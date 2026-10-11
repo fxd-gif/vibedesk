@@ -1,0 +1,114 @@
+import { app, BrowserWindow, ipcMain } from 'electron'
+import fs from 'fs'
+import path from 'path'
+import type { ProjectStore } from './projectStore'
+import type { SettingsStore } from './settingsStore'
+import { randomUUID } from 'crypto'
+import { candidatesFromPath } from './skillStore'
+import { fetchGithubCandidates } from './github'
+import { listClaudeSessions } from './claudeHistory'
+import type { SkillTarget } from '../shared/types'
+
+export interface IpcDeps {
+  win: () => BrowserWindow | null
+  projects: ProjectStore
+  settings: SettingsStore
+}
+
+/** Liefert bis zu 8 Unterordner, die zum eingegebenen Pfadpräfix passen. */
+export function suggestDirs(prefix: string): string[] {
+  if (!prefix) return []
+  const endsWithSep = /[\\/]$/.test(prefix)
+  const dir = endsWithSep ? prefix : path.dirname(prefix)
+  const part = endsWithSep ? '' : path.basename(prefix).toLowerCase()
+  try {
+    return fs
+      .readdirSync(dir, { withFileTypes: true })
+      .filter((d) => d.isDirectory() && !d.name.startsWith('.') && !d.name.startsWith('$') && d.name.toLowerCase().startsWith(part))
+      .slice(0, 8)
+      .map((d) => path.join(dir, d.name))
+  } catch {
+    return []
+  }
+}
+
+export function registerCoreIpc(d: IpcDeps): void {
+  ipcMain.handle('settings:get', () => d.settings.get())
+  ipcMain.handle('settings:set', (_e, patch) => d.settings.set(patch))
+
+  ipcMain.handle('projects:list', () => d.projects.list())
+  ipcMain.handle('projects:create', (_e, name: string) => d.projects.create(name))
+  ipcMain.handle('projects:add', (_e, dir: string) => d.projects.add(dir))
+  ipcMain.handle('projects:remove', (_e, id: string, trash: boolean) => d.projects.remove(id, { trash }))
+
+  ipcMain.handle('fs:suggestDirs', (_e, prefix: string) => suggestDirs(prefix))
+
+  ipcMain.on('app:exitFullscreen', () => d.win()?.setFullScreen(false))
+  ipcMain.on('app:toggleFullscreen', () => {
+    const w = d.win()
+    if (w) w.setFullScreen(!w.isFullScreen())
+  })
+  ipcMain.on('app:quit', () => app.quit())
+}
+
+export interface SessionIpcDeps {
+  sessions: import('./sessionManager').SessionManager
+  projects: ProjectStore
+  claudeProjectsDir: string
+}
+
+export function registerNotesIpc(notes: import('./notesStore').NotesStore): void {
+  ipcMain.handle('notes:get', (_e, id: string) => notes.get(id))
+  ipcMain.handle('notes:set', (_e, id: string, text: string) => notes.set(id, String(text).slice(0, 1_000_000)))
+}
+
+export function registerSessionIpc(d: SessionIpcDeps): void {
+  ipcMain.handle('history:list', (_e, projectId: string) => {
+    const p = d.projects.get(projectId)
+    return p ? listClaudeSessions(p.path, d.claudeProjectsDir) : []
+  })
+  ipcMain.handle('sessions:start', (_e, projectId: string, resumeId?: string) => {
+    const p = d.projects.get(projectId)
+    if (!p) throw new Error('Projekt nicht gefunden')
+    if (!fs.existsSync(p.path)) throw new Error('Projektordner fehlt: ' + p.path)
+    const info = d.sessions.start(p, { resumeId })
+    d.projects.touch(p.id)
+    return info
+  })
+  ipcMain.handle('sessions:stop', (_e, id: string) => d.sessions.stop(id))
+  ipcMain.handle('sessions:list', () => d.sessions.list())
+  ipcMain.on('sessions:write', (_e, id: string, data: string) => d.sessions.write(id, data))
+  ipcMain.on('sessions:resize', (_e, id: string, cols: number, rows: number) => d.sessions.resize(id, cols, rows))
+}
+
+export interface SkillIpcDeps {
+  skills: import('./skillStore').SkillStore
+  projects: ProjectStore
+}
+
+export function registerSkillIpc(d: SkillIpcDeps): void {
+  // Kandidaten bleiben im Main-Prozess, der Renderer sieht nur Token + Metadaten
+  const pending = new Map<string, import('./skillStore').SkillCandidate>()
+  const summarize = (cands: import('./skillStore').SkillCandidate[]) => {
+    if (!cands.length) throw new Error('Keine SKILL.md mit gültigem Frontmatter (name, description) gefunden')
+    return cands.map((c) => {
+      const token = randomUUID()
+      pending.set(token, c)
+      return { token, name: c.name, description: c.description }
+    })
+  }
+  ipcMain.handle('skills:list', () => d.skills.list(d.projects.list()))
+  ipcMain.handle('skills:importPaths', (_e, paths: string[]) => summarize(paths.flatMap((p) => candidatesFromPath(p))))
+  ipcMain.handle('skills:importGithub', async (_e, url: string) => summarize(await fetchGithubCandidates(url)))
+  ipcMain.handle('skills:install', async (_e, tokens: string[], target: SkillTarget, replace: boolean) => {
+    const out = []
+    for (const t of tokens) {
+      const c = pending.get(t)
+      if (!c) throw new Error('Import abgelaufen – bitte erneut hinzufügen')
+      out.push(await d.skills.install(c, target, { replace }))
+      pending.delete(t)
+    }
+    return out
+  })
+  ipcMain.handle('skills:remove', (_e, dir: string) => d.skills.remove(dir, d.projects.list()))
+}

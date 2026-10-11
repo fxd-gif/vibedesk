@@ -1,0 +1,13 @@
+node_modules/
+out/
+dist/
+.superpowers/
+test-results/
+playwright-report/
+
+# lokale Entwicklung – nicht im öffentlichen Repo
+tests/
+docs/
+scripts/
+vitest.config.ts
+playwright.config.ts

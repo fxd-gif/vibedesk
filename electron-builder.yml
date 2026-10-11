@@ -1,0 +1,28 @@
+appId: dev.vibedesk.app
+productName: VibeDesk
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**
+  - package.json
+extraResources:
+  - from: resources/hook-forwarder.js
+    to: hook-forwarder.js
+asarUnpack:
+  - "**/node_modules/@lydell/**"
+win:
+  icon: resources/icon.png
+  target:
+    - nsis
+nsis:
+  include: resources/installer/installer.nsh
+  oneClick: true
+  perMachine: false
+  runAfterFinish: true
+  artifactName: VibeDesk-Setup-${version}.${ext}
+publish:
+  provider: github
+  owner: fxd-gif
+  repo: vibedesk
+  releaseType: release
