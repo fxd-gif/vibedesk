@@ -4,7 +4,9 @@ import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
 import { join } from 'path'
 import { ProjectStore } from './projectStore'
 import { DEFAULT_SETTINGS, SettingsStore } from './settingsStore'
-import { registerCoreIpc, registerNotesIpc, registerSessionIpc, registerSkillIpc } from './ipc'
+import { registerCoreIpc, registerFileIpc, registerNotesIpc, registerSessionIpc, registerSkillIpc } from './ipc'
+import { FileService, FileWatcher } from './fileService'
+import { CLAUDE_DOCS_URL, checkTools, installTool, NODE_DOWNLOAD_URL } from './toolSetup'
 import { NotesStore } from './notesStore'
 import { DiscordRpc, fetchAppInfo, type DiscordStatus } from './discord/rpc'
 import { setupUpdater } from './updater'
@@ -69,6 +71,12 @@ app.whenReady().then(async () => {
   Menu.setApplicationMenu(null)
   if (app.isPackaged) registerRunAlias(process.execPath)
   ipcMain.handle('app:claudeInstalled', () => !!process.env.VIBEDESK_CLAUDE_CMD || claudeOnPath())
+  ipcMain.handle('setup:check', () => checkTools())
+  ipcMain.handle('setup:install', (_e, tool: string) => {
+    if (tool !== 'node' && tool !== 'claude') return false
+    return installTool(tool, (line) => send('setup:log', tool, line))
+  })
+  ipcMain.on('setup:openDownload', (_e, tool: string) => shell.openExternal(tool === 'node' ? NODE_DOWNLOAD_URL : CLAUDE_DOCS_URL))
   ipcMain.handle('app:claudeVersion', () => claudeVersion())
   const userData = app.getPath('userData')
   const settings = new SettingsStore(join(userData, 'settings.json'), DEFAULT_SETTINGS(app.getPath('documents')))
@@ -128,6 +136,9 @@ app.whenReady().then(async () => {
   )
   registerSkillIpc({ skills, projects })
   registerNotesIpc(new NotesStore(join(userData, 'notes')))
+  const fileWatcher = new FileWatcher((c) => send('files:change', c))
+  registerFileIpc(new FileService(() => projects.list().filter((p) => !p.missing).map((p) => p.path)), fileWatcher)
+  app.on('before-quit', () => fileWatcher.closeAll())
 
   let discordStatus: DiscordStatus = { state: 'off' }
   const discord = new DiscordRpc((st) => {

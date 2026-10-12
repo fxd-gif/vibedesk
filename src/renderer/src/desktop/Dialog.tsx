@@ -44,6 +44,11 @@ function DialogBox({ d }: { d: DialogSpec }): React.JSX.Element {
               Abbrechen
             </button>
           )}
+          {d.altLabel && (
+            <button className="btn" onClick={() => close({ ok: false, alt: true, value: '', checked: false })} data-testid="dialog-alt">
+              {d.altLabel}
+            </button>
+          )}
           <button
             ref={okRef}
             autoFocus={d.kind !== 'prompt'}

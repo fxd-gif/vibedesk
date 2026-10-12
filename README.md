@@ -35,11 +35,13 @@ VibeDesk ist eine Vollbild-Arbeitsumgebung für Windows, gebaut für das Arbeite
 **Claude Code im Blick**
 - Mehrere Sessions parallel, mit Status im Dock: arbeitet · wartet auf dich · fertig
 - Sanfter Ton, sobald eine Session auf dich wartet
-- Live-Feed aller Aktionen, Todo-Fortschritt und Agent-Baum für Subagents
+- **Session-Inspector:** Live-Feed aller Aktionen, Todo-Fortschritt, Agent-Baum für Subagents und Stats – in einem Fenster mit Tabs
 - **Stats:** Context-Auslastung, Tokens, Cache-Trefferquote und geschätzte Kosten – pro Session und pro Tag
 - Frühere Sessions mit einem Klick fortsetzen
 
 **Werkzeuge**
+- **Code-Editor** für schnelle Anpassungen: Klick auf eine Datei im Live-Feed öffnet sie genau an der Stelle, die Claude geändert hat – mit Dateibaum, Tabs und Syntax-Highlighting
+- **Befehls-Palette** (<kbd>Strg</kbd> + <kbd>K</kbd>): alle Fenster, Projekte und Aktionen per Suche
 - Browser-Vorschau: Dev-Server werden erkannt und direkt im Glasfenster geöffnet
 - Prompt-Bibliothek und Notizen pro Projekt
 - Skills per Drag & Drop oder GitHub-Link installieren
@@ -60,7 +62,7 @@ VibeDesk ist eine Vollbild-Arbeitsumgebung für Windows, gebaut für das Arbeite
 
 Updates kommen automatisch: VibeDesk lädt neue Versionen im Hintergrund und installiert sie beim nächsten Neustart.
 
-**Voraussetzungen:** Windows 10 oder 11 · [Claude Code](https://docs.claude.com/en/docs/claude-code) (`npm i -g @anthropic-ai/claude-code`)
+**Voraussetzungen:** Windows 10 oder 11. Node.js und [Claude Code](https://docs.claude.com/en/docs/claude-code) installiert VibeDesk beim ersten Start auf Wunsch mit einem Klick.
 
 ## Bedienung
 
@@ -70,7 +72,9 @@ Updates kommen automatisch: VibeDesk lädt neue Versionen im Hintergrund und ins
 | <kbd>Esc</kbd> halten · <kbd>F11</kbd> | Vollbild verlassen |
 | Fenster an den Rand ziehen | halbe Bildschirmbreite |
 | Doppelklick auf die Titelleiste | maximieren |
-| Dock → Anordnen | alle Fenster automatisch kacheln |
+| <kbd>Strg</kbd> + <kbd>K</kbd> · <kbd>Strg</kbd> + <kbd>⇧</kbd> + <kbd>P</kbd> | Befehls-Palette (im Terminal nur die zweite) |
+| <kbd>Strg</kbd> + <kbd>S</kbd> | im Editor speichern |
+| Palette → Fenster anordnen | alle Fenster automatisch kacheln |
 
 ## Datenschutz
 

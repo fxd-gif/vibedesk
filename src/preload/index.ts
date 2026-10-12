@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
-import type { DiscordStatus, HookEvent, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
+import type { DiscordStatus, FileChange, HookEvent, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
   const h = (_e: unknown, ...args: unknown[]): void => cb(...(args as A))
@@ -42,7 +42,14 @@ const api: VibedeskApi = {
     hookEvent: (cb) => listen<[HookEvent]>('hook:event', cb),
     stats: (cb) => listen<[SessionStats]>('stats:update', cb),
     discordStatus: (cb) => listen<[DiscordStatus]>('discord:status', cb),
-    update: (cb) => listen<[UpdateStatus]>('update:status', cb)
+    update: (cb) => listen<[UpdateStatus]>('update:status', cb),
+    fileChange: (cb) => listen<[FileChange]>('files:change', cb),
+    setupLog: (cb) => listen<[ToolId, string]>('setup:log', cb)
+  },
+  setup: {
+    check: () => ipcRenderer.invoke('setup:check'),
+    install: (tool) => ipcRenderer.invoke('setup:install', tool),
+    openDownload: (tool) => ipcRenderer.send('setup:openDownload', tool)
   },
   update: {
     status: () => ipcRenderer.invoke('update:status'),
@@ -67,6 +74,14 @@ const api: VibedeskApi = {
     set: (projectId, text) => ipcRenderer.invoke('notes:set', projectId, text)
   },
   openExternal: (url) => ipcRenderer.send('app:openExternal', url),
+  files: {
+    list: (dir) => ipcRenderer.invoke('files:list', dir),
+    read: (p) => ipcRenderer.invoke('files:read', p),
+    write: (p, text, expectedMtime, eol, bom) => ipcRenderer.invoke('files:write', p, text, expectedMtime, eol, bom),
+    watch: (p) => ipcRenderer.send('files:watch', p),
+    unwatch: (p) => ipcRenderer.send('files:unwatch', p),
+    reveal: (p) => ipcRenderer.send('files:reveal', p)
+  },
   scenes: {
     addCustom: (p) => ipcRenderer.invoke('scenes:addCustom', p)
   },

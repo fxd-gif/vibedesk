@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import type { ProjectStore } from './projectStore'
@@ -111,4 +111,24 @@ export function registerSkillIpc(d: SkillIpcDeps): void {
     return out
   })
   ipcMain.handle('skills:remove', (_e, dir: string) => d.skills.remove(dir, d.projects.list()))
+}
+
+export function registerFileIpc(files: import('./fileService').FileService, watcher: import('./fileService').FileWatcher): void {
+  ipcMain.handle('files:list', (_e, dir: string) => files.list(dir))
+  ipcMain.handle('files:read', (_e, p: string) => files.read(p))
+  ipcMain.handle('files:write', (_e, p: string, text: string, expectedMtime: number | null, eol: 'lf' | 'crlf', bom: boolean) =>
+    files.write(p, String(text), typeof expectedMtime === 'number' ? expectedMtime : null, eol === 'crlf' ? 'crlf' : 'lf', !!bom)
+  )
+  ipcMain.on('files:watch', (_e, p: string) => {
+    const f = files.resolve(p)
+    if (f) watcher.watch(f)
+  })
+  ipcMain.on('files:unwatch', (_e, p: string) => {
+    const f = files.resolve(p)
+    if (f) watcher.unwatch(f)
+  })
+  ipcMain.on('files:reveal', (_e, p: string) => {
+    const f = files.resolve(p)
+    if (f) shell.showItemInFolder(f)
+  })
 }

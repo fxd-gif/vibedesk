@@ -6,6 +6,7 @@ import { useSettings } from '../store/settingsStore'
 import { playChime } from '../ambience/chime'
 import { toggleMusic, toggleRainSound } from '../ambience/toggles'
 import { useUpdate } from '../store/updateStore'
+import { showWhatsNew } from '../changelog/WhatsNew'
 
 export const STREAMS = [
   { label: 'laut.fm · lofi', url: 'https://stream.laut.fm/lofi' },
@@ -159,7 +160,12 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
       </section>
       <section className="about">
         <div className="row between">
-          <span className="dim small">VibeDesk {update.version || '…'}</span>
+          <span className="dim small">
+            VibeDesk {update.version || '…'} ·{' '}
+            <button className="linkish" onClick={() => (onClose(), showWhatsNew())}>
+              Was ist neu?
+            </button>
+          </span>
           <button className="btn small ghost" disabled={update.status.state === 'checking' || update.status.state === 'downloading'} onClick={() => api.update.check()}>
             {update.status.state === 'checking' ? 'Suche …' : update.status.state === 'none' ? 'Aktuell ✓' : update.status.state === 'error' ? 'Erneut suchen' : 'Nach Updates suchen'}
           </button>

@@ -7,6 +7,10 @@ export interface FeedEntry {
   tool: string
   target: string
   result: 'pending' | 'ok' | 'fail' | 'stopped'
+  /** voller Pfad bei Datei-Tools → Klick öffnet den Editor */
+  filePath?: string
+  /** eingefügter Text bei Edit → Editor springt dorthin */
+  find?: string
 }
 
 export interface TodoItem {
@@ -75,6 +79,19 @@ export function describeTarget(tool: string, input: unknown): string {
   return ''
 }
 
+const isAbs = (p: string): boolean => /^([a-zA-Z]:[\\/]|[\\/])/.test(p)
+
+/** Voller Dateipfad und Sprungziel für Datei-Tools (Edit, Write, Read …). */
+export function fileTarget(input: unknown, cwd: string): { filePath?: string; find?: string } {
+  const i = obj(input)
+  const p = str(i.file_path || i.notebook_path)
+  if (!p) return {}
+  const filePath = isAbs(p) || !cwd ? p : cwd.replace(/[\\/]+$/, '') + '\\' + p
+  const edits = Array.isArray(i.edits) ? i.edits : []
+  const find = str(i.new_string) || str(obj(edits[0]).new_string) || undefined
+  return find ? { filePath, find } : { filePath }
+}
+
 function parseTodos(x: unknown): TodoItem[] {
   if (!Array.isArray(x)) return []
   return x
@@ -124,7 +141,7 @@ function applyHook(s: SessionWorkflow, e: HookEvent, nextId: number): { s: Sessi
     }
     case 'PreToolUse': {
       const input = p.tool_input
-      const entry: FeedEntry = { id: nextId, sessionId: e.sessionId, ts: e.ts, tool, target: describeTarget(tool, input), result: 'pending' }
+      const entry: FeedEntry = { id: nextId, sessionId: e.sessionId, ts: e.ts, tool, target: describeTarget(tool, input), result: 'pending', ...fileTarget(input, str(p.cwd)) }
       const feed = [...s.feed, entry].slice(-FEED_LIMIT)
       const patch: Partial<SessionWorkflow> = { status: 'working', feed }
       if (tool === 'TodoWrite') patch.todos = parseTodos(obj(input).todos)

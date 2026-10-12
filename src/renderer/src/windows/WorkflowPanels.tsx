@@ -6,6 +6,7 @@ import { useWorkflow } from '../store/workflowStore'
 import type { FeedEntry } from '../store/workflowReducer'
 import { clock, relTime } from '../util'
 import { STATUS_TEXT } from './TerminalWindow'
+import { openInEditor } from '../store/editorStore'
 
 function useNow(ms = 15000): number {
   const [now, setNow] = useState(Date.now())
@@ -80,11 +81,17 @@ export function FeedPanel(): React.JSX.Element {
       {!entries.length && <div className="panel-empty">Noch keine Aktionen.</div>}
       <ul className="feed-list">
         {entries.map((e) => (
-          <li key={e.id} className={`feed-row ${e.result}`} data-testid="feed-row">
+          <li
+            key={e.id}
+            className={`feed-row ${e.result}${e.filePath ? ' link' : ''}`}
+            data-testid="feed-row"
+            onClick={e.filePath ? () => openInEditor(e.filePath!, e.find) : undefined}
+            title={e.filePath ? `Im Editor öffnen: ${e.filePath}` : undefined}
+          >
             <span className="mono dim">{clock(e.ts)}</span>
             {sessions.length > 1 && <span className="feed-sess">{names[e.sessionId]}</span>}
             <span className="feed-tool">{e.tool}</span>
-            <span className="feed-target mono" title={e.target}>
+            <span className="feed-target mono">
               {e.target}
             </span>
             {resultMark(e.result)}

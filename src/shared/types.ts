@@ -32,7 +32,7 @@ export interface WindowRect {
 
 import type { Activity, PresenceConfig } from './presence'
 
-export type PanelId = 'projects' | 'skills' | 'status' | 'feed' | 'todos' | 'agents' | 'stats' | 'prompts' | 'focus' | 'discord'
+export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor'
 
 export type DiscordStatus =
   | { state: 'off' }
@@ -120,6 +120,42 @@ export interface Settings {
   focus: FocusSettings
   discord: PresenceConfig
   onboarded: boolean
+  /** offene Editor-Tabs pro Projekt (nur Pfade) */
+  editorTabs: Record<string, string[]>
+  /** zuletzt gesehene Version – für „Was ist neu“ nach Updates */
+  lastSeenVersion: string
+}
+
+export interface FileEntry {
+  name: string
+  path: string
+  dir: boolean
+}
+
+export type Eol = 'lf' | 'crlf'
+
+export interface FileContent {
+  /** aufgelöster, kanonischer Pfad – Schlüssel für Tabs und Watcher */
+  path: string
+  text: string
+  mtime: number
+  eol: Eol
+  bom: boolean
+}
+
+export type FileErrorCode = 'outside' | 'binary' | 'too_large' | 'conflict' | 'not_found' | 'io'
+
+export type FileResult<T> = ({ ok: true } & T) | { ok: false; code: FileErrorCode; message: string }
+
+export type FileChange = { path: string; kind: 'changed'; mtime: number } | { path: string; kind: 'deleted' }
+
+export type ToolId = 'node' | 'claude'
+
+export interface ToolStatus {
+  /** Version oder null, wenn nicht gefunden */
+  node: string | null
+  claude: string | null
+  winget: boolean
 }
 
 export interface SkillInfo {
@@ -162,6 +198,11 @@ export interface VibedeskApi {
     claudeInstalled(): Promise<boolean>
     claudeVersion(): Promise<string | null>
   }
+  setup: {
+    check(): Promise<ToolStatus>
+    install(tool: ToolId): Promise<boolean>
+    openDownload(tool: ToolId): void
+  }
   sessions: {
     start(projectId: string, resumeId?: string): Promise<SessionInfo>
     stop(id: string): Promise<void>
@@ -176,6 +217,8 @@ export interface VibedeskApi {
     stats(cb: (s: SessionStats) => void): Unsubscribe
     discordStatus(cb: (s: DiscordStatus) => void): Unsubscribe
     update(cb: (s: UpdateStatus) => void): Unsubscribe
+    fileChange(cb: (c: FileChange) => void): Unsubscribe
+    setupLog(cb: (tool: ToolId, line: string) => void): Unsubscribe
   }
   update: {
     status(): Promise<UpdateStatus>
@@ -200,6 +243,7 @@ export interface VibedeskApi {
     set(projectId: string, text: string): Promise<void>
   }
   openExternal(url: string): void
+  files: FilesApi
   scenes: {
     addCustom(path: string): Promise<string>
   }
@@ -210,4 +254,13 @@ export interface VibedeskApi {
     install(tokens: string[], target: SkillTarget, replace: boolean): Promise<SkillInfo[]>
     remove(dir: string): Promise<void>
   }
+}
+
+export interface FilesApi {
+  list(dir: string): Promise<FileResult<{ entries: FileEntry[] }>>
+  read(path: string): Promise<FileResult<FileContent>>
+  write(path: string, text: string, expectedMtime: number | null, eol: Eol, bom: boolean): Promise<FileResult<{ mtime: number }>>
+  watch(path: string): void
+  unwatch(path: string): void
+  reveal(path: string): void
 }

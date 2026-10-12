@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from './api'
 import { centeredRect, useUi } from './store/uiStore'
 import { GlassWindow } from './desktop/GlassWindow'
 import { DialogHost } from './desktop/Dialog'
-import { alert } from './store/dialogStore'
 import { Dock, type DockItem } from './desktop/Dock'
-import { PANELS, PANEL_IDS, panelDef } from './windows/panels'
+import { migratePanels, PANELS, PANEL_IDS, panelDef } from './windows/panels'
+import { checkWhatsNew, WhatsNew } from './changelog/WhatsNew'
+import { checkSetupOnStart, SetupPrompt, wireSetup } from './windows/ToolSetup'
+import { CommandPalette, usePalette, wirePalette } from './windows/palette/CommandPalette'
 import type { PanelId } from '../../shared/types'
 import './desktop/desktop.css'
 import { kindOf, termWin, useSessions, wireSessions } from './store/sessionStore'
@@ -18,16 +20,17 @@ import { TerminalWindow } from './windows/TerminalWindow'
 import { RainCanvas } from './ambience/RainCanvas'
 import { useSettings } from './store/settingsStore'
 import { ambienceAudio } from './ambience/audio'
-import { isMuted, toggleMusic } from './ambience/toggles'
+import { isMuted } from './ambience/toggles'
 import { AmbienceMenu } from './windows/AmbienceMenu'
 import { fmtClock, useFocus, wireFocus } from './store/focusStore'
 import { phaseTotal, remaining } from './store/focusTimer'
 import { Ring, toneOf } from './windows/FocusPanel'
 import { Icon } from './desktop/icons'
-import { useDiscord, wireDiscord } from './store/discordStore'
+import { wireDiscord } from './store/discordStore'
 import { wireUpdate } from './store/updateStore'
 import { UpdateToast } from './desktop/UpdateToast'
 import { Onboarding } from './windows/Onboarding'
+import { EDITOR_ID, toggleEditor, wireEditor } from './store/editorStore'
 
 
 const initials = (n: string): string => {
@@ -82,8 +85,9 @@ export default function App(): React.JSX.Element {
   const settings = useSettings((s) => s.s)
   const previews = usePreview((s) => s.open)
   const focus = useFocus()
-  const discordState = useDiscord((s) => s.status.state)
   const [menu, setMenu] = useState(false)
+  const paletteOpen = usePalette((s) => s.open)
+  const openAmbience = useCallback(() => setMenu(true), [])
   const [audioState, setAudioState] = useState({ musicOffline: false, musicPlaying: false })
 
   useEffect(() => ambienceAudio.onState(setAudioState), [])
@@ -104,18 +108,21 @@ export default function App(): React.JSX.Element {
     wireFocus()
     wireDiscord()
     wireUpdate()
+    wireEditor()
+    wirePalette()
+    wireSetup()
     useSettings.getState().load().then((s) => {
       const ui = useUi.getState()
       ui.initRects(s.windowRects)
-      const panels = s.visiblePanels.length ? s.visiblePanels : (['projects'] as PanelId[])
+      const migrated = migratePanels(s.visiblePanels)
+      const panels = migrated.length ? migrated : (['projects'] as PanelId[])
       panels.forEach((id) => {
         const def = panelDef(id)
         if (def) ui.openWin(id, centeredRect(def.w, def.h))
       })
       setReady(true)
-      api.app.claudeInstalled().then((ok) => {
-        if (!ok) alert('Claude Code nicht gefunden', 'Installiere es einmal im Terminal mit:\n\nnpm i -g @anthropic-ai/claude-code\n\nDanach VibeDesk neu starten.')
-      })
+      checkWhatsNew()
+      if (s.onboarded) checkSetupOnStart()
     })
   }, [])
 
@@ -153,7 +160,7 @@ export default function App(): React.JSX.Element {
       {PANELS.filter((p) => open.includes(p.id)).map((def) => {
         const id = def.id
         return (
-          <GlassWindow key={id} id={id} title={def.title}>
+          <GlassWindow key={id} id={id} title={def.title} onClose={def.onClose} minW={id === EDITOR_ID ? 520 : undefined} minH={id === EDITOR_ID ? 300 : undefined}>
             {def.render()}
           </GlassWindow>
         )
@@ -166,17 +173,20 @@ export default function App(): React.JSX.Element {
       ))}
       <Dock
         groups={[
-          [panelItem('projects'), panelItem('skills'), panelItem('prompts'), { ...panelItem('discord'), badge: discordState === 'connected' ? <span className="dot working" /> : undefined }],
+          [
+            { id: 'palette', icon: 'command', label: 'Befehle (Strg+K)', active: paletteOpen, onClick: () => usePalette.getState().show(!paletteOpen) },
+            panelItem('projects')
+          ],
           [
             {
-              id: 'music',
-              icon: 'music',
-              label: settings?.musicOn ? (audioState.musicOffline ? 'Lofi-Radio offline' : isMuted(settings.musicVolume) ? 'Lofi-Radio läuft stumm – Lautstärke im 💧-Menü' : 'Lofi-Radio aus') : 'Lofi-Radio an',
-              active: !!settings?.musicOn,
+              id: 'ambience',
+              icon: 'rain',
+              label: settings?.musicOn && audioState.musicOffline ? 'Atmosphäre · Lofi-Radio offline' : 'Atmosphäre & Musik',
+              active: menu,
               className: settings?.musicOn && audioState.musicOffline ? 'offline' : undefined,
-              onClick: () => settings && useSettings.getState().set(toggleMusic(settings))
+              badge: settings?.musicOn && !isMuted(settings.musicVolume) && !audioState.musicOffline ? <span className="dock-eq" aria-hidden><i /><i /><i /></span> : undefined,
+              onClick: () => setMenu((m) => !m)
             },
-            { id: 'ambience', icon: 'rain', label: 'Atmosphäre', active: menu, onClick: () => setMenu((m) => !m) },
             (() => {
               const s = focus.state
               const total = settings ? phaseTotal(s, settings.focus) : 0
@@ -213,16 +223,18 @@ export default function App(): React.JSX.Element {
               }
             }
           }),
-          (['status', 'feed', 'todos', 'agents', 'stats'] as PanelId[]).map(panelItem),
           [
-            { id: 'preview', icon: 'globe', label: 'Browser-Vorschau', active: Object.keys(previews).length > 0, onClick: () => usePreview.getState().openPreview(Object.values(usePreview.getState().urls).flat()[0]) },
-            { id: 'arrange', icon: 'grid', label: 'Anordnen', onClick: () => useUi.getState().arrangeAll(kindOf) },
-            { id: 'exit', icon: 'exit', label: 'Vollbild verlassen (Esc halten / F11)', onClick: () => api.app.toggleFullscreen() }
+            panelItem('inspector'),
+            { ...panelItem('editor'), onClick: () => void toggleEditor() },
+            { id: 'preview', icon: 'globe', label: 'Browser-Vorschau', active: Object.keys(previews).length > 0, onClick: () => usePreview.getState().openPreview(Object.values(usePreview.getState().urls).flat()[0]) }
           ]
         ]}
       />
+      <CommandPalette onAmbience={openAmbience} />
       {menu && <AmbienceMenu offline={audioState.musicOffline} onClose={() => setMenu(false)} />}
       <UpdateToast />
+      <WhatsNew />
+      <SetupPrompt />
       <Onboarding />
       <DialogHost />
       {focus.banner && (

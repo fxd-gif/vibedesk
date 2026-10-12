@@ -30,7 +30,9 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   ],
   focus: { work: 25, short: 5, long: 15, rounds: 4 },
   discord: DEFAULT_PRESENCE,
-  onboarded: false
+  onboarded: false,
+  editorTabs: {},
+  lastSeenVersion: ''
 })
 
 export class SettingsStore {

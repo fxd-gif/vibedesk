@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { api } from '../api'
 import { SCENES } from '../ambience/sceneParams'
 import { toggleMusic, toggleRainSound } from '../ambience/toggles'
 import { Icon } from '../desktop/icons'
 import { useSettings } from '../store/settingsStore'
 import { centeredRect, useUi } from '../store/uiStore'
 import { PathInput } from './PathInput'
+import { ToolSetupPanel, useSetup } from './ToolSetup'
 import iconUrl from '../assets/icon.png'
 
 const STEPS = ['welcome', 'claude', 'folder', 'mood', 'discord', 'done'] as const
@@ -23,7 +23,7 @@ export function Onboarding(): React.JSX.Element | null {
   const s = useSettings((x) => x.s)
   const set = useSettings((x) => x.set)
   const [i, setI] = useState(0)
-  const [claude, setClaude] = useState<string | null | undefined>(undefined)
+  const installing = useSetup((x) => x.installing)
   const [dir, setDir] = useState('')
   const [leaving, setLeaving] = useState(false)
   const step: Step = STEPS[i]
@@ -31,12 +31,6 @@ export function Onboarding(): React.JSX.Element | null {
   useEffect(() => {
     if (s && !dir) setDir(s.projectsDir)
   }, [s, dir])
-
-  const checkClaude = (): void => {
-    setClaude(undefined)
-    api.app.claudeVersion().then(setClaude)
-  }
-  useEffect(checkClaude, [])
 
   if (!s || s.onboarded) return null
 
@@ -68,27 +62,10 @@ export function Onboarding(): React.JSX.Element | null {
 
         {step === 'claude' && (
           <>
-            <h2>Claude Code</h2>
-            {claude === undefined && (
-              <p className="row" style={{ justifyContent: 'center' }}>
-                <span className="spin" /> Suche Claude Code …
-              </p>
-            )}
-            {claude && (
-              <p className="onb-ok">
-                <Icon name="check" size={18} /> Gefunden – Version {claude}
-              </p>
-            )}
-            {claude === null && (
-              <>
-                <p>Claude Code ist noch nicht installiert. Öffne ein Terminal und führe aus:</p>
-                <code className="onb-code">npm i -g @anthropic-ai/claude-code</code>
-                <button className="btn small" onClick={checkClaude}>
-                  Erneut prüfen
-                </button>
-              </>
-            )}
-            <button className="btn primary big" onClick={next} data-testid="onb-next">
+            <h2>Werkzeuge</h2>
+            <p>VibeDesk braucht Node.js und Claude Code. Fehlt etwas, installierst du es hier mit einem Klick.</p>
+            <ToolSetupPanel />
+            <button className="btn primary big" onClick={next} disabled={!!installing} data-testid="onb-next">
               Weiter
             </button>
           </>
@@ -174,8 +151,8 @@ export function Onboarding(): React.JSX.Element | null {
                 <span>Vollbild verlassen</span>
               </div>
               <div>
-                <Icon name="grid" size={15} /> Anordnen
-                <span>bringt Ordnung in alle Fenster</span>
+                <kbd>Strg</kbd> + <kbd>K</kbd>
+                <span>Befehls-Palette: alle Fenster & Aktionen</span>
               </div>
             </div>
             <div className="row" style={{ justifyContent: 'center', gap: 8 }}>

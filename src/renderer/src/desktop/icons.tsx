@@ -24,7 +24,10 @@ const paths: Record<string, string> = {
   external: 'M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5',
   history: 'M4 12a8 8 0 1 0 2.3-5.7M4 4v4h4M12 8v4l3 2',
   discord: 'M8 16c2.5 1.3 5.5 1.3 8 0M8.5 12.5h.01M15.5 12.5h.01M7 7c3-1.3 7-1.3 10 0l2 9c-1.8 1.4-3.6 2-5 2l-1-2M7 7L5 16c1.8 1.4 3.6 2 5 2l1-2',
-  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4'
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
+  code: 'M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16',
+  inspect: 'M4 5h16v14H4zM4 9h16M8 13h5M8 16h8',
+  command: 'M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z'
 }
 
 export function Icon({ name, size = 18 }: { name: keyof typeof paths | string; size?: number }): React.JSX.Element {

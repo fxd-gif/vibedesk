@@ -2,11 +2,12 @@ import type { ReactNode } from 'react'
 import type { PanelId } from '../../../shared/types'
 import { ProjectsWindow } from './ProjectsWindow'
 import { SkillsWindow } from './SkillsWindow'
-import { StatsPanel } from './StatsPanel'
 import { PromptsWindow } from './PromptsWindow'
 import { FocusPanel } from './FocusPanel'
 import { DiscordWindow } from './DiscordWindow'
-import { AgentPanel, FeedPanel, StatusPanel, TodoPanel } from './WorkflowPanels'
+import { InspectorWindow } from './InspectorWindow'
+import { EditorWindow } from './editor/EditorWindow'
+import { closeEditor, EDITOR_SIZE } from '../store/editorStore'
 
 export interface PanelDef {
   id: PanelId
@@ -15,6 +16,8 @@ export interface PanelDef {
   w: number
   h: number
   render: () => ReactNode
+  /** eigener Schließen-Ablauf (z. B. Nachfrage bei ungespeicherten Änderungen) */
+  onClose?: () => void
 }
 
 export const PANELS: PanelDef[] = [
@@ -23,12 +26,16 @@ export const PANELS: PanelDef[] = [
   { id: 'prompts', title: 'Prompts & Notizen', icon: 'pen', w: 520, h: 560, render: () => <PromptsWindow /> },
   { id: 'focus', title: 'Fokus-Timer', icon: 'timer', w: 340, h: 470, render: () => <FocusPanel /> },
   { id: 'discord', title: 'Discord Rich Presence', icon: 'discord', w: 900, h: 660, render: () => <DiscordWindow /> },
-  { id: 'status', title: 'Status', icon: 'status', w: 420, h: 260, render: () => <StatusPanel /> },
-  { id: 'feed', title: 'Live-Feed', icon: 'feed', w: 520, h: 340, render: () => <FeedPanel /> },
-  { id: 'todos', title: 'Todos', icon: 'todos', w: 420, h: 340, render: () => <TodoPanel /> },
-  { id: 'stats', title: 'Stats', icon: 'stats', w: 460, h: 520, render: () => <StatsPanel /> },
-  { id: 'agents', title: 'Agent-Baum', icon: 'agents', w: 420, h: 340, render: () => <AgentPanel /> }
+  { id: 'inspector', title: 'Session-Inspector', icon: 'inspect', w: 560, h: 520, render: () => <InspectorWindow /> },
+  { id: 'editor', title: 'Editor', icon: 'code', ...EDITOR_SIZE, render: () => <EditorWindow />, onClose: () => void closeEditor() }
 ]
 
 export const PANEL_IDS = PANELS.map((p) => p.id) as string[]
+
+/** Frühere Einzel-Panels leben jetzt als Tabs im Session-Inspector. */
+const LEGACY_INSPECTOR = new Set(['status', 'feed', 'todos', 'agents', 'stats'])
+export function migratePanels(ids: string[]): PanelId[] {
+  const out = ids.map((id) => (LEGACY_INSPECTOR.has(id) ? 'inspector' : id)).filter((id) => PANEL_IDS.includes(id))
+  return [...new Set(out)] as PanelId[]
+}
 export const panelDef = (id: string): PanelDef | undefined => PANELS.find((p) => p.id === id)

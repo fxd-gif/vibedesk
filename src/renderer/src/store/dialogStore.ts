@@ -5,6 +5,8 @@ export interface DialogSpec {
   title: string
   message?: string
   confirmLabel?: string
+  /** optionaler dritter Knopf (z. B. „Verwerfen“) */
+  altLabel?: string
   danger?: boolean
   checkbox?: string
   defaultValue?: string
@@ -14,6 +16,7 @@ export interface DialogSpec {
 
 export interface DialogResult {
   ok: boolean
+  alt?: boolean
   value: string
   checked: boolean
 }
@@ -49,4 +52,10 @@ export const prompt = async (spec: Omit<DialogSpec, 'kind'>): Promise<string | n
 
 export const alert = async (title: string, message?: string): Promise<void> => {
   await useDialog.getState().ask({ kind: 'alert', title, message })
+}
+
+/** Drei Wege: Bestätigen, Alternative (altLabel) oder Abbrechen. */
+export const choose = async (spec: Omit<DialogSpec, 'kind'> & { altLabel: string }): Promise<'ok' | 'alt' | 'cancel'> => {
+  const r = await useDialog.getState().ask({ ...spec, kind: 'confirm' })
+  return r.ok ? 'ok' : r.alt ? 'alt' : 'cancel'
 }
