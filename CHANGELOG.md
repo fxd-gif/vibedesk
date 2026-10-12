@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.4.0
+
 ### Neu
 - **Code-Editor** für schnelle Anpassungen: Dateibaum, Tabs, Syntax-Highlighting, Speichern mit Strg+S
 - Klick auf eine Datei im Live-Feed öffnet sie im Editor – direkt an der Stelle, die Claude geändert hat
