@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.10.0
+
 ### Neu
 - **Das VibeDesk-Gehirn**: Claude bekommt ein Projektgedächtnis. Bereiche, Entscheidungen, Stolperfallen und Konventionen landen als verlinkte Notizen in `.vibedesk/brain` – Markdown mit `[[Links]]`, direkt in Obsidian zu öffnen und mit Git zu versionieren
 - Jede neue Session startet mit einem Überblick über dieses Wissen und kann es über eigene Werkzeuge durchsuchen, lesen und erweitern – ohne Rückfragen und ganz lokal
