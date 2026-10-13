@@ -98,9 +98,13 @@ export function decodeAddon(bytes: Uint8Array): AddonPackage {
   let sum = 0
   try {
     files = unzipSync(zip, {
+      // Angaben im Zip stammen vom Ersteller und können lügen: nur unkomprimierte Einträge (wie encodeAddon sie schreibt),
+      // deren tatsächliche Größe zur Angabe passt und die sich nicht überlappen – sonst wäre eine innere Zip-Bombe möglich.
       filter: (f) => {
-        sum += f.originalSize
-        if (f.originalSize > LIMITS.asset || sum > LIMITS.unpacked) throw new AddonFormatError('too-large')
+        if (f.compression !== 0 || f.size !== f.originalSize) throw new AddonFormatError('corrupt')
+        sum += f.size
+        if (f.size > LIMITS.asset || sum > LIMITS.unpacked) throw new AddonFormatError('too-large')
+        if (sum > zip.length) throw new AddonFormatError('corrupt')
         return true
       }
     })
