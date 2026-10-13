@@ -1,5 +1,5 @@
 // Führt das Blockly-JSON eines Addons direkt aus – kein Code-Generator, kein eval.
-// Die App erreicht ein Addon ausschließlich über AddonActions.
+// Die App erreicht ein Addon ausschließlich über AddonActions (und AddonStorage für „Dauerhaft merken“).
 import type { BlocklyBlock, BlocklyProgram } from '../../../shared/addonBlocks'
 
 export interface AddonActions {
@@ -14,16 +14,27 @@ export interface AddonActions {
   focus(cmd: 'start' | 'stop'): void
   copyText(text: string): void
   query(what: string): string | number
+  /** Frage mit zwei Knöpfen; true = erster Knopf. Läuft nach einer Weile mit false ab. */
+  ask(text: string, yes: string, no: string): Promise<boolean>
 }
+
+/** Dauerhafter Speicher eines Addons (überlebt Neustarts). */
+export interface AddonStorage {
+  ready: Promise<void>
+  get(key: string): StoredValue | undefined
+  set(key: string, value: StoredValue): void
+}
+export type StoredValue = number | string | boolean | (number | string | boolean)[]
 
 export type AddonEvent =
   | { type: 'start' }
-  | { type: 'session_waiting' }
-  | { type: 'session_done' }
+  | { type: 'session_waiting'; project?: string }
+  | { type: 'session_done'; project?: string }
   | { type: 'focus'; phase: 'work' | 'break' | 'end' }
   | { type: 'time'; hour: number; minute: number }
   | { type: 'hotkey'; key: string }
   | { type: 'interval'; minutes: number }
+  | { type: 'signal'; name: string }
 
 export interface Clock {
   now(): number
@@ -53,7 +64,12 @@ export const LIMITS = {
   noticeLen: 140,
   maxWaitSec: 3600,
   maxRepeat: 1000,
-  yieldEvery: 500
+  yieldEvery: 500,
+  listLen: 500,
+  storedTextLen: 2000,
+  storedListLen: 100,
+  fadeStepsPerSec: 4,
+  pollMs: 250
 }
 
 const EVENT_OF: Record<string, AddonEvent['type']> = {
@@ -63,33 +79,68 @@ const EVENT_OF: Record<string, AddonEvent['type']> = {
   vd_on_focus: 'focus',
   vd_on_time: 'time',
   vd_on_hotkey: 'hotkey',
-  vd_on_interval: 'interval'
+  vd_on_interval: 'interval',
+  vd_on_signal: 'signal'
 }
 
-type Value = number | string | boolean
+type Scalar = number | string | boolean
+type Value = Scalar | Scalar[]
+
+/** Pro Skriptlauf: das auslösende Ereignis (für „Ereignis-Info“). */
+interface Ctx {
+  event: AddonEvent
+}
 
 class Aborted extends Error {}
+/** Drossel geschlossen: dieser Ablauf endet still. */
+class GateClosed extends Error {}
 
 const clamp = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, v))
-const toNum = (v: Value): number => {
-  const n = typeof v === 'number' ? v : typeof v === 'boolean' ? Number(v) : parseFloat(v)
+const toNum = (v: Value | undefined): number => {
+  if (Array.isArray(v)) return v.length
+  const n = typeof v === 'number' ? v : typeof v === 'boolean' ? Number(v) : parseFloat(String(v ?? ''))
   return Number.isFinite(n) ? n : 0
 }
+const str = (v: Value | undefined): string => (Array.isArray(v) ? v.map(String).join(', ') : String(v ?? '')).slice(0, LIMITS.textLen)
 const isTrue = (v: unknown): boolean => v === true || v === 'TRUE'
+const same = (a: Value, b: Value): boolean => {
+  const x = str(a)
+  const y = str(b)
+  if (x === y) return true
+  const p = parseFloat(x)
+  const q = parseFloat(y)
+  return x.trim() !== '' && y.trim() !== '' && Number.isFinite(p) && Number.isFinite(q) && p === q
+}
 const field = (b: BlocklyBlock, k: string): unknown => b.fields?.[k]
 const input = (b: BlocklyBlock, k: string): BlocklyBlock | undefined => b.inputs?.[k]?.block ?? b.inputs?.[k]?.shadow
 const varId = (b: BlocklyBlock): string => String((field(b, 'VAR') as { id?: string } | undefined)?.id ?? '')
-const numberedInputs = (b: BlocklyBlock, prefix: string): number[] =>
-  Object.keys(b.inputs ?? {})
+const numbered = (keys: string[], prefix: string): number[] =>
+  keys
     .map((k) => new RegExp(`^${prefix}(\\d+)$`).exec(k)?.[1])
     .filter((x): x is string => x !== undefined)
     .map(Number)
     .sort((a, c) => a - c)
+const numberedInputs = (b: BlocklyBlock, prefix: string): number[] => numbered(Object.keys(b.inputs ?? {}), prefix)
+const finite = (n: number): number => (Number.isFinite(n) ? n : 0)
+const deg = Math.PI / 180
+
+function toStored(v: Value): StoredValue {
+  if (Array.isArray(v)) return v.slice(0, LIMITS.storedListLen).map((x) => (typeof x === 'string' ? x.slice(0, LIMITS.storedTextLen) : x))
+  return typeof v === 'string' ? v.slice(0, LIMITS.storedTextLen) : v
+}
+
+/** Hauseigener Speicher, falls kein dauerhafter übergeben wurde (z. B. in Tests). */
+function memoryStorage(): AddonStorage {
+  const m = new Map<string, StoredValue>()
+  return { ready: Promise.resolve(), get: (k) => m.get(k), set: (k, v) => void m.set(k, v) }
+}
 
 export class AddonRunner {
   private readonly ctrl = new AbortController()
   private readonly vars = new Map<string, Value>()
   private readonly recent: number[] = []
+  private readonly gates = new Map<string, number>()
+  private readonly storage: AddonStorage
   private lastNotice = -Infinity
   private lastCopy = -Infinity
   private steps = 0
@@ -102,9 +153,12 @@ export class AddonRunner {
       prompts: Record<string, string>
       actions: AddonActions
       clock: Clock
+      storage?: AddonStorage
       onError(msg: string): void
     }
-  ) {}
+  ) {
+    this.storage = opts.storage ?? memoryStorage()
+  }
 
   get running(): number {
     return this._running
@@ -138,18 +192,27 @@ export class AddonRunner {
         return String(field(b, 'KEY')).toUpperCase() === e.key.toUpperCase()
       case 'interval':
         return toNum(field(b, 'MINUTES') as Value) === e.minutes
+      case 'signal':
+        return String(field(b, 'NAME')) === e.name
       default:
         return true
     }
   }
 
-  emit(e: AddonEvent): void {
-    if (this.stopped) return
+  /** Startet alle passenden Abläufe; liefert ihre Promises (für „Signal senden und warten“). */
+  private launch(e: AddonEvent): Promise<void>[] {
+    if (this.stopped) return []
+    const out: Promise<void>[] = []
     for (const hat of this.hats) {
       if (!this.matches(hat, e)) continue
-      if (this._running >= LIMITS.maxScripts) return
-      void this.runScript(input(hat, 'DO'))
+      if (this._running >= LIMITS.maxScripts) break
+      out.push(this.runScript(input(hat, 'DO'), { event: e }))
     }
+    return out
+  }
+
+  emit(e: AddonEvent): void {
+    void this.launch(e)
   }
 
   stop(): void {
@@ -157,12 +220,13 @@ export class AddonRunner {
     this.ctrl.abort()
   }
 
-  private async runScript(body: BlocklyBlock | undefined): Promise<void> {
+  private async runScript(body: BlocklyBlock | undefined, ctx: Ctx): Promise<void> {
     this._running++
     try {
-      await this.execStack(body)
+      await this.storage.ready
+      await this.execStack(body, ctx)
     } catch (e) {
-      if (!(e instanceof Aborted) && !this.ctrl.signal.aborted) this.opts.onError(e instanceof Error ? e.message : String(e))
+      if (!(e instanceof Aborted) && !(e instanceof GateClosed) && !this.ctrl.signal.aborted) this.opts.onError(e instanceof Error ? e.message : String(e))
     } finally {
       this._running--
     }
@@ -174,6 +238,16 @@ export class AddonRunner {
     } catch {
       throw new Aborted()
     }
+  }
+
+  /** Wartet auf ein Promise, bricht aber beim Stoppen des Addons sofort ab. */
+  private abortable<T>(p: Promise<T>): Promise<T> {
+    const signal = this.ctrl.signal
+    if (signal.aborted) return Promise.reject(new Aborted())
+    return new Promise<T>((res, rej) => {
+      signal.addEventListener('abort', () => rej(new Aborted()))
+      p.then(res, rej)
+    })
   }
 
   /** Gleitendes Fenster: höchstens LIMITS.actionsPerSecond Aktionen in jeder Sekunde. */
@@ -189,17 +263,25 @@ export class AddonRunner {
     }
   }
 
-  private async execStack(start: BlocklyBlock | undefined): Promise<void> {
+  private async execStack(start: BlocklyBlock | undefined, ctx: Ctx): Promise<void> {
     for (let b = start; b; b = b.next?.block) {
       if (this.ctrl.signal.aborted) throw new Aborted()
       // Alle paar hundert Schritte die Kontrolle an die App zurückgeben, damit nichts einfriert
       if (++this.steps % LIMITS.yieldEvery === 0) await this.sleep(0)
-      await this.exec(b)
+      await this.exec(b, ctx)
     }
   }
 
-  private async exec(b: BlocklyBlock): Promise<void> {
+  private fadeChannel(ch: string): { get(): number; set(v: number): void } {
     const a = this.opts.actions
+    if (ch === 'music') return { get: () => a.getVolume('music'), set: (v) => a.setVolume('music', v) }
+    if (ch === 'rain_volume') return { get: () => a.getVolume('rain'), set: (v) => a.setVolume('rain', v) }
+    return { get: () => a.getRain(), set: (v) => a.setRain(v) }
+  }
+
+  private async exec(b: BlocklyBlock, ctx: Ctx): Promise<void> {
+    const a = this.opts.actions
+    const val = (k: string): Promise<Value> => this.eval(input(b, k), ctx)
     const act = async (fn: () => void): Promise<void> => {
       await this.throttle()
       fn()
@@ -208,15 +290,15 @@ export class AddonRunner {
       case 'vd_set_scene':
         return act(() => a.setScene(String(field(b, 'SCENE'))))
       case 'vd_set_rain': {
-        const v = clamp(toNum(await this.eval(input(b, 'VALUE'))), 0, 100)
+        const v = clamp(toNum(await val('VALUE')), 0, 100)
         return act(() => a.setRain(v))
       }
       case 'vd_change_rain': {
-        const d = toNum(await this.eval(input(b, 'DELTA')))
+        const d = toNum(await val('DELTA'))
         return act(() => a.setRain(clamp(a.getRain() + d, 0, 100)))
       }
       case 'vd_set_volume': {
-        const v = clamp(toNum(await this.eval(input(b, 'VALUE'))), 0, 100)
+        const v = clamp(toNum(await val('VALUE')), 0, 100)
         const ch = field(b, 'CHANNEL') === 'rain' ? 'rain' : 'music'
         return act(() => a.setVolume(ch, v))
       }
@@ -225,7 +307,7 @@ export class AddonRunner {
       case 'vd_play_sound':
         return act(() => a.playSound(String(field(b, 'SOUND'))))
       case 'vd_show_notice': {
-        const text = String(await this.eval(input(b, 'TEXT'))).slice(0, LIMITS.noticeLen)
+        const text = str(await val('TEXT')).slice(0, LIMITS.noticeLen)
         const now = this.opts.clock.now()
         if (now - this.lastNotice < LIMITS.noticeEveryMs) return
         this.lastNotice = now
@@ -234,7 +316,7 @@ export class AddonRunner {
       case 'vd_focus':
         return act(() => a.focus(field(b, 'CMD') === 'stop' ? 'stop' : 'start'))
       case 'vd_copy_text': {
-        const text = String(await this.eval(input(b, 'TEXT')))
+        const text = str(await val('TEXT'))
         // Zwischenablage nur selten überschreiben – sonst könnte ein Addon Kopiertes heimlich austauschen
         const now = this.opts.clock.now()
         if (now - this.lastCopy < LIMITS.clipboardEveryMs) return
@@ -242,31 +324,107 @@ export class AddonRunner {
         return act(() => a.copyText(text))
       }
       case 'vd_wait':
-        return this.sleep(clamp(toNum(await this.eval(input(b, 'SECONDS'))), 0, LIMITS.maxWaitSec) * 1000)
+        return this.sleep(clamp(toNum(await val('SECONDS')), 0, LIMITS.maxWaitSec) * 1000)
       case 'vd_forever':
         for (;;) {
           const started = this.opts.clock.now()
-          await this.execStack(input(b, 'DO'))
+          await this.execStack(input(b, 'DO'), ctx)
           await this.sleep(Math.max(0, LIMITS.foreverMinMs - (this.opts.clock.now() - started)))
         }
       case 'controls_repeat_ext': {
-        const n = clamp(Math.floor(toNum(await this.eval(input(b, 'TIMES')))), 0, LIMITS.maxRepeat)
-        for (let i = 0; i < n; i++) {
-          await this.execStack(input(b, 'DO'))
-        }
+        const n = clamp(Math.floor(toNum(await val('TIMES'))), 0, LIMITS.maxRepeat)
+        for (let i = 0; i < n; i++) await this.execStack(input(b, 'DO'), ctx)
         return
       }
       case 'controls_if': {
         for (const i of numberedInputs(b, 'IF')) {
-          if (isTrue(await this.eval(input(b, `IF${i}`)))) return this.execStack(input(b, `DO${i}`))
+          if (isTrue(await val(`IF${i}`))) return this.execStack(input(b, `DO${i}`), ctx)
         }
-        return this.execStack(input(b, 'ELSE'))
+        return this.execStack(input(b, 'ELSE'), ctx)
       }
       case 'variables_set':
-        this.vars.set(varId(b), await this.eval(input(b, 'VALUE')))
+        this.vars.set(varId(b), await val('VALUE'))
         return
       case 'math_change':
-        this.vars.set(varId(b), toNum(this.vars.get(varId(b)) ?? 0) + toNum(await this.eval(input(b, 'DELTA'))))
+        this.vars.set(varId(b), toNum(this.vars.get(varId(b)) ?? 0) + toNum(await val('DELTA')))
+        return
+
+      // ---------- Standard-Erweiterungen ----------
+      case 'vd_switch': {
+        const v = await val('VALUE')
+        for (const i of numbered(Object.keys(b.fields ?? {}), 'V')) {
+          if (same(v, String(field(b, `V${i}`) ?? ''))) return this.execStack(input(b, `CASE${i}`), ctx)
+        }
+        return this.execStack(input(b, 'DEFAULT'), ctx)
+      }
+      case 'vd_store_set': {
+        const v = await val('VALUE')
+        return act(() => this.storage.set(String(field(b, 'KEY')), toStored(v)))
+      }
+      case 'vd_fade': {
+        const ch = this.fadeChannel(String(field(b, 'CHANNEL')))
+        const to = clamp(toNum(await val('VALUE')), 0, 100)
+        const secs = clamp(toNum(await val('SECONDS')), 0, LIMITS.maxWaitSec)
+        await this.throttle()
+        const from = ch.get()
+        const steps = clamp(Math.round(secs * LIMITS.fadeStepsPerSec), 1, 400)
+        for (let i = 1; i <= steps; i++) {
+          if (this.ctrl.signal.aborted) throw new Aborted()
+          ch.set(Math.round((from + ((to - from) * i) / steps) * 10) / 10)
+          if (i < steps) await this.sleep((secs * 1000) / steps)
+        }
+        return
+      }
+      case 'vd_ask': {
+        const text = str(await val('TEXT')).slice(0, LIMITS.noticeLen)
+        const now = this.opts.clock.now()
+        if (now - this.lastNotice < LIMITS.noticeEveryMs) return
+        this.lastNotice = now
+        await this.throttle()
+        const yes = String(field(b, 'YES_LABEL') ?? 'Ja').slice(0, 24) || 'Ja'
+        const no = String(field(b, 'NO_LABEL') ?? 'Nein').slice(0, 24) || 'Nein'
+        const ok = await this.abortable(a.ask(text, yes, no))
+        return this.execStack(input(b, ok ? 'DO_YES' : 'DO_NO'), ctx)
+      }
+
+      // ---------- Erweitert ----------
+      case 'vd_emit': {
+        await this.throttle()
+        const runs = this.launch({ type: 'signal', name: String(field(b, 'NAME')) })
+        if (isTrue(field(b, 'WAIT'))) await this.abortable(Promise.all(runs))
+        return
+      }
+      case 'vd_parallel':
+        await Promise.all([this.execStack(input(b, 'A'), ctx), this.execStack(input(b, 'B'), ctx)])
+        return
+      case 'vd_wait_until': {
+        const limit = clamp(toNum(await val('TIMEOUT')), 0, LIMITS.maxWaitSec) * 1000
+        const start = this.opts.clock.now()
+        for (;;) {
+          if (isTrue(await val('COND'))) return
+          if (this.opts.clock.now() - start >= limit) return
+          await this.sleep(Math.min(LIMITS.pollMs, Math.max(0, limit - (this.opts.clock.now() - start))))
+        }
+      }
+      case 'vd_gate': {
+        const key = b.id ?? JSON.stringify(b.inputs ?? {})
+        const gap = clamp(toNum(await val('SECONDS')), 0, 86_400) * 1000
+        const now = this.opts.clock.now()
+        const last = this.gates.get(key)
+        if (last !== undefined && now - last < gap) throw new GateClosed()
+        this.gates.set(key, now)
+        return
+      }
+      case 'vd_list_add': {
+        const v = await val('VALUE')
+        const cur = this.vars.get(varId(b))
+        const list = Array.isArray(cur) ? [...cur] : []
+        if (list.length < LIMITS.listLen) list.push(Array.isArray(v) ? str(v) : v)
+        this.vars.set(varId(b), list)
+        return
+      }
+      case 'vd_list_clear':
+        this.vars.set(varId(b), [])
         return
       default:
         // Werte-Blöcke als Anweisung oder unbekannte Typen: nichts tun
@@ -274,8 +432,9 @@ export class AddonRunner {
     }
   }
 
-  private async eval(b: BlocklyBlock | undefined): Promise<Value> {
+  private async eval(b: BlocklyBlock | undefined, ctx: Ctx): Promise<Value> {
     if (!b) return 0
+    const val = (k: string): Promise<Value> => this.eval(input(b, k), ctx)
     switch (b.type) {
       case 'math_number':
         return toNum(field(b, 'NUM') as Value)
@@ -284,17 +443,16 @@ export class AddonRunner {
       case 'logic_boolean':
         return isTrue(field(b, 'BOOL'))
       case 'logic_negate':
-        return !isTrue(await this.eval(input(b, 'BOOL')))
+        return !isTrue(await val('BOOL'))
       case 'logic_operation': {
-        const x = isTrue(await this.eval(input(b, 'A')))
-        if (field(b, 'OP') === 'AND') return x && isTrue(await this.eval(input(b, 'B')))
-        return x || isTrue(await this.eval(input(b, 'B')))
+        const x = isTrue(await val('A'))
+        if (field(b, 'OP') === 'AND') return x && isTrue(await val('B'))
+        return x || isTrue(await val('B'))
       }
       case 'logic_compare': {
-        const x = await this.eval(input(b, 'A'))
-        const y = await this.eval(input(b, 'B'))
-        const numeric = typeof x !== 'string' || typeof y !== 'string' ? [toNum(x), toNum(y)] : [x, y]
-        const [p, q] = numeric
+        const x = await val('A')
+        const y = await val('B')
+        const [p, q] = typeof x === 'string' && typeof y === 'string' ? [x, y] : [toNum(x), toNum(y)]
         switch (field(b, 'OP')) {
           case 'EQ':
             return p === q
@@ -312,14 +470,14 @@ export class AddonRunner {
         return false
       }
       case 'math_arithmetic': {
-        const x = toNum(await this.eval(input(b, 'A')))
-        const y = toNum(await this.eval(input(b, 'B')))
+        const x = toNum(await val('A'))
+        const y = toNum(await val('B'))
         const r = { ADD: x + y, MINUS: x - y, MULTIPLY: x * y, DIVIDE: y === 0 ? 0 : x / y, POWER: x ** y }[String(field(b, 'OP'))] ?? 0
-        return Number.isFinite(r) ? r : 0
+        return finite(r)
       }
       case 'math_random_int': {
-        const lo = Math.ceil(toNum(await this.eval(input(b, 'FROM'))))
-        const hi = Math.floor(toNum(await this.eval(input(b, 'TO'))))
+        const lo = Math.ceil(toNum(await val('FROM')))
+        const hi = Math.floor(toNum(await val('TO')))
         const [min, max] = lo <= hi ? [lo, hi] : [hi, lo]
         return min + Math.floor(Math.random() * (max - min + 1))
       }
@@ -327,18 +485,101 @@ export class AddonRunner {
         let s = ''
         for (const i of numberedInputs(b, 'ADD')) {
           if (s.length >= LIMITS.textLen) break
-          s += String(await this.eval(input(b, `ADD${i}`))).slice(0, LIMITS.textLen)
+          s += str(await val(`ADD${i}`))
         }
         return s.slice(0, LIMITS.textLen)
       }
       case 'variables_get':
         return this.vars.get(varId(b)) ?? 0
-      case 'vd_get':
-        return this.opts.actions.query(String(field(b, 'WHAT')))
+      case 'vd_get': {
+        const what = String(field(b, 'WHAT'))
+        if (what === 'event_project') {
+          const e = ctx.event
+          return e.type === 'session_waiting' || e.type === 'session_done' ? (e.project ?? '') : ''
+        }
+        return this.opts.actions.query(what)
+      }
       case 'vd_prompt_text':
         return this.opts.prompts[String(field(b, 'NAME'))] ?? ''
+      case 'vd_store_get':
+        return this.storage.get(String(field(b, 'KEY'))) ?? 0
+      case 'vd_list_get': {
+        const cur = this.vars.get(varId(b))
+        const list = Array.isArray(cur) ? cur : []
+        switch (field(b, 'OP')) {
+          case 'length':
+            return list.length
+          case 'random':
+            return list.length ? list[Math.floor(Math.random() * list.length)] : ''
+          case 'first':
+            return list[0] ?? ''
+          case 'last':
+            return list.at(-1) ?? ''
+          case 'item':
+            return list[Math.floor(toNum(await val('ARG'))) - 1] ?? ''
+          case 'contains': {
+            const x = await val('ARG')
+            return list.some((v) => same(v, x))
+          }
+          case 'join':
+            return str(list)
+        }
+        return 0
+      }
+      case 'vd_calc':
+        return this.calc(String(field(b, 'OP')), await val('A'), input(b, 'B') ? await val('B') : undefined)
       default:
         return 0
     }
+  }
+
+  private calc(op: string, a: Value, b: Value | undefined): Value {
+    const x = toNum(a)
+    const y = toNum(b)
+    switch (op) {
+      case 'add':
+        return finite(x + y)
+      case 'sub':
+        return finite(x - y)
+      case 'mul':
+        return finite(x * y)
+      case 'div':
+        return y === 0 ? 0 : finite(x / y)
+      case 'mod':
+        return y === 0 ? 0 : finite(((x % y) + y) % y)
+      case 'pow':
+        return finite(x ** y)
+      case 'min':
+        return Math.min(x, y)
+      case 'max':
+        return Math.max(x, y)
+      case 'round':
+        return Math.round(x)
+      case 'floor':
+        return Math.floor(x)
+      case 'ceil':
+        return Math.ceil(x)
+      case 'abs':
+        return Math.abs(x)
+      case 'sqrt':
+        return x < 0 ? 0 : Math.sqrt(x)
+      case 'sin':
+        return finite(Math.round(Math.sin(x * deg) * 1e6) / 1e6)
+      case 'cos':
+        return finite(Math.round(Math.cos(x * deg) * 1e6) / 1e6)
+      case 'join':
+        return (str(a) + str(b)).slice(0, LIMITS.textLen)
+      case 'upper':
+        return str(a).toUpperCase()
+      case 'lower':
+        return str(a).toLowerCase()
+      case 'length':
+        return Array.isArray(a) ? a.length : str(a).length
+      case 'contains':
+        return str(a).toLowerCase().includes(str(b).toLowerCase())
+      case 'trim':
+        return str(a).trim()
+    }
+    return 0
   }
 }

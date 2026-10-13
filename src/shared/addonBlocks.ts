@@ -1,7 +1,7 @@
 // Baustein-Katalog für Addons: die einzige Wahrheit darüber, welche Blöcke es gibt.
 // Codec, Prüfung, Interpreter und Blockly-Definitionen bauen darauf auf.
 
-export type Capability = 'scene' | 'rain' | 'audio' | 'sound' | 'notice' | 'focus' | 'clipboard' | 'hotkey' | 'schedule'
+export type Capability = 'scene' | 'rain' | 'audio' | 'sound' | 'notice' | 'focus' | 'clipboard' | 'hotkey' | 'schedule' | 'storage'
 
 export const CAPABILITY_LABELS: Record<Capability, string> = {
   scene: 'wechselt die Szene',
@@ -12,7 +12,8 @@ export const CAPABILITY_LABELS: Record<Capability, string> = {
   focus: 'steuert den Fokus-Timer',
   clipboard: 'kopiert Text in die Zwischenablage',
   hotkey: 'reagiert auf Tastenkürzel',
-  schedule: 'läuft zeitgesteuert'
+  schedule: 'läuft zeitgesteuert',
+  storage: 'merkt sich Werte dauerhaft'
 }
 
 export type FieldSpec =
@@ -27,13 +28,17 @@ export type FieldSpec =
 export interface BlockSpec {
   type: string
   category: 'event' | 'action' | 'logic' | 'value'
+  /** Feldnamen mit „*“ am Ende stehen für nummerierte Felder (V0, V1, …) */
   fields: Record<string, FieldSpec>
   /** Werte-Eingaben */
   inputs: string[]
   /** Anweisungs-Eingaben (Blockstapel) */
   statements: string[]
-  capability?: Capability
+  capability?: Capability | Capability[]
 }
+
+/** Höchstzahl nummerierter Felder/Eingaben (V0…V19, CASE0…CASE19, IF0…, ADD0…) */
+export const MAX_NUMBERED = 20
 
 export interface BlocklyBlock {
   type: string
@@ -56,7 +61,32 @@ export const BUILTIN_SCENES = ['city', 'forest', 'tokyo']
 const KEYS = [...'ABCDFGHIJKLNOPRSTUVWXYZ1456']
 const OPS_COMPARE = ['EQ', 'NEQ', 'LT', 'LTE', 'GT', 'GTE']
 const OPS_MATH = ['ADD', 'MINUS', 'MULTIPLY', 'DIVIDE', 'POWER']
-export const QUERY_KEYS = ['scene', 'rain', 'music_volume', 'rain_volume', 'focus_phase', 'waiting_sessions', 'hour', 'minute']
+export const QUERY_KEYS = [
+  'scene',
+  'rain',
+  'music_volume',
+  'rain_volume',
+  'focus_phase',
+  'waiting_sessions',
+  'hour',
+  'minute',
+  // Sessions & Kosten
+  'sessions_running',
+  'tokens_today',
+  'cost_today',
+  'session_minutes',
+  'event_project',
+  // Zeit
+  'weekday',
+  'day',
+  'month',
+  'year',
+  'unix',
+  'uptime_minutes'
+]
+export const CALC_OPS = ['add', 'sub', 'mul', 'div', 'mod', 'pow', 'min', 'max', 'round', 'floor', 'ceil', 'abs', 'sqrt', 'sin', 'cos', 'join', 'upper', 'lower', 'length', 'contains', 'trim']
+export const LIST_OPS = ['length', 'random', 'first', 'last', 'item', 'contains', 'join']
+const NAME = { kind: 'text', maxLen: 40 } as const
 
 const list: BlockSpec[] = []
 const def = (type: string, category: BlockSpec['category'], o: Partial<Omit<BlockSpec, 'type' | 'category'>> = {}): void => {
@@ -86,6 +116,24 @@ def('vd_focus', 'action', { fields: { CMD: { kind: 'enum', options: ['start', 's
 def('vd_copy_text', 'action', { inputs: ['TEXT'], capability: 'clipboard' })
 def('vd_wait', 'action', { inputs: ['SECONDS'] })
 def('vd_forever', 'action', { statements: ['DO'] })
+
+// Standard-Erweiterungen
+def('vd_switch', 'logic', { fields: { 'V*': { kind: 'text', maxLen: 100 } }, inputs: ['VALUE'], statements: ['CASE*', 'DEFAULT'] })
+def('vd_store_set', 'action', { fields: { KEY: NAME }, inputs: ['VALUE'], capability: 'storage' })
+def('vd_fade', 'action', { fields: { CHANNEL: { kind: 'enum', options: ['rain', 'music', 'rain_volume'] } }, inputs: ['VALUE', 'SECONDS'], capability: ['rain', 'audio'] })
+def('vd_ask', 'action', { fields: { YES_LABEL: { kind: 'text', maxLen: 24 }, NO_LABEL: { kind: 'text', maxLen: 24 } }, inputs: ['TEXT'], statements: ['DO_YES', 'DO_NO'], capability: 'notice' })
+
+// Erweitert
+ev('vd_on_signal', { NAME })
+def('vd_emit', 'action', { fields: { NAME, WAIT: { kind: 'bool' } } })
+def('vd_parallel', 'logic', { statements: ['A', 'B'] })
+def('vd_wait_until', 'logic', { inputs: ['COND', 'TIMEOUT'] })
+def('vd_gate', 'logic', { inputs: ['SECONDS'] })
+def('vd_list_add', 'action', { fields: { VAR: { kind: 'variable' } }, inputs: ['VALUE'] })
+def('vd_list_clear', 'action', { fields: { VAR: { kind: 'variable' } } })
+def('vd_list_get', 'value', { fields: { VAR: { kind: 'variable' }, OP: { kind: 'enum', options: LIST_OPS } }, inputs: ['ARG'] })
+def('vd_calc', 'value', { fields: { OP: { kind: 'enum', options: CALC_OPS } }, inputs: ['A', 'B'] })
+def('vd_store_get', 'value', { fields: { KEY: NAME }, capability: 'storage' })
 
 // Werte
 def('vd_get', 'value', { fields: { WHAT: { kind: 'enum', options: QUERY_KEYS } } })
@@ -123,8 +171,8 @@ export function walkBlocks(program: BlocklyProgram, fn: (b: BlocklyBlock, depth:
 export function capabilitiesOf(program: BlocklyProgram): Capability[] {
   const caps = new Set<Capability>()
   walkBlocks(program, (b) => {
-    const c = BLOCKS[b.type]?.capability
-    if (c) caps.add(c)
+    const c = Object.hasOwn(BLOCKS, b.type) ? BLOCKS[b.type].capability : undefined
+    for (const x of Array.isArray(c) ? c : c ? [c] : []) caps.add(x)
   })
   return [...caps].sort()
 }

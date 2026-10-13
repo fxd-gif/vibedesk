@@ -1,5 +1,5 @@
 // Prüft ein entpacktes Addon vollständig, bevor irgendetwas installiert wird.
-import { BLOCKS, capabilitiesOf, walkBlocks, type BlocklyBlock, type FieldSpec } from './addonBlocks'
+import { BLOCKS, capabilitiesOf, MAX_NUMBERED, walkBlocks, type BlocklyBlock, type FieldSpec } from './addonBlocks'
 import { LIMITS, type AddonPackage } from './addonFormat'
 
 export type AssetKind = 'image' | 'sound'
@@ -34,9 +34,18 @@ function checkText(label: string, v: unknown, min: number, max: number): void {
   if (typeof v !== 'string' || v.length < min || v.length > max) fail(`${label} ist ungültig (${min}–${max} Zeichen).`)
 }
 
-function inputAllowed(name: string, allowed: string[]): boolean {
-  return allowed.some((a) => (a.endsWith('*') ? new RegExp(`^${a.slice(0, -1)}\\d+$`).test(name) : a === name))
+/** Exakter Name oder nummerierte Variante (IF0, CASE3, V12 …) mit Index unter MAX_NUMBERED. */
+function matchName(name: string, allowed: string[]): string | null {
+  for (const a of allowed) {
+    if (a === name) return a
+    if (a.endsWith('*')) {
+      const m = new RegExp(`^${a.slice(0, -1)}(\\d{1,2})$`).exec(name)
+      if (m && Number(m[1]) < MAX_NUMBERED) return a
+    }
+  }
+  return null
 }
+const inputAllowed = (name: string, allowed: string[]): boolean => matchName(name, allowed) !== null
 
 function checkField(b: BlocklyBlock, key: string, spec: FieldSpec, v: unknown, assetKinds: Map<string, AssetKind>, vars: Set<string>): void {
   const bad = (): never => fail(`Ungültiger Wert für ${key} in Baustein ${b.type}`)
@@ -125,7 +134,8 @@ export function validateAddon(p: AddonPackage): AddonPackage {
     if (!spec) fail(`Unbekannter Baustein: ${b.type}`)
     checkExtraState(b)
     for (const [key, v] of Object.entries(b.fields ?? {})) {
-      const f = Object.hasOwn(spec!.fields, key) ? spec!.fields[key] : undefined
+      const pattern = matchName(key, Object.keys(spec!.fields))
+      const f = pattern && Object.hasOwn(spec!.fields, pattern) ? spec!.fields[pattern] : undefined
       if (!f) fail(`Unbekanntes Feld ${key} in Baustein ${b.type}`)
       checkField(b, key, f!, v, assetKinds, vars)
     }
