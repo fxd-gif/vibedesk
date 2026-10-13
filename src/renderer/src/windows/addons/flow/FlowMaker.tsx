@@ -27,6 +27,7 @@ import { Palette, DRAG_TYPE } from './Palette'
 import { NodeInspector, type InspectorContext } from './Inspector'
 import { AddonMeta, type Meta } from './AddonMeta'
 import { FlowIcon } from './FlowIcon'
+import { TEMPLATES, templateGraph } from '../../../addons/templates'
 import './flow.css'
 
 type RFNode = Node<FlowNodeData, 'card'>
@@ -75,7 +76,7 @@ function ZoomBar({ onUndo, onRedo, canUndo, canRedo }: { onUndo(): void; onRedo(
   )
 }
 
-function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): React.JSX.Element {
+function Editor({ editId, templateId, onBack }: { editId: string | null; templateId: string | null; onBack(): void }): React.JSX.Element {
   const [id] = useState(() => editId ?? crypto.randomUUID())
   const [nodes, setNodes, onNodesChange] = useNodesState<RFNode>([])
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([])
@@ -84,7 +85,7 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
   const [testing, setTesting] = useState(false)
   const [status, setStatus] = useState<{ kind: 'saved' | 'dirty' | 'saving' | 'error'; text: string }>({ kind: 'saved', text: 'Gespeichert' })
   const [dirty, setDirty] = useState(0)
-  const { screenToFlowPosition, fitView } = useReactFlow()
+  const { screenToFlowPosition } = useReactFlow()
   const canvas = useRef<HTMLDivElement>(null)
 
   const latest = useRef({ nodes, edges, meta })
@@ -136,6 +137,12 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
         if (cancelled) return
         setMeta({ name: m.name, author: m.author, description: m.description, version: m.version, prompts: Object.entries(m.prompts ?? {}).map(([n, t], i) => ({ key: i, name: n, text: t })), assets })
         graph = programToGraph(existing.program)
+      } else if (templateId) {
+        const t = TEMPLATES.find((x) => x.id === templateId)
+        if (t) {
+          graph = templateGraph(t)
+          setMeta((m) => ({ ...m, name: t.name, description: t.description, prompts: Object.entries(t.prompts ?? {}).map(([n, text], i) => ({ key: i, name: n, text })) }))
+        }
       }
       const ns = graph.nodes.map(toRF)
       const es = graph.edges.map((e) => edgeOf(e.source, e.sourceHandle, e.target))
@@ -144,13 +151,12 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
       hist.current = { past: [], future: [], base: { nodes: ns, edges: es } }
       setLoaded(true)
       setStatus(existing ? { kind: 'saved', text: 'Gespeichert' } : { kind: 'dirty', text: 'Noch nicht gespeichert' })
-      requestAnimationFrame(() => void fitView({ padding: 0.3, maxZoom: 1 }))
     })()
     return () => {
       cancelled = true
       setTestRunner(null)
     }
-  }, [editId, setNodes, setEdges, fitView])
+  }, [editId, templateId, setNodes, setEdges])
 
   // ---------- Kontext für das Einstellungs-Panel ----------
   const ctx: InspectorContext = useMemo(() => {
@@ -442,7 +448,9 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
               onEdgesDelete={() => commit()}
               deleteKeyCode={['Delete', 'Backspace']}
               colorMode="dark"
-              minZoom={0.3}
+              fitView
+              fitViewOptions={{ padding: 0.15, maxZoom: 1 }}
+              minZoom={0.2}
               maxZoom={1.8}
               snapToGrid
               snapGrid={[10, 10]}
@@ -475,10 +483,10 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
   )
 }
 
-export function FlowMaker({ editId, onBack }: { editId: string | null; onBack(): void }): React.JSX.Element {
+export function FlowMaker({ editId, templateId = null, onBack }: { editId: string | null; templateId?: string | null; onBack(): void }): React.JSX.Element {
   return (
     <ReactFlowProvider>
-      <Editor editId={editId} onBack={onBack} />
+      <Editor editId={editId} templateId={templateId} onBack={onBack} />
     </ReactFlowProvider>
   )
 }

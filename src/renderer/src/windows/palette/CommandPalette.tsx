@@ -60,7 +60,7 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     win('discord'),
     win('addons', 'Eigene Addons bauen, importieren, exportieren'),
     { id: 'act:addonImport', label: 'Addon importieren…', group: 'Aktionen', icon: 'puzzle', run: () => void pickAndInstall() },
-    { id: 'act:addonMaker', label: 'Neues Addon bauen', group: 'Aktionen', icon: 'puzzle', run: () => (useAddonUi.getState().edit(null), openPanel('addons')) },
+    { id: 'act:addonMaker', label: 'Neues Addon bauen', group: 'Aktionen', icon: 'puzzle', run: () => (useAddonUi.getState().newAddon(), openPanel('addons')) },
     ...projects
       .filter((p) => !p.missing)
       .map((p): Cmd => ({ id: 'proj:' + p.id, label: `Session starten: ${p.name}`, group: 'Projekte', icon: 'play', hint: p.path, run: () => void useSessions.getState().start(p.id) })),

@@ -9,6 +9,7 @@ import { pickAndInstall } from './InstallDialog'
 export function ManagerView(): React.JSX.Element {
   const { list, errors, setEnabled, remove } = useAddons()
   const edit = useAddonUi((s) => s.edit)
+  const newAddon = useAddonUi((s) => s.newAddon)
 
   const exportOne = async (id: string): Promise<void> => {
     try {
@@ -31,7 +32,7 @@ export function ManagerView(): React.JSX.Element {
           <button className="btn small" onClick={() => void pickAndInstall()} data-testid="addon-import">
             <Icon name="plus" size={13} /> Importieren…
           </button>
-          <button className="btn small primary" onClick={() => edit(null)} data-testid="addon-new">
+          <button className="btn small primary" onClick={newAddon} data-testid="addon-new">
             <Icon name="puzzle" size={13} /> Neues Addon
           </button>
         </div>
@@ -40,7 +41,7 @@ export function ManagerView(): React.JSX.Element {
         <div className="addon-empty">
           <Icon name="puzzle" size={32} />
           <p className="dim">Noch keine Addons. Bau dein erstes im Maker oder importiere eine .vibeaddon-Datei.</p>
-          <button className="btn primary" onClick={() => edit(null)}>
+          <button className="btn primary" onClick={newAddon}>
             Erstes Addon bauen
           </button>
         </div>

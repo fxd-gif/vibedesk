@@ -41,7 +41,9 @@ VibeDesk ist eine Vollbild-Arbeitsumgebung für Windows, gebaut für das Arbeite
 
 **Addons**
 - **Addon-Maker** als Flowchart-Editor – Bausteine ziehen und verbinden, ohne eine Zeile Code: „Wenn eine Session auf mich wartet → wechsle nach Tokio und spiel einen Gong“
-- Auslöser, Aktionen, Wenn/Sonst, Schleifen und Variablen; eigene Szenenbilder, Töne und Prompt-Vorlagen im Addon
+- Auslöser, Aktionen, Wenn/Sonst mit Und/Oder, Je nach Wert, Schleifen, Fragen mit Knöpfen, Überblenden und dauerhaft gemerkte Werte; eigene Szenenbilder, Töne und Prompt-Vorlagen im Addon
+- **Erweitert:** Signale (auch als Unterprogramme), parallele Zweige, Warten bis, Drossel, Listen und verschachtelte Berechnungen
+- **8 Vorlagen** zum Start – vom Pomodoro mit Statistik bis zum Kosten-Wächter
 - Teilen als **`.vibeaddon`**-Datei: exportieren, verschicken, per Doppelklick installieren
 - Sicher by Design: Addons sehen nur ihre Bausteine – keine Dateien, keine Befehle, kein Internet. Vor dem Installieren zeigt VibeDesk, was ein Addon tut
 
