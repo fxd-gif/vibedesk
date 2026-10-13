@@ -3,6 +3,9 @@ import { Icon } from '../desktop/icons'
 import { collectVars, useDiscord } from '../store/discordStore'
 import { useSettings } from '../store/settingsStore'
 import { DEFAULT_CLIENT_ID, PLACEHOLDERS, PRESENCE_PRESETS, renderPresence, type PresenceConfig } from '../../../shared/presence'
+import { isWebhookUrl, testEmbed, type WebhookSettings } from '../../../shared/webhook'
+import { api } from '../api'
+import { sendRecap } from '../store/webhookStore'
 
 function useTick(ms = 1000): number {
   const [now, setNow] = useState(Date.now())
@@ -59,7 +62,12 @@ function Preview({ cfg }: { cfg: PresenceConfig }): React.JSX.Element {
             <div className="dc-texts">
               <b>{app?.name ?? 'VibeDesk'}</b>
               {a.details && <span>{a.details}</span>}
-              {a.state && <span>{a.state}</span>}
+              {a.state && (
+                <span>
+                  {a.state}
+                  {a.party && ` (${a.party.size[0]} von ${a.party.size[1]})`}
+                </span>
+              )}
               {time && <span className="dc-time">{time}</span>}
             </div>
           </div>
@@ -94,6 +102,99 @@ function Chips<T extends string>({ value, options, onChange }: { value: T; optio
         </button>
       ))}
     </div>
+  )
+}
+
+function Toggle({ label, on, onChange, disabled, testid }: { label: string; on: boolean; onChange(v: boolean): void; disabled?: boolean; testid?: string }): React.JSX.Element {
+  return (
+    <div className={`row between${disabled ? ' dim' : ''}`}>
+      <span>{label}</span>
+      <button className={`toggle${on ? ' on' : ''}`} role="switch" aria-checked={on} disabled={disabled} onClick={() => onChange(!on)} data-testid={testid}>
+        <i />
+      </button>
+    </div>
+  )
+}
+
+// ---------- Webhook ----------
+
+function WebhookSection(): React.JSX.Element | null {
+  const s = useSettings((x) => x.s)
+  const setSettings = useSettings((x) => x.set)
+  const [draft, setDraft] = useState(s?.discordHook.url ?? '')
+  const [show, setShow] = useState(false)
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [busy, setBusy] = useState(false)
+  if (!s) return null
+  const hook = s.discordHook
+  const set = (patch: Partial<WebhookSettings>): void => setSettings({ discordHook: { ...hook, ...patch } })
+  const valid = isWebhookUrl(draft)
+  const commit = (): void => {
+    const url = draft.trim()
+    if (url === hook.url) return
+    if (url && !isWebhookUrl(url)) return setMsg({ ok: false, text: 'Das ist keine Discord-Webhook-URL (https://discord.com/api/webhooks/…).' })
+    set({ url })
+    setMsg(null)
+  }
+  const run = async (fn: () => Promise<{ ok: boolean; error?: string }>, okText: string): Promise<void> => {
+    commit()
+    setBusy(true)
+    const r = await fn().catch(() => ({ ok: false, error: 'Senden fehlgeschlagen.' }))
+    setBusy(false)
+    setMsg(r.ok ? { ok: true, text: okText } : { ok: false, text: r.error ?? 'Senden fehlgeschlagen.' })
+  }
+  // im Streamer-Modus bleibt die URL immer verdeckt – wer sie kennt, kann in deinen Kanal schreiben
+  const masked = s.streamer.enabled || !show
+
+  return (
+    <section data-testid="dc-webhook">
+      <h4>Benachrichtigungen per Webhook</h4>
+      <div className="dim tiny">Discord-Kanal → Bearbeiten → Integrationen → Webhooks → Neuer Webhook → „Webhook-URL kopieren“. Am besten ein privater Kanal nur für dich.</div>
+      <div className="row">
+        <input
+          className="field small mono"
+          style={{ flex: 1 }}
+          type={masked ? 'password' : 'text'}
+          placeholder="https://discord.com/api/webhooks/…"
+          value={draft}
+          spellCheck={false}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => e.key === 'Enter' && commit()}
+          data-testid="dc-webhook-url"
+        />
+        {!s.streamer.enabled && (
+          <button className="btn small ghost" title={show ? 'Verbergen' : 'Anzeigen'} onClick={() => setShow(!show)}>
+            <Icon name={show ? 'eyeoff' : 'eye'} size={13} />
+          </button>
+        )}
+      </div>
+      <Toggle label="Melden, wenn eine Session auf dich wartet" on={hook.onWaiting} onChange={(v) => set({ onWaiting: v })} testid="dc-hook-waiting" />
+      <Toggle label="… nur wenn ich nicht am Rechner bin" on={hook.onlyAway} disabled={!hook.onWaiting} onChange={(v) => set({ onlyAway: v })} />
+      <Toggle label="Tagesrückblick senden" on={hook.recap} onChange={(v) => set({ recap: v })} testid="dc-hook-recap" />
+      {hook.recap && (
+        <label className="dc-field">
+          <span>ab</span>
+          <select className="field small" value={hook.recapHour} onChange={(e) => set({ recapHour: Number(e.target.value), lastRecap: '' })}>
+            {Array.from({ length: 24 }, (_, h) => (
+              <option key={h} value={h}>
+                {String(h).padStart(2, '0')}:00 Uhr
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      <div className="row">
+        <button className="btn small ghost" disabled={!valid || busy} onClick={() => void run(() => api.discord.webhook('test', testEmbed()), 'Gesendet – schau in deinen Kanal.')}>
+          Testnachricht
+        </button>
+        <button className="btn small ghost" disabled={!valid || busy} onClick={() => void run(() => sendRecap(true), 'Rückblick gesendet.')}>
+          Rückblick jetzt senden
+        </button>
+      </div>
+      {msg && <div className={`tiny ${msg.ok ? 'ok' : 'warn'}`}>{msg.text}</div>}
+      <div className="dim tiny">Gemeldet wird erst nach 20 Sekunden Warten und höchstens alle 5 Minuten pro Session. Im Privat- und Streamer-Modus ohne Projektnamen.</div>
+    </section>
   )
 }
 
@@ -201,6 +302,7 @@ export function DiscordWindow(): React.JSX.Element | null {
           {textField('largeText', 'Tooltip groß')}
           <Field label="Kleines Bild" value={cfg.smallImage} placeholder="Asset-Name oder https://…" onChange={(v) => set({ smallImage: v })} />
           {textField('smallText', 'Tooltip klein')}
+          <Toggle label="Status als kleines Bild (arbeitet, wartet, Fokus …)" on={cfg.statusIcons} disabled={!!cfg.smallImage.trim()} onChange={(v) => set({ statusIcons: v })} testid="dc-status-icons" />
           {app && app.assets.length > 0 ? (
             <div className="dc-assets">
               {app.assets.map((a) => (
@@ -268,13 +370,11 @@ export function DiscordWindow(): React.JSX.Element | null {
             ]}
             onChange={(v) => set({ statusDisplay: v })}
           />
-          <div className="row between">
-            <span>Projektnamen verbergen</span>
-            <button className={`toggle${cfg.privacy ? ' on' : ''}`} role="switch" aria-checked={cfg.privacy} onClick={() => set({ privacy: !cfg.privacy })}>
-              <i />
-            </button>
-          </div>
+          <Toggle label="Projektnamen verbergen" on={cfg.privacy} onChange={(v) => set({ privacy: v })} />
+          <Toggle label="Lounge-Größe zeigen („2 von 16“)" on={cfg.showParty} onChange={(v) => set({ showParty: v })} testid="dc-party" />
         </section>
+
+        <WebhookSection />
       </div>
       <div className="dc-side">
         <div className="dim small" style={{ marginBottom: 8 }}>

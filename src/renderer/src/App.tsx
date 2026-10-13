@@ -28,6 +28,7 @@ import { phaseTotal, remaining } from './store/focusTimer'
 import { Ring, toneOf } from './windows/FocusPanel'
 import { Icon } from './desktop/icons'
 import { wireDiscord } from './store/discordStore'
+import { wireWebhook } from './store/webhookStore'
 import { wireUpdate } from './store/updateStore'
 import { UpdateToast } from './desktop/UpdateToast'
 import { Onboarding } from './windows/Onboarding'
@@ -120,6 +121,7 @@ export default function App(): React.JSX.Element {
     wirePreview()
     wireFocus()
     wireDiscord()
+    wireWebhook()
     wireUpdate()
     wireEditor()
     wirePalette()

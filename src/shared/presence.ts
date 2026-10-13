@@ -22,7 +22,14 @@ export interface PresenceConfig {
   privacy: boolean
   /** was Discord in der Mitgliederliste neben dem Namen zeigt */
   statusDisplay: 'name' | 'state' | 'details'
+  /** kleines Bild zeigt den Status (arbeitet, wartet, Fokus …), solange kein eigenes gesetzt ist */
+  statusIcons: boolean
+  /** Lounge-Größe als Party anzeigen („3 von 16“) */
+  showParty: boolean
 }
+
+/** Was das Status-Icon zeigt – Fokus-Phasen haben Vorrang vor dem Session-Status. */
+export type StatusIconKey = 'working' | 'waiting' | 'done' | 'error' | 'idle' | 'focus' | 'break'
 
 export interface PresenceVars {
   project: string
@@ -39,6 +46,9 @@ export interface PresenceVars {
   appStart: number
   sessionStart: number | null
   focusEnd: number | null
+  statusKey: StatusIconKey | ''
+  /** Vibe-Lounge, falls beigetreten – id ist ein Hash, nie der Raumcode selbst */
+  lounge: { id: string; size: number; max: number } | null
 }
 
 export interface Activity {
@@ -47,12 +57,23 @@ export interface Activity {
   timestamps?: { start?: number; end?: number }
   assets?: { large_image?: string; large_text?: string; small_image?: string; small_text?: string }
   buttons?: PresenceButton[]
+  party?: { id: string; size: [number, number] }
   status_display_type?: 0 | 1 | 2
 }
 
 export const DEFAULT_CLIENT_ID = '1322704722276257822'
 /** Öffentlich gehostetes App-Icon – Fallback, wenn kein eigenes großes Bild gesetzt ist */
 export const DEFAULT_LARGE_IMAGE = 'https://raw.githubusercontent.com/fxd-gif/vibedesk/main/resources/icon.png'
+export const statusIconUrl = (key: StatusIconKey): string => `https://raw.githubusercontent.com/fxd-gif/vibedesk/main/resources/presence/${key}.png`
+export const STATUS_ICON_TEXT: Record<StatusIconKey, string> = {
+  working: 'arbeitet',
+  waiting: 'wartet auf Eingabe',
+  done: 'fertig',
+  error: 'Fehler',
+  idle: 'bereit',
+  focus: 'Fokus-Runde',
+  break: 'Pause'
+}
 
 export const DEFAULT_PRESENCE: PresenceConfig = {
   enabled: false,
@@ -68,7 +89,9 @@ export const DEFAULT_PRESENCE: PresenceConfig = {
   buttons: [],
   timestamp: 'app',
   privacy: false,
-  statusDisplay: 'name'
+  statusDisplay: 'name',
+  statusIcons: true,
+  showParty: true
 }
 
 export const PRESENCE_PRESETS: { id: string; label: string; patch: Partial<PresenceConfig> }[] = [
@@ -128,8 +151,10 @@ export function renderPresence(cfg: PresenceConfig, vars: PresenceVars): Activit
   if (large.toLowerCase() !== 'none') assets.large_image = large || DEFAULT_LARGE_IMAGE
   const lt = fit(fillTemplate(cfg.largeText, v))
   if (lt) assets.large_text = lt
+  const iconKey = cfg.statusIcons && !cfg.smallImage.trim() ? vars.statusKey : ''
   if (cfg.smallImage.trim()) assets.small_image = cfg.smallImage.trim()
-  const st = fit(fillTemplate(cfg.smallText, v))
+  else if (iconKey) assets.small_image = statusIconUrl(iconKey)
+  const st = fit(fillTemplate(cfg.smallText, v)) ?? (iconKey ? fit(STATUS_ICON_TEXT[iconKey]) : undefined)
   if (st) assets.small_text = st
   if (Object.keys(assets).length) a.assets = assets
 
@@ -138,6 +163,10 @@ export function renderPresence(cfg: PresenceConfig, vars: PresenceVars): Activit
     .slice(0, 2)
     .map((b) => ({ label: b.label.trim().slice(0, 32), url: b.url.trim() }))
   if (buttons.length) a.buttons = buttons
+
+  // Party-Größe hängt Discord hinter Zeile 2 an – ohne Zeile 2 zeigt es nichts
+  const l = vars.lounge
+  if (cfg.showParty && l && l.size > 0 && a.state) a.party = { id: l.id, size: [l.size, Math.max(l.size, l.max)] }
 
   if (cfg.timestamp === 'app') a.timestamps = { start: vars.appStart }
   else if (cfg.timestamp === 'session') a.timestamps = { start: vars.sessionStart ?? vars.appStart }

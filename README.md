@@ -53,7 +53,8 @@ VibeDesk ist eine Vollbild-Arbeitsumgebung für Windows, gebaut für das Arbeite
 - Browser-Vorschau: Dev-Server werden erkannt und direkt im Glasfenster geöffnet
 - Prompt-Bibliothek und Notizen pro Projekt
 - Skills per Drag & Drop oder GitHub-Link installieren
-- Discord Rich Presence mit eigenen Texten, Bildern und Live-Vorschau
+- Discord Rich Presence mit eigenen Texten, Bildern, Status-Icons, Lounge-Größe und Live-Vorschau
+- Discord-Benachrichtigungen per Webhook: „Session wartet auf dich“ aufs Handy und ein Tagesrückblick am Abend
 
 <table>
   <tr>

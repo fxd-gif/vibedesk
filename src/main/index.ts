@@ -13,13 +13,14 @@ import { FileService, FileWatcher } from './fileService'
 import { CLAUDE_DOCS_URL, checkTools, installTool, NODE_DOWNLOAD_URL } from './toolSetup'
 import { NotesStore } from './notesStore'
 import { DiscordRpc, fetchAppInfo, type DiscordStatus } from './discord/rpc'
+import { postWebhook, shouldSend, type WebhookKind } from './discord/webhook'
 import { setupUpdater } from './updater'
 import { SkillStore } from './skillStore'
 import { localDate, StatsHistory, StatsService } from './statsService'
 import os from 'os'
 import { registerRunAlias } from './runAlias'
 import { claudeOnPath, claudeVersion } from './sessionManager'
-import { ipcMain } from 'electron'
+import { ipcMain, powerMonitor } from 'electron'
 import { randomBytes } from 'crypto'
 import * as pty from '@lydell/node-pty'
 import { HookServer } from './hookServer'
@@ -179,6 +180,13 @@ app.whenReady().then(async () => {
   ipcMain.on('discord:setActivity', (_e, a) => discord.setActivity(a))
   ipcMain.handle('discord:status', () => discordStatus)
   ipcMain.handle('discord:appInfo', (_e, clientId: string) => fetchAppInfo(clientId))
+  // „weg“ = VibeDesk nicht im Vordergrund oder 2 Minuten keine Eingabe
+  const away = (): boolean => !mainWindow?.isFocused() || powerMonitor.getSystemIdleTime() >= 120
+  ipcMain.handle('discord:webhook', async (_e, kind: WebhookKind, body: unknown) => {
+    const hook = settings.get().discordHook
+    if (!shouldSend(kind, hook, away)) return { ok: false, skipped: true }
+    return postWebhook(hook.url, body)
+  })
   const dc = settings.get().discord
   discord.configure(dc.enabled, dc.clientId)
   app.on('before-quit', () => discord.shutdown())

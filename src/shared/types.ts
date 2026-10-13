@@ -34,6 +34,7 @@ import type { Activity, PresenceConfig } from './presence'
 import type { AddonManifest, AddonPackage } from './addonFormat'
 import type { BlocklyProgram } from './addonBlocks'
 import type { OverlayState } from './overlay'
+import type { WebhookPayload, WebhookSettings } from './webhook'
 
 export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer'
 
@@ -122,6 +123,8 @@ export interface Settings {
   prompts: Prompt[]
   focus: FocusSettings
   discord: PresenceConfig
+  /** Discord-Webhook für Benachrichtigungen – die URL ist ein Geheimnis */
+  discordHook: WebhookSettings
   onboarded: boolean
   /** offene Editor-Tabs pro Projekt (nur Pfade) */
   editorTabs: Record<string, string[]>
@@ -280,6 +283,7 @@ export interface VibedeskApi {
     setActivity(a: Activity | null): void
     status(): Promise<DiscordStatus>
     appInfo(clientId: string): Promise<DiscordAppInfo | null>
+    webhook(kind: 'waiting' | 'recap' | 'test', body: WebhookPayload): Promise<{ ok: boolean; skipped?: boolean; error?: string }>
   }
   stats: {
     history(): Promise<DayStats[]>

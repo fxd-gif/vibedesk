@@ -7,6 +7,15 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+- **Discord-Benachrichtigungen per Webhook**: Wartet eine Session auf dich, während du nicht am Rechner bist, kommt eine Nachricht in deinen Discord-Kanal – auch aufs Handy
+- **Tagesrückblick** in Discord: Tokens, Kosten, fertige Sessions, Fokus-Runden, Projekte und eine Mini-Grafik der letzten 7 Tage
+- Rich Presence zeigt den Status als kleines Icon (arbeitet, wartet, fertig, Fokus, Pause)
+- Rich Presence zeigt, wie viele in deiner Vibe-Lounge sind („2 von 16“)
+
+### Verbessert
+- Streamer-Modus schwärzt jetzt auch Discord-Webhook-URLs
+
 ## 0.7.0
 
 ### Neu

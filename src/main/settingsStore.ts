@@ -1,6 +1,7 @@
 import path from 'path'
 import type { Settings } from '../shared/types'
 import { DEFAULT_PRESENCE } from '../shared/presence'
+import { DEFAULT_WEBHOOK } from '../shared/webhook'
 import { readJson, writeJsonAtomic } from './jsonFile'
 
 export const DEFAULT_STREAM_URL = 'https://stream.laut.fm/lofi'
@@ -30,6 +31,7 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   ],
   focus: { work: 25, short: 5, long: 15, rounds: 4 },
   discord: DEFAULT_PRESENCE,
+  discordHook: DEFAULT_WEBHOOK,
   onboarded: false,
   editorTabs: {},
   lastSeenVersion: '',
@@ -61,6 +63,7 @@ export class SettingsStore {
     this.value = { ...defaults, ...(stored && typeof stored === 'object' ? stored : {}) }
     // verschachtelte Objekte um neue Felder ergänzen
     this.value.discord = { ...defaults.discord, ...(this.value.discord ?? {}) }
+    this.value.discordHook = { ...defaults.discordHook, ...(this.value.discordHook ?? {}) }
     this.value.focus = { ...defaults.focus, ...(this.value.focus ?? {}) }
     this.value.lounge = { ...defaults.lounge, ...(this.value.lounge ?? {}) }
     this.value.streamer = { ...defaults.streamer, ...(this.value.streamer ?? {}) }

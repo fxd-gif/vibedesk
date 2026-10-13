@@ -28,6 +28,8 @@ const TOKEN_RULES: Rule[] = [
   [/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}/g, (m) => mask(m, 3)],
   // Discord-Bot-Token
   [/\b[MNO][A-Za-z\d_-]{23,25}\.[A-Za-z\d_-]{6}\.[A-Za-z\d_-]{27,}/g, (m) => mask(m, 0)],
+  // Discord-Webhook: wer den Token kennt, kann in den Kanal schreiben
+  [/(discord(?:app)?\.com\/api(?:\/v\d+)?\/webhooks\/\d+\/)([A-Za-z0-9_-]{30,})/g, (_m, a, t) => a + mask(t)],
   [/\b(Bearer|Basic)(\s+)([A-Za-z0-9._~+/-]{12,}=*)/g, (_m, a, s, t) => a + s + mask(t)],
   // Zugangsdaten in URLs: https://user:pass@host
   [/(\b[a-z][a-z0-9+.-]*:\/\/[^\s:/@]+:)([^\s@/]+)(@)/gi, (_m, a, p, c) => a + mask(p) + c]

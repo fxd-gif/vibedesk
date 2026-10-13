@@ -62,7 +62,8 @@ const api: VibedeskApi = {
     configure: (enabled, clientId) => ipcRenderer.send('discord:configure', enabled, clientId),
     setActivity: (a) => ipcRenderer.send('discord:setActivity', a),
     status: () => ipcRenderer.invoke('discord:status'),
-    appInfo: (clientId) => ipcRenderer.invoke('discord:appInfo', clientId)
+    appInfo: (clientId) => ipcRenderer.invoke('discord:appInfo', clientId),
+    webhook: (kind, body) => ipcRenderer.invoke('discord:webhook', kind, body)
   },
   stats: {
     history: () => ipcRenderer.invoke('stats:history')
