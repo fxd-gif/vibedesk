@@ -11,3 +11,6 @@ docs/
 scripts/
 vitest.config.ts
 playwright.config.ts
+
+# VibeDesk-Gehirn – privates Projektwissen, nicht ins Repo
+.vibedesk/
