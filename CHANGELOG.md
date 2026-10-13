@@ -7,6 +7,9 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Behoben
+- Wenn Claude Code Hooks über PowerShell ausführt (z. B. ohne Git Bash), kam bei jedem Prompt „UserPromptSubmit hook error … In Zeile:1 Zeichen:8“ – Status, Live-Feed und Gehirn blieben dann leer. Der Hook-Befehl funktioniert jetzt in PowerShell, cmd und bash
+
 ## 0.10.1
 
 ### Verbessert

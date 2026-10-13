@@ -12,11 +12,22 @@ export const HOOK_EVENTS = [
 
 const TOOL_EVENTS = new Set<string>(['PreToolUse', 'PostToolUse'])
 
+/**
+ * Hook-Befehl, der in bash, cmd und PowerShell gleich funktioniert. Claude Code nutzt unter Windows je nach
+ * Installation bash oder PowerShell – und PowerShell versteht zwei Strings hintereinander ("node" "datei")
+ * nicht als Aufruf. Das Programm steht deshalb unquotiert vorn. Ein Programmpfad mit Leerzeichen bräuchte
+ * in PowerShell ein & davor (das bash nicht kennt) – dann lieber node aus dem PATH.
+ */
+export function hookCommand(nodeExe: string, scriptPath: string): string {
+  const exe = /^[\w.:\\/-]+$/.test(nodeExe) ? nodeExe : 'node'
+  return `${exe} "${scriptPath}"`
+}
+
 export const BRAIN_SERVER = 'vibedesk-brain'
 
 /** Claude-Code-Settings, deren Hooks jedes Event an den VibeDesk-Forwarder geben. */
 export function buildHookSettings(nodeExe: string, forwarderPath: string, opts: { brain?: boolean } = {}): object {
-  const hook = { type: 'command', command: `"${nodeExe}" "${forwarderPath}"`, timeout: 5 }
+  const hook = { type: 'command', command: hookCommand(nodeExe, forwarderPath), timeout: 5 }
   const hooks = Object.fromEntries(
     HOOK_EVENTS.map((e) => [e, [TOOL_EVENTS.has(e) ? { matcher: '*', hooks: [hook] } : { hooks: [hook] }]])
   )
