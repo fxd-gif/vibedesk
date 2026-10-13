@@ -53,8 +53,8 @@ function projectOf(projects: Project[], file: string): Project | undefined {
 }
 
 /** Fragt bei ungespeicherten Tabs nach. false = Abbrechen. */
-export async function settleDirty(what: string): Promise<boolean> {
-  const dirty = dirtyTabs()
+export async function settleDirty(what: string, only?: (t: import('./editorModel').Tab) => boolean): Promise<boolean> {
+  const dirty = dirtyTabs().filter((t) => !only || only(t))
   if (!dirty.length) return true
   const names = dirty.map((t) => t.name).join(', ')
   const r = await choose({

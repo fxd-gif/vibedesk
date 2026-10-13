@@ -7,6 +7,7 @@ import { relTime, shortenPath } from '../util'
 import { PathInput } from './PathInput'
 import type { ClaudeSessionMeta, Project } from '../../../shared/types'
 import { Fragment } from 'react'
+import { useRedact } from '../store/streamerStore'
 
 export function ProjectsWindow(): React.JSX.Element {
   const [projects, setProjects] = useState<Project[]>([])
@@ -15,6 +16,7 @@ export function ProjectsWindow(): React.JSX.Element {
   const sessions = useSessions((s) => s.sessions)
   const [histFor, setHistFor] = useState<string | null>(null)
   const [hist, setHist] = useState<ClaudeSessionMeta[] | null>(null)
+  const red = useRedact()
 
   const toggleHist = (id: string): void => {
     if (histFor === id) return setHistFor(null)
@@ -66,7 +68,7 @@ export function ProjectsWindow(): React.JSX.Element {
       const sure = await useDialog.getState().ask({
         kind: 'confirm',
         title: 'Wirklich in den Papierkorb?',
-        message: `${p.path}\n\nDer komplette Ordner wird in den Windows-Papierkorb verschoben.`,
+        message: `${red(p.path)}\n\nDer komplette Ordner wird in den Windows-Papierkorb verschoben.`,
         confirmLabel: 'In den Papierkorb',
         danger: true
       })
@@ -110,8 +112,8 @@ export function ProjectsWindow(): React.JSX.Element {
                 {p.name}
                 {p.missing && <span className="badge">fehlt</span>}
               </div>
-              <div className="ppath mono" title={p.path}>
-                {shortenPath(p.path)} · {relTime(p.lastOpenedAt)}
+              <div className="ppath mono" title={red(p.path)}>
+                {shortenPath(red(p.path))} · {relTime(p.lastOpenedAt)}
               </div>
             </div>
             <div className="pactions">

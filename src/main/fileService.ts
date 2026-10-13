@@ -21,6 +21,19 @@ function isInside(child: string, root: string): boolean {
   return rel === '' || (!!rel && !rel.startsWith('..') && !path.isAbsolute(rel))
 }
 
+const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i
+
+/** Prüft einen einzelnen Datei-/Ordnernamen (Windows-Regeln). Liefert eine Fehlermeldung oder null. */
+export function nameError(name: string): string | null {
+  if (!name || !name.trim()) return 'Bitte einen Namen eingeben'
+  if (name.length > 255) return 'Name ist zu lang'
+  if (name === '.' || name === '..') return 'Ungültiger Name'
+  if (/[<>:"|?*\x00-\x1f]/.test(name)) return 'Diese Zeichen sind nicht erlaubt: < > : " | ? *'
+  if (/[. ]$/.test(name)) return 'Name darf nicht mit Punkt oder Leerzeichen enden'
+  if (RESERVED.test(name)) return `„${name}“ ist unter Windows reserviert`
+  return null
+}
+
 /** Lesen/Schreiben von Projektdateien – ausschließlich innerhalb der registrierten Projektordner. */
 export class FileService {
   constructor(private roots: () => string[]) {}
@@ -39,6 +52,69 @@ export class FileService {
       if (isInside(real, root)) return real
     }
     return null
+  }
+
+  private isRoot(real: string): boolean {
+    return this.roots().some((r) => {
+      try {
+        return path.relative(fs.realpathSync.native(r), real) === ''
+      } catch {
+        return false
+      }
+    })
+  }
+
+  create(parent: string, name: string, kind: 'file' | 'dir'): FileResult<{ path: string }> {
+    const d = this.resolve(parent)
+    if (!d) return fail('outside', 'Ordner liegt außerhalb des Projekts')
+    const parts = String(name).trim().split(/[\\/]+/).filter(Boolean)
+    for (const p of parts.length ? parts : ['']) {
+      const e = nameError(p)
+      if (e) return fail('invalid', e)
+    }
+    const target = this.resolve(path.join(d, ...parts))
+    if (!target) return fail('outside', 'Ziel liegt außerhalb des Projekts')
+    try {
+      if (fs.existsSync(target)) return fail('exists', `„${parts.join('/')}“ gibt es schon`)
+      if (kind === 'dir') fs.mkdirSync(target, { recursive: true })
+      else {
+        fs.mkdirSync(path.dirname(target), { recursive: true })
+        fs.writeFileSync(target, '', { flag: 'wx' })
+      }
+      return { ok: true, path: target }
+    } catch (err) {
+      return fail('io', (err as Error).message)
+    }
+  }
+
+  rename(file: string, newName: string): FileResult<{ path: string }> {
+    const f = this.resolve(file)
+    if (!f) return fail('outside', 'Datei liegt außerhalb des Projekts')
+    if (this.isRoot(f)) return fail('invalid', 'Der Projektordner selbst kann hier nicht umbenannt werden')
+    const name = String(newName).trim()
+    const e = nameError(name) ?? (/[\\/]/.test(name) ? 'Name darf keinen Schrägstrich enthalten' : null)
+    if (e) return fail('invalid', e)
+    const target = path.join(path.dirname(f), name)
+    if (!this.resolve(target)) return fail('outside', 'Ziel liegt außerhalb des Projekts')
+    try {
+      if (!fs.existsSync(f)) return fail('not_found', 'Existiert nicht mehr')
+      // nur Groß-/Kleinschreibung geändert → unter Windows dieselbe Datei, trotzdem umbenennen
+      const caseOnly = target.toLowerCase() === f.toLowerCase()
+      if (!caseOnly && fs.existsSync(target)) return fail('exists', `„${name}“ gibt es schon`)
+      fs.renameSync(f, target)
+      return { ok: true, path: target }
+    } catch (err) {
+      return fail('io', (err as Error).message)
+    }
+  }
+
+  /** Prüft, ob etwas gelöscht werden darf (nicht der Projektordner selbst). */
+  removable(file: string): FileResult<{ path: string }> {
+    const f = this.resolve(file)
+    if (!f) return fail('outside', 'Datei liegt außerhalb des Projekts')
+    if (this.isRoot(f)) return fail('invalid', 'Der Projektordner selbst kann hier nicht gelöscht werden')
+    if (!fs.existsSync(f)) return fail('not_found', 'Existiert nicht mehr')
+    return { ok: true, path: f }
   }
 
   list(dir: string): FileResult<{ entries: FileEntry[] }> {

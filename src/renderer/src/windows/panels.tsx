@@ -9,6 +9,8 @@ import { InspectorWindow } from './InspectorWindow'
 import { EditorWindow } from './editor/EditorWindow'
 import { closeEditor, EDITOR_SIZE } from '../store/editorStore'
 import { AddonWindow } from './addons/AddonWindow'
+import { LoungeWindow } from './LoungeWindow'
+import { StreamerWindow } from './StreamerWindow'
 
 export interface PanelDef {
   id: PanelId
@@ -28,6 +30,8 @@ export const PANELS: PanelDef[] = [
   { id: 'focus', title: 'Fokus-Timer', icon: 'timer', w: 340, h: 470, render: () => <FocusPanel /> },
   { id: 'discord', title: 'Discord Rich Presence', icon: 'discord', w: 900, h: 660, render: () => <DiscordWindow /> },
   { id: 'inspector', title: 'Session-Inspector', icon: 'inspect', w: 560, h: 520, render: () => <InspectorWindow /> },
+  { id: 'lounge', title: 'Vibe-Lounge', icon: 'users', w: 520, h: 620, render: () => <LoungeWindow /> },
+  { id: 'streamer', title: 'Streamer-Modus', icon: 'broadcast', w: 580, h: 680, render: () => <StreamerWindow /> },
   { id: 'editor', title: 'Editor', icon: 'code', ...EDITOR_SIZE, render: () => <EditorWindow />, onClose: () => void closeEditor() },
   { id: 'addons', title: 'Addons', icon: 'puzzle', w: 1240, h: 780, render: () => <AddonWindow /> }
 ]

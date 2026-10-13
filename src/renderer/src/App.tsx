@@ -10,6 +10,7 @@ import { checkSetupOnStart, SetupPrompt, wireSetup } from './windows/ToolSetup'
 import { CommandPalette, usePalette, wirePalette } from './windows/palette/CommandPalette'
 import type { PanelId } from '../../shared/types'
 import './desktop/desktop.css'
+import './desktop/social.css'
 import { kindOf, termWin, useSessions, wireSessions } from './store/sessionStore'
 import { useWorkflow, wireWorkflow } from './store/workflowStore'
 import { wireStats } from './store/statsStore'
@@ -34,6 +35,12 @@ import { EDITOR_ID, toggleEditor, wireEditor } from './store/editorStore'
 import { startAddonRuntime } from './addons/runtime'
 import { InstallDialog, openInstallDialog, wireAddonImport } from './windows/addons/InstallDialog'
 import { AskToast } from './addons/AskToast'
+import { useLounge, wireLounge } from './store/loungeStore'
+import { wireStreamer } from './store/streamerStore'
+import { LoungeFloaters } from './windows/LoungeWindow'
+import { Curtain, StreamerPill } from './windows/StreamerWindow'
+import { ShareDialogs } from './windows/ShareDialogs'
+import { openPanel } from './windows/palette/CommandPalette'
 
 
 const initials = (n: string): string => {
@@ -101,6 +108,9 @@ export default function App(): React.JSX.Element {
     if (settings) ambienceAudio.setRain(settings.rainSoundOn, settings.rainSoundVolume, settings.rainIntensity)
   }, [settings?.rainSoundOn, settings?.rainSoundVolume, settings?.rainIntensity])
   const statuses = useWorkflow((s) => s.sessions)
+  const loungeState = useLounge((s) => s.state)
+  const loungePeers = useLounge((s) => Object.keys(s.peers).length)
+  const loungeUnread = useLounge((s) => s.unread)
 
   useEffect(() => {
     wireWorkflow()
@@ -115,6 +125,8 @@ export default function App(): React.JSX.Element {
     wirePalette()
     wireSetup()
     wireAddonImport()
+    wireLounge()
+    wireStreamer()
     useSettings.getState().load().then((s) => {
       const ui = useUi.getState()
       ui.initRects(s.windowRects)
@@ -184,7 +196,12 @@ export default function App(): React.JSX.Element {
         groups={[
           [
             { id: 'palette', icon: 'command', label: 'Befehle (Strg+K)', active: paletteOpen, onClick: () => usePalette.getState().show(!paletteOpen) },
-            panelItem('projects')
+            panelItem('projects'),
+            {
+              ...panelItem('lounge'),
+              label: loungeState === 'off' ? 'Vibe-Lounge' : `Vibe-Lounge · ${loungePeers + 1} online${loungeUnread ? ` · ${loungeUnread} neu` : ''}`,
+              badge: loungeUnread ? <span className="dock-count">{loungeUnread > 9 ? '9+' : loungeUnread}</span> : loungeState !== 'off' ? <span className="dot done" /> : undefined
+            }
           ],
           [
             {
@@ -240,6 +257,8 @@ export default function App(): React.JSX.Element {
           ]
         ]}
       />
+      <LoungeFloaters />
+      <StreamerPill onClick={() => openPanel('streamer')} />
       <CommandPalette onAmbience={openAmbience} />
       {menu && <AmbienceMenu offline={audioState.musicOffline} onClose={() => setMenu(false)} />}
       <UpdateToast />
@@ -248,7 +267,9 @@ export default function App(): React.JSX.Element {
       <Onboarding />
       <InstallDialog />
       <AskToast />
+      <ShareDialogs />
       <DialogHost />
+      <Curtain />
       {focus.banner && (
         <div className="focus-banner" key={focus.banner.text}>
           {focus.banner.text}

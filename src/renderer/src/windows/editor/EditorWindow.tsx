@@ -1,8 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Prec, type EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { api } from '../../api'
-import { choose } from '../../store/dialogStore'
+import { choose, confirm } from '../../store/dialogStore'
+import { isSensitiveFile } from '../../../../shared/redact'
+import { useSettings } from '../../store/settingsStore'
 import { samePath, type Tab } from '../../store/editorModel'
 import { currentProject, editorDocs, ensureProject, selectProject, useEditor, useEditorUi } from '../../store/editorStore'
 import { createState, revealText } from './cmSetup'
@@ -110,6 +112,10 @@ export function EditorWindow(): React.JSX.Element {
 
   const activeTab = tabs.find((t) => t.path === active)
   const project = currentProject()
+  // Streamer-Modus: .env & Co. erst nach Bestätigung zeigen
+  const protect = useSettings((x) => !!x.s?.streamer.enabled && !!x.s?.streamer.protectFiles)
+  const [unlocked, setUnlocked] = useState<Set<string>>(new Set())
+  const veiled = !!activeTab && activeTab.status === 'ready' && protect && isSensitiveFile(activeTab.path) && !unlocked.has(activeTab.path)
 
   useEffect(() => {
     ensureProject()
@@ -218,6 +224,21 @@ export function EditorWindow(): React.JSX.Element {
         <div className="ed-pane">
           {activeTab && <Banner tab={activeTab} />}
           <div className="ed-cm" ref={host} style={{ display: activeTab?.status === 'ready' ? undefined : 'none' }} />
+          {veiled && activeTab && (
+            <div className="ed-veil" data-testid="editor-veil">
+              <b>{activeTab.name}</b>
+              <span className="dim">kann Passwörter oder Schlüssel enthalten – im Streamer-Modus verborgen.</span>
+              <button
+                className="btn small"
+                onClick={async () => {
+                  if (await confirm({ title: `„${activeTab.name}“ anzeigen?`, message: 'Der Inhalt ist dann im Stream zu sehen. Zieh am besten vorher den Vorhang zu (Strg+Umschalt+H).', confirmLabel: 'Anzeigen', danger: true }))
+                    setUnlocked(new Set([...unlocked, activeTab.path]))
+                }}
+              >
+                Trotzdem anzeigen
+              </button>
+            </div>
+          )}
           {activeTab && activeTab.status !== 'ready' && (
             <div className="panel-empty ed-notice">
               <b>{activeTab.name}</b>

@@ -1,10 +1,11 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import type { ProjectStore } from './projectStore'
 import type { SettingsStore } from './settingsStore'
 import { randomUUID } from 'crypto'
-import { candidatesFromPath } from './skillStore'
+import { candidatesFromFiles, candidatesFromPath, readSkillFiles } from './skillStore'
+import { decodeShare, encodeShare, fileBytes, toSharedFile } from '../shared/shareCode'
 import { fetchGithubCandidates } from './github'
 import { listClaudeSessions } from './claudeHistory'
 import type { SkillTarget } from '../shared/types'
@@ -49,6 +50,8 @@ export function registerCoreIpc(d: IpcDeps): void {
     if (w) w.setFullScreen(!w.isFullScreen())
   })
   ipcMain.on('app:quit', () => app.quit())
+  ipcMain.on('clipboard:write', (_e, text: string) => clipboard.writeText(String(text).slice(0, 2_000_000)))
+  ipcMain.handle('clipboard:read', async () => String(await clipboard.readText()).slice(0, 2_000_000))
 }
 
 export interface SessionIpcDeps {
@@ -111,6 +114,18 @@ export function registerSkillIpc(d: SkillIpcDeps): void {
     return out
   })
   ipcMain.handle('skills:remove', (_e, dir: string) => d.skills.remove(dir, d.projects.list()))
+  ipcMain.handle('skills:exportCode', (_e, dir: string, from: string) => {
+    if (!d.skills.isSkillDir(String(dir), d.projects.list())) throw new Error('Kein Skill-Ordner')
+    const files = readSkillFiles(String(dir))
+    const cand = candidatesFromFiles(files).find((c) => c.files.has('SKILL.md') && [...c.files.keys()].length === files.length)
+    if (!cand) throw new Error('Die SKILL.md dieses Skills hat kein gültiges Frontmatter (name, description).')
+    return encodeShare({ kind: 'skill', name: cand.name, description: cand.description, files: files.map((f) => toSharedFile(f.path, f.data)), from: String(from ?? '').slice(0, 40) })
+  })
+  ipcMain.handle('skills:importCode', (_e, code: string) => {
+    const e = decodeShare(String(code))
+    if (e.kind !== 'skill') throw new Error('Der Code enthält keinen Skill.')
+    return summarize(candidatesFromFiles(e.files.map((f) => ({ path: f.path, data: fileBytes(f) }))).filter((c) => c.files.has('SKILL.md') && c.files.size === e.files.length))
+  })
 }
 
 export function registerFileIpc(files: import('./fileService').FileService, watcher: import('./fileService').FileWatcher): void {
@@ -119,6 +134,18 @@ export function registerFileIpc(files: import('./fileService').FileService, watc
   ipcMain.handle('files:write', (_e, p: string, text: string, expectedMtime: number | null, eol: 'lf' | 'crlf', bom: boolean) =>
     files.write(p, String(text), typeof expectedMtime === 'number' ? expectedMtime : null, eol === 'crlf' ? 'crlf' : 'lf', !!bom)
   )
+  ipcMain.handle('files:create', (_e, parent: string, name: string, kind: string) => files.create(parent, String(name ?? ''), kind === 'dir' ? 'dir' : 'file'))
+  ipcMain.handle('files:rename', (_e, p: string, name: string) => files.rename(p, String(name ?? '')))
+  ipcMain.handle('files:trash', async (_e, p: string) => {
+    const r = files.removable(p)
+    if (!r.ok) return r
+    try {
+      await shell.trashItem(r.path)
+      return r
+    } catch (err) {
+      return { ok: false, code: 'io', message: (err as Error).message }
+    }
+  })
   ipcMain.on('files:watch', (_e, p: string) => {
     const f = files.resolve(p)
     if (f) watcher.watch(f)

@@ -7,6 +7,19 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+- **Vibe-Lounge**: mit Freunden im selben Raum vibecoden – ganz ohne Server, direkt zwischen euch. Ihr seht, wer gerade baut, startet Fokus-Runden zusammen, chattet und schickt Reaktionen
+- **Share-Codes**: Prompts, Skills und deine Atmosphäre als Code teilen (z. B. per Discord). Einfügen mit Strg+K – vor dem Übernehmen gibt’s immer eine Vorschau
+- **Streamer-Modus**: schwärzt API-Keys, Passwörter, Benutzernamen und E-Mails, sperrt `.env` & Co. im Editor und verdeckt Notizen
+- OBS-Overlay für Streams: Status, Plan, Live-Feed und Fokus-Timer als Browserquelle
+- Twitch-Chat-Vorschläge: Zuschauer schlagen mit `!vibe …` Prompts vor und stimmen ab – du entscheidest, was ins Terminal kommt
+- Vorhang (Strg+Umschalt+H) verdeckt sofort den ganzen Bildschirm
+- Im Editor Dateien und Ordner anlegen, umbenennen und löschen (Rechtsklick im Dateibaum, F2, Entf)
+
+### Verbessert
+- Updates werden direkt beim Öffnen installiert, solange noch keine Session läuft – kein manueller Neustart mehr nötig
+- Update-Prüfung startet schneller nach dem Öffnen
+
 ## 0.6.0
 
 ### Neu

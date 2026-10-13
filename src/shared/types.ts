@@ -33,8 +33,9 @@ export interface WindowRect {
 import type { Activity, PresenceConfig } from './presence'
 import type { AddonManifest, AddonPackage } from './addonFormat'
 import type { BlocklyProgram } from './addonBlocks'
+import type { OverlayState } from './overlay'
 
-export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons'
+export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer'
 
 export type DiscordStatus =
   | { state: 'off' }
@@ -126,7 +127,36 @@ export interface Settings {
   editorTabs: Record<string, string[]>
   /** zuletzt gesehene Version – für „Was ist neu“ nach Updates */
   lastSeenVersion: string
+  lounge: LoungeSettings
+  streamer: StreamerSettings
 }
+
+export interface LoungeSettings {
+  name: string
+  emoji: string
+  /** Projektnamen in der Lounge zeigen (aus im Streamer-Modus) */
+  showProject: boolean
+  lastRoom: string
+}
+
+export interface StreamerSettings {
+  enabled: boolean
+  hidePaths: boolean
+  maskEmails: boolean
+  hideNotes: boolean
+  protectFiles: boolean
+  /** Kosten im Overlay zeigen */
+  overlayCost: boolean
+  /** Bash-Befehle im Overlay zeigen (sonst nur „Befehl“) */
+  overlayBash: boolean
+  overlayPort: number
+  overlayToken: string
+  twitchChannel: string
+  chatCommand: string
+  chatModsOnly: boolean
+}
+
+export type OverlayStatus = { running: false; error?: string } | { running: true; port: number }
 
 export interface FileEntry {
   name: string
@@ -145,7 +175,7 @@ export interface FileContent {
   bom: boolean
 }
 
-export type FileErrorCode = 'outside' | 'binary' | 'too_large' | 'conflict' | 'not_found' | 'io'
+export type FileErrorCode = 'outside' | 'binary' | 'too_large' | 'conflict' | 'not_found' | 'io' | 'exists' | 'invalid'
 
 export type FileResult<T> = ({ ok: true } & T) | { ok: false; code: FileErrorCode; message: string }
 
@@ -272,6 +302,17 @@ export interface VibedeskApi {
     importGithub(url: string): Promise<SkillCandidateSummary[]>
     install(tokens: string[], target: SkillTarget, replace: boolean): Promise<SkillInfo[]>
     remove(dir: string): Promise<void>
+    exportCode(dir: string, from: string): Promise<string>
+    importCode(code: string): Promise<SkillCandidateSummary[]>
+  }
+  streamer: {
+    configure(enabled: boolean, port: number): Promise<OverlayStatus>
+    push(state: OverlayState): void
+    user(): Promise<string>
+  }
+  clipboard: {
+    write(text: string): void
+    read(): Promise<string>
   }
 }
 
@@ -282,6 +323,11 @@ export interface FilesApi {
   watch(path: string): void
   unwatch(path: string): void
   reveal(path: string): void
+  /** legt eine Datei/einen Ordner an; name darf Unterordner enthalten (a/b.ts) */
+  create(parent: string, name: string, kind: 'file' | 'dir'): Promise<FileResult<{ path: string }>>
+  rename(path: string, newName: string): Promise<FileResult<{ path: string }>>
+  /** verschiebt in den Papierkorb */
+  trash(path: string): Promise<FileResult<{ path: string }>>
 }
 
 export interface InstalledAddon {

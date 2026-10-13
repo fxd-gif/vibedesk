@@ -81,7 +81,10 @@ const api: VibedeskApi = {
     write: (p, text, expectedMtime, eol, bom) => ipcRenderer.invoke('files:write', p, text, expectedMtime, eol, bom),
     watch: (p) => ipcRenderer.send('files:watch', p),
     unwatch: (p) => ipcRenderer.send('files:unwatch', p),
-    reveal: (p) => ipcRenderer.send('files:reveal', p)
+    reveal: (p) => ipcRenderer.send('files:reveal', p),
+    create: (parent, name, kind) => ipcRenderer.invoke('files:create', parent, name, kind),
+    rename: (p, name) => ipcRenderer.invoke('files:rename', p, name),
+    trash: (p) => ipcRenderer.invoke('files:trash', p)
   },
   addons: {
     list: () => ipcRenderer.invoke('addons:list'),
@@ -104,7 +107,18 @@ const api: VibedeskApi = {
     importPaths: (paths) => ipcRenderer.invoke('skills:importPaths', paths),
     importGithub: (url) => ipcRenderer.invoke('skills:importGithub', url),
     install: (tokens, target, replace) => ipcRenderer.invoke('skills:install', tokens, target, replace),
-    remove: (dir) => ipcRenderer.invoke('skills:remove', dir)
+    remove: (dir) => ipcRenderer.invoke('skills:remove', dir),
+    exportCode: (dir, from) => ipcRenderer.invoke('skills:exportCode', dir, from),
+    importCode: (code) => ipcRenderer.invoke('skills:importCode', code)
+  },
+  streamer: {
+    configure: (enabled, port) => ipcRenderer.invoke('streamer:configure', enabled, port),
+    push: (state) => ipcRenderer.send('streamer:push', state),
+    user: () => ipcRenderer.invoke('streamer:user')
+  },
+  clipboard: {
+    write: (text) => ipcRenderer.send('clipboard:write', String(text)),
+    read: () => ipcRenderer.invoke('clipboard:read')
   }
 }
 

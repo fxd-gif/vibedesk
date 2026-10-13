@@ -64,6 +64,36 @@ function fromEntries(entries: Map<string, Uint8Array>): SkillCandidate[] {
   return out
 }
 
+/** Kandidaten aus einer fertigen Dateiliste (z. B. aus einem Share-Code). */
+export function candidatesFromFiles(files: { path: string; data: Uint8Array }[]): SkillCandidate[] {
+  const entries = new Map<string, Uint8Array>()
+  for (const f of files) if (safeRel(f.path)) entries.set(f.path, f.data)
+  return fromEntries(entries)
+}
+
+/** Liest einen installierten Skill-Ordner zum Teilen ein (ohne Symlinks, mit Größengrenzen). */
+export function readSkillFiles(dir: string, maxBytes = 1024 * 1024): { path: string; data: Uint8Array }[] {
+  const out: { path: string; data: Uint8Array }[] = []
+  let bytes = 0
+  const walk = (abs: string, rel: string, depth: number): void => {
+    if (depth > MAX_DEPTH) return
+    for (const d of fs.readdirSync(abs, { withFileTypes: true })) {
+      if (d.isSymbolicLink() || d.name.startsWith('.')) continue
+      const r = rel ? `${rel}/${d.name}` : d.name
+      if (d.isDirectory()) {
+        if (!SKIP_DIRS.has(d.name)) walk(path.join(abs, d.name), r, depth + 1)
+      } else if (d.isFile()) {
+        const data = fs.readFileSync(path.join(abs, d.name))
+        bytes += data.length
+        if (bytes > maxBytes || out.length >= 200) throw new Error('Der Skill ist zu groß zum Teilen per Code (max. 1 MB, 200 Dateien).')
+        out.push({ path: r, data })
+      }
+    }
+  }
+  walk(dir, '', 0)
+  return out
+}
+
 export function candidatesFromDir(dir: string): SkillCandidate[] {
   const entries = new Map<string, Uint8Array>()
   let bytes = 0
@@ -162,6 +192,15 @@ export class SkillStore {
       fs.writeFileSync(abs, data)
     }
     return { name: c.name, description: c.description, dir, scope: target.kind === 'global' ? 'global' : target.projectId }
+  }
+
+  /** true, wenn `dir` ein Skill-Ordner direkt unter einem bekannten Skill-Verzeichnis ist */
+  isSkillDir(dir: string, projects: Project[] = []): boolean {
+    const abs = path.resolve(dir)
+    const ok = [this.globalDir, ...projects.map((p) => this.projectDir(p.id)).filter(Boolean)].some(
+      (root) => path.dirname(abs).toLowerCase() === path.resolve(root as string).toLowerCase()
+    )
+    return ok && fs.existsSync(path.join(abs, 'SKILL.md'))
   }
 
   async remove(dir: string, projects: Project[] = []): Promise<void> {

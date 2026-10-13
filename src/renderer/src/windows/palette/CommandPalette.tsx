@@ -9,11 +9,14 @@ import { kindOf, useSessions } from '../../store/sessionStore'
 import { centeredRect, useUi } from '../../store/uiStore'
 import type { PanelId, Project } from '../../../../shared/types'
 import { INSPECTOR_TABS, useInspector, type InspectorTab } from '../InspectorWindow'
+import { useAddonUi } from '../addons/AddonWindow'
+import { pickAndInstall } from '../addons/InstallDialog'
 import { panelDef } from '../panels'
 import { rank } from './fuzzy'
 import { showWhatsNew } from '../../changelog/WhatsNew'
-import { useAddonUi } from '../addons/AddonWindow'
-import { pickAndInstall } from '../addons/InstallDialog'
+import { findShareCode } from '../../../../shared/shareCode'
+import { openPaste, sharePrompts, startImport } from '../../store/shareStore'
+import { redactText, toggleCurtain } from '../../store/streamerStore'
 
 interface Cmd {
   id: string
@@ -61,9 +64,14 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     win('addons', 'Eigene Addons bauen, importieren, exportieren'),
     { id: 'act:addonImport', label: 'Addon importieren…', group: 'Aktionen', icon: 'puzzle', run: () => void pickAndInstall() },
     { id: 'act:addonMaker', label: 'Neues Addon bauen', group: 'Aktionen', icon: 'puzzle', run: () => (useAddonUi.getState().newAddon(), openPanel('addons')) },
+    win('lounge', 'Mit Freunden vibecoden – ohne Server'),
+    win('streamer', 'Schutz, OBS-Overlay, Twitch-Chat'),
     ...projects
       .filter((p) => !p.missing)
-      .map((p): Cmd => ({ id: 'proj:' + p.id, label: `Session starten: ${p.name}`, group: 'Projekte', icon: 'play', hint: p.path, run: () => void useSessions.getState().start(p.id) })),
+      .map((p): Cmd => ({ id: 'proj:' + p.id, label: `Session starten: ${p.name}`, group: 'Projekte', icon: 'play', hint: redactText(p.path), run: () => void useSessions.getState().start(p.id) })),
+    { id: 'act:paste', label: 'Share-Code einfügen …', group: 'Teilen', icon: 'share', hint: 'Prompts, Skills, Atmosphären', run: openPaste },
+    ...(s?.prompts.length ? [{ id: 'act:sharePrompts', label: 'Alle Prompts als Code teilen', group: 'Teilen', icon: 'share', searchOnly: true, run: () => sharePrompts(s.prompts) }] : []),
+    { id: 'act:curtain', label: 'Vorhang zuziehen', group: 'Aktionen', icon: 'eyeoff', hint: 'Strg+Umschalt+H', searchOnly: true, run: () => toggleCurtain(true) },
     { id: 'act:arrange', label: 'Fenster anordnen', group: 'Aktionen', icon: 'grid', run: () => useUi.getState().arrangeAll(kindOf) },
     { id: 'act:ambience', label: 'Atmosphäre & Musik einstellen', group: 'Aktionen', icon: 'rain', run: onAmbience },
     ...(s ? [{ id: 'act:music', label: s.musicOn ? 'Lofi-Radio aus' : 'Lofi-Radio an', group: 'Aktionen', icon: 'music', run: () => useSettings.getState().set(toggleMusic(s)) }] : []),
@@ -91,7 +99,12 @@ function PaletteBox({ onAmbience }: { onAmbience(): void }): React.JSX.Element {
   }, [])
 
   const all = useMemo(() => buildCommands(projects, onAmbience), [projects, onAmbience])
-  const items = useMemo(() => (q.trim() ? rank(all, q, (c) => `${c.label} ${c.group}`) : all.filter((c) => !c.searchOnly)), [all, q])
+  const items = useMemo(() => {
+    // eingefügter Share-Code → direkt öffnen
+    const code = findShareCode(q.replace(/\s+/g, ''))
+    if (code) return [{ id: 'act:importCode', label: 'Share-Code öffnen', group: 'Teilen', icon: 'share', hint: 'Vorschau ansehen', run: () => void startImport(code) }]
+    return q.trim() ? rank(all, q, (c) => `${c.label} ${c.group}`) : all.filter((c) => !c.searchOnly)
+  }, [all, q])
   const cur = Math.min(idx, items.length - 1)
 
   useEffect(() => setIdx(0), [q])

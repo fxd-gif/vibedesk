@@ -74,7 +74,9 @@ export function wireDiscord(): void {
       lastCfg = key
       api.discord.configure(cfg.enabled, cfg.clientId)
     }
-    if (cfg.enabled) api.discord.setActivity(renderPresence(cfg, collectVars()))
+    // im Streamer-Modus nie Projektnamen an Discord geben
+    const streaming = !!useSettings.getState().s?.streamer.enabled
+    if (cfg.enabled) api.discord.setActivity(renderPresence(streaming ? { ...cfg, privacy: true } : cfg, collectVars()))
   }
   // Main drosselt und sendet nur bei Änderung – hier reicht ein ruhiger Takt plus Reaktion auf Zustandswechsel
   setInterval(push, 5000)

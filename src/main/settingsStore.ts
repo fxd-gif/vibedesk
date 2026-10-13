@@ -32,7 +32,22 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   discord: DEFAULT_PRESENCE,
   onboarded: false,
   editorTabs: {},
-  lastSeenVersion: ''
+  lastSeenVersion: '',
+  lounge: { name: '', emoji: '🦊', showProject: false, lastRoom: '' },
+  streamer: {
+    enabled: false,
+    hidePaths: true,
+    maskEmails: true,
+    hideNotes: true,
+    protectFiles: true,
+    overlayCost: false,
+    overlayBash: false,
+    overlayPort: 17345,
+    overlayToken: '',
+    twitchChannel: '',
+    chatCommand: '!vibe',
+    chatModsOnly: false
+  }
 })
 
 export class SettingsStore {
@@ -47,6 +62,8 @@ export class SettingsStore {
     // verschachtelte Objekte um neue Felder ergänzen
     this.value.discord = { ...defaults.discord, ...(this.value.discord ?? {}) }
     this.value.focus = { ...defaults.focus, ...(this.value.focus ?? {}) }
+    this.value.lounge = { ...defaults.lounge, ...(this.value.lounge ?? {}) }
+    this.value.streamer = { ...defaults.streamer, ...(this.value.streamer ?? {}) }
   }
 
   get(): Settings {

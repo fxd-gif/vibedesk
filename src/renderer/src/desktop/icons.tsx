@@ -28,7 +28,13 @@ const paths: Record<string, string> = {
   code: 'M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16',
   inspect: 'M4 5h16v14H4zM4 9h16M8 13h5M8 16h8',
   command: 'M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z',
-  puzzle: 'M10 4a2 2 0 1 1 4 0v2h4v4h-2a2 2 0 1 0 0 4h2v4h-4v-2a2 2 0 1 0-4 0v2H6v-4h2a2 2 0 1 0 0-4H6V6h4z'
+  puzzle: 'M10 4a2 2 0 1 1 4 0v2h4v4h-2a2 2 0 1 0 0 4h2v4h-4v-2a2 2 0 1 0-4 0v2H6v-4h2a2 2 0 1 0 0-4H6V6h4z',
+  share: 'M12 15V4M8 8l4-4 4 4M5 13v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6',
+  users: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.3a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.7.8 2.8 2.6 3 5.2',
+  broadcast: 'M12 13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM8.5 15a5 5 0 0 1 0-7M15.5 8a5 5 0 0 1 0 7M5.6 18a9 9 0 0 1 0-13M18.4 5a9 9 0 0 1 0 13',
+  eyeoff: 'M3 3l18 18M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 8.5 4.2 9.5 6-.5.9-1.6 2.4-3.1 3.7M6.6 7.6C4.6 8.9 3.2 10.8 2.5 12c1 1.8 4.5 6 9.5 6 1.6 0 3-.4 4.3-1.1M9.9 10a3 3 0 0 0 4.1 4.1',
+  copy: 'M9 9h10v11H9zM5 15V4h10',
+  send: 'M4 12l16-8-6 16-2.5-6.5z'
 }
 
 export function Icon({ name, size = 18 }: { name: keyof typeof paths | string; size?: number }): React.JSX.Element {

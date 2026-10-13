@@ -10,6 +10,19 @@ interface Entry {
 const entries = new Map<string, Entry>()
 let wired = false
 
+type OutputTransform = (sessionId: string, data: string, write: (s: string) => void) => void
+let transform: OutputTransform | null = null
+
+/** Filter für die Terminal-Ausgabe (Streamer-Modus schwärzt hier Secrets). */
+export function setOutputTransform(fn: OutputTransform | null): void {
+  transform = fn
+}
+
+/** Leert Bildschirm und Verlauf aller Terminals (z. B. vor dem Livegehen). */
+export function clearAllTerminals(): void {
+  entries.forEach((e) => e.term.clear())
+}
+
 const theme = {
   background: 'rgba(0,0,0,0)',
   foreground: '#dfe5ef',
@@ -55,7 +68,11 @@ export function disposeTerminal(sessionId: string): void {
 function wire(): void {
   if (wired) return
   wired = true
-  api.on.sessionData((id, data) => entries.get(id)?.term.write(data))
+  api.on.sessionData((id, data) => {
+    if (!entries.has(id)) return
+    if (transform) transform(id, data, (s) => entries.get(id)?.term.write(s))
+    else entries.get(id)!.term.write(data)
+  })
   api.on.sessionExit((id, code) =>
     entries.get(id)?.term.write(`\r\n\x1b[2m— Session beendet (Code ${code}) —\x1b[0m\r\n`)
   )

@@ -7,6 +7,7 @@ import type { FeedEntry } from '../store/workflowReducer'
 import { clock, relTime } from '../util'
 import { STATUS_TEXT } from './TerminalWindow'
 import { openInEditor } from '../store/editorStore'
+import { useRedact } from '../store/streamerStore'
 
 function useNow(ms = 15000): number {
   const [now, setNow] = useState(Date.now())
@@ -57,6 +58,7 @@ export function FeedPanel(): React.JSX.Element {
   const sessions = useSessions((s) => s.sessions)
   const wf = useWorkflow((s) => s.sessions)
   const [filter, setFilter] = useState<string | null>(null)
+  const red = useRedact()
   if (!sessions.length) return <NoSessions />
   const names = Object.fromEntries(sessions.map((s) => [s.id, s.name]))
   const entries = sessions
@@ -92,7 +94,7 @@ export function FeedPanel(): React.JSX.Element {
             {sessions.length > 1 && <span className="feed-sess">{names[e.sessionId]}</span>}
             <span className="feed-tool">{e.tool}</span>
             <span className="feed-target mono">
-              {e.target}
+              {red(e.target)}
             </span>
             {resultMark(e.result)}
           </li>

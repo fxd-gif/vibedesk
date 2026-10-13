@@ -24,6 +24,8 @@ import { randomBytes } from 'crypto'
 import * as pty from '@lydell/node-pty'
 import { HookServer } from './hookServer'
 import { SessionManager } from './sessionManager'
+import { OverlayServer } from './overlayServer'
+import { basename } from 'path'
 
 if (process.env.VIBEDESK_USERDATA) app.setPath('userData', process.env.VIBEDESK_USERDATA)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
@@ -184,6 +186,20 @@ app.whenReady().then(async () => {
     sessions.stopAll()
     hookServer.stop()
   })
+  // Streamer-Modus: OBS-Overlay (nur localhost) + Benutzername fürs Schwärzen von Pfaden
+  const overlay = new OverlayServer(() => settings.get().streamer.overlayToken)
+  ipcMain.handle('streamer:configure', async (_e, enabled: boolean, port: number) => {
+    if (!enabled) {
+      await overlay.stop()
+      return overlay.status
+    }
+    const p = Number.isInteger(port) && port >= 1024 && port <= 65535 ? port : 17345
+    return overlay.start(p)
+  })
+  ipcMain.on('streamer:push', (_e, state: unknown) => overlay.push(state))
+  ipcMain.handle('streamer:user', () => basename(os.homedir()))
+  app.on('before-quit', () => void overlay.stop())
+
   setupUpdater((s) => send('update:status', s))
   mainWindow = createWindow()
 })

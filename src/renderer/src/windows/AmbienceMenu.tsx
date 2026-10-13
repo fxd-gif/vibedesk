@@ -7,6 +7,7 @@ import { playChime } from '../ambience/chime'
 import { toggleMusic, toggleRainSound } from '../ambience/toggles'
 import { useUpdate } from '../store/updateStore'
 import { showWhatsNew } from '../changelog/WhatsNew'
+import { shareAmbience } from '../store/shareStore'
 
 export const STREAMS = [
   { label: 'laut.fm · lofi', url: 'https://stream.laut.fm/lofi' },
@@ -14,7 +15,7 @@ export const STREAMS = [
   { label: 'Zeno · Lofi Beats', url: 'https://stream.zeno.fm/0r0xa792kwzuv' }
 ]
 
-function Toggle({ on, onChange, label }: { on: boolean; onChange(v: boolean): void; label: string }): React.JSX.Element {
+export function Toggle({ on, onChange, label }: { on: boolean; onChange(v: boolean): void; label: string }): React.JSX.Element {
   return (
     <button className={`toggle${on ? ' on' : ''}`} role="switch" aria-checked={on} aria-label={label} onClick={() => onChange(!on)}>
       <i />
@@ -64,7 +65,12 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
   return (
     <div className="amb-menu" ref={ref} data-testid="ambience-menu">
       <section>
-        <h4>Ausblick</h4>
+        <div className="row between">
+          <h4>Ausblick</h4>
+          <button className="btn small ghost" onClick={() => (onClose(), void shareAmbience())} title="Atmosphäre als Code teilen">
+            Teilen
+          </button>
+        </div>
         <div className="row chips">
           {SCENES.map((sc) => (
             <button key={sc.id} className={`chip${s.scene === sc.id ? ' on' : ''}`} onClick={() => set({ scene: sc.id })}>

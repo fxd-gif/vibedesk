@@ -3,6 +3,7 @@ import { api, errorText } from '../api'
 import { Icon } from '../desktop/icons'
 import { alert, confirm } from '../store/dialogStore'
 import type { Project, SkillCandidateSummary, SkillInfo, SkillTarget } from '../../../shared/types'
+import { openPaste, shareSkill } from '../store/shareStore'
 
 export function SkillsWindow(): React.JSX.Element {
   const [skills, setSkills] = useState<SkillInfo[]>([])
@@ -111,6 +112,9 @@ export function SkillsWindow(): React.JSX.Element {
         <button className="btn small primary" disabled={!url.trim() || busy} onClick={() => handle(() => api.skills.importGithub(url.trim()))}>
           <Icon name="github" size={14} /> Laden
         </button>
+        <button className="btn small ghost" title="Share-Code einfügen" onClick={openPaste}>
+          <Icon name="share" size={14} /> Code
+        </button>
       </div>
       <div className="row">
         <span className="dim">Installieren nach</span>
@@ -180,6 +184,9 @@ export function SkillsWindow(): React.JSX.Element {
                   </div>
                 </div>
                 <div className="pactions">
+                  <button className="btn small ghost" title="Als Code teilen" onClick={() => void shareSkill(s.dir, s.name)}>
+                    <Icon name="share" size={14} />
+                  </button>
                   <button className="btn small ghost" title="Entfernen" onClick={() => remove(s)}>
                     <Icon name="trash" size={14} />
                   </button>

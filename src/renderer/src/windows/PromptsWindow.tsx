@@ -7,6 +7,7 @@ import { useSettings } from '../store/settingsStore'
 import { useUi } from '../store/uiStore'
 import { bracketedPaste } from '../../../shared/paste'
 import type { Project, Prompt } from '../../../shared/types'
+import { sharePrompts } from '../store/shareStore'
 
 /** Session des obersten Terminal-Fensters (sonst die erste). */
 function useActiveSession(): string | null {
@@ -29,6 +30,9 @@ function PromptCard({ p, target, onEdit }: { p: Prompt; target: string | null; o
         <div className="prompt-actions">
           <button className="btn small ghost" title="Bearbeiten" onClick={onEdit}>
             <Icon name="pen" size={13} />
+          </button>
+          <button className="btn small ghost" title="Als Code teilen" onClick={() => sharePrompts([p])}>
+            <Icon name="share" size={13} />
           </button>
           <button className="btn small" disabled={!target} onClick={() => send(false)} title="Ins Terminal einfügen (nicht abschicken)">
             Einfügen
@@ -90,6 +94,8 @@ function Notes(): React.JSX.Element {
   const [pid, setPid] = useState<string | null>(null)
   const [text, setText] = useState('')
   const [state, setState] = useState<'idle' | 'dirty' | 'saved'>('idle')
+  const hide = useSettings((x) => !!x.s?.streamer.enabled && !!x.s?.streamer.hideNotes)
+  const [revealed, setRevealed] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
@@ -128,7 +134,14 @@ function Notes(): React.JSX.Element {
           {state === 'dirty' ? 'speichert …' : state === 'saved' ? 'gespeichert' : ''}
         </span>
       </div>
-      <textarea className="field notes-area" placeholder="Ideen, Todos, Links für dieses Projekt …" value={text} onChange={(e) => change(e.target.value)} />
+      <div className="notes-wrap">
+        <textarea className={`field notes-area${hide && !revealed ? ' veiled' : ''}`} placeholder="Ideen, Todos, Links für dieses Projekt …" value={text} onChange={(e) => change(e.target.value)} />
+        {hide && !revealed && (
+          <button className="veil" onClick={() => setRevealed(true)}>
+            Notizen verdeckt (Streamer-Modus) · zum Anzeigen klicken
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -171,9 +184,16 @@ export function PromptsWindow(): React.JSX.Element {
             {editing && !prompts.some((p) => p.id === editing.id) && <PromptEditor p={editing} onDone={() => setEditing(null)} />}
           </ul>
           {!editing && (
-            <button className="btn small" onClick={() => setEditing({ id: crypto.randomUUID(), title: '', text: '' })}>
-              <Icon name="plus" size={13} /> Neuer Prompt
-            </button>
+            <div className="row">
+              <button className="btn small" onClick={() => setEditing({ id: crypto.randomUUID(), title: '', text: '' })}>
+                <Icon name="plus" size={13} /> Neuer Prompt
+              </button>
+              {prompts.length > 1 && (
+                <button className="btn small ghost" onClick={() => sharePrompts(prompts)}>
+                  <Icon name="share" size={13} /> Alle teilen
+                </button>
+              )}
+            </div>
           )}
         </>
       )}
