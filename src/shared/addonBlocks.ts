@@ -52,7 +52,8 @@ export interface BlocklyProgram {
 }
 
 export const BUILTIN_SCENES = ['city', 'forest', 'tokyo']
-const KEYS = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789']
+// Ohne Q, E, M, 2, 3, 7, 8, 9, 0: Strg+Alt ist auf deutschen Tastaturen AltGr (@, €, µ, ², ³, {, [, ], })
+const KEYS = [...'ABCDFGHIJKLNOPRSTUVWXYZ1456']
 const OPS_COMPARE = ['EQ', 'NEQ', 'LT', 'LTE', 'GT', 'GTE']
 const OPS_MATH = ['ADD', 'MINUS', 'MULTIPLY', 'DIVIDE', 'POWER']
 export const QUERY_KEYS = ['scene', 'rain', 'music_volume', 'rain_volume', 'focus_phase', 'waiting_sessions', 'hour', 'minute']

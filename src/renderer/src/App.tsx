@@ -31,6 +31,7 @@ import { wireUpdate } from './store/updateStore'
 import { UpdateToast } from './desktop/UpdateToast'
 import { Onboarding } from './windows/Onboarding'
 import { EDITOR_ID, toggleEditor, wireEditor } from './store/editorStore'
+import { startAddonRuntime } from './addons/runtime'
 
 
 const initials = (n: string): string => {
@@ -121,6 +122,7 @@ export default function App(): React.JSX.Element {
         if (def) ui.openWin(id, centeredRect(def.w, def.h))
       })
       setReady(true)
+      startAddonRuntime()
       checkWhatsNew()
       if (s.onboarded) checkSetupOnStart()
     })
