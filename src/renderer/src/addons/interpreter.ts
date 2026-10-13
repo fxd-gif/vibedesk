@@ -20,6 +20,14 @@ export interface AddonActions {
   query(what: string): string | number
   /** Frage mit zwei Knöpfen; true = erster Knopf. Läuft nach einer Weile mit false ab. */
   ask(text: string, yes: string, no: string): Promise<boolean>
+  /** Session im Projekt (Name; leer = Projekt der obersten Session) – laufende nehmen oder starten. Liefert die Session-ID. */
+  claudeStart(project: string): Promise<string | null>
+  /** Prompt an die Session (oder die oberste) schicken; liefert die benutzte Session-ID oder null */
+  claudeSend(session: string | undefined, text: string): Promise<string | null>
+  /** Wartet, bis die Session nicht mehr arbeitet (höchstens timeoutMs) */
+  claudeWait(session: string, timeoutMs: number, signal: AbortSignal): Promise<void>
+  /** working · waiting · done · idle · error · none */
+  claudeStatus(session: string | undefined): string
 }
 
 /** Dauerhafter Speicher eines Addons (überlebt Neustarts). */
@@ -34,13 +42,14 @@ export interface AddonStorage {
 
 export type AddonEvent =
   | { type: 'start' }
-  | { type: 'session_waiting'; project?: string }
-  | { type: 'session_done'; project?: string }
+  | { type: 'session_waiting'; project?: string; session?: string }
+  | { type: 'session_done'; project?: string; session?: string }
   | { type: 'focus'; phase: 'work' | 'break' | 'end' }
   | { type: 'time'; hour: number; minute: number }
   | { type: 'hotkey'; key: string }
   | { type: 'interval'; minutes: number }
   | { type: 'signal'; name: string }
+  | { type: 'command'; name: string }
 
 export interface Clock {
   now(): number
@@ -84,7 +93,11 @@ export const LIMITS = {
   storedTextLen: 2000,
   storedListLen: 100,
   fadeStepsPerSec: 4,
-  pollMs: 250
+  pollMs: 250,
+  /** Makros: Abstand zwischen zwei Prompts und Höchstzahl pro Stunde – gegen Endlosschleifen mit „Session fertig“ */
+  claudeEveryMs: 3000,
+  claudePerHour: 40,
+  claudeWaitMin: 120
 }
 
 const EVENT_OF: Record<string, AddonEvent['type']> = {
@@ -95,15 +108,17 @@ const EVENT_OF: Record<string, AddonEvent['type']> = {
   vd_on_time: 'time',
   vd_on_hotkey: 'hotkey',
   vd_on_interval: 'interval',
-  vd_on_signal: 'signal'
+  vd_on_signal: 'signal',
+  vd_on_command: 'command'
 }
 
 type Scalar = number | string | boolean
 type Value = Scalar | Scalar[]
 
-/** Pro Skriptlauf: das auslösende Ereignis (für „Ereignis-Info“). */
+/** Pro Skriptlauf: das auslösende Ereignis (für „Ereignis-Info“) und die Claude-Session des Makros. */
 interface Ctx {
   event: AddonEvent
+  session?: string
 }
 
 class Aborted extends Error {}
@@ -201,6 +216,10 @@ export class AddonRunner {
   hotkeys(): string[] {
     return this.hats.filter((b) => b.type === 'vd_on_hotkey').map((b) => String(field(b, 'KEY')))
   }
+  /** Namen der Makro-Befehle (für die Befehls-Palette) */
+  commands(): string[] {
+    return this.hats.filter((b) => b.type === 'vd_on_command').map((b) => String(field(b, 'NAME') ?? '').trim()).filter(Boolean)
+  }
   intervals(): number[] {
     return this.hats.filter((b) => b.type === 'vd_on_interval').map((b) => toNum(field(b, 'MINUTES') as Value))
   }
@@ -221,6 +240,8 @@ export class AddonRunner {
         return toNum(field(b, 'MINUTES') as Value) === e.minutes
       case 'signal':
         return String(field(b, 'NAME')) === e.name
+      case 'command':
+        return String(field(b, 'NAME') ?? '').trim() === e.name
       default:
         return true
     }
@@ -233,7 +254,7 @@ export class AddonRunner {
     for (const hat of this.hats) {
       if (!this.matches(hat, e)) continue
       if (this._running >= LIMITS.maxScripts) break
-      out.push(this.runScript(input(hat, 'DO'), { event: e }))
+      out.push(this.runScript(input(hat, 'DO'), { event: e, session: e.type === 'session_waiting' || e.type === 'session_done' ? e.session : undefined }))
     }
     return out
   }
@@ -290,6 +311,17 @@ export class AddonRunner {
   }
 
   /** Gleitendes Fenster: höchstens LIMITS.actionsPerSecond Aktionen in jeder Sekunde. */
+  private claudeSent: number[] = []
+  /** Makro-Bremse: Abstand zwischen Prompts und Höchstzahl pro Stunde */
+  private async claudeBudget(): Promise<void> {
+    const now = this.opts.clock.now()
+    this.claudeSent = this.claudeSent.filter((t) => now - t < 3_600_000)
+    if (this.claudeSent.length >= LIMITS.claudePerHour) throw new Error(`Mehr als ${LIMITS.claudePerHour} Prompts in einer Stunde – Makro angehalten.`)
+    const last = this.claudeSent[this.claudeSent.length - 1]
+    if (last !== undefined && now - last < LIMITS.claudeEveryMs) await this.sleep(LIMITS.claudeEveryMs - (now - last))
+    this.claudeSent.push(this.opts.clock.now())
+  }
+
   private async throttle(): Promise<void> {
     for (;;) {
       const now = this.opts.clock.now()
@@ -432,6 +464,31 @@ export class AddonRunner {
         return this.execStack(input(b, ok ? 'DO_YES' : 'DO_NO'), ctx)
       }
 
+      // ---------- Claude ----------
+      case 'vd_claude_start': {
+        await this.throttle()
+        const sid = await this.abortable(a.claudeStart(String(field(b, 'PROJECT') ?? '').trim()))
+        if (!sid) throw new Error('Session konnte nicht geöffnet werden – gibt es das Projekt?')
+        ctx.session = sid
+        return
+      }
+      case 'vd_claude_send': {
+        const text = str(await val('TEXT')).trim()
+        if (!text) return
+        await this.claudeBudget()
+        const sid = await this.abortable(a.claudeSend(ctx.session, text))
+        if (!sid) throw new Error('Keine Claude-Session offen – öffne eine oder nutze „Session öffnen“.')
+        ctx.session = sid
+        if (isTrue(field(b, 'AWAIT'))) await this.abortable(a.claudeWait(sid, LIMITS.claudeWaitMin * 60_000, this.ctrl.signal))
+        return
+      }
+      case 'vd_claude_wait': {
+        const sid = ctx.session
+        if (!sid) return
+        const min = clamp(toNum(await val('TIMEOUT')), 0, LIMITS.claudeWaitMin)
+        return this.abortable(a.claudeWait(sid, min * 60_000, this.ctrl.signal))
+      }
+
       // ---------- Erweitert ----------
       case 'vd_emit': {
         await this.throttle()
@@ -561,6 +618,7 @@ export class AddonRunner {
           const e = ctx.event
           return e.type === 'session_waiting' || e.type === 'session_done' ? (e.project ?? '') : ''
         }
+        if (what === 'claude_status') return this.opts.actions.claudeStatus(ctx.session)
         return this.opts.actions.query(what)
       }
       case 'vd_prompt_text':

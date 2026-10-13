@@ -35,7 +35,7 @@ type Snap = { nodes: RFNode[]; edges: Edge[] }
 
 const NODE_TYPES = { card: NodeCard }
 const NODE_W = 230
-const CAT_COLOR = { trigger: '#8b7cf6', action: '#5b8cff', logic: '#8a97b3', tool: '#34d399', advanced: '#f472b6' }
+const CAT_COLOR = { trigger: '#8b7cf6', claude: '#f59e6b', action: '#5b8cff', logic: '#8a97b3', tool: '#34d399', advanced: '#f472b6' }
 const HANDLE_COLOR: Record<string, string> = { yes: '#34d399', no: '#f87171', default: '#8a97b3' }
 
 const toRF = (n: FlowNode): RFNode => ({ id: n.id, type: 'card', position: n.position, data: n.data })

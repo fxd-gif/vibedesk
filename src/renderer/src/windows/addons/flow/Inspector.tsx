@@ -225,7 +225,9 @@ const FIELD_NAMES: Record<string, string> = {
   NAME: 'Signal-Name',
   WAIT: 'Auf Empfänger warten?',
   YES_LABEL: 'Text Knopf 1',
-  NO_LABEL: 'Text Knopf 2'
+  NO_LABEL: 'Text Knopf 2',
+  AWAIT: 'Auf Claude warten?',
+  PROJECT: 'Projekt'
 }
 
 export function NodeInspector({
@@ -252,7 +254,7 @@ export function NodeInspector({
   const fieldControl = (key: string): React.ReactNode => {
     const f = spec.fields[key]
     const value = String(d.fields[key] ?? '')
-    const label = d.type === 'vd_store_set' && key === 'KEY' ? 'Name des Werts' : (FIELD_NAMES[key] ?? key)
+    const label = d.type === 'vd_store_set' && key === 'KEY' ? 'Name des Werts' : d.type === 'vd_on_command' && key === 'NAME' ? 'Name in der Palette' : (FIELD_NAMES[key] ?? key)
     if (d.type === 'vd_on_time' && key === 'MINUTE') return null
     if (d.type === 'vd_on_time' && key === 'HOUR')
       return (
@@ -286,7 +288,19 @@ export function NodeInspector({
       }
       case 'text':
         return (
-          <Field key={key} label={label} hint={key === 'NAME' ? 'Sender und Empfänger brauchen denselben Namen.' : undefined}>
+          <Field
+            key={key}
+            label={label}
+            hint={
+              d.type === 'vd_on_command'
+                ? 'Erscheint in der Befehls-Palette als „Makro: …“.'
+                : key === 'NAME'
+                  ? 'Sender und Empfänger brauchen denselben Namen.'
+                  : key === 'PROJECT'
+                    ? 'Name des Projekts – leer lassen für das Projekt der Session im Vordergrund.'
+                    : undefined
+            }
+          >
             <input className="finput" list={key === 'NAME' ? 'flow-signals' : key === 'KEY' ? 'flow-store' : undefined} maxLength={f.maxLen} value={value} onChange={(e) => setField(key, e.target.value)} data-testid={`fi-${key}`} />
           </Field>
         )

@@ -1,7 +1,7 @@
 // Baustein-Katalog für Addons: die einzige Wahrheit darüber, welche Blöcke es gibt.
 // Codec, Prüfung, Interpreter und Blockly-Definitionen bauen darauf auf.
 
-export type Capability = 'scene' | 'rain' | 'audio' | 'sound' | 'notice' | 'ask' | 'focus' | 'clipboard' | 'hotkey' | 'schedule' | 'storage'
+export type Capability = 'scene' | 'rain' | 'audio' | 'sound' | 'notice' | 'ask' | 'focus' | 'clipboard' | 'hotkey' | 'schedule' | 'storage' | 'claude'
 
 export const CAPABILITY_LABELS: Record<Capability, string> = {
   scene: 'wechselt die Szene',
@@ -14,7 +14,8 @@ export const CAPABILITY_LABELS: Record<Capability, string> = {
   clipboard: 'kopiert Text in die Zwischenablage',
   hotkey: 'reagiert auf Tastenkürzel',
   schedule: 'läuft zeitgesteuert',
-  storage: 'merkt sich Werte dauerhaft'
+  storage: 'merkt sich Werte dauerhaft',
+  claude: 'steuert Claude: öffnet Sessions und schickt Prompts'
 }
 
 export type FieldSpec =
@@ -83,7 +84,9 @@ export const QUERY_KEYS = [
   'month',
   'year',
   'unix',
-  'uptime_minutes'
+  'uptime_minutes',
+  // Claude
+  'claude_status'
 ]
 export const CALC_OPS = ['add', 'sub', 'mul', 'div', 'mod', 'pow', 'min', 'max', 'round', 'floor', 'ceil', 'abs', 'sqrt', 'sin', 'cos', 'join', 'upper', 'lower', 'length', 'contains', 'trim']
 export const LIST_OPS = ['length', 'random', 'first', 'last', 'item', 'contains', 'join']
@@ -135,6 +138,12 @@ def('vd_list_clear', 'action', { fields: { VAR: { kind: 'variable' } } })
 def('vd_list_get', 'value', { fields: { VAR: { kind: 'variable' }, OP: { kind: 'enum', options: LIST_OPS } }, inputs: ['ARG'] })
 def('vd_calc', 'value', { fields: { OP: { kind: 'enum', options: CALC_OPS } }, inputs: ['A', 'B'] })
 def('vd_store_get', 'value', { fields: { KEY: NAME }, capability: 'storage' })
+
+// Claude – Makros
+ev('vd_on_command', { NAME: { kind: 'text', maxLen: 40 } })
+def('vd_claude_start', 'action', { fields: { PROJECT: { kind: 'text', maxLen: 80 } }, capability: 'claude' })
+def('vd_claude_send', 'action', { fields: { AWAIT: { kind: 'bool' } }, inputs: ['TEXT'], capability: 'claude' })
+def('vd_claude_wait', 'logic', { inputs: ['TIMEOUT'], capability: 'claude' })
 
 // Werte
 def('vd_get', 'value', { fields: { WHAT: { kind: 'enum', options: QUERY_KEYS } } })

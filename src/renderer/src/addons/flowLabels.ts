@@ -8,7 +8,8 @@ export const FIELD_LABELS: Record<string, Record<string, string>> = {
   SCENE: { city: 'Stadt bei Nacht', forest: 'Wald in der Dämmerung', tokyo: 'Tokio-Gasse' },
   SOUND: { chime: 'Gong' },
   ON: { TRUE: 'an', FALSE: 'aus' },
-  WAIT: { TRUE: 'ja, warten bis fertig', FALSE: 'nein, sofort weiter' }
+  WAIT: { TRUE: 'ja, warten bis fertig', FALSE: 'nein, sofort weiter' },
+  AWAIT: { TRUE: 'ja, erst weiter, wenn Claude fertig ist', FALSE: 'nein, sofort weiter' }
 }
 
 /** App-Werte für die fx-Auswahl, gruppiert */
@@ -21,7 +22,8 @@ export const APP_GROUPS: { label: string; items: [string, string][] }[] = [
       ['session_minutes', 'Session-Dauer (Min.)'],
       ['tokens_today', 'Tokens heute'],
       ['cost_today', 'Kosten heute ($)'],
-      ['event_project', 'Projekt des Ereignisses']
+      ['event_project', 'Projekt des Ereignisses'],
+      ['claude_status', 'Claude-Status (arbeitet, wartet, fertig …)']
     ]
   },
   {
@@ -161,6 +163,14 @@ export function summarize(d: FlowNodeData): string {
       return 'Aufgabe erledigt'
     case 'vd_on_signal':
       return `„${f.NAME}“`
+    case 'vd_on_command':
+      return `Strg+K → Makro: ${f.NAME}`
+    case 'vd_claude_start':
+      return String(f.PROJECT ?? '').trim() || 'Projekt im Vordergrund'
+    case 'vd_claude_send':
+      return `${v('TEXT')}${f.AWAIT === 'TRUE' ? ' · wartet' : ''}`
+    case 'vd_claude_wait':
+      return `höchstens ${unit('TIMEOUT', 'min')}`
     case 'vd_set_scene':
       return optionLabel('SCENE', String(f.SCENE))
     case 'vd_play_sound':

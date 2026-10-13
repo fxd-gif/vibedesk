@@ -5,7 +5,10 @@ import { playChime } from '../ambience/chime'
 import { useFocus } from '../store/focusStore'
 import { useSettings } from '../store/settingsStore'
 import { useWorkflow } from '../store/workflowStore'
-import { useSessions } from '../store/sessionStore'
+import { termWin, useSessions } from '../store/sessionStore'
+import { ensureSession, sendToSession, waitUntilIdle } from '../store/sessionPrompt'
+import { useUi } from '../store/uiStore'
+import { api } from '../api'
 import { useStats } from '../store/statsStore'
 import { askUser } from './AskToast'
 import { addonSceneValue } from './events'
@@ -20,6 +23,19 @@ const apply = (p: SettingsPatch, transient?: boolean): void => (transient ? show
 const pct = (v: number | undefined, fallback: number): number => Math.round((v ?? fallback) * 100)
 const startedAt = Date.now()
 const localDay = (d: Date): string => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+/** Session im Vordergrund, sonst die erste offene */
+function topSession(): string | undefined {
+  const ui = useUi.getState()
+  const sessions = useSessions.getState().sessions
+  for (let i = ui.open.length - 1; i >= 0; i--) {
+    const s = sessions.find((x) => termWin(x.id) === ui.open[i])
+    if (s) return s.id
+  }
+  return sessions[0]?.id
+}
+
+const alive = (id: string | undefined): id is string => !!id && useSessions.getState().sessions.some((s) => s.id === id)
 
 export function createActions(addonId: string, addonName = 'Addon'): AddonActions {
   const assetUrl = (name: string): string => `${ADDON_SCHEME}://${addonId}/${encodeURIComponent(name)}`
@@ -49,6 +65,28 @@ export function createActions(addonId: string, addonName = 'Addon'): AddonAction
     },
     copyText: (text) => void navigator.clipboard.writeText(text).catch(() => undefined),
     ask: (text, yes, no) => askUser(addonId, addonName, text, yes, no),
+    claudeStart: async (project) => {
+      const want = project.trim().toLowerCase()
+      if (!want) {
+        const top = topSession()
+        if (top) return top
+      }
+      const list = await api.projects.list()
+      const p = want ? list.find((x) => !x.missing && x.name.toLowerCase() === want) : [...list].filter((x) => !x.missing).sort((a, b) => (b.lastOpenedAt ?? 0) - (a.lastOpenedAt ?? 0))[0]
+      return p ? ensureSession(p.id) : null
+    },
+    claudeSend: async (session, text) => {
+      const id = alive(session) ? session : topSession()
+      if (!id) return null
+      // Makros laufen im Hintergrund – den Fokus nicht wegnehmen
+      sendToSession(id, text, false)
+      return id
+    },
+    claudeWait: (session, timeoutMs, signal) => waitUntilIdle(session, timeoutMs, signal),
+    claudeStatus: (session) => {
+      const id = alive(session) ? session : topSession()
+      return id ? (useWorkflow.getState().sessions[id]?.status ?? 'idle') : 'none'
+    },
     query: (what) => {
       const s = settings()
       const now = new Date()

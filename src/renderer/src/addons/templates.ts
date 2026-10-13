@@ -60,6 +60,7 @@ const iff = (b: Builder, cond: Cond): string => b.n('controls_if', { cond })
 const hotkey = (b: Builder, key: string): string => b.n('vd_on_hotkey', { fields: { KEY: key } })
 const sound = (b: Builder): string => b.n('vd_play_sound')
 const ask = (b: Builder, text: string, yes: string, no: string): string => b.n('vd_ask', { fields: { YES_LABEL: yes, NO_LABEL: no }, values: { TEXT: txt(text) } })
+const claude = (b: Builder, text: string): string => b.n('vd_claude_send', { fields: { AWAIT: 'TRUE' }, values: { TEXT: txt(text) } })
 
 // ---------- Vorlagen ----------
 
@@ -251,6 +252,51 @@ export const TEMPLATES: Template[] = [
       b.link(hatWas, 'yes', b.seq(setVar(b, 'bericht', { k: 'list', name: 'heute', op: 'join' }), setVar(b, 'anzahl', store('erledigt')), frage))
       b.link(frage, 'yes', b.seq(b.n('vd_copy_text', { values: { TEXT: txt('Heute erledigt ({anzahl} Aufgaben): {bericht}') } }), notice(b, 'Bericht kopiert')))
       b.seq(b.n('vd_on_time', { fields: { HOUR: 0, MINUTE: 0 } }), b.n('vd_list_clear', { varName: 'heute' }), keep(b, 'erledigt', num(0)))
+    }
+  },
+  {
+    id: 'macro-tests-commit',
+    name: 'Makro: Tests & Commit',
+    description: 'Ein Befehl, drei Schritte: Claude schreibt Tests, repariert, was rot ist, und committet – du bekommst Bescheid, wenn es fertig ist oder dich braucht.',
+    icon: 'send',
+    accent: 'claude',
+    highlights: ['Makro-Befehl', 'Prompt an Claude', 'Claude-Status', 'Tastenkürzel'],
+    build(b) {
+      const start = (): string => b.n('vd_emit', { fields: { NAME: 'tests-commit', WAIT: 'FALSE' } })
+      b.seq(b.n('vd_on_command', { fields: { NAME: 'Tests & Commit' } }), start())
+      b.seq(hotkey(b, 'K'), start())
+      const check = iff(b, all(cmp(app('claude_status'), 'EQ', txt('waiting'))))
+      b.seq(
+        signal(b, 'tests-commit'),
+        notice(b, 'Makro läuft: Tests & Commit'),
+        claude(b, 'Schreib aussagekräftige Tests für die zuletzt geänderten Dateien.'),
+        claude(b, 'Lass alle Tests laufen und repariere, was rot ist.'),
+        check
+      )
+      b.link(check, 'yes', b.seq(sound(b), notice(b, 'Claude braucht dich – Makro pausiert')))
+      b.link(check, 'no', b.seq(claude(b, 'Prüfe die Änderungen und erstelle einen sauberen Commit mit aussagekräftiger Nachricht.'), sound(b), notice(b, 'Tests & Commit fertig')))
+    }
+  },
+  {
+    id: 'macro-morning',
+    name: 'Makro: Morgen-Start',
+    description: 'Um 9 Uhr (oder per Befehl) öffnet Claude dein letztes Projekt und gibt dir einen Überblick: was zuletzt passiert ist, was offen ist und drei nächste Schritte.',
+    icon: 'send',
+    accent: 'claude',
+    highlights: ['Session öffnen', 'Prompt an Claude', 'Uhrzeit', 'Frage'],
+    build(b) {
+      const go = (): string => b.n('vd_emit', { fields: { NAME: 'morgen', WAIT: 'FALSE' } })
+      const frage = ask(b, 'Guten Morgen! Soll Claude dein Projekt auf Stand bringen?', 'Los', 'Heute nicht')
+      b.seq(b.n('vd_on_time', { fields: { HOUR: 9, MINUTE: 0 } }), frage)
+      b.link(frage, 'yes', go())
+      b.seq(b.n('vd_on_command', { fields: { NAME: 'Morgen-Start' } }), go())
+      b.seq(
+        signal(b, 'morgen'),
+        b.n('vd_claude_start', { fields: { PROJECT: '' } }),
+        claude(b, 'Gib mir einen kurzen Überblick: Was wurde zuletzt geändert, was ist offen (TODOs, fehlschlagende Tests)? Schlage drei nächste Schritte vor.'),
+        sound(b),
+        notice(b, 'Dein Morgen-Überblick ist fertig')
+      )
     }
   }
 ]

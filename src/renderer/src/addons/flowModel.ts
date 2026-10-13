@@ -4,7 +4,7 @@ import { BLOCKS, type BlocklyBlock, type BlocklyProgram } from '../../../shared/
 
 /** Ausgänge: next (weiter), yes/no (Wenn, Frage), body (Schleife), a/b (Gleichzeitig), caseN/default (Je nach Wert) */
 export type Handle = string
-export type Category = 'trigger' | 'action' | 'logic' | 'tool' | 'advanced'
+export type Category = 'trigger' | 'claude' | 'action' | 'logic' | 'tool' | 'advanced'
 
 export type Val =
   | { k: 'num'; v: number }
@@ -101,6 +101,16 @@ export const KINDS: Record<string, KindDef> = {
   vd_on_time: trig('Uhrzeit', 'Jeden Tag zu einer festen Uhrzeit.', 'clock', { HOUR: 22, MINUTE: 0 }),
   vd_on_hotkey: trig('Tastenkürzel', 'Wenn du Strg + Alt + Taste drückst.', 'keyboard', { KEY: 'T' }),
   vd_on_interval: trig('Intervall', 'Wiederholt sich alle paar Minuten.', 'repeat', { MINUTES: 30 }),
+  vd_on_command: trig('Makro-Befehl', 'Startet über die Befehls-Palette (Strg+K) als „Makro: Name“.', 'zap', { NAME: 'Mein Makro' }),
+
+  vd_claude_start: act('Session öffnen', 'Öffnet eine Claude-Session im Projekt – oder nimmt die, die schon läuft.', 'play', 'claude', [], { fields: { PROJECT: '' } }),
+  vd_claude_send: act('Prompt an Claude', 'Schickt einen Prompt an die Session – auf Wunsch geht es erst weiter, wenn Claude fertig ist.', 'send', 'claude', [{ key: 'TEXT', label: 'Prompt', type: 'text' }], {
+    fields: { AWAIT: 'TRUE' },
+    values: { TEXT: txt('Schreib Tests für die zuletzt geänderten Dateien.') }
+  }),
+  vd_claude_wait: act('Warten bis Claude fertig', 'Wartet, bis die Session nicht mehr arbeitet – höchstens bis zum Zeitlimit.', 'hourglass', 'claude', [{ key: 'TIMEOUT', label: 'Höchstens', type: 'num', unit: 'min' }], {
+    values: { TIMEOUT: num(30) }
+  }),
 
   vd_set_scene: act('Szene wechseln', 'Wechselt das Bild hinter der Scheibe.', 'image', 'action', [], { fields: { SCENE: 'city' } }),
   vd_set_rain: act('Regen setzen', 'Stellt die Regenstärke ein.', 'rain', 'action', [{ key: 'VALUE', label: 'Stärke', type: 'num', unit: '%' }], { values: { VALUE: num(60) } }),
@@ -173,7 +183,7 @@ export const KINDS: Record<string, KindDef> = {
   vd_list_clear: act('Liste leeren', 'Entfernt alle Einträge einer Liste.', 'list', 'advanced', [], { varName: 'liste' })
 }
 
-export const CATEGORY_LABELS: Record<Category, string> = { trigger: 'Auslöser', action: 'Aktionen', logic: 'Logik', tool: 'Werkzeuge', advanced: 'Erweitert' }
+export const CATEGORY_LABELS: Record<Category, string> = { trigger: 'Auslöser', claude: 'Claude', action: 'Aktionen', logic: 'Logik', tool: 'Werkzeuge', advanced: 'Erweitert' }
 
 export const isTrigger = (type: string): boolean => BLOCKS[type]?.category === 'event'
 

@@ -55,4 +55,4 @@ export function FlowIcon({ name, size = 18, stroke = 1.7 }: { name: string; size
   )
 }
 
-export const CATEGORY_ICONS = { trigger: 'zap', action: 'play', logic: 'logic', tool: 'wrench', advanced: 'sparkles' } as const
+export const CATEGORY_ICONS = { trigger: 'zap', claude: 'send', action: 'play', logic: 'logic', tool: 'wrench', advanced: 'sparkles' } as const

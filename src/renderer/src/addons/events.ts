@@ -11,8 +11,9 @@ export function statusTransitions(prev: StatusMap, next: StatusMap, projectOf: (
   for (const [id, s] of Object.entries(next)) {
     if (prev[id]?.status === s.status) continue
     const project = projectOf(id)
-    if (s.status === 'waiting') out.push(project ? { type: 'session_waiting', project } : { type: 'session_waiting' })
-    else if (s.status === 'done') out.push(project ? { type: 'session_done', project } : { type: 'session_done' })
+    const extra = { ...(project ? { project } : {}), session: id }
+    if (s.status === 'waiting') out.push({ type: 'session_waiting', ...extra })
+    else if (s.status === 'done') out.push({ type: 'session_done', ...extra })
   }
   return out
 }

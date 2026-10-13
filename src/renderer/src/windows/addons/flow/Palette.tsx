@@ -3,7 +3,7 @@ import { CATEGORY_LABELS, KINDS, type Category } from '../../../addons/flowModel
 import { CATEGORY_ICONS, FlowIcon } from './FlowIcon'
 
 export const DRAG_TYPE = 'application/x-vibedesk-node'
-const STANDARD: Category[] = ['trigger', 'action', 'logic', 'tool']
+const STANDARD: Category[] = ['trigger', 'claude', 'action', 'logic', 'tool']
 
 function Item({ type, onAdd }: { type: string; onAdd(type: string): void }): React.JSX.Element {
   const k = KINDS[type]

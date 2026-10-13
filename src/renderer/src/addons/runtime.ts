@@ -152,4 +152,16 @@ export function startAddonRuntime(): void {
   void useAddons.getState().reload()
 }
 
+/** Makro-Befehle aller laufenden Addons (für die Befehls-Palette) */
+export function addonCommands(): { name: string; addon: string }[] {
+  const out: { name: string; addon: string }[] = []
+  for (const [id, r] of runners) for (const name of r.commands()) out.push({ name, addon: addonName(id) })
+  if (testRunner) for (const name of testRunner.commands()) out.push({ name, addon: 'Test im Maker' })
+  return out.filter((c, i) => out.findIndex((x) => x.name === c.name) === i)
+}
+
+export function runCommand(name: string): void {
+  emit({ type: 'command', name })
+}
+
 export { addonName }

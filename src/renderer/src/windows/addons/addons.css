@@ -39,3 +39,5 @@
 .ask-btn.primary { background: #b9c5ff; border-color: #b9c5ff; color: #121630; font-weight: 600; }
 .ask-timer { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: #8b7cf6; transform-origin: left; animation: ask-timer linear forwards; }
 @keyframes ask-timer { to { transform: scaleX(0); } }
+.install-warn { margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(245, 158, 107, .12); border: 1px solid rgba(245, 158, 107, .45); color: #fcd3b6; font-size: 12.5px; line-height: 1.55; }
+.install-warn b { color: #fde4d2; }

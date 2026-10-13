@@ -1,3 +1,4 @@
+import { addonCommands, runCommand } from '../../addons/runtime'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { create } from 'zustand'
 import { api } from '../../api'
@@ -68,6 +69,7 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     { id: 'act:addonMaker', label: 'Neues Addon bauen', group: 'Aktionen', icon: 'puzzle', run: () => (useAddonUi.getState().newAddon(), openPanel('addons')) },
     win('lounge', 'Mit Freunden vibecoden – ohne Server'),
     win('streamer', 'Schutz, OBS-Overlay, Twitch-Chat'),
+    ...addonCommands().map((c): Cmd => ({ id: 'macro:' + c.name, label: `Makro: ${c.name}`, group: 'Makros', icon: 'puzzle', hint: c.addon, run: () => runCommand(c.name) })),
     ...projects
       .filter((p) => !p.missing)
       .map((p): Cmd => ({ id: 'proj:' + p.id, label: `Session starten: ${p.name}`, group: 'Projekte', icon: 'play', hint: redactText(p.path), run: () => void useSessions.getState().start(p.id) })),

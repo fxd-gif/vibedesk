@@ -1,3 +1,4 @@
+import { CAPABILITY_LABELS } from '../../../../shared/addonBlocks'
 import { create } from 'zustand'
 import { api, errorText } from '../../api'
 import type { AddonPreview } from '../../../../shared/types'
@@ -79,7 +80,14 @@ export function InstallDialog(): React.JSX.Element | null {
             ))}
           </div>
         )}
-        <p className="dim small">Addons können keine Dateien lesen, keine Befehle ausführen und nicht ins Internet.</p>
+        {preview.capabilityLabels.includes(CAPABILITY_LABELS.claude) ? (
+          <p className="install-warn" data-testid="install-claude-warn">
+            <b>Achtung: Dieses Addon steuert Claude.</b> Es kann Sessions öffnen und Prompts schicken – Claude kann daraufhin Dateien ändern und Befehle ausführen.
+            Installiere es nur, wenn du dem Absender vertraust, und schau dir die Prompts im Maker an.
+          </p>
+        ) : (
+          <p className="dim small">Addons können keine Dateien lesen, keine Befehle ausführen und nicht ins Internet.</p>
+        )}
         <div className="dlg-actions">
           <button className="btn ghost" onClick={close} disabled={busy}>
             Abbrechen
