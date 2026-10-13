@@ -69,6 +69,7 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     { id: 'act:addonMaker', label: 'Neues Addon bauen', group: 'Aktionen', icon: 'puzzle', run: () => (useAddonUi.getState().newAddon(), openPanel('addons')) },
     win('lounge', 'Mit Freunden vibecoden – ohne Server'),
     win('streamer', 'Schutz, OBS-Overlay, Twitch-Chat'),
+    win('companion', 'Freigaben, Vorschläge und Prompts vom Handy'),
     ...addonCommands().map((c): Cmd => ({ id: 'macro:' + c.name, label: `Makro: ${c.name}`, group: 'Makros', icon: 'puzzle', hint: c.addon, run: () => runCommand(c.name) })),
     ...projects
       .filter((p) => !p.missing)

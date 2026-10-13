@@ -7,6 +7,7 @@ import { relTime } from '../util'
 import { Toggle } from '../windows/AmbienceMenu'
 import { Icon } from './icons'
 import { UpdateToast } from './UpdateToast'
+import { PermissionCards } from './PermissionCards'
 import './notify.css'
 
 const KIND_DOT: Record<Notice['kind'], string> = { waiting: 'waiting', done: 'done', error: 'error', info: '' }
@@ -50,6 +51,7 @@ export function ToastStack(): React.JSX.Element {
   return (
     <div className="toast-stack" data-testid="toast-stack">
       <UpdateToast />
+      <PermissionCards />
       {!panel && toasts.map((n) => <NoticeCard key={n.id} n={n} />)}
     </div>
   )

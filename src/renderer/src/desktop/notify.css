@@ -60,3 +60,7 @@
 .start-actions { display: flex; justify-content: center; gap: 8px; }
 /* offenes Menü verdeckt sonst seinen eigenen Tooltip */
 .dock-btn[data-testid='dock-more'].active:hover::before, .dock-btn[data-testid='dock-notify'].active:hover::before { display: none; }
+
+/* Freigabe-Karten: bleiben, bis entschieden ist */
+.perm-card { width: 380px; border-color: rgba(250, 204, 21, .38); }
+.perm-detail { margin: 10px 0 0; padding: 8px 10px; max-height: 140px; overflow: auto; border-radius: 9px; background: rgba(0,0,0,.32); font: 11.5px/1.45 var(--mono, 'JetBrains Mono', Consolas, monospace); white-space: pre-wrap; word-break: break-word; color: var(--text); }

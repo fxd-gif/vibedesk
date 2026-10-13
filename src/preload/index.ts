@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { DiscordStatus, FileChange, HookEvent, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
 import type { BrainPulse } from '../shared/brain'
+import type { PermissionAsk } from '../shared/permissions'
+import type { CompanionDevice, PromptTarget } from '../shared/companion'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
   const h = (_e: unknown, ...args: unknown[]): void => cb(...(args as A))
@@ -52,7 +54,11 @@ const api: VibedeskApi = {
     brainChanged: (cb) => listen<[string]>('brain:changed', cb),
     brainPulse: (cb) => listen<[BrainPulse]>('brain:pulse', cb),
     gitLoginCode: (cb) => listen<[string, string]>('git:loginCode', cb),
-    gitInstallLog: (cb) => listen<['git' | 'gh', string]>('git:installLog', cb)
+    gitInstallLog: (cb) => listen<['git' | 'gh', string]>('git:installLog', cb),
+    permissions: (cb) => listen<[PermissionAsk[]]>('permissions:list', cb),
+    companionPrompt: (cb) => listen<[string, PromptTarget, string]>('companion:prompt', cb),
+    companionDevices: (cb) => listen<[CompanionDevice[], CompanionDevice | undefined]>('companion:devices', cb),
+    companionPower: (cb) => listen<['shutdown' | 'sleep' | 'cancel', number | null]>('companion:power', cb)
   },
   setup: {
     check: () => ipcRenderer.invoke('setup:check'),
@@ -153,6 +159,21 @@ const api: VibedeskApi = {
     configure: (enabled, port) => ipcRenderer.invoke('streamer:configure', enabled, port),
     push: (state) => ipcRenderer.send('streamer:push', state),
     user: () => ipcRenderer.invoke('streamer:user')
+  },
+  permissions: {
+    list: () => ipcRenderer.invoke('permissions:list'),
+    answer: (id, decision) => ipcRenderer.invoke('permissions:answer', id, decision)
+  },
+  companion: {
+    configure: (enabled, port) => ipcRenderer.invoke('companion:configure', enabled, port),
+    startPairing: () => ipcRenderer.invoke('companion:startPairing'),
+    cancelPairing: () => ipcRenderer.send('companion:cancelPairing'),
+    devices: () => ipcRenderer.invoke('companion:devices'),
+    revoke: (id) => ipcRenderer.invoke('companion:revoke', id),
+    revokeAll: () => ipcRenderer.invoke('companion:revokeAll'),
+    cancelShutdown: () => ipcRenderer.invoke('companion:cancelShutdown'),
+    push: (s) => ipcRenderer.send('companion:push', s),
+    promptDone: (reqId, ok) => ipcRenderer.send('companion:promptDone', reqId, ok)
   },
   clipboard: {
     write: (text) => ipcRenderer.send('clipboard:write', String(text)),

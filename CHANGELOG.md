@@ -7,6 +7,19 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Handy-Begleiter**: VibeDesk aufs Handy holen – im selben WLAN QR-Code scannen und mit einem 6-stelligen Einmal-Code vom PC koppeln. Auf dem Handy siehst du alle Sessions, was Claude zuletzt geschrieben hat, den Plan-Fortschritt und deine Mitteilungen
+- **Wie geht es weiter?** Ist Claude fertig, schlägt das Handy drei sinnvolle nächste Schritte vor – ein Tipp schickt sie los
+- **Idee eintippen, Claude formuliert**: Schreib kurz, was du willst – Claude macht daraus einen klaren Prompt und schickt ihn direkt in die gewählte Session (oder startet eine neue). Läuft über dein Claude-Abo, ohne API-Key
+- **Freigaben als Karte**: Will Claude einen Befehl ausführen oder eine Datei ändern, erscheint unten rechts eine Karte mit Erlauben · Immer · Ablehnen – und gleichzeitig auf dem Handy, das dabei vibriert. „Im Terminal“ führt zur gewohnten Frage
+- Solange der Handy-Begleiter läuft, geht der PC nicht in den Standby. Vom Handy lässt er sich ausschalten (mit 60 Sekunden zum Abbrechen) oder schlafen legen
+- Gekoppelte Handys siehst du im Fenster „Handy-Begleiter“ und kannst sie einzeln abmelden. Im Streamer-Modus ist der Kopplungs-Code verschwommen
+
+### Behoben
+
+- Prompts aus Makros (und vom Handy) landeten zwar in Claudes Eingabe, wurden aber nicht abgeschickt – jetzt geht Enter zuverlässig hinterher
+
 ## 0.12.1
 
 ### Verbessert

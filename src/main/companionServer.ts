@@ -1,0 +1,205 @@
+// Handy-Begleiter: kleiner Webserver im lokalen Netz. Bewusst nicht nur 127.0.0.1 – das Handy muss ihn im WLAN
+// erreichen. Darum: standardmäßig aus, Koppeln nur mit einem Einmal-Code, den der PC auf Knopfdruck zeigt; danach
+// braucht jeder API-Aufruf den Geräte-Schlüssel (Authorization-Header, nie in der URL). Keine CORS-Freigaben,
+// kleine Bodies, Bremse für Fehlversuche.
+import http from 'http'
+import type { AddressInfo } from 'net'
+import { randomBytes } from 'crypto'
+import { RateLimiter } from '../shared/lounge'
+import { isDecision } from '../shared/permissions'
+import { deviceName, type CompanionDevice, type CompanionState } from '../shared/companion'
+import { companionIcon, companionManifest, companionPage } from './companionPage'
+import type { CompanionAuth } from './companionAuth'
+import type { CompanionHub } from './companionHub'
+import type { PowerControl } from './powerControl'
+
+const MAX_BODY = 16 * 1024
+const MAX_CLIENTS = 8
+
+export class CompanionServer {
+  private server: http.Server | null = null
+  private port = 0
+  private clients = new Map<http.ServerResponse, string>()
+  private state = '{}'
+  private heartbeat: ReturnType<typeof setInterval> | null = null
+  /** Fehlversuche (falscher Schlüssel oder Code) pro Adresse und insgesamt */
+  private fails = new RateLimiter(20, 10 * 60_000)
+  private pairTries = new RateLimiter(30, 10 * 60_000)
+  private powerLimit = new RateLimiter(5, 60_000)
+
+  constructor(
+    private auth: CompanionAuth,
+    private hub: CompanionHub,
+    private power: PowerControl,
+    private onPaired: (d: CompanionDevice) => void = () => {}
+  ) {}
+
+  get running(): boolean {
+    return !!this.server
+  }
+
+  /** tatsächlicher Port (bei 0 vom System gewählt) */
+  get boundPort(): number {
+    return this.port
+  }
+
+  async start(port: number, host = '0.0.0.0'): Promise<{ ok: true } | { ok: false; error: string }> {
+    if (this.server && this.port === port) return { ok: true }
+    await this.stop()
+    const server = http.createServer((req, res) => this.handle(req, res))
+    try {
+      await new Promise<void>((resolve, reject) => {
+        server.once('error', reject)
+        server.listen(port, host, () => resolve())
+      })
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code
+      return { ok: false, error: code === 'EADDRINUSE' ? `Port ${port} ist schon belegt – wähle einen anderen.` : String((err as Error).message) }
+    }
+    this.server = server
+    this.port = (server.address() as AddressInfo).port
+    this.heartbeat = setInterval(() => this.clients.forEach((_d, c) => c.write(': ping\n\n')), 15_000)
+    return { ok: true }
+  }
+
+  stop(): Promise<void> {
+    if (this.heartbeat) clearInterval(this.heartbeat)
+    this.heartbeat = null
+    this.clients.forEach((_d, c) => c.end())
+    this.clients.clear()
+    const s = this.server
+    this.server = null
+    if (!s) return Promise.resolve()
+    return new Promise((resolve) => {
+      s.close(() => resolve())
+      s.closeAllConnections()
+    })
+  }
+
+  /** Abgemeldete Geräte sofort trennen (deviceId oder alle) */
+  disconnect(deviceId?: string): void {
+    for (const [c, id] of this.clients) {
+      if (deviceId && id !== deviceId) continue
+      c.end()
+      this.clients.delete(c)
+    }
+  }
+
+  push(state: CompanionState): void {
+    this.state = JSON.stringify(state)
+    const msg = `data: ${this.state}\n\n`
+    this.clients.forEach((_d, c) => c.write(msg))
+  }
+
+  private device(req: http.IncomingMessage): CompanionDevice | null {
+    const h = req.headers.authorization
+    const given = typeof h === 'string' && h.startsWith('Bearer ') ? h.slice(7).trim() : ''
+    return given ? this.auth.verify(given) : null
+  }
+
+  private handle(req: http.IncomingMessage, res: http.ServerResponse): void {
+    const common = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'x-frame-options': 'DENY' }
+    const send = (code: number, body: string, type = 'application/json; charset=utf-8'): void => {
+      if (res.headersSent) return
+      res.writeHead(code, { ...common, 'content-type': type })
+      res.end(body)
+    }
+    const json = (code: number, x: unknown): void => send(code, JSON.stringify(x))
+    const url = new URL(req.url ?? '/', 'http://companion')
+    const ip = req.socket.remoteAddress ?? '?'
+
+    if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
+      const nonce = randomBytes(16).toString('base64')
+      res.writeHead(200, {
+        ...common,
+        'content-type': 'text/html; charset=utf-8',
+        'content-security-policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`
+      })
+      res.end(companionPage(nonce))
+      return
+    }
+    if (req.method === 'GET' && url.pathname === '/manifest.webmanifest') return send(200, companionManifest(), 'application/manifest+json')
+    if (req.method === 'GET' && url.pathname === '/icon.svg') return send(200, companionIcon(), 'image/svg+xml')
+    if (!url.pathname.startsWith('/api/')) return send(404, '"not found"')
+
+    // Koppeln: ohne Schlüssel, aber nur mit dem Code vom PC-Bildschirm
+    if (url.pathname === '/api/pair') {
+      if (req.method !== 'POST') return json(405, { ok: false, error: 'Methode nicht erlaubt' })
+      if (!this.pairTries.allow(ip) || !this.pairTries.allow('*')) return json(429, { ok: false, error: 'Zu viele Versuche – warte ein paar Minuten.' })
+      return this.body(req, (b) => {
+        const r = this.auth.pair(b?.code, typeof b?.name === 'string' && b.name.trim() ? b.name : deviceName(String(req.headers['user-agent'] ?? '')))
+        if (!r.ok) return json(200, r)
+        this.onPaired(r.device)
+        json(200, { ok: true, token: r.token, name: r.device.name })
+      }, () => json(413, { ok: false, error: 'Zu groß' }))
+    }
+
+    const dev = this.device(req)
+    if (!dev) {
+      if (!this.fails.allow(ip)) return json(429, { ok: false, error: 'Zu viele Fehlversuche – warte ein paar Minuten.' })
+      return json(401, { ok: false, error: 'Nicht gekoppelt' })
+    }
+
+    if (req.method === 'GET' && url.pathname === '/api/events') {
+      if (this.clients.size >= MAX_CLIENTS) return json(503, { ok: false, error: 'Zu viele Geräte verbunden.' })
+      res.writeHead(200, { ...common, 'content-type': 'text/event-stream; charset=utf-8', connection: 'keep-alive' })
+      res.write(`retry: 2000\ndata: ${this.state}\n\n`)
+      this.clients.set(res, dev.id)
+      req.on('close', () => this.clients.delete(res))
+      return
+    }
+    if (req.method !== 'POST') return json(405, { ok: false, error: 'Methode nicht erlaubt' })
+
+    this.body(req, (body) => {
+      if (!body) return json(400, { ok: false, error: 'Ungültige Anfrage' })
+      const fail = (e: unknown): void => json(500, { ok: false, error: String(e) })
+      switch (url.pathname) {
+        case '/api/permission':
+          if (!isDecision(body.decision) || body.decision === 'terminal') return json(400, { ok: false, error: 'Ungültige Entscheidung' })
+          return json(200, this.hub.answer(body.id, body.decision))
+        case '/api/prompt':
+          return void this.hub.prompt(body).then((r) => json(200, r), fail)
+        case '/api/suggest':
+          return void this.hub.suggest(body.sessionId).then((r) => json(200, r), fail)
+        case '/api/power':
+          if (!this.powerLimit.allow('p')) return json(429, { ok: false, error: 'Langsam – kurz warten.' })
+          return void this.power.act(body.action).then((r) => {
+            json(200, r)
+            this.hub.touch()
+          }, fail)
+        case '/api/unpair':
+          this.auth.revoke(dev.id)
+          json(200, { ok: true })
+          return this.disconnect(dev.id)
+        default:
+          return json(404, { ok: false, error: 'Unbekannt' })
+      }
+    }, () => json(413, { ok: false, error: 'Zu groß' }))
+  }
+
+  private body(req: http.IncomingMessage, done: (b: Record<string, unknown> | null) => void, tooBig: () => void): void {
+    let size = 0
+    let aborted = false
+    const chunks: Buffer[] = []
+    req.on('data', (c: Buffer) => {
+      if (aborted) return
+      size += c.length
+      if (size > MAX_BODY) {
+        aborted = true
+        tooBig()
+        req.resume()
+        return
+      }
+      chunks.push(c)
+    })
+    req.on('end', () => {
+      if (aborted) return
+      try {
+        const b = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+        done(b && typeof b === 'object' && !Array.isArray(b) ? b : null)
+      } catch {
+        done(null)
+      }
+    })
+  }
+}

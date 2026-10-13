@@ -1,0 +1,16 @@
+/* Handy-Begleiter */
+.panel.companion { display: flex; flex-direction: column; gap: 12px; }
+.companion .streamer-hero.on { background: rgba(159,184,255,.1); border-color: rgba(159,184,255,.4); }
+.companion .streamer-hero.on svg { color: var(--accent, #9fb8ff); }
+.comp-pair { display: flex; gap: 16px; align-items: center; }
+.comp-qr { flex: none; width: 184px; height: 184px; border-radius: 14px; background: #fff; padding: 8px; display: grid; place-items: center; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+.comp-qr img { width: 100%; height: 100%; image-rendering: pixelated; }
+.comp-steps { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; line-height: 1.45; }
+.comp-warn { padding: 8px 10px; border-radius: 10px; background: rgba(250,204,21,.1); border: 1px solid rgba(250,204,21,.35); font-size: 12.5px; }
+.comp-feat { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; line-height: 1.45; }
+.comp-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.comp-side code { word-break: break-all; }
+.comp-code { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 14px; border-radius: 12px; background: rgba(159,184,255,.08); border: 1px solid rgba(159,184,255,.35); }
+.comp-code b { font: 700 30px/1.15 var(--mono); letter-spacing: .12em; color: var(--text); }
+.comp-code b.blurred { filter: blur(9px); user-select: none; }
+.comp-dev svg { vertical-align: -2px; margin-right: 4px; opacity: .8; }

@@ -13,6 +13,7 @@ import { LoungeWindow } from './LoungeWindow'
 import { StreamerWindow } from './StreamerWindow'
 import { BrainWindow } from './brain/BrainWindow'
 import { GitWindow } from './git/GitWindow'
+import { CompanionWindow } from './CompanionWindow'
 
 export interface PanelDef {
   id: PanelId
@@ -35,6 +36,7 @@ export const PANELS: PanelDef[] = [
   { id: 'discord', title: 'Discord Rich Presence', hint: 'Zeig in Discord, woran du gerade baust', icon: 'discord', w: 900, h: 660, render: () => <DiscordWindow /> },
   { id: 'inspector', title: 'Session-Inspector', hint: 'Live sehen, was Claude tut: Aktionen, Todos, Agents, Kosten', icon: 'inspect', w: 560, h: 520, render: () => <InspectorWindow /> },
   { id: 'lounge', title: 'Vibe-Lounge', hint: 'Mit Freunden im selben Raum vibecoden', icon: 'users', w: 520, h: 620, render: () => <LoungeWindow /> },
+  { id: 'companion', title: 'Handy-Begleiter', hint: 'Claude vom Handy aus Freigaben geben, Vorschläge holen und Aufträge schicken', icon: 'phone', w: 560, h: 660, render: () => <CompanionWindow /> },
   { id: 'streamer', title: 'Streamer-Modus', hint: 'Geheimnisse schwärzen, OBS-Overlay und Twitch-Chat', icon: 'broadcast', w: 580, h: 680, render: () => <StreamerWindow /> },
   { id: 'editor', title: 'Editor', hint: 'Dateien ansehen und schnell selbst anpassen', icon: 'code', ...EDITOR_SIZE, render: () => <EditorWindow />, onClose: () => void closeEditor() },
   { id: 'git', title: 'Git & GitHub', hint: 'Änderungen ansehen, committen und mit GitHub synchronisieren', icon: 'github', w: 1080, h: 680, render: () => <GitWindow /> },

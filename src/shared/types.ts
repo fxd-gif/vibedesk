@@ -37,8 +37,10 @@ import type { OverlayState } from './overlay'
 import type { WebhookPayload, WebhookSettings } from './webhook'
 import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
+import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget } from './companion'
+import type { PermissionAsk, PermissionDecision } from './permissions'
 
-export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git'
+export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion'
 
 export type DiscordStatus =
   | { state: 'off' }
@@ -169,6 +171,9 @@ export interface Settings {
   dockAll: boolean
   /** VibeDesk-Gehirn: Claude bekommt Projektgedächtnis (MCP + Überblick beim Start) */
   brainOn: boolean
+  /** Freigaben (Erlauben/Ablehnen) als Karte in VibeDesk und auf dem Handy beantworten */
+  approvalsOn: boolean
+  companion: CompanionSettings
 }
 
 export interface LoungeSettings {
@@ -299,6 +304,13 @@ export interface VibedeskApi {
     brainPulse(cb: (p: BrainPulse) => void): Unsubscribe
     gitLoginCode(cb: (code: string, url: string) => void): Unsubscribe
     gitInstallLog(cb: (tool: 'git' | 'gh', line: string) => void): Unsubscribe
+    permissions(cb: (list: PermissionAsk[]) => void): Unsubscribe
+    /** Prompt vom Handy: abschicken und mit companion.promptDone(reqId, ok) bestätigen */
+    companionPrompt(cb: (reqId: string, target: PromptTarget, text: string) => void): Unsubscribe
+    /** gekoppelte Geräte haben sich geändert (neu gekoppelt, abgemeldet) */
+    companionDevices(cb: (list: CompanionDevice[], paired?: CompanionDevice) => void): Unsubscribe
+    /** Handy hat Herunterfahren/Standby ausgelöst oder abgebrochen */
+    companionPower(cb: (action: 'shutdown' | 'sleep' | 'cancel', at: number | null) => void): Unsubscribe
   }
   addons: {
     list(): Promise<InstalledAddon[]>
@@ -387,6 +399,22 @@ export interface VibedeskApi {
     configure(enabled: boolean, port: number): Promise<OverlayStatus>
     push(state: OverlayState): void
     user(): Promise<string>
+  }
+  permissions: {
+    list(): Promise<PermissionAsk[]>
+    answer(id: string, decision: PermissionDecision): Promise<boolean>
+  }
+  companion: {
+    configure(enabled: boolean, port: number): Promise<CompanionStatus>
+    /** Einmal-Code zum Koppeln eines Handys (5 Minuten gültig) */
+    startPairing(): Promise<CompanionPairing>
+    cancelPairing(): void
+    devices(): Promise<CompanionDevice[]>
+    revoke(id: string): Promise<void>
+    revokeAll(): Promise<void>
+    cancelShutdown(): Promise<boolean>
+    push(s: CompanionSnapshot): void
+    promptDone(reqId: string, ok: boolean): void
   }
   clipboard: {
     write(text: string): void

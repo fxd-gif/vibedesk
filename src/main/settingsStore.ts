@@ -2,6 +2,7 @@ import path from 'path'
 import type { Settings } from '../shared/types'
 import { DEFAULT_PRESENCE } from '../shared/presence'
 import { DEFAULT_WEBHOOK } from '../shared/webhook'
+import { COMPANION_PORT } from '../shared/companion'
 import { readJson, writeJsonAtomic } from './jsonFile'
 
 export const DEFAULT_STREAM_URL = 'https://stream.laut.fm/lofi'
@@ -52,7 +53,9 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   },
   notify: { toasts: true, windows: true, focusQuiet: true, kinds: { waiting: true, done: true, error: true } },
   dockAll: false,
-  brainOn: true
+  brainOn: true,
+  approvalsOn: true,
+  companion: { enabled: false, port: COMPANION_PORT }
 })
 
 export class SettingsStore {
@@ -71,6 +74,7 @@ export class SettingsStore {
     this.value.lounge = { ...defaults.lounge, ...(this.value.lounge ?? {}) }
     this.value.streamer = { ...defaults.streamer, ...(this.value.streamer ?? {}) }
     this.value.notify = { ...defaults.notify, ...(this.value.notify ?? {}) }
+    this.value.companion = { ...defaults.companion, ...(this.value.companion ?? {}) }
     this.value.notify.kinds = { ...defaults.notify.kinds, ...(this.value.notify.kinds ?? {}) }
   }
 

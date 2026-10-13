@@ -115,6 +115,7 @@ function applyHook(s: SessionWorkflow, e: HookEvent, nextId: number): { s: Sessi
     case 'UserPromptSubmit':
       return { s: touch({ status: 'working' }), usedId: false }
     case 'Notification':
+    case 'PermissionRequest':
       return { s: touch({ status: 'waiting' }), usedId: false }
     case 'Stop':
       return { s: touch({ status: 'done', feed: settle(s.feed) }), usedId: false }

@@ -48,6 +48,8 @@ import { MoreMenu } from './desktop/MoreMenu'
 import { dockPlan, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
 import { wireBrainNudge } from './store/brainNudge'
+import { wirePermissions } from './store/permissionStore'
+import { wireCompanion } from './store/companionStore'
 import { TEND_PROMPT } from './windows/brain/BrainWindow'
 
 
@@ -143,6 +145,8 @@ export default function App(): React.JSX.Element {
     wireStreamer()
     wireNotify()
     wireBrainNudge(TEND_PROMPT)
+    wirePermissions()
+    wireCompanion()
     useSettings.getState().load().then((s) => {
       const ui = useUi.getState()
       ui.initRects(s.windowRects)

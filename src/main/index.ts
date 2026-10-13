@@ -31,6 +31,8 @@ import { basename } from 'path'
 import { BrainService, registerBrainIpc } from './brainService'
 import { GitService } from './gitService'
 import { registerGitIpc } from './gitIpc'
+import { PermissionBroker } from './permissionBroker'
+import { setupCompanion } from './companionIpc'
 
 if (process.env.VIBEDESK_USERDATA) app.setPath('userData', process.env.VIBEDESK_USERDATA)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
@@ -156,15 +158,36 @@ app.whenReady().then(async () => {
     projects,
     () => mainWindow
   )
+  // Freigaben: Karte in VibeDesk und Handy-Begleiter beantworten, was Claude sonst im Terminal fragt
+  const broker = new PermissionBroker({
+    enabled: () => settings.get().approvalsOn,
+    emit: (list) => {
+      send('permissions:list', list)
+      companion.hub.touch()
+    }
+  })
+  const companion = setupCompanion({
+    settings,
+    broker,
+    send,
+    claudeCmd: () => process.env.VIBEDESK_CLAUDE_CMD || 'claude',
+    tmpDir: join(app.getPath('temp'), 'vibedesk', 'companion'),
+    // Claude Code legt Transkripte unter CLAUDE_CONFIG_DIR bzw. ~/.claude ab – nur dort darf gelesen werden
+    transcriptsDir: join(process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude'), 'projects'),
+    devicesFile: join(userData, 'companion.json')
+  })
   const hookServer = new HookServer(
     token,
     (e) => {
       send('hook:event', e)
       stats.onHook(e)
       brain.onHook(e)
+      broker.onHook(e)
+      companion.hub.onHook(e)
       if (e.name === 'SessionStart') return brain.sessionStartOutput(e.sessionId)
     },
-    (sid, tool, args) => brain.tool(sid, tool, args)
+    (sid, tool, args) => brain.tool(sid, tool, args),
+    (e) => broker.ask(e.sessionId, e.payload)
   )
   const port = await hookServer.start()
   const resource = (f: string): string => (app.isPackaged ? join(process.resourcesPath, f) : join(app.getAppPath(), 'resources', f))
@@ -185,6 +208,7 @@ app.whenReady().then(async () => {
     output.flush(id)
     stats.flush(id)
     stats.remove(id)
+    broker.dropSession(id)
     send('session:exit', id, code)
   })
   registerSessionIpc({ sessions, projects, claudeProjectsDir: join(os.homedir(), '.claude', 'projects') })
@@ -222,6 +246,8 @@ app.whenReady().then(async () => {
   discord.configure(dc.enabled, dc.clientId)
   app.on('before-quit', () => discord.shutdown())
   app.on('before-quit', () => {
+    broker.dropAll()
+    void companion.stop()
     brain.flushAll()
     sessions.stopAll()
     hookServer.stop()

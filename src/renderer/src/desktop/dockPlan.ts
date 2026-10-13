@@ -12,7 +12,7 @@ export interface DockCtx {
 }
 
 /** Reihenfolge im Dock bzw. im Mehr-Menü */
-const OPTIONAL: PanelId[] = ['inspector', 'editor', 'git', 'brain', 'addons', 'lounge', 'prompts', 'skills', 'discord', 'streamer']
+const OPTIONAL: PanelId[] = ['inspector', 'editor', 'git', 'brain', 'addons', 'lounge', 'prompts', 'skills', 'companion', 'discord', 'streamer']
 
 function earned(id: PanelId, c: DockCtx): boolean {
   switch (id) {

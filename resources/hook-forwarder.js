@@ -4,7 +4,11 @@
 const http = require('http')
 
 const done = () => process.exit(0)
-setTimeout(done, 1500).unref()
+let guard = setTimeout(done, 1500)
+guard.unref()
+
+// Freigaben warten, bis jemand in VibeDesk (oder auf dem Handy) antwortet – knapp unter dem Hook-Timeout von 600 s
+const PERMISSION_MS = 595000
 
 const { VIBEDESK_SESSION_ID: sessionId, VIBEDESK_PORT: port, VIBEDESK_TOKEN: token } = process.env
 if (!sessionId || !port || !token) done()
@@ -20,18 +24,24 @@ process.stdin.on('end', () => {
   } catch {
     return done()
   }
+  const permission = payload && payload.hook_event_name === 'PermissionRequest'
+  if (permission) {
+    clearTimeout(guard)
+    guard = setTimeout(done, PERMISSION_MS)
+    guard.unref()
+  }
   const body = JSON.stringify({ sessionId, payload })
   const req = http.request(
     {
       host: '127.0.0.1',
       port: Number(port),
-      path: '/event',
+      path: permission ? '/permission' : '/event',
       method: 'POST',
-      timeout: 1200,
+      timeout: permission ? PERMISSION_MS - 1000 : 1200,
       headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'x-vibedesk-token': token }
     },
     (res) => {
-      // Antwort (z. B. Kontext beim Session-Start) geht an Claude Code
+      // Antwort (z. B. Kontext beim Session-Start oder eine Freigabe-Entscheidung) geht an Claude Code
       let out = ''
       res.setEncoding('utf8')
       res.on('data', (c) => (out += c))

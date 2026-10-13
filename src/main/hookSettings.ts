@@ -7,10 +7,14 @@ export const HOOK_EVENTS = [
   'SubagentStart',
   'SubagentStop',
   'SessionStart',
-  'SessionEnd'
+  'SessionEnd',
+  'PermissionRequest'
 ] as const
 
-const TOOL_EVENTS = new Set<string>(['PreToolUse', 'PostToolUse'])
+const TOOL_EVENTS = new Set<string>(['PreToolUse', 'PostToolUse', 'PermissionRequest'])
+
+/** Freigaben warten auf eine Antwort in VibeDesk/auf dem Handy – der Forwarder gibt kurz vorher selbst auf */
+const PERMISSION_TIMEOUT_S = 600
 
 /**
  * Hook-Befehl, der in bash, cmd und PowerShell gleich funktioniert. Claude Code nutzt unter Windows je nach
@@ -29,7 +33,10 @@ export const BRAIN_SERVER = 'vibedesk-brain'
 export function buildHookSettings(nodeExe: string, forwarderPath: string, opts: { brain?: boolean } = {}): object {
   const hook = { type: 'command', command: hookCommand(nodeExe, forwarderPath), timeout: 5 }
   const hooks = Object.fromEntries(
-    HOOK_EVENTS.map((e) => [e, [TOOL_EVENTS.has(e) ? { matcher: '*', hooks: [hook] } : { hooks: [hook] }]])
+    HOOK_EVENTS.map((e) => {
+      const h = e === 'PermissionRequest' ? { ...hook, timeout: PERMISSION_TIMEOUT_S } : hook
+      return [e, [TOOL_EVENTS.has(e) ? { matcher: '*', hooks: [h] } : { hooks: [h] }]]
+    })
   )
   // Gehirn-Werkzeuge ohne Rückfrage – sie lesen und schreiben nur Notizen in .vibedesk/brain
   return opts.brain ? { hooks, permissions: { allow: [`mcp__${BRAIN_SERVER}`] } } : { hooks }
