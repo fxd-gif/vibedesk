@@ -7,6 +7,16 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+- **Addons**: Bau dir eigene Erweiterungen aus Bausteinen wie bei Scratch – ganz ohne Code. Zum Beispiel: „Wenn eine Session auf mich wartet → wechsle nach Tokio und spiel einen Gong“
+- Bausteine für Ereignisse (Session wartet/fertig, Fokus-Timer, Uhrzeit, Tastenkürzel, Intervall), Aktionen (Szene, Regen, Lautstärke, Töne, Hinweise, Fokus-Timer, Zwischenablage) und Logik (wenn/sonst, Schleifen, Variablen)
+- Eigene Szenenbilder, Töne und Prompt-Vorlagen direkt im Addon
+- Addons als **.vibeaddon**-Datei exportieren und teilen – Doppelklick, Drag & Drop oder „Importieren…“ installiert sie
+- Vor dem Installieren siehst du im Klartext, was ein Addon tut. Addons können keine Dateien lesen, keine Befehle ausführen und nicht ins Internet
+
+### Verbessert
+- „Fenster anordnen“ legt Panels ohne Terminals als Raster an statt als schmale, hohe Streifen; solche alten Fenstergrößen werden beim Start verworfen
+
 ## 0.4.0
 
 ### Neu
