@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.11.0
+
 ### Neu
 - **Git & GitHub** als eigenes Fenster: geänderte Dateien mit Diff ansehen, einzeln oder alle vormerken, verwerfen, committen – und den Verlauf mit allen Änderungen eines Commits durchblättern
 - **KI-Commit-Nachricht**: Claude schreibt die Nachricht aus deinen Änderungen, im Stil der bisherigen Commits deines Repos – über dein Claude-Abo, ohne API-Key
