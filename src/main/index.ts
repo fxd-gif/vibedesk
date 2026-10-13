@@ -41,8 +41,8 @@ if (!app.requestSingleInstanceLock()) app.quit()
 app.on('second-instance', (_e, argv) => {
   const addon = addonPathFromArgv(argv)
   if (addon) {
-    pendingAddon = addon
-    send('addon:open', addon)
+    if (mainWindow) send('addon:open', addon)
+    else pendingAddon = addon
   }
   if (!mainWindow) return
   if (mainWindow.isMinimized()) mainWindow.restore()

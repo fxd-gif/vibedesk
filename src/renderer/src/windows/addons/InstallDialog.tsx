@@ -1,0 +1,117 @@
+import { create } from 'zustand'
+import { api, errorText } from '../../api'
+import type { AddonPreview } from '../../../../shared/types'
+import { useAddons } from '../../store/addonStore'
+import { alert } from '../../store/dialogStore'
+import { openPanel } from '../palette/CommandPalette'
+import { useAddonUi } from './AddonWindow'
+
+type Source = string | Uint8Array
+
+const useInstall = create<{ preview: AddonPreview | null; source: Source | null; busy: boolean }>(() => ({ preview: null, source: null, busy: false }))
+
+/** Prüft eine .vibeaddon-Datei (Pfad oder Bytes) und zeigt, was das Addon tut – installiert wird erst nach Bestätigung. */
+export async function openInstallDialog(source: Source): Promise<void> {
+  try {
+    const preview = await api.addons.inspect(source)
+    useInstall.setState({ preview, source, busy: false })
+  } catch (err) {
+    await alert('Addon kann nicht installiert werden', errorText(err))
+  }
+}
+
+/** Importieren-Knopf: Datei wählen, dann derselbe Dialog wie beim Doppelklick. */
+export async function pickAndInstall(): Promise<void> {
+  const p = await api.addons.pickFile()
+  if (p) await openInstallDialog(p)
+}
+
+export function InstallDialog(): React.JSX.Element | null {
+  const { preview, source, busy } = useInstall()
+  if (!preview || source === null) return null
+  const m = preview.manifest
+  const old = preview.existing
+  const close = (): void => useInstall.setState({ preview: null, source: null, busy: false })
+  const install = async (): Promise<void> => {
+    useInstall.setState({ busy: true })
+    try {
+      await api.addons.install(source)
+      await useAddons.getState().reload()
+      close()
+      useAddonUi.getState().showManager()
+      openPanel('addons')
+    } catch (err) {
+      close()
+      await alert('Addon kann nicht installiert werden', errorText(err))
+    }
+  }
+
+  return (
+    <div className="dlg-backdrop" onPointerDown={(e) => e.target === e.currentTarget && !busy && close()}>
+      <div className="dlg install-dlg" role="dialog" data-testid="install-dialog" onKeyDown={(e) => e.key === 'Escape' && !busy && close()}>
+        <h3>{old ? 'Addon aktualisieren?' : 'Addon installieren?'}</h3>
+        <div>
+          <strong>{m.name}</strong>
+          {m.author && <span className="dim"> · von {m.author}</span>}
+        </div>
+        {m.description && <p className="dlg-msg">{m.description}</p>}
+        {old && (
+          <p className="dlg-msg">
+            Installiert: v{old.version} von {old.author || 'unbekannt'} → v{m.version} von {m.author || 'unbekannt'}
+          </p>
+        )}
+        <div>
+          <div className="dim small">Dieses Addon …</div>
+          {preview.capabilityLabels.length ? (
+            <ul className="install-caps">
+              {preview.capabilityLabels.map((c) => (
+                <li key={c}>{c}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="dlg-msg">… tut nichts Sichtbares.</p>
+          )}
+        </div>
+        {preview.images.length > 0 && (
+          <div className="install-images">
+            {preview.images.map((i) => (
+              <img key={i.name} src={i.dataUrl} alt={i.name} title={i.name} />
+            ))}
+          </div>
+        )}
+        <p className="dim small">Addons können keine Dateien lesen, keine Befehle ausführen und nicht ins Internet.</p>
+        <div className="dlg-actions">
+          <button className="btn ghost" onClick={close} disabled={busy}>
+            Abbrechen
+          </button>
+          <button className="btn primary" autoFocus onClick={() => void install()} disabled={busy} data-testid="install-confirm">
+            {old ? 'Aktualisieren' : 'Installieren'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+let wired = false
+/** Doppelklick bei laufender App und Drag & Drop einer .vibeaddon aufs Fenster. */
+export function wireAddonImport(): void {
+  if (wired) return
+  wired = true
+  api.on.addonOpen((p) => void openInstallDialog(p))
+  const addonFile = (e: DragEvent): File | undefined => Array.from(e.dataTransfer?.files ?? []).find((f) => f.name.toLowerCase().endsWith('.vibeaddon'))
+  window.addEventListener('dragover', (e) => {
+    if (e.dataTransfer?.types.includes('Files')) e.preventDefault()
+  })
+  window.addEventListener(
+    'drop',
+    (e) => {
+      const f = addonFile(e)
+      if (!f) return
+      e.preventDefault()
+      e.stopPropagation()
+      void openInstallDialog(api.fs.pathForFile(f))
+    },
+    true
+  )
+}

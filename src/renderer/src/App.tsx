@@ -32,6 +32,7 @@ import { UpdateToast } from './desktop/UpdateToast'
 import { Onboarding } from './windows/Onboarding'
 import { EDITOR_ID, toggleEditor, wireEditor } from './store/editorStore'
 import { startAddonRuntime } from './addons/runtime'
+import { InstallDialog, openInstallDialog, wireAddonImport } from './windows/addons/InstallDialog'
 
 
 const initials = (n: string): string => {
@@ -112,6 +113,7 @@ export default function App(): React.JSX.Element {
     wireEditor()
     wirePalette()
     wireSetup()
+    wireAddonImport()
     useSettings.getState().load().then((s) => {
       const ui = useUi.getState()
       ui.initRects(s.windowRects)
@@ -123,6 +125,10 @@ export default function App(): React.JSX.Element {
       })
       setReady(true)
       startAddonRuntime()
+      // per Doppelklick geöffnete .vibeaddon-Datei
+      void api.addons.takePending().then((p) => {
+        if (p) void openInstallDialog(p)
+      })
       checkWhatsNew()
       if (s.onboarded) checkSetupOnStart()
     })
@@ -239,6 +245,7 @@ export default function App(): React.JSX.Element {
       <WhatsNew />
       <SetupPrompt />
       <Onboarding />
+      <InstallDialog />
       <DialogHost />
       {focus.banner && (
         <div className="focus-banner" key={focus.banner.text}>

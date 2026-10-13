@@ -85,3 +85,13 @@
 .install-images { display: flex; gap: 6px; flex-wrap: wrap; }
 .install-images img { width: 96px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid var(--glass-border); }
 .install-caps { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+
+.addon-manager { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.addon-switch { position: relative; width: 34px; height: 20px; cursor: pointer; flex-shrink: 0; margin-right: 4px; }
+.addon-switch input { display: none; }
+.addon-switch span { position: absolute; inset: 0; border-radius: 999px; background: rgba(255,255,255,.12); border: 1px solid var(--glass-border); transition: background .15s; }
+.addon-switch span::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #c9d2e6; transition: transform .15s; }
+.addon-switch input:checked + span { background: rgba(159,184,255,.45); border-color: rgba(159,184,255,.6); }
+.addon-switch input:checked + span::after { transform: translateX(14px); background: #fff; }
+.install-dlg { max-width: 460px; display: flex; flex-direction: column; gap: 10px; }
+.install-dlg h3 { margin: 0; }

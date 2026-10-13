@@ -13,6 +13,7 @@ import { panelDef } from '../panels'
 import { rank } from './fuzzy'
 import { showWhatsNew } from '../../changelog/WhatsNew'
 import { useAddonUi } from '../addons/AddonWindow'
+import { pickAndInstall } from '../addons/InstallDialog'
 
 interface Cmd {
   id: string
@@ -58,6 +59,7 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     win('focus'),
     win('discord'),
     win('addons', 'Eigene Addons bauen, importieren, exportieren'),
+    { id: 'act:addonImport', label: 'Addon importieren…', group: 'Aktionen', icon: 'puzzle', run: () => void pickAndInstall() },
     { id: 'act:addonMaker', label: 'Neues Addon bauen', group: 'Aktionen', icon: 'puzzle', run: () => (useAddonUi.getState().edit(null), openPanel('addons')) },
     ...projects
       .filter((p) => !p.missing)
