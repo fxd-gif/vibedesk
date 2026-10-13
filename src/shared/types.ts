@@ -36,8 +36,9 @@ import type { BlocklyProgram } from './addonBlocks'
 import type { OverlayState } from './overlay'
 import type { WebhookPayload, WebhookSettings } from './webhook'
 import type { BrainPulse, BrainView, NoteDetail } from './brain'
+import type { GitCommit, GitState, GitTools } from './git'
 
-export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain'
+export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git'
 
 export type DiscordStatus =
   | { state: 'off' }
@@ -296,6 +297,8 @@ export interface VibedeskApi {
     notifyClick(cb: (id: number) => void): Unsubscribe
     brainChanged(cb: (projectId: string) => void): Unsubscribe
     brainPulse(cb: (p: BrainPulse) => void): Unsubscribe
+    gitLoginCode(cb: (code: string, url: string) => void): Unsubscribe
+    gitInstallLog(cb: (tool: 'git' | 'gh', line: string) => void): Unsubscribe
   }
   addons: {
     list(): Promise<InstalledAddon[]>
@@ -335,6 +338,28 @@ export interface VibedeskApi {
   notes: {
     get(projectId: string): Promise<string>
     set(projectId: string, text: string): Promise<void>
+  }
+  git: {
+    tools(): Promise<GitTools>
+    install(tool: 'git' | 'gh'): Promise<boolean>
+    login(): Promise<void>
+    cancelLogin(): void
+    status(projectId: string): Promise<GitState>
+    diff(projectId: string, file: string, staged: boolean, untracked: boolean): Promise<string>
+    stage(projectId: string, paths: string[]): Promise<void>
+    stageAll(projectId: string): Promise<void>
+    unstage(projectId: string, paths: string[], unborn: boolean): Promise<void>
+    discard(projectId: string, files: { path: string; untracked: boolean }[]): Promise<void>
+    commit(projectId: string, message: string, all: boolean): Promise<string>
+    log(projectId: string): Promise<GitCommit[]>
+    show(projectId: string, hash: string): Promise<string>
+    init(projectId: string): Promise<void>
+    pull(projectId: string): Promise<void>
+    push(projectId: string, hasUpstream: boolean): Promise<void>
+    fetch(projectId: string): Promise<void>
+    publish(projectId: string, name: string, priv: boolean): Promise<string>
+    aiMessage(projectId: string): Promise<string>
+    openWeb(url: string): void
   }
   brain: {
     view(projectId: string): Promise<BrainView | null>

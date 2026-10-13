@@ -7,6 +7,12 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+- **Git & GitHub** als eigenes Fenster: geänderte Dateien mit Diff ansehen, einzeln oder alle vormerken, verwerfen, committen – und den Verlauf mit allen Änderungen eines Commits durchblättern
+- **KI-Commit-Nachricht**: Claude schreibt die Nachricht aus deinen Änderungen, im Stil der bisherigen Commits deines Repos – über dein Claude-Abo, ohne API-Key
+- Push, Pull und Aktualisieren mit Anzeige, wie viele Commits voraus oder hinterher sind; neue Projekte mit einem Klick auf GitHub veröffentlichen (privat oder öffentlich)
+- VibeDesk erkennt, ob Git installiert und ob du bei GitHub angemeldet bist: Git und die GitHub-CLI lassen sich per Klick installieren, die Anmeldung läuft über einen Code im Browser – scheitert ein Push an der Anmeldung, bietet VibeDesk sie direkt an
+
 ## 0.10.2
 
 ### Behoben

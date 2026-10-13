@@ -12,6 +12,7 @@ import { AddonWindow } from './addons/AddonWindow'
 import { LoungeWindow } from './LoungeWindow'
 import { StreamerWindow } from './StreamerWindow'
 import { BrainWindow } from './brain/BrainWindow'
+import { GitWindow } from './git/GitWindow'
 
 export interface PanelDef {
   id: PanelId
@@ -36,6 +37,7 @@ export const PANELS: PanelDef[] = [
   { id: 'lounge', title: 'Vibe-Lounge', hint: 'Mit Freunden im selben Raum vibecoden', icon: 'users', w: 520, h: 620, render: () => <LoungeWindow /> },
   { id: 'streamer', title: 'Streamer-Modus', hint: 'Geheimnisse schwärzen, OBS-Overlay und Twitch-Chat', icon: 'broadcast', w: 580, h: 680, render: () => <StreamerWindow /> },
   { id: 'editor', title: 'Editor', hint: 'Dateien ansehen und schnell selbst anpassen', icon: 'code', ...EDITOR_SIZE, render: () => <EditorWindow />, onClose: () => void closeEditor() },
+  { id: 'git', title: 'Git & GitHub', hint: 'Änderungen ansehen, committen und mit GitHub synchronisieren', icon: 'github', w: 1080, h: 680, render: () => <GitWindow /> },
   { id: 'brain', title: 'Gehirn', hint: 'Was Claude über dein Projekt weiß – als lebendiger Graph', icon: 'brain', w: 1160, h: 720, render: () => <BrainWindow /> },
   { id: 'addons', title: 'Addons', hint: 'Eigene Abläufe bauen – ganz ohne Code', icon: 'puzzle', w: 1240, h: 780, render: () => <AddonWindow /> }
 ]

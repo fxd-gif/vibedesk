@@ -28,6 +28,8 @@ import { SessionManager } from './sessionManager'
 import { OverlayServer } from './overlayServer'
 import { basename } from 'path'
 import { BrainService, registerBrainIpc } from './brainService'
+import { GitService } from './gitService'
+import { registerGitIpc } from './gitIpc'
 
 if (process.env.VIBEDESK_USERDATA) app.setPath('userData', process.env.VIBEDESK_USERDATA)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
@@ -148,6 +150,11 @@ app.whenReady().then(async () => {
     emit: (ch, payload) => send(ch, payload)
   })
   registerBrainIpc(brain)
+  registerGitIpc(
+    new GitService({ claudeCmd: () => process.env.VIBEDESK_CLAUDE_CMD || 'claude', trash: (p) => shell.trashItem(p) }),
+    projects,
+    () => mainWindow
+  )
   const hookServer = new HookServer(
     token,
     (e) => {

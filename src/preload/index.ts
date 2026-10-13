@@ -50,7 +50,9 @@ const api: VibedeskApi = {
     addonOpen: (cb) => listen<[string]>('addon:open', cb),
     notifyClick: (cb) => listen<[number]>('notify:click', cb),
     brainChanged: (cb) => listen<[string]>('brain:changed', cb),
-    brainPulse: (cb) => listen<[BrainPulse]>('brain:pulse', cb)
+    brainPulse: (cb) => listen<[BrainPulse]>('brain:pulse', cb),
+    gitLoginCode: (cb) => listen<[string, string]>('git:loginCode', cb),
+    gitInstallLog: (cb) => listen<['git' | 'gh', string]>('git:installLog', cb)
   },
   setup: {
     check: () => ipcRenderer.invoke('setup:check'),
@@ -79,6 +81,28 @@ const api: VibedeskApi = {
   notes: {
     get: (projectId) => ipcRenderer.invoke('notes:get', projectId),
     set: (projectId, text) => ipcRenderer.invoke('notes:set', projectId, text)
+  },
+  git: {
+    tools: () => ipcRenderer.invoke('git:tools'),
+    install: (tool) => ipcRenderer.invoke('git:install', tool),
+    login: () => ipcRenderer.invoke('git:login'),
+    cancelLogin: () => ipcRenderer.send('git:cancelLogin'),
+    status: (id) => ipcRenderer.invoke('git:status', id),
+    diff: (id, file, staged, untracked) => ipcRenderer.invoke('git:diff', id, file, staged, untracked),
+    stage: (id, paths) => ipcRenderer.invoke('git:stage', id, paths),
+    stageAll: (id) => ipcRenderer.invoke('git:stageAll', id),
+    unstage: (id, paths, unborn) => ipcRenderer.invoke('git:unstage', id, paths, unborn),
+    discard: (id, files) => ipcRenderer.invoke('git:discard', id, files),
+    commit: (id, message, all) => ipcRenderer.invoke('git:commit', id, message, all),
+    log: (id) => ipcRenderer.invoke('git:log', id),
+    show: (id, hash) => ipcRenderer.invoke('git:show', id, hash),
+    init: (id) => ipcRenderer.invoke('git:init', id),
+    pull: (id) => ipcRenderer.invoke('git:pull', id),
+    push: (id, hasUpstream) => ipcRenderer.invoke('git:push', id, hasUpstream),
+    fetch: (id) => ipcRenderer.invoke('git:fetch', id),
+    publish: (id, name, priv) => ipcRenderer.invoke('git:publish', id, name, priv),
+    aiMessage: (id) => ipcRenderer.invoke('git:aiMessage', id),
+    openWeb: (url) => ipcRenderer.send('git:openWeb', url)
   },
   brain: {
     view: (projectId) => ipcRenderer.invoke('brain:view', projectId),

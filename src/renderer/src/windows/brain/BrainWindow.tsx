@@ -3,13 +3,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../../api'
 import { NOTE_TYPES, NOTE_TYPE_LABEL, noteId, type BrainView, type GraphNodeKind } from '../../../../shared/brain'
 import type { Project } from '../../../../shared/types'
-import { recentProjects } from '../../desktop/recentProjects'
 import { Icon } from '../../desktop/icons'
 import { alert } from '../../store/dialogStore'
 import { promptProject } from '../../store/sessionPrompt'
-import { termWin, useSessions } from '../../store/sessionStore'
+import { useSessions } from '../../store/sessionStore'
+import { activeProjectId } from '../../store/activeProject'
 import { useSettings } from '../../store/settingsStore'
-import { useUi } from '../../store/uiStore'
 import { Toggle } from '../AmbienceMenu'
 import { BrainGraph, KIND_COLOR, type GraphHandle } from './BrainGraph'
 import { BrainSide, emptyDraft, type Draft } from './BrainSide'
@@ -21,18 +20,6 @@ export const TEND_PROMPT =
   'Pflege das VibeDesk-Gehirn: Prüfe mit brain_overview die Notizen „zu prüfen“ gegen den aktuellen Code und aktualisiere oder archiviere sie. Halte danach mit brain_write fest, was du in dieser Session gelernt oder entschieden hast.'
 
 const FILTERS: { kind: GraphNodeKind; label: string }[] = [...NOTE_TYPES.map((t) => ({ kind: t as GraphNodeKind, label: NOTE_TYPE_LABEL[t] })), { kind: 'file', label: 'Dateien' }]
-
-/** Projekt der obersten Session, sonst das zuletzt geöffnete */
-function defaultProject(projects: Project[]): string | null {
-  const ui = useUi.getState()
-  const sessions = useSessions.getState().sessions
-  for (let i = ui.open.length - 1; i >= 0; i--) {
-    const s = sessions.find((x) => termWin(x.id) === ui.open[i])
-    if (s) return s.projectId
-  }
-  if (sessions[0]) return sessions[0].projectId
-  return recentProjects(projects, 1)[0]?.id ?? null
-}
 
 export function BrainWindow(): React.JSX.Element {
   const [projects, setProjects] = useState<Project[]>([])
@@ -49,7 +36,7 @@ export function BrainWindow(): React.JSX.Element {
   useEffect(() => {
     void api.projects.list().then((list) => {
       setProjects(list)
-      setProjectId((cur) => cur ?? defaultProject(list))
+      setProjectId((cur) => cur ?? activeProjectId(list))
     })
   }, [])
 

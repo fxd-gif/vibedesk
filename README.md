@@ -55,6 +55,7 @@ VibeDesk ist eine Vollbild-Arbeitsumgebung für Windows, gebaut für das Arbeite
 
 **Werkzeuge**
 - **Code-Editor** für schnelle Anpassungen: Klick auf eine Datei im Live-Feed öffnet sie genau an der Stelle, die Claude geändert hat – mit Dateibaum, Tabs und Syntax-Highlighting
+- **Git & GitHub**: Änderungen mit Diff, Commit mit KI-Nachricht von Claude, Verlauf, Push/Pull und Veröffentlichen auf GitHub – inklusive Login und Installation per Klick
 - **Befehls-Palette** (<kbd>Strg</kbd> + <kbd>K</kbd>): alle Fenster, Projekte und Aktionen per Suche
 - Browser-Vorschau: Dev-Server werden erkannt und direkt im Glasfenster geöffnet
 - Prompt-Bibliothek und Notizen pro Projekt

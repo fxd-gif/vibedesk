@@ -12,12 +12,13 @@ export interface DockCtx {
 }
 
 /** Reihenfolge im Dock bzw. im Mehr-Menü */
-const OPTIONAL: PanelId[] = ['inspector', 'editor', 'brain', 'addons', 'lounge', 'prompts', 'skills', 'discord', 'streamer']
+const OPTIONAL: PanelId[] = ['inspector', 'editor', 'git', 'brain', 'addons', 'lounge', 'prompts', 'skills', 'discord', 'streamer']
 
 function earned(id: PanelId, c: DockCtx): boolean {
   switch (id) {
     case 'inspector':
     case 'editor':
+    case 'git':
     case 'brain':
       return c.sessions > 0
     case 'addons':
@@ -30,7 +31,7 @@ function earned(id: PanelId, c: DockCtx): boolean {
 }
 
 /** Nur diese wandern mit „Alle Symbole“ ins Dock – der Rest bleibt im Mehr-Menü */
-const DOCKABLE = new Set<PanelId>(['inspector', 'editor', 'brain', 'addons', 'lounge'])
+const DOCKABLE = new Set<PanelId>(['inspector', 'editor', 'git', 'brain', 'addons', 'lounge'])
 
 export function dockPlan(c: DockCtx): { dock: PanelId[]; more: PanelId[] } {
   const dock = OPTIONAL.filter((id) => DOCKABLE.has(id) && (c.all || c.isOpen(id) || earned(id, c)))
