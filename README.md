@@ -34,6 +34,7 @@ VibeDesk ist eine Vollbild-Arbeitsumgebung für Windows, gebaut für das Arbeite
 
 **Claude Code im Blick**
 - Mehrere Sessions parallel, mit Status im Dock: arbeitet · wartet auf dich · fertig
+- **Mitteilungen**: Karten mit „Öffnen“, Windows-Benachrichtigungen im Hintergrund, Verlauf hinter der Glocke – in Fokus-Runden kommt nur Wichtiges durch
 - Sanfter Ton, sobald eine Session auf dich wartet
 - **Session-Inspector:** Live-Feed aller Aktionen, Todo-Fortschritt, Agent-Baum für Subagents und Stats – in einem Fenster mit Tabs
 - **Stats:** Context-Auslastung, Tokens, Cache-Trefferquote und geschätzte Kosten – pro Session und pro Tag

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../desktop/icons'
 import { termWin, useSessions } from '../store/sessionStore'
-import { useUi } from '../store/uiStore'
+import { centeredRect, useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
 import type { FeedEntry } from '../store/workflowReducer'
 import { clock, relTime } from '../util'
@@ -22,7 +22,11 @@ const NoSessions = () => (
   <div className="panel-empty">
     Keine laufenden Sessions.
     <br />
-    Öffne ein Projekt, dann erscheint hier alles live.
+    Öffne ein Projekt, dann siehst du hier live, was Claude tut.
+    <br />
+    <button className="btn small primary" style={{ marginTop: 12 }} onClick={() => useUi.getState().openWin('projects', centeredRect(520, 480))}>
+      <Icon name="folder" size={14} /> Projekt öffnen
+    </button>
   </div>
 )
 

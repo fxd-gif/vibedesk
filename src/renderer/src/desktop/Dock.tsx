@@ -5,6 +5,8 @@ export interface DockItem {
   id: string
   icon?: string
   label: string
+  /** ein Satz, wofür das Symbol da ist */
+  hint?: string
   active?: boolean
   onClick: () => void
   badge?: ReactNode
@@ -25,6 +27,7 @@ export function Dock({ groups }: { groups: DockItem[][] }): React.JSX.Element {
                 className={`dock-btn${it.active ? ' active' : ''}${it.className ? ' ' + it.className : ''}`}
                 onClick={it.onClick}
                 data-tip={it.label}
+                data-hint={it.hint}
                 aria-label={it.label}
                 data-testid={`dock-${it.id}`}
               >

@@ -7,6 +7,17 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+- **Mitteilungen**: Wartet eine Session, ist sie fertig oder abgestürzt, erscheint unten rechts eine Karte mit „Öffnen“ bzw. „Neu starten“ – und wenn VibeDesk im Hintergrund ist, auch eine Windows-Benachrichtigung
+- **Glocke im Dock** mit Verlauf aller Mitteilungen und Einstellungen: Karten, Windows-Benachrichtigungen, Ton und welche Arten du sehen willst
+- **Ruhe in Fokus-Runden**: nur Wichtiges kommt sofort durch, der Rest wartet bis zur Pause
+- **Startkarte** „Woran baust du heute?“ mit deinen zuletzt genutzten Projekten – ein Klick und Claude startet
+
+### Verbessert
+- Ruhigeres Dock: Inspector, Editor und Vorschau erscheinen erst, wenn eine Session läuft; Addons und Lounge, sobald du sie nutzt
+- Neues **Mehr-Menü** (⋯) mit allen Fenstern und einem Satz, wofür sie da sind – inklusive Schalter „Alle Symbole im Dock zeigen“
+- Dock-Tooltips erklären jetzt, wofür ein Symbol da ist
+
 ## 0.8.0
 
 ### Neu

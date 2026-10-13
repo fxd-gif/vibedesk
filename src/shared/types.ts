@@ -63,6 +63,19 @@ export interface Prompt {
   text: string
 }
 
+/** Arten von Mitteilungen – jede lässt sich einzeln abschalten */
+export type NoticeKind = 'waiting' | 'done' | 'error'
+
+export interface NotifySettings {
+  /** Karten unten rechts */
+  toasts: boolean
+  /** Windows-Benachrichtigung, solange VibeDesk im Hintergrund ist */
+  windows: boolean
+  /** in Fokus-Runden nur Wichtiges zeigen, den Rest danach gesammelt */
+  focusQuiet: boolean
+  kinds: Record<NoticeKind, boolean>
+}
+
 export interface FocusSettings {
   work: number
   short: number
@@ -132,6 +145,9 @@ export interface Settings {
   lastSeenVersion: string
   lounge: LoungeSettings
   streamer: StreamerSettings
+  notify: NotifySettings
+  /** alle Dock-Symbole zeigen statt nur der gerade sinnvollen */
+  dockAll: boolean
 }
 
 export interface LoungeSettings {
@@ -232,6 +248,8 @@ export interface VibedeskApi {
     quit(): void
     claudeInstalled(): Promise<boolean>
     claudeVersion(): Promise<string | null>
+    /** Windows-Benachrichtigung; ein Klick darauf holt VibeDesk nach vorn und meldet die id zurück */
+    notify(id: number, title: string, body: string): void
   }
   setup: {
     check(): Promise<ToolStatus>
@@ -255,6 +273,7 @@ export interface VibedeskApi {
     fileChange(cb: (c: FileChange) => void): Unsubscribe
     setupLog(cb: (tool: ToolId, line: string) => void): Unsubscribe
     addonOpen(cb: (path: string) => void): Unsubscribe
+    notifyClick(cb: (id: number) => void): Unsubscribe
   }
   addons: {
     list(): Promise<InstalledAddon[]>

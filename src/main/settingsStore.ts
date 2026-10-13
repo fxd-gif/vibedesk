@@ -17,7 +17,7 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   blur: 0.6,
   scene: 'city',
   customScenes: [],
-  visiblePanels: ['projects'],
+  visiblePanels: [],
   windowRects: {},
   maxSessions: 3,
   chimeOn: true,
@@ -49,7 +49,9 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
     twitchChannel: '',
     chatCommand: '!vibe',
     chatModsOnly: false
-  }
+  },
+  notify: { toasts: true, windows: true, focusQuiet: true, kinds: { waiting: true, done: true, error: true } },
+  dockAll: false
 })
 
 export class SettingsStore {
@@ -67,6 +69,8 @@ export class SettingsStore {
     this.value.focus = { ...defaults.focus, ...(this.value.focus ?? {}) }
     this.value.lounge = { ...defaults.lounge, ...(this.value.lounge ?? {}) }
     this.value.streamer = { ...defaults.streamer, ...(this.value.streamer ?? {}) }
+    this.value.notify = { ...defaults.notify, ...(this.value.notify ?? {}) }
+    this.value.notify.kinds = { ...defaults.notify.kinds, ...(this.value.notify.kinds ?? {}) }
   }
 
   get(): Settings {

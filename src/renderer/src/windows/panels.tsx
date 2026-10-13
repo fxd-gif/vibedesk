@@ -15,6 +15,8 @@ import { StreamerWindow } from './StreamerWindow'
 export interface PanelDef {
   id: PanelId
   title: string
+  /** ein Satz: wofür das Fenster da ist (Tooltip, Mehr-Menü) */
+  hint: string
   icon: string
   w: number
   h: number
@@ -24,16 +26,16 @@ export interface PanelDef {
 }
 
 export const PANELS: PanelDef[] = [
-  { id: 'projects', title: 'Projekte', icon: 'folder', w: 520, h: 480, render: () => <ProjectsWindow /> },
-  { id: 'skills', title: 'Skills', icon: 'spark', w: 600, h: 540, render: () => <SkillsWindow /> },
-  { id: 'prompts', title: 'Prompts & Notizen', icon: 'pen', w: 520, h: 560, render: () => <PromptsWindow /> },
-  { id: 'focus', title: 'Fokus-Timer', icon: 'timer', w: 340, h: 470, render: () => <FocusPanel /> },
-  { id: 'discord', title: 'Discord Rich Presence', icon: 'discord', w: 900, h: 660, render: () => <DiscordWindow /> },
-  { id: 'inspector', title: 'Session-Inspector', icon: 'inspect', w: 560, h: 520, render: () => <InspectorWindow /> },
-  { id: 'lounge', title: 'Vibe-Lounge', icon: 'users', w: 520, h: 620, render: () => <LoungeWindow /> },
-  { id: 'streamer', title: 'Streamer-Modus', icon: 'broadcast', w: 580, h: 680, render: () => <StreamerWindow /> },
-  { id: 'editor', title: 'Editor', icon: 'code', ...EDITOR_SIZE, render: () => <EditorWindow />, onClose: () => void closeEditor() },
-  { id: 'addons', title: 'Addons', icon: 'puzzle', w: 1240, h: 780, render: () => <AddonWindow /> }
+  { id: 'projects', title: 'Projekte', hint: 'Projekte öffnen, anlegen und frühere Sessions fortsetzen', icon: 'folder', w: 520, h: 480, render: () => <ProjectsWindow /> },
+  { id: 'skills', title: 'Skills', hint: 'Fähigkeiten für Claude installieren – per Drag & Drop oder GitHub-Link', icon: 'spark', w: 600, h: 540, render: () => <SkillsWindow /> },
+  { id: 'prompts', title: 'Prompts & Notizen', hint: 'Fertige Prompts und Notizen pro Projekt', icon: 'pen', w: 520, h: 560, render: () => <PromptsWindow /> },
+  { id: 'focus', title: 'Fokus-Timer', hint: 'Pomodoro-Timer – in Pausen wird es leiser', icon: 'timer', w: 340, h: 470, render: () => <FocusPanel /> },
+  { id: 'discord', title: 'Discord Rich Presence', hint: 'Zeig in Discord, woran du gerade baust', icon: 'discord', w: 900, h: 660, render: () => <DiscordWindow /> },
+  { id: 'inspector', title: 'Session-Inspector', hint: 'Live sehen, was Claude tut: Aktionen, Todos, Agents, Kosten', icon: 'inspect', w: 560, h: 520, render: () => <InspectorWindow /> },
+  { id: 'lounge', title: 'Vibe-Lounge', hint: 'Mit Freunden im selben Raum vibecoden', icon: 'users', w: 520, h: 620, render: () => <LoungeWindow /> },
+  { id: 'streamer', title: 'Streamer-Modus', hint: 'Geheimnisse schwärzen, OBS-Overlay und Twitch-Chat', icon: 'broadcast', w: 580, h: 680, render: () => <StreamerWindow /> },
+  { id: 'editor', title: 'Editor', hint: 'Dateien ansehen und schnell selbst anpassen', icon: 'code', ...EDITOR_SIZE, render: () => <EditorWindow />, onClose: () => void closeEditor() },
+  { id: 'addons', title: 'Addons', hint: 'Eigene Abläufe bauen – ganz ohne Code', icon: 'puzzle', w: 1240, h: 780, render: () => <AddonWindow /> }
 ]
 
 export const PANEL_IDS = PANELS.map((p) => p.id) as string[]

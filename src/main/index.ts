@@ -40,6 +40,9 @@ let mainWindow: BrowserWindow | null = null
 let pendingAddon: string | null = addonPathFromArgv(process.argv)
 
 // Nur eine Instanz: ein zweites "vibe" holt das bestehende Fenster nach vorne
+// Ohne feste App-ID zeigt Windows keine Benachrichtigungen (im Installer setzt electron-builder dieselbe)
+if (process.platform === 'win32') app.setAppUserModelId('dev.vibedesk.app')
+
 if (!app.requestSingleInstanceLock()) app.quit()
 app.on('second-instance', (_e, argv) => {
   const addon = addonPathFromArgv(argv)

@@ -9,6 +9,19 @@ import type { ClaudeSessionMeta, Project } from '../../../shared/types'
 import { Fragment } from 'react'
 import { useRedact } from '../store/streamerStore'
 
+/** Fragt nach dem Namen, legt das Projekt an und startet gleich eine Session darin. */
+export async function newProject(afterCreate?: () => Promise<unknown>): Promise<void> {
+  const name = await prompt({ title: 'Neues Projekt', message: 'Der Ordner wird in deinem Projekte-Verzeichnis angelegt.', placeholder: 'Projektname', confirmLabel: 'Anlegen' })
+  if (!name) return
+  try {
+    const p = await api.projects.create(name)
+    await afterCreate?.()
+    await useSessions.getState().start(p.id)
+  } catch (err) {
+    await alert('Projekt konnte nicht angelegt werden', errorText(err))
+  }
+}
+
 export function ProjectsWindow(): React.JSX.Element {
   const [projects, setProjects] = useState<Project[]>([])
   const [adding, setAdding] = useState(false)
@@ -30,17 +43,7 @@ export function ProjectsWindow(): React.JSX.Element {
     reload()
   }, [reload, sessions.length])
 
-  const create = async (): Promise<void> => {
-    const name = await prompt({ title: 'Neues Projekt', message: 'Der Ordner wird in deinem Projekte-Verzeichnis angelegt.', placeholder: 'Projektname', confirmLabel: 'Anlegen' })
-    if (!name) return
-    try {
-      const p = await api.projects.create(name)
-      await reload()
-      await useSessions.getState().start(p.id)
-    } catch (err) {
-      await alert('Projekt konnte nicht angelegt werden', errorText(err))
-    }
-  }
+  const create = (): Promise<void> => newProject(reload)
 
   const addExisting = async (path: string): Promise<void> => {
     if (!path.trim()) return

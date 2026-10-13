@@ -30,7 +30,6 @@ import { Icon } from './desktop/icons'
 import { wireDiscord } from './store/discordStore'
 import { wireWebhook } from './store/webhookStore'
 import { wireUpdate } from './store/updateStore'
-import { UpdateToast } from './desktop/UpdateToast'
 import { Onboarding } from './windows/Onboarding'
 import { EDITOR_ID, toggleEditor, wireEditor } from './store/editorStore'
 import { startAddonRuntime } from './addons/runtime'
@@ -42,6 +41,12 @@ import { LoungeFloaters } from './windows/LoungeWindow'
 import { Curtain, StreamerPill } from './windows/StreamerWindow'
 import { ShareDialogs } from './windows/ShareDialogs'
 import { openPanel } from './windows/palette/CommandPalette'
+import { NotifyPanel, ToastStack } from './desktop/NotifyCenter'
+import { setPanel as setNotifyPanel, useNotify, wireNotify } from './store/notifyStore'
+import { StartCard } from './desktop/StartCard'
+import { MoreMenu } from './desktop/MoreMenu'
+import { dockPlan, showPreviewInDock } from './desktop/dockPlan'
+import { useAddons } from './store/addonStore'
 
 
 const initials = (n: string): string => {
@@ -112,6 +117,11 @@ export default function App(): React.JSX.Element {
   const loungeState = useLounge((s) => s.state)
   const loungePeers = useLounge((s) => Object.keys(s.peers).length)
   const loungeUnread = useLounge((s) => s.unread)
+  const notifyUnread = useNotify((s) => s.unread)
+  const notifyOpen = useNotify((s) => s.panel)
+  const addonCount = useAddons((s) => s.list.length)
+  const [more, setMore] = useState(false)
+  const closeMore = useCallback(() => setMore(false), [])
 
   useEffect(() => {
     wireWorkflow()
@@ -129,12 +139,13 @@ export default function App(): React.JSX.Element {
     wireAddonImport()
     wireLounge()
     wireStreamer()
+    wireNotify()
     useSettings.getState().load().then((s) => {
       const ui = useUi.getState()
       ui.initRects(s.windowRects)
       const migrated = migratePanels(s.visiblePanels)
-      const panels = migrated.length ? migrated : (['projects'] as PanelId[])
-      panels.forEach((id) => {
+      // ohne gemerkte Fenster begrüßt die Startkarte
+      migrated.forEach((id) => {
         const def = panelDef(id)
         if (def) ui.openWin(id, centeredRect(def.w, def.h))
       })
@@ -166,7 +177,25 @@ export default function App(): React.JSX.Element {
   const isOn = (id: string) => open.includes(id) && !minimized.includes(id)
   const panelItem = (id: PanelId): DockItem => {
     const def = panelDef(id)!
-    return { id, icon: def.icon, label: def.title, active: isOn(id), onClick: () => ui.toggleWin(id, centeredRect(def.w, def.h)) }
+    return { id, icon: def.icon, label: def.title, hint: def.hint, active: isOn(id), onClick: () => ui.toggleWin(id, centeredRect(def.w, def.h)) }
+  }
+  const dockCtx = {
+    all: !!settings?.dockAll,
+    sessions: sessions.length,
+    addons: addonCount,
+    loungeOn: loungeState !== 'off',
+    isOpen: (id: PanelId) => open.includes(id)
+  }
+  const plan = dockPlan(dockCtx)
+  const toolItem = (id: PanelId): DockItem => {
+    if (id === 'editor') return { ...panelItem('editor'), onClick: () => void toggleEditor() }
+    if (id === 'lounge')
+      return {
+        ...panelItem('lounge'),
+        label: loungeState === 'off' ? 'Vibe-Lounge' : `Vibe-Lounge · ${loungePeers + 1} online${loungeUnread ? ` · ${loungeUnread} neu` : ''}`,
+        badge: loungeUnread ? <span className="dock-count">{loungeUnread > 9 ? '9+' : loungeUnread}</span> : loungeState !== 'off' ? <span className="dot done" /> : undefined
+      }
+    return panelItem(id)
   }
 
   return (
@@ -197,19 +226,15 @@ export default function App(): React.JSX.Element {
       <Dock
         groups={[
           [
-            { id: 'palette', icon: 'command', label: 'Befehle (Strg+K)', active: paletteOpen, onClick: () => usePalette.getState().show(!paletteOpen) },
-            panelItem('projects'),
-            {
-              ...panelItem('lounge'),
-              label: loungeState === 'off' ? 'Vibe-Lounge' : `Vibe-Lounge · ${loungePeers + 1} online${loungeUnread ? ` · ${loungeUnread} neu` : ''}`,
-              badge: loungeUnread ? <span className="dock-count">{loungeUnread > 9 ? '9+' : loungeUnread}</span> : loungeState !== 'off' ? <span className="dot done" /> : undefined
-            }
+            { id: 'palette', icon: 'command', label: 'Befehle (Strg+K)', hint: 'Alles per Suche: Fenster, Projekte, Aktionen', active: paletteOpen, onClick: () => usePalette.getState().show(!paletteOpen) },
+            panelItem('projects')
           ],
           [
             {
               id: 'ambience',
               icon: 'rain',
               label: settings?.musicOn && audioState.musicOffline ? 'Atmosphäre · Lofi-Radio offline' : 'Atmosphäre & Musik',
+              hint: 'Szene, Regen und Lofi-Radio',
               active: menu,
               className: settings?.musicOn && audioState.musicOffline ? 'offline' : undefined,
               badge: settings?.musicOn && !isMuted(settings.musicVolume) && !audioState.musicOffline ? <span className="dock-eq" aria-hidden><i /><i /><i /></span> : undefined,
@@ -252,10 +277,21 @@ export default function App(): React.JSX.Element {
             }
           }),
           [
-            panelItem('inspector'),
-            { ...panelItem('editor'), onClick: () => void toggleEditor() },
-            panelItem('addons'),
-            { id: 'preview', icon: 'globe', label: 'Browser-Vorschau', active: Object.keys(previews).length > 0, onClick: () => usePreview.getState().openPreview(Object.values(usePreview.getState().urls).flat()[0]) }
+            ...plan.dock.map(toolItem),
+            ...(showPreviewInDock(dockCtx, Object.keys(previews).length)
+              ? [{ id: 'preview', icon: 'globe', label: 'Browser-Vorschau', hint: 'Deine App live ansehen – Dev-Server werden erkannt', active: Object.keys(previews).length > 0, onClick: () => usePreview.getState().openPreview(Object.values(usePreview.getState().urls).flat()[0]) }]
+              : [])
+          ],
+          [
+            {
+              id: 'notify',
+              icon: 'bell',
+              label: notifyUnread ? `Mitteilungen · ${notifyUnread} neu` : 'Mitteilungen',
+              active: notifyOpen,
+              badge: notifyUnread ? <span className="dock-count">{notifyUnread > 9 ? '9+' : notifyUnread}</span> : undefined,
+              onClick: () => setNotifyPanel(!notifyOpen)
+            },
+            { id: 'more', icon: 'more', label: 'Mehr', hint: 'Weitere Fenster und Werkzeuge', active: more, onClick: () => setMore((m) => !m) }
           ]
         ]}
       />
@@ -263,7 +299,10 @@ export default function App(): React.JSX.Element {
       <StreamerPill onClick={() => openPanel('streamer')} />
       <CommandPalette onAmbience={openAmbience} />
       {menu && <AmbienceMenu offline={audioState.musicOffline} onClose={() => setMenu(false)} />}
-      <UpdateToast />
+      <StartCard />
+      <ToastStack />
+      <NotifyPanel />
+      {more && <MoreMenu items={plan.more} onClose={closeMore} />}
       <WhatsNew />
       <SetupPrompt />
       <Onboarding />

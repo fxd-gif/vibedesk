@@ -27,7 +27,8 @@ const api: VibedeskApi = {
     toggleFullscreen: () => ipcRenderer.send('app:toggleFullscreen'),
     quit: () => ipcRenderer.send('app:quit'),
     claudeInstalled: () => ipcRenderer.invoke('app:claudeInstalled'),
-    claudeVersion: () => ipcRenderer.invoke('app:claudeVersion')
+    claudeVersion: () => ipcRenderer.invoke('app:claudeVersion'),
+    notify: (id, title, body) => ipcRenderer.send('app:notify', id, title, body)
   },
   sessions: {
     start: (projectId, resumeId) => ipcRenderer.invoke('sessions:start', projectId, resumeId),
@@ -45,7 +46,8 @@ const api: VibedeskApi = {
     update: (cb) => listen<[UpdateStatus]>('update:status', cb),
     fileChange: (cb) => listen<[FileChange]>('files:change', cb),
     setupLog: (cb) => listen<[ToolId, string]>('setup:log', cb),
-    addonOpen: (cb) => listen<[string]>('addon:open', cb)
+    addonOpen: (cb) => listen<[string]>('addon:open', cb),
+    notifyClick: (cb) => listen<[number]>('notify:click', cb)
   },
   setup: {
     check: () => ipcRenderer.invoke('setup:check'),

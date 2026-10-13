@@ -1,4 +1,4 @@
-import { app, BrowserWindow, clipboard, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, clipboard, ipcMain, Notification, shell } from 'electron'
 import fs from 'fs'
 import path from 'path'
 import type { ProjectStore } from './projectStore'
@@ -50,6 +50,26 @@ export function registerCoreIpc(d: IpcDeps): void {
     if (w) w.setFullScreen(!w.isFullScreen())
   })
   ipcMain.on('app:quit', () => app.quit())
+  // Windows-Benachrichtigung; Klick holt VibeDesk nach vorn und sagt dem Renderer, welche Mitteilung gemeint war
+  const shown = new Set<Notification>()
+  ipcMain.on('app:notify', (_e, id: number, title: string, body: string) => {
+    if (!Notification.isSupported()) return
+    const n = new Notification({ title: String(title).slice(0, 120), body: String(body).slice(0, 300), silent: true })
+    // Referenz halten, sonst räumt der GC die Benachrichtigung samt Klick-Handler ab
+    shown.add(n)
+    const drop = (): void => void shown.delete(n)
+    n.on('close', drop)
+    n.on('click', () => {
+      drop()
+      const w = d.win()
+      if (!w) return
+      if (w.isMinimized()) w.restore()
+      w.show()
+      w.focus()
+      w.webContents.send('notify:click', id)
+    })
+    n.show()
+  })
   ipcMain.on('clipboard:write', (_e, text: string) => clipboard.writeText(String(text).slice(0, 2_000_000)))
   ipcMain.handle('clipboard:read', async () => String(await clipboard.readText()).slice(0, 2_000_000))
 }
