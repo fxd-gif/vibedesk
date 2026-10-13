@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.12.1
+
 ### Verbessert
 - **Flüssigeres Terminal**: Claudes Ausgabe wird jetzt per Grafikkarte (WebGL) gezeichnet – auch bei viel Text auf einmal ruckelt nichts mehr. Fällt WebGL aus, springt automatisch der bisherige Renderer ein
 - Die Ausgabe kommt gebündelt statt in vielen kleinen Häppchen im Fenster an, und beim Ziehen oder Vergrößern passt sich das Terminal ruhiger an
