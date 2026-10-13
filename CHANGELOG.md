@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.13.0
+
 ### Neu
 
 - **Handy-Begleiter**: VibeDesk aufs Handy holen – im selben WLAN QR-Code scannen und mit einem 6-stelligen Einmal-Code vom PC koppeln. Auf dem Handy siehst du alle Sessions, was Claude zuletzt geschrieben hat, den Plan-Fortschritt und deine Mitteilungen
