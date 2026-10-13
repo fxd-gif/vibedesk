@@ -113,7 +113,7 @@ export function walkBlocks(program: BlocklyProgram, fn: (b: BlocklyBlock, depth:
   const visit = (start: BlocklyBlock | undefined, depth: number): void => {
     for (let b = start; b; b = b.next?.block) {
       fn(b, depth)
-      for (const inp of Object.values(b.inputs ?? {})) visit(inp.block, depth + 1)
+      for (const inp of Object.values(b.inputs ?? {})) visit(inp.block ?? inp.shadow, depth + 1)
     }
   }
   for (const top of program.blocks?.blocks ?? []) visit(top, 0)
