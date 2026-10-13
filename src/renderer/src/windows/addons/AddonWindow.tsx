@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { MakerView } from './MakerView'
+import { FlowMaker } from './flow/FlowMaker'
 import { ManagerView } from './ManagerView'
 import './addons.css'
 
@@ -27,15 +27,7 @@ export function AddonWindow(): React.JSX.Element {
   const { tab, editId, session } = useAddonUi()
   return (
     <div className="panel addons-win">
-      <div className="row tabs">
-        <button className={`tab${tab === 'manager' ? ' on' : ''}`} onClick={() => useAddonUi.getState().showManager()} data-testid="addons-tab-manager">
-          Meine Addons
-        </button>
-        <button className={`tab${tab === 'maker' ? ' on' : ''}`} onClick={() => useAddonUi.setState({ tab: 'maker' })} data-testid="addons-tab-maker">
-          Maker
-        </button>
-      </div>
-      <div className="addons-body">{tab === 'manager' ? <ManagerView /> : <MakerView key={session} editId={editId} />}</div>
+      {tab === 'manager' ? <ManagerView /> : <FlowMaker key={session} editId={editId} onBack={() => useAddonUi.getState().showManager()} />}
     </div>
   )
 }
