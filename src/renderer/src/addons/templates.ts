@@ -214,8 +214,11 @@ export const TEMPLATES: Template[] = [
       const beimStart = iff(b, all(cmp(store('welle'), 'EQ', num(1))))
       b.seq(b.n('vd_on_start'), beimStart)
       b.link(beimStart, 'yes', emit(b, 'welle'))
+      // Sperre: läuft die Schleife schon, startet ein erneutes Signal keine zweite
+      const schonDa = iff(b, all(cmp(vr('läuft'), 'EQ', num(1))))
       const loop = b.n('vd_forever')
-      b.seq(signal(b, 'welle'), setVar(b, 't', num(0)), loop)
+      b.seq(signal(b, 'welle'), schonDa)
+      b.link(schonDa, 'no', b.seq(setVar(b, 'läuft', num(1)), setVar(b, 't', num(0)), loop))
       const aktiv = iff(b, all(cmp(store('welle'), 'EQ', num(1))))
       b.link(loop, 'body', aktiv)
       b.link(

@@ -7,9 +7,10 @@ export type { StoredValue }
 
 export interface AddonActions {
   setScene(v: string): void
-  setRain(v0to100: number): void
+  /** transient = nur anzeigen, nicht speichern (Zwischenschritte beim Überblenden) */
+  setRain(v0to100: number, transient?: boolean): void
   getRain(): number
-  setVolume(ch: 'music' | 'rain', v0to100: number): void
+  setVolume(ch: 'music' | 'rain', v0to100: number, transient?: boolean): void
   getVolume(ch: 'music' | 'rain'): number
   setMusicOn(on: boolean): void
   playSound(v: string): void
@@ -26,6 +27,8 @@ export interface AddonStorage {
   ready: Promise<void>
   get(key: string): StoredValue | undefined
   set(key: string, value: StoredValue): void
+  /** Ausstehendes sofort schreiben (beim Stoppen) */
+  flush?(): Promise<void>
 }
 
 
@@ -49,11 +52,15 @@ export const realClock: Clock = {
   sleep: (ms, signal) =>
     new Promise((res, rej) => {
       if (signal.aborted) return rej(new Error('abgebrochen'))
-      const t = setTimeout(res, ms)
-      signal.addEventListener('abort', () => {
+      const onAbort = (): void => {
         clearTimeout(t)
         rej(new Error('abgebrochen'))
-      })
+      }
+      const t = setTimeout(() => {
+        signal.removeEventListener('abort', onAbort)
+        res()
+      }, ms)
+      signal.addEventListener('abort', onAbort, { once: true })
     })
 }
 
@@ -69,6 +76,11 @@ export const LIMITS = {
   maxRepeat: 1000,
   yieldEvery: 500,
   listLen: 500,
+  /** Einträge über alle Listen eines Addons zusammen */
+  listTotal: 20_000,
+  listItemLen: 500,
+  /** gleichzeitig laufende Zweige aus „Gleichzeitig“ – darüber laufen sie nacheinander */
+  maxBranches: 32,
   storedTextLen: 2000,
   storedListLen: 100,
   fadeStepsPerSec: 4,
@@ -144,6 +156,8 @@ export class AddonRunner {
   private readonly recent: number[] = []
   private readonly gates = new Map<string, number>()
   private readonly storage: AddonStorage
+  private readonly fadeTokens = new Map<string, number>()
+  private branchesActive = 0
   private lastNotice = -Infinity
   private lastCopy = -Infinity
   private steps = 0
@@ -165,6 +179,16 @@ export class AddonRunner {
 
   get running(): number {
     return this._running
+  }
+  /** gerade laufende Zweige aus „Gleichzeitig“ */
+  get branches(): number {
+    return this.branchesActive
+  }
+  /** Einträge über alle Listen */
+  get listEntries(): number {
+    let n = 0
+    for (const v of this.vars.values()) if (Array.isArray(v)) n += v.length
+    return n
   }
 
   private get hats(): BlocklyBlock[] {
@@ -221,6 +245,7 @@ export class AddonRunner {
   stop(): void {
     this.stopped = true
     this.ctrl.abort()
+    void this.storage.flush?.()
   }
 
   private async runScript(body: BlocklyBlock | undefined, ctx: Ctx): Promise<void> {
@@ -248,8 +273,19 @@ export class AddonRunner {
     const signal = this.ctrl.signal
     if (signal.aborted) return Promise.reject(new Aborted())
     return new Promise<T>((res, rej) => {
-      signal.addEventListener('abort', () => rej(new Aborted()))
-      p.then(res, rej)
+      const onAbort = (): void => rej(new Aborted())
+      signal.addEventListener('abort', onAbort, { once: true })
+      const done = (): void => signal.removeEventListener('abort', onAbort)
+      p.then(
+        (v) => {
+          done()
+          res(v)
+        },
+        (e) => {
+          done()
+          rej(e)
+        }
+      )
     })
   }
 
@@ -275,11 +311,11 @@ export class AddonRunner {
     }
   }
 
-  private fadeChannel(ch: string): { get(): number; set(v: number): void } {
+  private fadeChannel(ch: string): { get(): number; set(v: number, transient: boolean): void } {
     const a = this.opts.actions
-    if (ch === 'music') return { get: () => a.getVolume('music'), set: (v) => a.setVolume('music', v) }
-    if (ch === 'rain_volume') return { get: () => a.getVolume('rain'), set: (v) => a.setVolume('rain', v) }
-    return { get: () => a.getRain(), set: (v) => a.setRain(v) }
+    if (ch === 'music') return { get: () => a.getVolume('music'), set: (v, t) => a.setVolume('music', v, t) }
+    if (ch === 'rain_volume') return { get: () => a.getVolume('rain'), set: (v, t) => a.setVolume('rain', v, t) }
+    return { get: () => a.getRain(), set: (v, t) => a.setRain(v, t) }
   }
 
   private async exec(b: BlocklyBlock, ctx: Ctx): Promise<void> {
@@ -365,15 +401,21 @@ export class AddonRunner {
         return act(() => this.storage.set(String(field(b, 'KEY')), toStored(v)))
       }
       case 'vd_fade': {
-        const ch = this.fadeChannel(String(field(b, 'CHANNEL')))
+        const key = String(field(b, 'CHANNEL'))
+        const ch = this.fadeChannel(key)
         const to = clamp(toNum(await val('VALUE')), 0, 100)
         const secs = clamp(toNum(await val('SECONDS')), 0, LIMITS.maxWaitSec)
         await this.throttle()
+        // Eine neue Überblendung auf demselben Kanal löst die laufende ab
+        const token = (this.fadeTokens.get(key) ?? 0) + 1
+        this.fadeTokens.set(key, token)
         const from = ch.get()
         const steps = clamp(Math.round(secs * LIMITS.fadeStepsPerSec), 1, 400)
         for (let i = 1; i <= steps; i++) {
           if (this.ctrl.signal.aborted) throw new Aborted()
-          ch.set(Math.round((from + ((to - from) * i) / steps) * 10) / 10)
+          if (this.fadeTokens.get(key) !== token) return
+          // Zwischenschritte nur anzeigen, erst der Endwert wird gespeichert
+          ch.set(Math.round((from + ((to - from) * i) / steps) * 10) / 10, i < steps)
           if (i < steps) await this.sleep((secs * 1000) / steps)
         }
         return
@@ -397,9 +439,26 @@ export class AddonRunner {
         if (isTrue(field(b, 'WAIT'))) await this.abortable(Promise.all(runs))
         return
       }
-      case 'vd_parallel':
-        await Promise.all([this.execStack(input(b, 'A'), ctx), this.execStack(input(b, 'B'), ctx)])
+      case 'vd_parallel': {
+        const runA = (): Promise<void> => this.execStack(input(b, 'A'), ctx)
+        const runB = (): Promise<void> => this.execStack(input(b, 'B'), ctx)
+        // Über dem Budget laufen die Zweige nacheinander – so kann „Gleichzeitig“ nicht unbegrenzt auffächern
+        if (this.branchesActive + 2 > LIMITS.maxBranches) {
+          await runA()
+          await runB()
+          return
+        }
+        this.branchesActive += 2
+        try {
+          // allSettled: der Ablauf bleibt gezählt, bis beide Zweige wirklich fertig sind
+          const results = await Promise.allSettled([runA(), runB()])
+          const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected')
+          if (failed) throw failed.reason
+        } finally {
+          this.branchesActive -= 2
+        }
         return
+      }
       case 'vd_wait_until': {
         const limit = clamp(toNum(await val('TIMEOUT')), 0, LIMITS.maxWaitSec) * 1000
         const start = this.opts.clock.now()
@@ -422,7 +481,9 @@ export class AddonRunner {
         const v = await val('VALUE')
         const cur = this.vars.get(varId(b))
         const list = Array.isArray(cur) ? [...cur] : []
-        if (list.length < LIMITS.listLen) list.push(Array.isArray(v) ? str(v) : v)
+        if (this.listEntries >= LIMITS.listTotal) throw new Error('Listen-Speicher voll (max. 20.000 Einträge über alle Listen)')
+        const item = Array.isArray(v) ? str(v) : v
+        if (list.length < LIMITS.listLen) list.push(typeof item === 'string' ? item.slice(0, LIMITS.listItemLen) : item)
         this.vars.set(varId(b), list)
         return
       }

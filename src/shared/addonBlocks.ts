@@ -1,7 +1,7 @@
 // Baustein-Katalog für Addons: die einzige Wahrheit darüber, welche Blöcke es gibt.
 // Codec, Prüfung, Interpreter und Blockly-Definitionen bauen darauf auf.
 
-export type Capability = 'scene' | 'rain' | 'audio' | 'sound' | 'notice' | 'focus' | 'clipboard' | 'hotkey' | 'schedule' | 'storage'
+export type Capability = 'scene' | 'rain' | 'audio' | 'sound' | 'notice' | 'ask' | 'focus' | 'clipboard' | 'hotkey' | 'schedule' | 'storage'
 
 export const CAPABILITY_LABELS: Record<Capability, string> = {
   scene: 'wechselt die Szene',
@@ -9,6 +9,7 @@ export const CAPABILITY_LABELS: Record<Capability, string> = {
   audio: 'ändert Lautstärken und Musik',
   sound: 'spielt Töne ab',
   notice: 'zeigt Hinweise an',
+  ask: 'stellt Fragen mit Knöpfen',
   focus: 'steuert den Fokus-Timer',
   clipboard: 'kopiert Text in die Zwischenablage',
   hotkey: 'reagiert auf Tastenkürzel',
@@ -121,7 +122,7 @@ def('vd_forever', 'action', { statements: ['DO'] })
 def('vd_switch', 'logic', { fields: { 'V*': { kind: 'text', maxLen: 100 } }, inputs: ['VALUE'], statements: ['CASE*', 'DEFAULT'] })
 def('vd_store_set', 'action', { fields: { KEY: NAME }, inputs: ['VALUE'], capability: 'storage' })
 def('vd_fade', 'action', { fields: { CHANNEL: { kind: 'enum', options: ['rain', 'music', 'rain_volume'] } }, inputs: ['VALUE', 'SECONDS'], capability: ['rain', 'audio'] })
-def('vd_ask', 'action', { fields: { YES_LABEL: { kind: 'text', maxLen: 24 }, NO_LABEL: { kind: 'text', maxLen: 24 } }, inputs: ['TEXT'], statements: ['DO_YES', 'DO_NO'], capability: 'notice' })
+def('vd_ask', 'action', { fields: { YES_LABEL: { kind: 'text', maxLen: 24 }, NO_LABEL: { kind: 'text', maxLen: 24 } }, inputs: ['TEXT'], statements: ['DO_YES', 'DO_NO'], capability: 'ask' })
 
 // Erweitert
 ev('vd_on_signal', { NAME })

@@ -6,6 +6,8 @@ export const ASK_TIMEOUT_MS = 60_000
 
 interface Ask {
   id: number
+  addonId: string
+  addonName: string
   text: string
   yes: string
   no: string
@@ -15,13 +17,21 @@ interface Ask {
 const useAsk = create<{ queue: Ask[] }>(() => ({ queue: [] }))
 let seq = 0
 
-/** Zeigt die Frage an; nach ASK_TIMEOUT_MS ohne Antwort zählt sie als „Nein“. Höchstens 3 warten gleichzeitig. */
-export function askUser(text: string, yes: string, no: string): Promise<boolean> {
+/** Zeigt die Frage an; nach ASK_TIMEOUT_MS ohne Antwort zählt sie als „Nein“. Pro Addon warten höchstens 2 gleichzeitig. */
+export function askUser(addonId: string, addonName: string, text: string, yes: string, no: string): Promise<boolean> {
   return new Promise((resolve) => {
-    if (useAsk.getState().queue.length >= 3) return resolve(false)
-    const ask: Ask = { id: ++seq, text, yes, no, resolve }
+    if (useAsk.getState().queue.filter((a) => a.addonId === addonId).length >= 2) return resolve(false)
+    const ask: Ask = { id: ++seq, addonId, addonName, text, yes, no, resolve }
     useAsk.setState((s) => ({ queue: [...s.queue, ask] }))
   })
+}
+
+/** Offene Fragen eines gestoppten Addons verwerfen (zählen als „Nein“). */
+export function dismissAsks(addonId: string): void {
+  const mine = useAsk.getState().queue.filter((a) => a.addonId === addonId)
+  if (!mine.length) return
+  useAsk.setState((s) => ({ queue: s.queue.filter((a) => a.addonId !== addonId) }))
+  for (const a of mine) a.resolve(false)
 }
 
 function answer(a: Ask, ok: boolean): void {
@@ -39,6 +49,7 @@ export function AskToast(): React.JSX.Element | null {
   if (!current) return null
   return (
     <div className="ask-toast" role="dialog" data-testid="ask-toast" key={current.id}>
+      <div className="ask-from">Addon „{current.addonName}“ fragt</div>
       <div className="ask-text">{current.text}</div>
       <div className="ask-actions">
         <button className="ask-btn" onClick={() => answer(current, false)} data-testid="ask-no">

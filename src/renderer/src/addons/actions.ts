@@ -12,21 +12,25 @@ import { addonSceneValue } from './events'
 import type { AddonActions } from './interpreter'
 
 const settings = () => useSettings.getState().s
-const patch = (p: Parameters<ReturnType<typeof useSettings.getState>['set']>[0]): void => useSettings.getState().set(p)
+type SettingsPatch = Parameters<ReturnType<typeof useSettings.getState>['set']>[0]
+const patch = (p: SettingsPatch): void => useSettings.getState().set(p)
+/** Nur anzeigen, nicht auf die Platte schreiben (Zwischenschritte beim Überblenden) */
+const show = (p: SettingsPatch): void => useSettings.setState((st) => (st.s ? { s: { ...st.s, ...p } } : st))
+const apply = (p: SettingsPatch, transient?: boolean): void => (transient ? show(p) : patch(p))
 const pct = (v: number | undefined, fallback: number): number => Math.round((v ?? fallback) * 100)
 const startedAt = Date.now()
 const localDay = (d: Date): string => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-export function createActions(addonId: string): AddonActions {
+export function createActions(addonId: string, addonName = 'Addon'): AddonActions {
   const assetUrl = (name: string): string => `${ADDON_SCHEME}://${addonId}/${encodeURIComponent(name)}`
   return {
     setScene: (v) => {
       if (BUILTIN_SCENES.includes(v)) patch({ scene: v })
       else if (v.startsWith('asset:')) patch({ scene: addonSceneValue(addonId, v.slice(6)) })
     },
-    setRain: (v) => patch({ rainIntensity: v / 100 }),
+    setRain: (v, transient) => apply({ rainIntensity: v / 100 }, transient),
     getRain: () => pct(settings()?.rainIntensity, 0.6),
-    setVolume: (ch, v) => patch(ch === 'music' ? { musicVolume: v / 100 } : { rainSoundVolume: v / 100 }),
+    setVolume: (ch, v, transient) => apply(ch === 'music' ? { musicVolume: v / 100 } : { rainSoundVolume: v / 100 }, transient),
     getVolume: (ch) => (ch === 'music' ? pct(settings()?.musicVolume, 0.5) : pct(settings()?.rainSoundVolume, 0.35)),
     setMusicOn: (on) => patch({ musicOn: on }),
     playSound: (v) => {
@@ -44,7 +48,7 @@ export function createActions(addonId: string): AddonActions {
       if (cmd === 'stop' && f.state.phase !== 'idle') f.act('reset')
     },
     copyText: (text) => void navigator.clipboard.writeText(text).catch(() => undefined),
-    ask: (text, yes, no) => askUser(text, yes, no),
+    ask: (text, yes, no) => askUser(addonId, addonName, text, yes, no),
     query: (what) => {
       const s = settings()
       const now = new Date()

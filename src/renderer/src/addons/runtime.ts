@@ -5,7 +5,9 @@ import { useSettings } from '../store/settingsStore'
 import { useWorkflow } from '../store/workflowStore'
 import { createActions } from './actions'
 import { focusTransition, planRebuild, sceneFallback, statusTransitions } from './events'
-import { AddonRunner, realClock, type AddonEvent, type AddonStorage, type StoredValue } from './interpreter'
+import { AddonRunner, realClock, type AddonEvent } from './interpreter'
+import { createStorage, type ManagedStorage } from './storage'
+import { dismissAsks } from './AskToast'
 import { api } from '../api'
 import { useSessions } from '../store/sessionStore'
 
@@ -16,23 +18,25 @@ let testRunner: AddonRunner | null = null
 let testId: string | null = null
 const lastInterval = new Map<string, number>()
 
-/** Dauerhafter Speicher je Addon: einmal laden, Änderungen gebündelt zurückschreiben. */
-export function createStorage(id: string): AddonStorage {
-  let data: Record<string, StoredValue> = {}
-  let timer: ReturnType<typeof setTimeout> | undefined
-  const ready = api.addons
-    .getState(id)
-    .then((d) => void (data = d ?? {}))
-    .catch(() => undefined)
-  return {
-    ready,
-    get: (k) => data[k],
-    set: (k, v) => {
-      data = { ...data, [k]: v }
-      clearTimeout(timer)
-      timer = setTimeout(() => void api.addons.setState(id, data).catch(() => undefined), 1000)
-    }
-  }
+const storageIO = { load: (id: string) => api.addons.getState(id), save: (id: string, data: Parameters<typeof api.addons.setState>[1]) => api.addons.setState(id, data) }
+/** letzter Speicher je Addon – ein neuer lädt erst, wenn der alte fertig geschrieben hat */
+const storages = new Map<string, ManagedStorage>()
+
+/** Speicher für ein Addon (Laufzeit oder Test im Maker). */
+export function addonStorage(id: string): ManagedStorage {
+  const prev = storages.get(id)
+  const s = createStorage(id, storageIO, prev ? prev.flush() : Promise.resolve(), (m) => useAddons.getState().setError(id, 'Speichern: ' + m))
+  storages.set(id, s)
+  return s
+}
+
+const addonName = (id: string): string => useAddons.getState().list.find((a) => a.manifest.id === id)?.manifest.name ?? 'Addon'
+
+/** Runner anhalten; bei gelöschtem Addon den Speicher verwerfen statt zu schreiben. */
+function stopRunner(id: string, r: AddonRunner | undefined, removed: boolean): void {
+  if (removed) storages.get(id)?.discard()
+  r?.stop()
+  dismissAsks(id)
 }
 
 const all = (): AddonRunner[] => (testRunner ? [...runners.values(), testRunner] : [...runners.values()])
@@ -42,14 +46,15 @@ function rebuild(): void {
   const { list, setError } = useAddons.getState()
   const wanted = list.filter((a) => a.enabled).map((a) => ({ a, id: a.manifest.id, sig: JSON.stringify([a.program, a.manifest.prompts]) }))
   const plan = planRebuild(signatures, wanted, testId)
+  const present = new Set(list.map((a) => a.manifest.id))
   for (const id of plan.stop) {
-    runners.get(id)?.stop()
+    stopRunner(id, runners.get(id), !present.has(id))
     runners.delete(id)
     signatures.delete(id)
     for (const k of [...lastInterval.keys()]) if (k.startsWith(id + ':')) lastInterval.delete(k)
   }
   for (const { a, id, sig } of wanted.filter((w) => plan.start.includes(w.id))) {
-    const r = new AddonRunner({ program: a.program, prompts: a.manifest.prompts ?? {}, actions: createActions(id), clock: realClock, storage: createStorage(id), onError: (m) => setError(id, m) })
+    const r = new AddonRunner({ program: a.program, prompts: a.manifest.prompts ?? {}, actions: createActions(id, a.manifest.name), clock: realClock, storage: addonStorage(id), onError: (m) => setError(id, m) })
     runners.set(id, r)
     signatures.set(id, sig)
     // neu hinzugekommen oder geändert: „VibeDesk startet“ für dieses Addon auslösen
@@ -69,6 +74,7 @@ export function pauseForTest(id: string): void {
 /** Der Maker testet seinen Entwurf mit eigenem Runner; null beendet den Test und startet das installierte Addon wieder. */
 export function setTestRunner(r: AddonRunner | null, id: string | null = null): void {
   testRunner?.stop()
+  if (testId) dismissAsks(testId)
   testRunner = r
   for (const k of [...lastInterval.keys()]) if (k.startsWith('test:')) lastInterval.delete(k)
   if (r) {
@@ -138,5 +144,12 @@ export function startAddonRuntime(): void {
     }
   }, 1000)
 
+  // Beim Schließen ausstehende „Dauerhaft merken“-Werte noch schreiben
+  window.addEventListener('beforeunload', () => {
+    for (const s of storages.values()) void s.flush()
+  })
+
   void useAddons.getState().reload()
 }
+
+export { addonName }

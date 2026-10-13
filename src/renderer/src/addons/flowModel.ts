@@ -483,8 +483,3 @@ export function unreachable(nodes: FlowNode[], edges: FlowEdge[]): Set<string> {
   return new Set(nodes.filter((n) => !reach.has(n.id)).map((n) => n.id))
 }
 
-/** Entfernt Verbindungen von Ausgängen, die es nicht mehr gibt (z. B. gelöschter Fall bei „Je nach Wert“). */
-export function pruneEdges(nodes: FlowNode[], edges: FlowEdge[]): FlowEdge[] {
-  const outs = new Map(nodes.map((n) => [n.id, outputsOf(n.data)]))
-  return edges.filter((e) => outs.get(e.source)?.includes(e.sourceHandle) && outs.has(e.target))
-}

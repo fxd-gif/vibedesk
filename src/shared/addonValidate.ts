@@ -37,11 +37,11 @@ function checkText(label: string, v: unknown, min: number, max: number): void {
 /** Exakter Name oder nummerierte Variante (IF0, CASE3, V12 …) mit Index unter MAX_NUMBERED. */
 function matchName(name: string, allowed: string[]): string | null {
   for (const a of allowed) {
-    if (a === name) return a
     if (a.endsWith('*')) {
-      const m = new RegExp(`^${a.slice(0, -1)}(\\d{1,2})$`).exec(name)
+      // nur 0, 1 … 19 – keine führenden Nullen, kein wörtliches „*“
+      const m = new RegExp(`^${a.slice(0, -1)}(0|[1-9]\\d?)$`).exec(name)
       if (m && Number(m[1]) < MAX_NUMBERED) return a
-    }
+    } else if (a === name) return a
   }
   return null
 }
