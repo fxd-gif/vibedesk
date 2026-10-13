@@ -26,3 +26,8 @@ publish:
   owner: fxd-gif
   repo: vibedesk
   releaseType: release
+fileAssociations:
+  - ext: vibeaddon
+    name: VibeDesk-Addon
+    description: VibeDesk-Addon
+    role: Viewer

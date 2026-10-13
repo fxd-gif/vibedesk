@@ -1,6 +1,10 @@
 import { app, BrowserWindow, Menu, net, protocol, shell } from 'electron'
 import { pathToFileURL } from 'url'
 import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
+import { ADDON_SCHEME, addonPathFromArgv, AddonStore } from './addonStore'
+import { registerAddonIpc } from './addonIpc'
+import { sniffAsset } from '../shared/addonValidate'
+import fs from 'fs'
 import { join } from 'path'
 import { ProjectStore } from './projectStore'
 import { DEFAULT_SETTINGS, SettingsStore } from './settingsStore'
@@ -23,13 +27,23 @@ import { SessionManager } from './sessionManager'
 
 if (process.env.VIBEDESK_USERDATA) app.setPath('userData', process.env.VIBEDESK_USERDATA)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
-protocol.registerSchemesAsPrivileged([{ scheme: SCENE_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } }])
+protocol.registerSchemesAsPrivileged([
+  { scheme: SCENE_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
+  { scheme: ADDON_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }
+])
 
 let mainWindow: BrowserWindow | null = null
+// Per Doppelklick geöffnete .vibeaddon-Datei, bis der Renderer sie abholt
+let pendingAddon: string | null = addonPathFromArgv(process.argv)
 
 // Nur eine Instanz: ein zweites "vibe" holt das bestehende Fenster nach vorne
 if (!app.requestSingleInstanceLock()) app.quit()
-app.on('second-instance', () => {
+app.on('second-instance', (_e, argv) => {
+  const addon = addonPathFromArgv(argv)
+  if (addon) {
+    pendingAddon = addon
+    send('addon:open', addon)
+  }
   if (!mainWindow) return
   if (mainWindow.isMinimized()) mainWindow.restore()
   mainWindow.show()
@@ -94,6 +108,20 @@ app.whenReady().then(async () => {
     return new Response(res.body, { status: res.status, headers: { 'content-type': res.headers.get('content-type') ?? 'image/*', 'access-control-allow-origin': '*' } })
   })
   registerSceneIpc(scenesDir)
+
+  const addons = new AddonStore(join(userData, 'addons'))
+  protocol.handle(ADDON_SCHEME, (req) => {
+    const f = addons.assetFile(req.url)
+    if (!f || !fs.existsSync(f)) return new Response('not found', { status: 404 })
+    const data = fs.readFileSync(f)
+    const type = sniffAsset(data)?.mime ?? 'application/octet-stream'
+    return new Response(data, { headers: { 'content-type': type, 'access-control-allow-origin': '*' } })
+  })
+  registerAddonIpc(addons, () => mainWindow, () => {
+    const p = pendingAddon
+    pendingAddon = null
+    return p
+  })
 
   const token = randomBytes(24).toString('hex')
   const statsHistory = new StatsHistory(join(userData, 'stats.json'))

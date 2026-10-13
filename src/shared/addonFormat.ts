@@ -122,3 +122,6 @@ export function decodeAddon(bytes: Uint8Array): AddonPackage {
     throw new AddonFormatError('corrupt')
   }
 }
+
+/** Assets installierter Addons: vibedesk-addon://<id>/<datei> */
+export const ADDON_SCHEME = 'vibedesk-addon'

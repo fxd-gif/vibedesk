@@ -44,7 +44,8 @@ const api: VibedeskApi = {
     discordStatus: (cb) => listen<[DiscordStatus]>('discord:status', cb),
     update: (cb) => listen<[UpdateStatus]>('update:status', cb),
     fileChange: (cb) => listen<[FileChange]>('files:change', cb),
-    setupLog: (cb) => listen<[ToolId, string]>('setup:log', cb)
+    setupLog: (cb) => listen<[ToolId, string]>('setup:log', cb),
+    addonOpen: (cb) => listen<[string]>('addon:open', cb)
   },
   setup: {
     check: () => ipcRenderer.invoke('setup:check'),
@@ -81,6 +82,17 @@ const api: VibedeskApi = {
     watch: (p) => ipcRenderer.send('files:watch', p),
     unwatch: (p) => ipcRenderer.send('files:unwatch', p),
     reveal: (p) => ipcRenderer.send('files:reveal', p)
+  },
+  addons: {
+    list: () => ipcRenderer.invoke('addons:list'),
+    inspect: (src) => ipcRenderer.invoke('addons:inspect', src),
+    install: (src) => ipcRenderer.invoke('addons:install', src),
+    remove: (id) => ipcRenderer.invoke('addons:remove', id),
+    setEnabled: (id, on) => ipcRenderer.invoke('addons:setEnabled', id, on),
+    saveDraft: (p) => ipcRenderer.invoke('addons:saveDraft', p),
+    exportTo: (id) => ipcRenderer.invoke('addons:exportTo', id),
+    pickFile: () => ipcRenderer.invoke('addons:pickFile'),
+    takePending: () => ipcRenderer.invoke('addons:takePending')
   },
   scenes: {
     addCustom: (p) => ipcRenderer.invoke('scenes:addCustom', p)

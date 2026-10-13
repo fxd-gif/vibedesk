@@ -31,6 +31,8 @@ export interface WindowRect {
 }
 
 import type { Activity, PresenceConfig } from './presence'
+import type { AddonManifest, AddonPackage } from './addonFormat'
+import type { BlocklyProgram } from './addonBlocks'
 
 export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor'
 
@@ -219,6 +221,21 @@ export interface VibedeskApi {
     update(cb: (s: UpdateStatus) => void): Unsubscribe
     fileChange(cb: (c: FileChange) => void): Unsubscribe
     setupLog(cb: (tool: ToolId, line: string) => void): Unsubscribe
+    addonOpen(cb: (path: string) => void): Unsubscribe
+  }
+  addons: {
+    list(): Promise<InstalledAddon[]>
+    /** Pfad zu einer .vibeaddon-Datei oder deren Bytes */
+    inspect(src: string | Uint8Array): Promise<AddonPreview>
+    install(src: string | Uint8Array): Promise<InstalledAddon>
+    remove(id: string): Promise<void>
+    setEnabled(id: string, on: boolean): Promise<void>
+    saveDraft(p: AddonPackage): Promise<InstalledAddon>
+    /** Speichern-Dialog; liefert den Zielpfad oder null bei Abbruch */
+    exportTo(id: string): Promise<string | null>
+    pickFile(): Promise<string | null>
+    /** Beim Start per Doppelklick übergebene Datei (einmalig) */
+    takePending(): Promise<string | null>
   }
   update: {
     status(): Promise<UpdateStatus>
@@ -264,3 +281,19 @@ export interface FilesApi {
   unwatch(path: string): void
   reveal(path: string): void
 }
+
+export interface InstalledAddon {
+  manifest: AddonManifest
+  enabled: boolean
+  program: BlocklyProgram
+  assetNames: string[]
+}
+
+export interface AddonPreview {
+  manifest: AddonManifest
+  capabilityLabels: string[]
+  images: { name: string; dataUrl: string }[]
+  existing: { name: string; author: string; version: number } | null
+}
+
+export type { AddonPackage }
