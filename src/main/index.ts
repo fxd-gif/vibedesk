@@ -27,6 +27,7 @@ import { HookServer } from './hookServer'
 import { SessionManager } from './sessionManager'
 import { OverlayServer } from './overlayServer'
 import { basename } from 'path'
+import { BrainService, registerBrainIpc } from './brainService'
 
 if (process.env.VIBEDESK_USERDATA) app.setPath('userData', process.env.VIBEDESK_USERDATA)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
@@ -136,14 +137,30 @@ app.whenReady().then(async () => {
   ipcMain.on('app:openExternal', (_e, url: string) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url)
   })
-  const hookServer = new HookServer(token, (e) => {
-    send('hook:event', e)
-    stats.onHook(e)
+  const brain = new BrainService({
+    activityDir: join(userData, 'brain'),
+    project: (id) => projects.get(id),
+    projectOfSession: (sid) => {
+      const info = sessions.list().find((s) => s.id === sid)
+      return info ? projects.get(info.projectId) : undefined
+    },
+    enabled: () => settings.get().brainOn,
+    emit: (ch, payload) => send(ch, payload)
   })
+  registerBrainIpc(brain)
+  const hookServer = new HookServer(
+    token,
+    (e) => {
+      send('hook:event', e)
+      stats.onHook(e)
+      brain.onHook(e)
+      if (e.name === 'SessionStart') return brain.sessionStartOutput(e.sessionId)
+    },
+    (sid, tool, args) => brain.tool(sid, tool, args)
+  )
   const port = await hookServer.start()
-  const forwarderPath = app.isPackaged
-    ? join(process.resourcesPath, 'hook-forwarder.js')
-    : join(app.getAppPath(), 'resources', 'hook-forwarder.js')
+  const resource = (f: string): string => (app.isPackaged ? join(process.resourcesPath, f) : join(app.getAppPath(), 'resources', f))
+  const forwarderPath = resource('hook-forwarder.js')
   const sessions = new SessionManager({
     spawn: (file, args, o) => pty.spawn(file, args, { name: 'xterm-256color', ...o }),
     tmpDir: join(app.getPath('temp'), 'vibedesk'),
@@ -151,7 +168,8 @@ app.whenReady().then(async () => {
     forwarderPath,
     port: () => port,
     token,
-    maxSessions: () => settings.get().maxSessions
+    maxSessions: () => settings.get().maxSessions,
+    brain: { mcpPath: resource('brain-mcp.js'), enabled: () => settings.get().brainOn }
   })
   sessions.on('data', (id, d) => send('session:data', id, d))
   sessions.on('exit', (id, code) => {
@@ -194,6 +212,7 @@ app.whenReady().then(async () => {
   discord.configure(dc.enabled, dc.clientId)
   app.on('before-quit', () => discord.shutdown())
   app.on('before-quit', () => {
+    brain.flushAll()
     sessions.stopAll()
     hookServer.stop()
   })

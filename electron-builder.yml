@@ -9,6 +9,8 @@ files:
 extraResources:
   - from: resources/hook-forwarder.js
     to: hook-forwarder.js
+  - from: resources/brain-mcp.js
+    to: brain-mcp.js
 asarUnpack:
   - "**/node_modules/@lydell/**"
 win:

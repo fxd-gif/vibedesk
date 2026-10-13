@@ -51,7 +51,8 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
     chatModsOnly: false
   },
   notify: { toasts: true, windows: true, focusQuiet: true, kinds: { waiting: true, done: true, error: true } },
-  dockAll: false
+  dockAll: false,
+  brainOn: true
 })
 
 export class SettingsStore {

@@ -51,3 +51,14 @@ export function pushLog<T extends LogEntry>(log: T[], n: T, max = LOG_MAX): T[] 
 export function heldSummary(count: number): string {
   return count === 1 ? 'Während der Fokus-Runde kam 1 Mitteilung' : `Während der Fokus-Runde kamen ${count} Mitteilungen`
 }
+
+// ---------- Gehirn-Anstoß ----------
+
+/** ab so vielen geänderten Dateien lohnt es sich, Wissen festzuhalten */
+export const NUDGE_EDITS = 5
+/** pro Projekt höchstens alle 30 Minuten */
+const NUDGE_GAP_MS = 30 * 60_000
+
+export function shouldNudge(edited: number, learned: number, lastNudge: number | undefined, now: number): boolean {
+  return edited >= NUDGE_EDITS && learned === 0 && (lastNudge === undefined || now - lastNudge >= NUDGE_GAP_MS)
+}

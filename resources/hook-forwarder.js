@@ -31,8 +31,14 @@ process.stdin.on('end', () => {
       headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'x-vibedesk-token': token }
     },
     (res) => {
-      res.resume()
-      res.on('end', done)
+      // Antwort (z. B. Kontext beim Session-Start) geht an Claude Code
+      let out = ''
+      res.setEncoding('utf8')
+      res.on('data', (c) => (out += c))
+      res.on('end', () => {
+        if (res.statusCode === 200 && out) process.stdout.write(out, done)
+        else done()
+      })
     }
   )
   req.on('error', done)

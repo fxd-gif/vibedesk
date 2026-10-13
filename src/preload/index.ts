@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { DiscordStatus, FileChange, HookEvent, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
+import type { BrainPulse } from '../shared/brain'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
   const h = (_e: unknown, ...args: unknown[]): void => cb(...(args as A))
@@ -47,7 +48,9 @@ const api: VibedeskApi = {
     fileChange: (cb) => listen<[FileChange]>('files:change', cb),
     setupLog: (cb) => listen<[ToolId, string]>('setup:log', cb),
     addonOpen: (cb) => listen<[string]>('addon:open', cb),
-    notifyClick: (cb) => listen<[number]>('notify:click', cb)
+    notifyClick: (cb) => listen<[number]>('notify:click', cb),
+    brainChanged: (cb) => listen<[string]>('brain:changed', cb),
+    brainPulse: (cb) => listen<[BrainPulse]>('brain:pulse', cb)
   },
   setup: {
     check: () => ipcRenderer.invoke('setup:check'),
@@ -76,6 +79,14 @@ const api: VibedeskApi = {
   notes: {
     get: (projectId) => ipcRenderer.invoke('notes:get', projectId),
     set: (projectId, text) => ipcRenderer.invoke('notes:set', projectId, text)
+  },
+  brain: {
+    view: (projectId) => ipcRenderer.invoke('brain:view', projectId),
+    note: (projectId, title) => ipcRenderer.invoke('brain:note', projectId, title),
+    file: (projectId, file) => ipcRenderer.invoke('brain:file', projectId, file),
+    write: (projectId, note, previousTitle) => ipcRenderer.invoke('brain:write', projectId, note, previousTitle),
+    remove: (projectId, title) => ipcRenderer.invoke('brain:remove', projectId, title),
+    reveal: (projectId) => ipcRenderer.invoke('brain:reveal', projectId)
   },
   openExternal: (url) => ipcRenderer.send('app:openExternal', url),
   files: {

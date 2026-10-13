@@ -57,6 +57,7 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     ...INSPECTOR_TABS.map(
       (t): Cmd => ({ id: 'insp:' + t.id, label: `Session-Inspector: ${t.label}`, group: 'Fenster', icon: 'inspect', searchOnly: true, run: () => openInspector(t.id) })
     ),
+    win('brain', 'Projektgedächtnis von Claude als Graph'),
     win('prompts'),
     win('skills'),
     win('focus'),

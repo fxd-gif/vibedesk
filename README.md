@@ -40,6 +40,11 @@ VibeDesk ist eine Vollbild-Arbeitsumgebung für Windows, gebaut für das Arbeite
 - **Stats:** Context-Auslastung, Tokens, Cache-Trefferquote und geschätzte Kosten – pro Session und pro Tag
 - Frühere Sessions mit einem Klick fortsetzen
 
+**Das VibeDesk-Gehirn**
+- Claude bekommt ein **Projektgedächtnis**: Bereiche, Entscheidungen, Stolperfallen und Konventionen als verlinkte Markdown-Notizen in `.vibedesk/brain` – kompatibel mit Obsidian
+- Jede Session startet mit diesem Wissen und pflegt es über eigene Werkzeuge weiter, statt das Projekt jedes Mal neu zu erkunden
+- **Lebendiger Graph**: Notizen und Dateien als Netz, Knoten leuchten auf, während Claude liest, ändert oder lernt
+
 **Addons**
 - **Addon-Maker** als Flowchart-Editor – Bausteine ziehen und verbinden, ohne eine Zeile Code: „Wenn eine Session auf mich wartet → wechsle nach Tokio und spiel einen Gong“
 - Auslöser, Aktionen, Wenn/Sonst mit Und/Oder, Je nach Wert, Schleifen, Fragen mit Knöpfen, Überblenden und dauerhaft gemerkte Werte; eigene Szenenbilder, Töne und Prompt-Vorlagen im Addon

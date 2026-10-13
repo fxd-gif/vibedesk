@@ -1,0 +1,68 @@
+/* ---------- Gehirn ---------- */
+.brain { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.brain-bar { display: flex; align-items: center; gap: 8px; padding: 10px 12px 6px; flex-wrap: wrap; }
+.brain-bar .brain-project { width: 170px; flex: 0 0 170px; }
+.brain-search { position: relative; display: flex; align-items: center; }
+.brain-search svg { position: absolute; left: 9px; color: var(--text-dim); pointer-events: none; }
+.brain-search .field.small { width: 200px; padding-left: 29px; }
+.brain-stats { color: var(--text-dim); font-size: 12px; white-space: nowrap; }
+.brain-stats b { color: #fb923c; font-weight: 500; }
+.brain-spacer { flex: 1; }
+.brain-on { display: flex; align-items: center; gap: 8px; color: var(--text-dim); font-size: 12px; cursor: pointer; white-space: nowrap; }
+.brain-filters { display: flex; align-items: center; gap: 4px; padding: 0 12px 8px; flex-wrap: wrap; }
+.brain-filter { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--glass-border); background: rgba(255,255,255,.04); color: var(--text-dim); font-size: 11.5px; cursor: pointer; transition: opacity 150ms, background 150ms; }
+.brain-filter:hover { background: rgba(255,255,255,.08); color: var(--text); }
+.brain-filter i { width: 8px; height: 8px; border-radius: 50%; }
+.brain-filter.off { opacity: .4; }
+.brain-filter.off i { background: transparent !important; box-shadow: inset 0 0 0 1px currentColor; }
+
+.brain-main { flex: 1; min-height: 0; display: flex; border-top: 1px solid var(--glass-border); }
+.brain-stage { position: relative; flex: 1; min-width: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, rgba(159, 184, 255, .07), transparent 65%), rgba(5, 7, 12, .35); }
+.brain-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.brain-legend { position: absolute; left: 12px; bottom: 10px; display: flex; gap: 12px; color: var(--text-dim); font-size: 11px; pointer-events: none; }
+.brain-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.brain-legend i { width: 9px; height: 9px; border-radius: 50%; }
+.brain-legend .pulse { background: transparent; border: 1.5px solid; }
+.brain-legend .read { border-color: #67e8f9; }
+.brain-legend .edit { border-color: #4ade80; }
+.brain-legend .write { border-color: #c4a7ff; }
+.brain-legend .stale { border: 1.5px dashed #fb923c; }
+
+.brain-empty { position: absolute; left: 50%; top: 50%; translate: -50% -50%; color: var(--text-dim); text-align: center; }
+.brain-empty.card { width: min(460px, calc(100% - 40px)); padding: 26px 26px 20px; border-radius: 18px; background: rgba(14, 18, 26, .72); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.4); }
+.brain-empty.card svg { color: #c4a7ff; filter: drop-shadow(0 0 14px rgba(196, 167, 255, .6)); }
+.brain-empty h3 { margin: 0; color: var(--text); font-size: 16px; font-weight: 600; }
+.brain-empty p { margin: 0; line-height: 1.6; font-size: 12.5px; }
+
+.brain-side { flex: 0 0 340px; min-width: 0; overflow: auto; border-left: 1px solid var(--glass-border); background: rgba(10, 13, 20, .45); }
+.bs, .bs-edit { padding: 16px 16px 20px; display: flex; flex-direction: column; gap: 10px; }
+.bs-empty { padding: 30px; display: grid; place-items: center; }
+.bs h3 { margin: 0; font-size: 17px; font-weight: 600; line-height: 1.3; word-break: break-word; user-select: text; }
+.bs h3.mono { font-size: 13px; }
+.bs-kind { display: flex; align-items: center; gap: 7px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-dim); }
+.bs-kind i { width: 9px; height: 9px; border-radius: 50%; }
+.bs-kind i.hollow { border: 1.5px dashed var(--text-dim); }
+.bs-stale { padding: 7px 10px; border-radius: 9px; background: rgba(251, 146, 60, .12); border: 1px solid rgba(251, 146, 60, .3); color: #fdba74; font-size: 12px; }
+.bs section { display: flex; flex-direction: column; gap: 2px; }
+.bs h4 { margin: 6px 0 2px; font-size: 10.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--text-dim); }
+.bs-ref { text-align: left; padding: 4px 8px; margin: 0 -8px; border: 0; border-radius: 7px; background: transparent; color: var(--accent); cursor: pointer; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bs-ref.mono { font-size: 11.5px; }
+.bs-ref:hover { background: rgba(159, 184, 255, .1); }
+.bs-hint { margin: 0; color: var(--text-dim); font-size: 12px; line-height: 1.55; }
+.bs-tags { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11.5px; color: var(--text-dim); }
+.bs-actions { margin-top: 6px; }
+.bs-veil { display: flex; align-items: center; gap: 8px; padding: 14px; border-radius: 10px; border: 1px dashed var(--glass-border); background: rgba(255,255,255,.03); color: var(--text-dim); cursor: pointer; }
+.bs-edit textarea { min-height: 240px; font-size: 12px; }
+.bs-types { display: flex; flex-wrap: wrap; gap: 4px; }
+.bs-types .chip { display: inline-flex; align-items: center; gap: 6px; }
+.bs-types .chip i { width: 8px; height: 8px; border-radius: 50%; }
+
+.md { font-size: 13px; line-height: 1.6; color: var(--text); user-select: text; word-break: break-word; }
+.md p { margin: 0 0 8px; }
+.md h3, .md h4, .md h5, .md h6 { margin: 12px 0 6px; font-size: 13.5px; font-weight: 600; }
+.md ul { margin: 0 0 8px; padding-left: 18px; }
+.md li { margin: 2px 0; }
+.md code { font-family: var(--mono); font-size: 11.5px; padding: 1px 5px; border-radius: 5px; background: rgba(255,255,255,.08); }
+.md pre { margin: 0 0 8px; padding: 10px; border-radius: 9px; background: rgba(0,0,0,.35); font-family: var(--mono); font-size: 11.5px; overflow: auto; white-space: pre; }
+.md-link { display: inline; padding: 0; border: 0; background: transparent; color: #c4a7ff; cursor: pointer; font: inherit; border-bottom: 1px dashed rgba(196, 167, 255, .5); }
+.md-link:hover { color: #e2d4ff; }

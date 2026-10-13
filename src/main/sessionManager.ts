@@ -3,7 +3,7 @@ import path from 'path'
 import { randomUUID } from 'crypto'
 import { execFile, execFileSync } from 'child_process'
 import type { Project, SessionInfo } from '../shared/types'
-import { buildHookSettings } from './hookSettings'
+import { buildBrainMcpConfig, buildHookSettings } from './hookSettings'
 
 export interface PtyLike {
   onData(cb: (d: string) => void): void
@@ -28,12 +28,15 @@ export interface SessionManagerOptions {
   token: string
   maxSessions: () => number
   isClaudeInstalled?: () => boolean
+  /** Gehirn: MCP-Server mitgeben, solange eingeschaltet */
+  brain?: { mcpPath: string; enabled: () => boolean }
 }
 
 interface Running {
   info: SessionInfo
   pty: PtyLike
   settingsFile: string
+  mcpFile?: string
 }
 
 export function claudeOnPath(): boolean {
@@ -74,7 +77,13 @@ export class SessionManager {
     const id = randomUUID()
     fs.mkdirSync(this.o.tmpDir, { recursive: true })
     const settingsFile = path.join(this.o.tmpDir, `session-${id}.json`)
-    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath)))
+    const brain = !!this.o.brain?.enabled()
+    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath, { brain })))
+    let mcpFile: string | undefined
+    if (brain) {
+      mcpFile = path.join(this.o.tmpDir, `session-${id}-mcp.json`)
+      fs.writeFileSync(mcpFile, JSON.stringify(buildBrainMcpConfig(this.o.nodeExe, this.o.brain!.mcpPath, { sessionId: id, port: this.o.port(), token: this.o.token })))
+    }
 
     const env: Record<string, string> = {
       ...(process.env as Record<string, string>),
@@ -84,7 +93,7 @@ export class SessionManager {
     }
     delete env.ELECTRON_RUN_AS_NODE
     // Kein /s: der erste Token bleibt unquotiert, damit cmd die Anführungszeichen des Pfads stehen lässt
-    const args = ['/d', '/c', cmd, '--settings', settingsFile, ...(opts.resumeId ? ['--resume', opts.resumeId] : [])]
+    const args = ['/d', '/c', cmd, '--settings', settingsFile, ...(mcpFile ? ['--mcp-config', mcpFile] : []), ...(opts.resumeId ? ['--resume', opts.resumeId] : [])]
     const pty = this.o.spawn('cmd.exe', args, {
       cwd: project.path,
       env,
@@ -92,7 +101,7 @@ export class SessionManager {
       rows: 30
     })
     const info: SessionInfo = { id, projectId: project.id, name: project.name, cwd: project.path }
-    this.sessions.set(id, { info, pty, settingsFile })
+    this.sessions.set(id, { info, pty, settingsFile, mcpFile })
     pty.onData((d) => this.dataCbs.forEach((cb) => cb(id, d)))
     pty.onExit(({ exitCode }) => {
       this.cleanup(id)
@@ -140,5 +149,6 @@ export class SessionManager {
     if (!s) return
     this.sessions.delete(id)
     fs.rmSync(s.settingsFile, { force: true })
+    if (s.mcpFile) fs.rmSync(s.mcpFile, { force: true })
   }
 }

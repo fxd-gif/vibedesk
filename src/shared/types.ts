@@ -35,8 +35,9 @@ import type { AddonManifest, AddonPackage } from './addonFormat'
 import type { BlocklyProgram } from './addonBlocks'
 import type { OverlayState } from './overlay'
 import type { WebhookPayload, WebhookSettings } from './webhook'
+import type { BrainPulse, BrainView, NoteDetail } from './brain'
 
-export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer'
+export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain'
 
 export type DiscordStatus =
   | { state: 'off' }
@@ -74,6 +75,23 @@ export interface NotifySettings {
   /** in Fokus-Runden nur Wichtiges zeigen, den Rest danach gesammelt */
   focusQuiet: boolean
   kinds: Record<NoticeKind, boolean>
+}
+
+export interface BrainNoteInput {
+  title: string
+  type: string
+  body: string
+  tags?: string[]
+  files?: string[]
+}
+
+export interface BrainFileInfo {
+  file: string
+  abs: string
+  reads: number
+  edits: number
+  notes: string[]
+  co: { file: string; count: number }[]
 }
 
 export interface FocusSettings {
@@ -148,6 +166,8 @@ export interface Settings {
   notify: NotifySettings
   /** alle Dock-Symbole zeigen statt nur der gerade sinnvollen */
   dockAll: boolean
+  /** VibeDesk-Gehirn: Claude bekommt Projektgedächtnis (MCP + Überblick beim Start) */
+  brainOn: boolean
 }
 
 export interface LoungeSettings {
@@ -274,6 +294,8 @@ export interface VibedeskApi {
     setupLog(cb: (tool: ToolId, line: string) => void): Unsubscribe
     addonOpen(cb: (path: string) => void): Unsubscribe
     notifyClick(cb: (id: number) => void): Unsubscribe
+    brainChanged(cb: (projectId: string) => void): Unsubscribe
+    brainPulse(cb: (p: BrainPulse) => void): Unsubscribe
   }
   addons: {
     list(): Promise<InstalledAddon[]>
@@ -313,6 +335,14 @@ export interface VibedeskApi {
   notes: {
     get(projectId: string): Promise<string>
     set(projectId: string, text: string): Promise<void>
+  }
+  brain: {
+    view(projectId: string): Promise<BrainView | null>
+    note(projectId: string, title: string): Promise<NoteDetail | null>
+    file(projectId: string, file: string): Promise<BrainFileInfo | null>
+    write(projectId: string, note: BrainNoteInput, previousTitle?: string): Promise<NoteDetail>
+    remove(projectId: string, title: string): Promise<boolean>
+    reveal(projectId: string): Promise<boolean>
   }
   openExternal(url: string): void
   files: FilesApi

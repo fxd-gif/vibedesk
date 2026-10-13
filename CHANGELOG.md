@@ -7,6 +7,14 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+- **Das VibeDesk-Gehirn**: Claude bekommt ein Projektgedächtnis. Bereiche, Entscheidungen, Stolperfallen und Konventionen landen als verlinkte Notizen in `.vibedesk/brain` – Markdown mit `[[Links]]`, direkt in Obsidian zu öffnen und mit Git zu versionieren
+- Jede neue Session startet mit einem Überblick über dieses Wissen und kann es über eigene Werkzeuge durchsuchen, lesen und erweitern – ohne Rückfragen und ganz lokal
+- **Gehirn-Fenster** als lebendiger Graph: zoomen, ziehen, suchen, nach Typ filtern. Knoten leuchten auf, während Claude Dateien liest, ändert oder etwas Neues lernt
+- Notizen direkt im Fenster lesen, schreiben und verlinken; zu jeder Datei siehst du das Wissen dazu und welche Dateien oft mit ihr zusammen geändert werden
+- „Gehirn aufbauen lassen“ und „Gehirn pflegen“ schicken Claude den passenden Auftrag. Notizen, deren Dateien sich seitdem geändert haben, sind als „zu prüfen“ markiert
+- Hat eine Session viel geändert, ohne etwas festzuhalten, schlägt VibeDesk vor, das Gehirn zu pflegen
+
 ## 0.9.0
 
 ### Neu

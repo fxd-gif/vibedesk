@@ -47,6 +47,8 @@ import { StartCard } from './desktop/StartCard'
 import { MoreMenu } from './desktop/MoreMenu'
 import { dockPlan, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
+import { wireBrainNudge } from './store/brainNudge'
+import { TEND_PROMPT } from './windows/brain/BrainWindow'
 
 
 const initials = (n: string): string => {
@@ -140,6 +142,7 @@ export default function App(): React.JSX.Element {
     wireLounge()
     wireStreamer()
     wireNotify()
+    wireBrainNudge(TEND_PROMPT)
     useSettings.getState().load().then((s) => {
       const ui = useUi.getState()
       ui.initRects(s.windowRects)
