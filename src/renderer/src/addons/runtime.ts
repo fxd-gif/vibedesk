@@ -4,7 +4,7 @@ import { useFocus } from '../store/focusStore'
 import { useSettings } from '../store/settingsStore'
 import { useWorkflow } from '../store/workflowStore'
 import { createActions } from './actions'
-import { focusTransition, sceneFallback, statusTransitions } from './events'
+import { focusTransition, planRebuild, sceneFallback, statusTransitions } from './events'
 import { AddonRunner, realClock, type AddonEvent } from './interpreter'
 
 const runners = new Map<string, AddonRunner>()
@@ -14,46 +14,49 @@ let testRunner: AddonRunner | null = null
 let testId: string | null = null
 const lastInterval = new Map<string, number>()
 
-const all = (): AddonRunner[] => {
-  const live = [...runners.entries()].filter(([id]) => id !== testId).map(([, r]) => r)
-  return testRunner ? [...live, testRunner] : live
-}
+const all = (): AddonRunner[] => (testRunner ? [...runners.values(), testRunner] : [...runners.values()])
 const emit = (e: AddonEvent): void => all().forEach((r) => r.emit(e))
 
 function rebuild(): void {
   const { list, setError } = useAddons.getState()
-  const wanted = list.filter((a) => a.enabled)
-  const ids = new Set(wanted.map((a) => a.manifest.id))
-  for (const [id, r] of runners) {
-    if (ids.has(id)) continue
-    r.stop()
+  const wanted = list.filter((a) => a.enabled).map((a) => ({ a, id: a.manifest.id, sig: JSON.stringify([a.program, a.manifest.prompts]) }))
+  const plan = planRebuild(signatures, wanted, testId)
+  for (const id of plan.stop) {
+    runners.get(id)?.stop()
     runners.delete(id)
     signatures.delete(id)
-  }
-  for (const a of wanted) {
-    const id = a.manifest.id
-    const sig = JSON.stringify([a.program, a.manifest.prompts])
-    if (signatures.get(id) === sig) continue
-    runners.get(id)?.stop()
     for (const k of [...lastInterval.keys()]) if (k.startsWith(id + ':')) lastInterval.delete(k)
+  }
+  for (const { a, id, sig } of wanted.filter((w) => plan.start.includes(w.id))) {
     const r = new AddonRunner({ program: a.program, prompts: a.manifest.prompts ?? {}, actions: createActions(id), clock: realClock, onError: (m) => setError(id, m) })
     runners.set(id, r)
     signatures.set(id, sig)
     // neu hinzugekommen oder geändert: „VibeDesk startet“ für dieses Addon auslösen
-    if (id !== testId) r.emit({ type: 'start' })
+    r.emit({ type: 'start' })
   }
   const scene = useSettings.getState().s?.scene
   const fallback = scene ? sceneFallback(scene, list) : null
   if (fallback) useSettings.getState().set({ scene: fallback })
 }
 
-/** Der Maker testet seinen Entwurf mit eigenem Runner; das installierte Addon pausiert so lange. */
+/** Vor dem Speichern im Maker: installiertes Addon anhalten, damit es während des Tests nicht doppelt läuft. */
+export function pauseForTest(id: string): void {
+  testId = id
+  rebuild()
+}
+
+/** Der Maker testet seinen Entwurf mit eigenem Runner; null beendet den Test und startet das installierte Addon wieder. */
 export function setTestRunner(r: AddonRunner | null, id: string | null = null): void {
   testRunner?.stop()
   testRunner = r
-  testId = r ? id : null
   for (const k of [...lastInterval.keys()]) if (k.startsWith('test:')) lastInterval.delete(k)
-  r?.emit({ type: 'start' })
+  if (r) {
+    if (id && testId !== id) pauseForTest(id)
+    r.emit({ type: 'start' })
+  } else if (testId) {
+    testId = null
+    rebuild()
+  }
 }
 
 const KEY_RE = /^(?:Key([A-Z])|Digit(\d))$/

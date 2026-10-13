@@ -48,6 +48,8 @@ export const LIMITS = {
   foreverMinMs: 100,
   maxScripts: 10,
   noticeEveryMs: 5000,
+  clipboardEveryMs: 10_000,
+  textLen: 5000,
   noticeLen: 140,
   maxWaitSec: 3600,
   maxRepeat: 1000,
@@ -89,6 +91,7 @@ export class AddonRunner {
   private readonly vars = new Map<string, Value>()
   private readonly recent: number[] = []
   private lastNotice = -Infinity
+  private lastCopy = -Infinity
   private steps = 0
   private stopped = false
   private _running = 0
@@ -108,7 +111,7 @@ export class AddonRunner {
   }
 
   private get hats(): BlocklyBlock[] {
-    return (this.opts.program.blocks?.blocks ?? []).filter((b) => b.type in EVENT_OF)
+    return (this.opts.program.blocks?.blocks ?? []).filter((b) => Object.hasOwn(EVENT_OF, b.type))
   }
 
   listens(): AddonEvent['type'][] {
@@ -232,6 +235,10 @@ export class AddonRunner {
         return act(() => a.focus(field(b, 'CMD') === 'stop' ? 'stop' : 'start'))
       case 'vd_copy_text': {
         const text = String(await this.eval(input(b, 'TEXT')))
+        // Zwischenablage nur selten überschreiben – sonst könnte ein Addon Kopiertes heimlich austauschen
+        const now = this.opts.clock.now()
+        if (now - this.lastCopy < LIMITS.clipboardEveryMs) return
+        this.lastCopy = now
         return act(() => a.copyText(text))
       }
       case 'vd_wait':
@@ -318,8 +325,11 @@ export class AddonRunner {
       }
       case 'text_join': {
         let s = ''
-        for (const i of numberedInputs(b, 'ADD')) s += String(await this.eval(input(b, `ADD${i}`)))
-        return s.slice(0, 5000)
+        for (const i of numberedInputs(b, 'ADD')) {
+          if (s.length >= LIMITS.textLen) break
+          s += String(await this.eval(input(b, `ADD${i}`))).slice(0, LIMITS.textLen)
+        }
+        return s.slice(0, LIMITS.textLen)
       }
       case 'variables_get':
         return this.vars.get(varId(b)) ?? 0

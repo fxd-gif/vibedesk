@@ -10,7 +10,7 @@ import { registerBlocks, setAssetSource, vibedeskTheme } from '../../addons/bloc
 import { toolbox } from '../../addons/blocklyDefs'
 import { AddonRunner, realClock } from '../../addons/interpreter'
 import { createActions } from '../../addons/actions'
-import { setTestRunner } from '../../addons/runtime'
+import { pauseForTest, setTestRunner } from '../../addons/runtime'
 import { Icon } from '../../desktop/icons'
 
 interface PromptRow {
@@ -182,9 +182,11 @@ export function MakerView({ editId }: { editId: string | null }): React.JSX.Elem
       setTesting(false)
       return
     }
-    if (!(await save())) return
+    if (!latest.current.name.trim()) return void (await alert('Bitte gib deinem Addon zuerst einen Namen.'))
+    pauseForTest(id)
+    if (!(await save())) return void setTestRunner(null)
     const p = await build()
-    if (!p) return
+    if (!p) return void setTestRunner(null)
     setTestRunner(
       new AddonRunner({ program: p.program, prompts: p.manifest.prompts, actions: createActions(id), clock: realClock, onError: (m) => setStatus('Fehler im Test: ' + m) }),
       id

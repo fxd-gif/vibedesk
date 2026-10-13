@@ -70,6 +70,25 @@ function checkField(b: BlocklyBlock, key: string, spec: FieldSpec, v: unknown, a
   }
 }
 
+const MAX_BLOCKS = 5000
+const MAX_MUTATION = 50
+
+/** Blockly lädt extraState in Schleifen – nur kleine, bekannte Werte zulassen (sonst friert der Maker ein). */
+function checkExtraState(b: BlocklyBlock): void {
+  const e = b.extraState
+  if (e === undefined || e === null) return
+  const small = (v: unknown): boolean => v === undefined || (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= MAX_MUTATION)
+  const bad = (): never => fail(`Ungültige Zusatzdaten in Baustein ${b.type}`)
+  if (typeof e !== 'object') return bad()
+  const o = e as Record<string, unknown>
+  const keys = Object.keys(o)
+  if (b.type === 'controls_if') {
+    if (keys.some((k) => k !== 'elseIfCount' && k !== 'hasElse') || !small(o.elseIfCount) || (o.hasElse !== undefined && typeof o.hasElse !== 'boolean')) bad()
+  } else if (b.type === 'text_join') {
+    if (keys.some((k) => k !== 'itemCount') || !small(o.itemCount)) bad()
+  } else bad()
+}
+
 export function validateAddon(p: AddonPackage): AddonPackage {
   const m = p.manifest
   if (!m || typeof m !== 'object') fail('Manifest fehlt.')
@@ -98,17 +117,20 @@ export function validateAddon(p: AddonPackage): AddonPackage {
   }
 
   const vars = new Set((p.program?.variables ?? []).map((v) => v.id))
+  let count = 0
   walkBlocks(p.program ?? {}, (b, depth) => {
     if (depth > LIMITS.depth) fail('Das Programm ist zu tief verschachtelt.')
-    const spec = BLOCKS[b.type]
+    if (++count > MAX_BLOCKS) fail(`Zu viele Bausteine (max. ${MAX_BLOCKS}).`)
+    const spec = Object.hasOwn(BLOCKS, b.type) ? BLOCKS[b.type] : undefined
     if (!spec) fail(`Unbekannter Baustein: ${b.type}`)
+    checkExtraState(b)
     for (const [key, v] of Object.entries(b.fields ?? {})) {
-      const f = spec.fields[key]
+      const f = Object.hasOwn(spec!.fields, key) ? spec!.fields[key] : undefined
       if (!f) fail(`Unbekanntes Feld ${key} in Baustein ${b.type}`)
-      checkField(b, key, f, v, assetKinds, vars)
+      checkField(b, key, f!, v, assetKinds, vars)
     }
     for (const key of Object.keys(b.inputs ?? {})) {
-      if (!inputAllowed(key, [...spec.inputs, ...spec.statements])) fail(`Unbekannte Eingabe ${key} in Baustein ${b.type}`)
+      if (!inputAllowed(key, [...spec!.inputs, ...spec!.statements])) fail(`Unbekannte Eingabe ${key} in Baustein ${b.type}`)
     }
   })
 

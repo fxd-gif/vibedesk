@@ -33,3 +33,14 @@ export function sceneFallback(scene: string, installed: InstalledAddon[]): strin
   const id = scene.slice(ADDON_SCENE.length).split('/')[0]
   return installed.some((a) => a.manifest.id === id && a.enabled) ? null : 'city'
 }
+
+/**
+ * Welche Runner beim Neuladen anhalten bzw. (neu) starten? Unveränderte laufen weiter.
+ * Das gerade im Maker getestete Addon läuft nicht doppelt: es wird angehalten und nicht neu gestartet.
+ */
+export function planRebuild(running: Map<string, string>, wanted: { id: string; sig: string }[], testId: string | null): { stop: string[]; start: string[] } {
+  const want = new Map(wanted.map((w) => [w.id, w.sig]))
+  const stop = [...running.keys()].filter((id) => id === testId || want.get(id) !== running.get(id))
+  const start = wanted.filter((w) => w.id !== testId && running.get(w.id) !== w.sig).map((w) => w.id)
+  return { stop, start }
+}
