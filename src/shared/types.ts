@@ -236,6 +236,8 @@ export interface VibedeskApi {
     pickFile(): Promise<string | null>
     /** Beim Start per Doppelklick übergebene Datei (einmalig) */
     takePending(): Promise<string | null>
+    getState(id: string): Promise<Record<string, StoredValue>>
+    setState(id: string, data: Record<string, StoredValue>): Promise<void>
   }
   update: {
     status(): Promise<UpdateStatus>
@@ -297,3 +299,6 @@ export interface AddonPreview {
 }
 
 export type { AddonPackage }
+
+/** Wert, den ein Addon dauerhaft speichern darf */
+export type StoredValue = number | string | boolean | (number | string | boolean)[]

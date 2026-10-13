@@ -92,7 +92,9 @@ const api: VibedeskApi = {
     saveDraft: (p) => ipcRenderer.invoke('addons:saveDraft', p),
     exportTo: (id) => ipcRenderer.invoke('addons:exportTo', id),
     pickFile: () => ipcRenderer.invoke('addons:pickFile'),
-    takePending: () => ipcRenderer.invoke('addons:takePending')
+    takePending: () => ipcRenderer.invoke('addons:takePending'),
+    getState: (id) => ipcRenderer.invoke('addons:getState', id),
+    setState: (id, data) => ipcRenderer.invoke('addons:setState', id, data)
   },
   scenes: {
     addCustom: (p) => ipcRenderer.invoke('scenes:addCustom', p)

@@ -33,6 +33,7 @@ import { Onboarding } from './windows/Onboarding'
 import { EDITOR_ID, toggleEditor, wireEditor } from './store/editorStore'
 import { startAddonRuntime } from './addons/runtime'
 import { InstallDialog, openInstallDialog, wireAddonImport } from './windows/addons/InstallDialog'
+import { AskToast } from './addons/AskToast'
 
 
 const initials = (n: string): string => {
@@ -246,6 +247,7 @@ export default function App(): React.JSX.Element {
       <SetupPrompt />
       <Onboarding />
       <InstallDialog />
+      <AskToast />
       <DialogHost />
       {focus.banner && (
         <div className="focus-banner" key={focus.banner.text}>

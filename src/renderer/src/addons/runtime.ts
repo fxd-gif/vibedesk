@@ -5,7 +5,9 @@ import { useSettings } from '../store/settingsStore'
 import { useWorkflow } from '../store/workflowStore'
 import { createActions } from './actions'
 import { focusTransition, planRebuild, sceneFallback, statusTransitions } from './events'
-import { AddonRunner, realClock, type AddonEvent } from './interpreter'
+import { AddonRunner, realClock, type AddonEvent, type AddonStorage, type StoredValue } from './interpreter'
+import { api } from '../api'
+import { useSessions } from '../store/sessionStore'
 
 const runners = new Map<string, AddonRunner>()
 /** Fingerabdruck je laufendem Addon – unveränderte Addons laufen beim Neuladen einfach weiter */
@@ -13,6 +15,25 @@ const signatures = new Map<string, string>()
 let testRunner: AddonRunner | null = null
 let testId: string | null = null
 const lastInterval = new Map<string, number>()
+
+/** Dauerhafter Speicher je Addon: einmal laden, Änderungen gebündelt zurückschreiben. */
+export function createStorage(id: string): AddonStorage {
+  let data: Record<string, StoredValue> = {}
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const ready = api.addons
+    .getState(id)
+    .then((d) => void (data = d ?? {}))
+    .catch(() => undefined)
+  return {
+    ready,
+    get: (k) => data[k],
+    set: (k, v) => {
+      data = { ...data, [k]: v }
+      clearTimeout(timer)
+      timer = setTimeout(() => void api.addons.setState(id, data).catch(() => undefined), 1000)
+    }
+  }
+}
 
 const all = (): AddonRunner[] => (testRunner ? [...runners.values(), testRunner] : [...runners.values()])
 const emit = (e: AddonEvent): void => all().forEach((r) => r.emit(e))
@@ -28,7 +49,7 @@ function rebuild(): void {
     for (const k of [...lastInterval.keys()]) if (k.startsWith(id + ':')) lastInterval.delete(k)
   }
   for (const { a, id, sig } of wanted.filter((w) => plan.start.includes(w.id))) {
-    const r = new AddonRunner({ program: a.program, prompts: a.manifest.prompts ?? {}, actions: createActions(id), clock: realClock, onError: (m) => setError(id, m) })
+    const r = new AddonRunner({ program: a.program, prompts: a.manifest.prompts ?? {}, actions: createActions(id), clock: realClock, storage: createStorage(id), onError: (m) => setError(id, m) })
     runners.set(id, r)
     signatures.set(id, sig)
     // neu hinzugekommen oder geändert: „VibeDesk startet“ für dieses Addon auslösen
@@ -70,7 +91,8 @@ export function startAddonRuntime(): void {
     if (s.list !== prev.list) rebuild()
   })
   useWorkflow.subscribe((s, prev) => {
-    if (s.sessions !== prev.sessions) statusTransitions(prev.sessions, s.sessions).forEach(emit)
+    const projectOf = (sid: string): string | undefined => useSessions.getState().sessions.find((x) => x.id === sid)?.name
+    if (s.sessions !== prev.sessions) statusTransitions(prev.sessions, s.sessions, projectOf).forEach(emit)
   })
   useFocus.subscribe((s, prev) => {
     const e = focusTransition(prev.state.phase, s.state.phase)

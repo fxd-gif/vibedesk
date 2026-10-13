@@ -1,6 +1,9 @@
 // Führt das Blockly-JSON eines Addons direkt aus – kein Code-Generator, kein eval.
 // Die App erreicht ein Addon ausschließlich über AddonActions (und AddonStorage für „Dauerhaft merken“).
 import type { BlocklyBlock, BlocklyProgram } from '../../../shared/addonBlocks'
+import type { StoredValue } from '../../../shared/types'
+
+export type { StoredValue }
 
 export interface AddonActions {
   setScene(v: string): void
@@ -24,7 +27,7 @@ export interface AddonStorage {
   get(key: string): StoredValue | undefined
   set(key: string, value: StoredValue): void
 }
-export type StoredValue = number | string | boolean | (number | string | boolean)[]
+
 
 export type AddonEvent =
   | { type: 'start' }

@@ -27,3 +27,14 @@
 .addon-switch input:checked + span::after { transform: translateX(14px); background: #fff; }
 .install-dlg { max-width: 460px; display: flex; flex-direction: column; gap: 10px; }
 .install-dlg h3 { margin: 0; }
+
+/* Frage mit Knöpfen (aus Addons) */
+.ask-toast { position: fixed; left: 50%; bottom: 112px; translate: -50% 0; z-index: 900; min-width: 340px; max-width: 520px; padding: 16px 18px 18px; border-radius: 14px; overflow: hidden; color: #eef1f8; background: linear-gradient(180deg, rgba(139, 124, 246, 0.16), rgba(14, 17, 27, 0.96) 70%); border: 1.5px solid rgba(139, 124, 246, 0.6); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4), 0 18px 48px -16px rgba(0, 0, 0, 0.8), 0 0 30px -8px rgba(139, 124, 246, 0.8); backdrop-filter: blur(18px); animation: ask-in 0.22s ease-out; }
+@keyframes ask-in { from { opacity: 0; translate: -50% 10px; } }
+.ask-text { font-size: 14px; font-weight: 500; line-height: 1.45; }
+.ask-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.ask-btn { height: 32px; padding: 0 14px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.04); color: #e6ebf5; font: inherit; font-weight: 500; cursor: pointer; }
+.ask-btn:hover { background: rgba(255, 255, 255, 0.08); }
+.ask-btn.primary { background: #b9c5ff; border-color: #b9c5ff; color: #121630; font-weight: 600; }
+.ask-timer { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: #8b7cf6; transform-origin: left; animation: ask-timer linear forwards; }
+@keyframes ask-timer { to { transform: scaleX(0); } }

@@ -21,7 +21,7 @@ import { alert } from '../../../store/dialogStore'
 import { canConnect, graphToProgram, KINDS, newNode, programToGraph, unreachable, type FlowEdge, type FlowNode, type FlowNodeData, type Handle } from '../../../addons/flowModel'
 import { AddonRunner, realClock } from '../../../addons/interpreter'
 import { createActions } from '../../../addons/actions'
-import { pauseForTest, setTestRunner } from '../../../addons/runtime'
+import { createStorage, pauseForTest, setTestRunner } from '../../../addons/runtime'
 import { NodeCard } from './NodeCard'
 import { Palette, DRAG_TYPE } from './Palette'
 import { NodeInspector, type InspectorContext } from './Inspector'
@@ -306,7 +306,7 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
     if (!(await save())) return void setTestRunner(null)
     const p = await build()
     if (!p) return void setTestRunner(null)
-    setTestRunner(new AddonRunner({ program: p.program, prompts: p.manifest.prompts, actions: createActions(id), clock: realClock, onError: (m) => setStatus({ kind: 'error', text: 'Fehler: ' + m }) }), id)
+    setTestRunner(new AddonRunner({ program: p.program, prompts: p.manifest.prompts, actions: createActions(id), clock: realClock, storage: createStorage(id), onError: (m) => setStatus({ kind: 'error', text: 'Fehler: ' + m }) }), id)
     setTesting(true)
   }
 

@@ -5,12 +5,17 @@ import { playChime } from '../ambience/chime'
 import { useFocus } from '../store/focusStore'
 import { useSettings } from '../store/settingsStore'
 import { useWorkflow } from '../store/workflowStore'
+import { useSessions } from '../store/sessionStore'
+import { useStats } from '../store/statsStore'
+import { askUser } from './AskToast'
 import { addonSceneValue } from './events'
 import type { AddonActions } from './interpreter'
 
 const settings = () => useSettings.getState().s
 const patch = (p: Parameters<ReturnType<typeof useSettings.getState>['set']>[0]): void => useSettings.getState().set(p)
 const pct = (v: number | undefined, fallback: number): number => Math.round((v ?? fallback) * 100)
+const startedAt = Date.now()
+const localDay = (d: Date): string => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 export function createActions(addonId: string): AddonActions {
   const assetUrl = (name: string): string => `${ADDON_SCHEME}://${addonId}/${encodeURIComponent(name)}`
@@ -39,6 +44,7 @@ export function createActions(addonId: string): AddonActions {
       if (cmd === 'stop' && f.state.phase !== 'idle') f.act('reset')
     },
     copyText: (text) => void navigator.clipboard.writeText(text).catch(() => undefined),
+    ask: (text, yes, no) => askUser(text, yes, no),
     query: (what) => {
       const s = settings()
       const now = new Date()
@@ -61,6 +67,28 @@ export function createActions(addonId: string): AddonActions {
           return now.getHours()
         case 'minute':
           return now.getMinutes()
+        case 'sessions_running':
+          return useSessions.getState().sessions.length
+        case 'tokens_today':
+          return useStats.getState().days.find((d) => d.date === localDay(now))?.tokens ?? 0
+        case 'cost_today':
+          return Math.round((useStats.getState().days.find((d) => d.date === localDay(now))?.costUsd ?? 0) * 100) / 100
+        case 'session_minutes': {
+          const starts = Object.values(useStats.getState().sessions).map((x) => x.startedAt ?? 0).filter((t) => t > 0)
+          return starts.length ? Math.floor((now.getTime() - Math.min(...starts)) / 60000) : 0
+        }
+        case 'weekday':
+          return ((now.getDay() + 6) % 7) + 1
+        case 'day':
+          return now.getDate()
+        case 'month':
+          return now.getMonth() + 1
+        case 'year':
+          return now.getFullYear()
+        case 'unix':
+          return Math.floor(now.getTime() / 1000)
+        case 'uptime_minutes':
+          return Math.floor((now.getTime() - startedAt) / 60000)
       }
       return 0
     }
