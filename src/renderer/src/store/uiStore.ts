@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { WindowRect } from '../../../shared/types'
-import { arrange, clampRect } from '../desktop/layout'
+import { arrange, restoreRects } from '../desktop/layout'
 
 export const DOCK_H = 84
 
@@ -35,8 +35,7 @@ export const useUi = create<UiState>((set, get) => ({
   minimized: [],
   maximized: null,
   rects: {},
-  initRects: (rects) =>
-    set({ rects: Object.fromEntries(Object.entries(rects).map(([id, r]) => [id, clampRect(r, screen(), DOCK_H)])) }),
+  initRects: (rects) => set({ rects: restoreRects(rects, screen(), DOCK_H) }),
   openWin: (id, fallback) =>
     set((s) => ({
       open: [...s.open.filter((x) => x !== id), id],

@@ -16,6 +16,31 @@ function row(ids: string[], x: number, y: number, w: number, h: number): Record<
   return out
 }
 
+/** Größte sinnvolle Panel-Größe beim Anordnen – darüber wirken Panels verloren. */
+const PANEL_MAX = { w: 1100, h: 760 }
+
+/** Panels ohne Terminals: Raster statt schmaler Streifen, jedes Panel mittig in seiner Zelle. */
+function grid(ids: string[], x: number, y: number, w: number, h: number): Record<string, WindowRect> {
+  const cols = Math.ceil(Math.sqrt(ids.length))
+  const rows = Math.ceil(ids.length / cols)
+  const cw = Math.floor((w - GAP * (cols - 1)) / cols)
+  const ch = Math.floor((h - GAP * (rows - 1)) / rows)
+  const pw = Math.min(cw, PANEL_MAX.w)
+  const ph = Math.min(ch, PANEL_MAX.h)
+  const out: Record<string, WindowRect> = {}
+  ids.forEach((id, i) => {
+    const cx = x + (i % cols) * (cw + GAP)
+    const cy = y + Math.floor(i / cols) * (ch + GAP)
+    out[id] = { x: cx + Math.floor((cw - pw) / 2), y: cy + Math.floor((ch - ph) / 2), w: pw, h: ph }
+  })
+  return out
+}
+
+/** Alte, beim Anordnen entstandene Streifen (z. B. 145 × 844) – solche Größen nicht wiederverwenden. */
+export function isSlimRect(r: WindowRect): boolean {
+  return r.w < 260 || r.h > r.w * 2.5
+}
+
 /** Kachelt Terminals oben (62 % Höhe) und Panels darunter. */
 export function arrange(items: Item[], screen: Screen, dockH: number): Record<string, WindowRect> {
   const x = MARGIN
@@ -24,7 +49,7 @@ export function arrange(items: Item[], screen: Screen, dockH: number): Record<st
   const h = screen.h - dockH - 2 * MARGIN
   const terms = items.filter((i) => i.kind === 'terminal').map((i) => i.id)
   const panels = items.filter((i) => i.kind === 'panel').map((i) => i.id)
-  if (!terms.length) return panels.length ? row(panels, x, y, w, h) : {}
+  if (!terms.length) return panels.length ? grid(panels, x, y, w, h) : {}
   if (!panels.length) return row(terms, x, y, w, h)
   const th = Math.round(h * 0.62)
   return { ...row(terms, x, y, w, th), ...row(panels, x, y + th + GAP, w, h - th - GAP) }
@@ -45,4 +70,13 @@ export function snapRect(_rect: WindowRect, pointerX: number, screen: Screen, do
   if (pointerX <= SNAP_ZONE) return { x: 0, y: 0, w: half, h }
   if (pointerX >= screen.w - SNAP_ZONE) return { x: screen.w - half, y: 0, w: half, h }
   return null
+}
+
+/** Gespeicherte Fenster beim Start: Streifen verwerfen (öffnen dann in Standardgröße), Rest auf den Bildschirm holen. */
+export function restoreRects(rects: Record<string, WindowRect>, screen: Screen, dockH: number): Record<string, WindowRect> {
+  return Object.fromEntries(
+    Object.entries(rects)
+      .filter(([, r]) => !isSlimRect(r))
+      .map(([id, r]) => [id, clampRect(r, screen, dockH)])
+  )
 }
