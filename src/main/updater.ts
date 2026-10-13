@@ -3,7 +3,7 @@ import { app, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import type { UpdateStatus } from '../shared/types'
 
-const FIRST_CHECK_MS = 8_000
+const FIRST_CHECK_MS = 3_000
 const INTERVAL_MS = 4 * 60 * 60 * 1000
 
 export function setupUpdater(send: (s: UpdateStatus) => void): void {

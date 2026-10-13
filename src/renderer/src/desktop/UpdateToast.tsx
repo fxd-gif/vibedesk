@@ -4,8 +4,8 @@ import { useUpdate } from '../store/updateStore'
 import { Icon } from './icons'
 
 export function UpdateToast(): React.JSX.Element | null {
-  const { status, dismissed, dismiss } = useUpdate()
-  const label = updateLabel(status)
+  const { status, dismissed, dismiss, autoInstalling } = useUpdate()
+  const label = autoInstalling && status.state === 'ready' ? `Update ${status.version} wird installiert – VibeDesk startet gleich neu …` : updateLabel(status)
   if (!label || dismissed) return null
   const ready = status.state === 'ready'
   return (
@@ -17,7 +17,7 @@ export function UpdateToast(): React.JSX.Element | null {
           <i style={{ width: `${status.percent}%` }} />
         </div>
       )}
-      {ready && (
+      {ready && !autoInstalling && (
         <>
           <button className="btn small primary" onClick={() => api.update.install()}>
             Jetzt neu starten
