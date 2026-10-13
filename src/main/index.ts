@@ -25,6 +25,7 @@ import { randomBytes } from 'crypto'
 import * as pty from '@lydell/node-pty'
 import { HookServer } from './hookServer'
 import { SessionManager } from './sessionManager'
+import { OutputBatcher } from './outputBatcher'
 import { OverlayServer } from './overlayServer'
 import { basename } from 'path'
 import { BrainService, registerBrainIpc } from './brainService'
@@ -178,8 +179,10 @@ app.whenReady().then(async () => {
     maxSessions: () => settings.get().maxSessions,
     brain: { mcpPath: resource('brain-mcp.js'), enabled: () => settings.get().brainOn }
   })
-  sessions.on('data', (id, d) => send('session:data', id, d))
+  const output = new OutputBatcher((id, d) => send('session:data', id, d))
+  sessions.on('data', (id, d) => output.push(id, d))
   sessions.on('exit', (id, code) => {
+    output.flush(id)
     stats.flush(id)
     stats.remove(id)
     send('session:exit', id, code)

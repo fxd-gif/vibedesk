@@ -4,7 +4,7 @@ import { GlassWindow } from '../desktop/GlassWindow'
 import { Icon } from '../desktop/icons'
 import { confirm } from '../store/dialogStore'
 import { termWin, useSessions } from '../store/sessionStore'
-import { getTerminal } from '../store/terminals'
+import { getTerminal, mountTerminal } from '../store/terminals'
 import { useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
 import type { SessionInfo } from '../../../shared/types'
@@ -23,34 +23,32 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
   const host = useRef<HTMLDivElement>(null)
   const status = useWorkflow((s) => s.sessions[session.id]?.status ?? 'idle')
   const exitCode = useSessions((s) => s.exited[session.id])
-  const rect = useUi((s) => s.rects[id])
-  const maximized = useUi((s) => s.maximized === id)
   const isTop = useUi((s) => s.open[s.open.length - 1] === id)
   const urls = usePreview((s) => s.urls[session.id])
 
   useEffect(() => {
-    const t = getTerminal(session.id)
-    if (!t || !host.current) return
-    if (!t.term.element) t.term.open(host.current)
-    else host.current.appendChild(t.term.element)
+    const el = host.current
+    const t = el && mountTerminal(session.id, el)
+    if (!el || !t) return
+    // Fit höchstens einmal pro Frame – beim Ziehen feuert der ResizeObserver sehr oft
+    let frame = 0
     const ro = new ResizeObserver(() => {
-      try {
-        t.fit.fit()
-      } catch {
-        /* unsichtbar */
-      }
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        frame = 0
+        try {
+          t.fit.fit()
+        } catch {
+          /* unsichtbar */
+        }
+      })
     })
-    ro.observe(host.current)
-    return () => ro.disconnect()
-  }, [session.id])
-
-  useEffect(() => {
-    try {
-      getTerminal(session.id)?.fit.fit()
-    } catch {
-      /* noop */
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      cancelAnimationFrame(frame)
     }
-  }, [rect?.w, rect?.h, maximized])
+  }, [session.id])
 
   useEffect(() => {
     if (isTop) getTerminal(session.id)?.term.focus()
@@ -85,7 +83,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
         </>
       }
     >
-      <div className="term-host" ref={host} data-testid={`terminal-${session.name}`} />
+      <div className="term-host" ref={host} data-testid={`terminal-${session.name}`} data-session={session.id} />
       {exitCode !== undefined && (
         <div className="term-overlay">
           <span className="dim">Session beendet{exitCode !== 0 ? ` (Code ${exitCode})` : ''}</span>
