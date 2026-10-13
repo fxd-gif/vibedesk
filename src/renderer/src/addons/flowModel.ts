@@ -1,9 +1,10 @@
 // Flowchart-Modell des Addon-Makers: Knoten + Verbindungen ↔ BlocklyProgram (das Format, das Prüfung und Interpreter kennen).
 // Rein und ohne UI-Abhängigkeiten, damit testbar.
-import type { BlocklyBlock, BlocklyProgram } from '../../../shared/addonBlocks'
+import { BLOCKS, type BlocklyBlock, type BlocklyProgram } from '../../../shared/addonBlocks'
 
-export type Handle = 'next' | 'yes' | 'no' | 'body'
-export type Category = 'trigger' | 'action' | 'logic' | 'tool'
+/** Ausgänge: next (weiter), yes/no (Wenn, Frage), body (Schleife), a/b (Gleichzeitig), caseN/default (Je nach Wert) */
+export type Handle = string
+export type Category = 'trigger' | 'action' | 'logic' | 'tool' | 'advanced'
 
 export type Val =
   | { k: 'num'; v: number }
@@ -12,11 +13,19 @@ export type Val =
   | { k: 'app'; what: string }
   | { k: 'prompt'; name: string }
   | { k: 'random'; min: number; max: number }
+  | { k: 'store'; key: string }
+  | { k: 'calc'; op: string; a: Val; b?: Val }
+  | { k: 'list'; name: string; op: string; arg?: Val }
 
-export interface Cond {
+export interface Cmp {
   a: Val
   op: string
   b: Val
+}
+
+export interface Cond {
+  join: 'AND' | 'OR'
+  items: Cmp[]
 }
 
 export interface FlowNodeData {
@@ -25,6 +34,8 @@ export interface FlowNodeData {
   values: Record<string, Val>
   cond?: Cond
   varName?: string
+  /** Fälle bei „Je nach Wert“ */
+  cases?: string[]
   [key: string]: unknown
 }
 
@@ -44,8 +55,8 @@ export interface FlowEdge {
 export interface ValueSetting {
   key: string
   label: string
-  /** welche Wertarten angeboten werden */
-  type: 'num' | 'text'
+  /** welche Wertarten angeboten werden: Zahl, Text oder beides */
+  type: 'num' | 'text' | 'any'
   unit?: string
 }
 
@@ -56,27 +67,28 @@ export interface KindDef {
   icon: string
   outputs: Handle[]
   values: ValueSetting[]
-  defaults: { fields?: Record<string, string | number>; values?: Record<string, Val>; cond?: Cond; varName?: string }
+  defaults: { fields?: Record<string, string | number>; values?: Record<string, Val>; cond?: Cond; varName?: string; cases?: string[] }
 }
 
 const num = (v: number): Val => ({ k: 'num', v })
 const txt = (v: string): Val => ({ k: 'text', v })
+const hourCond = (): Cond => ({ join: 'AND', items: [{ a: { k: 'app', what: 'hour' }, op: 'GTE', b: num(22) }] })
 
-const trig = (label: string, desc: string, icon: string, fields?: Record<string, string | number>): KindDef => ({
-  label,
-  desc,
-  category: 'trigger',
-  icon,
-  outputs: ['next'],
-  values: [],
-  defaults: { fields }
-})
-const act = (label: string, desc: string, icon: string, category: Category, values: ValueSetting[] = [], defaults: KindDef['defaults'] = {}): KindDef => ({
+const trig = (label: string, desc: string, icon: string, fields?: Record<string, string | number>, category: Category = 'trigger'): KindDef => ({
   label,
   desc,
   category,
   icon,
   outputs: ['next'],
+  values: [],
+  defaults: { fields }
+})
+const act = (label: string, desc: string, icon: string, category: Category, values: ValueSetting[] = [], defaults: KindDef['defaults'] = {}, outputs: Handle[] = ['next']): KindDef => ({
+  label,
+  desc,
+  category,
+  icon,
+  outputs,
   values,
   defaults
 })
@@ -93,6 +105,17 @@ export const KINDS: Record<string, KindDef> = {
   vd_set_scene: act('Szene wechseln', 'Wechselt das Bild hinter der Scheibe.', 'image', 'action', [], { fields: { SCENE: 'city' } }),
   vd_set_rain: act('Regen setzen', 'Stellt die Regenstärke ein.', 'rain', 'action', [{ key: 'VALUE', label: 'Stärke', type: 'num', unit: '%' }], { values: { VALUE: num(60) } }),
   vd_change_rain: act('Regen ändern', 'Macht den Regen stärker oder schwächer.', 'rain', 'action', [{ key: 'DELTA', label: 'Änderung', type: 'num', unit: '%' }], { values: { DELTA: num(10) } }),
+  vd_fade: act(
+    'Überblenden',
+    'Fährt Regen oder Lautstärke sanft auf einen Zielwert.',
+    'fade',
+    'action',
+    [
+      { key: 'VALUE', label: 'Ziel', type: 'num', unit: '%' },
+      { key: 'SECONDS', label: 'Dauer', type: 'num', unit: 's' }
+    ],
+    { fields: { CHANNEL: 'rain' }, values: { VALUE: num(80), SECONDS: num(10) } }
+  ),
   vd_set_volume: act('Lautstärke', 'Stellt die Lautstärke von Musik oder Regen ein.', 'volume', 'action', [{ key: 'VALUE', label: 'Lautstärke', type: 'num', unit: '%' }], {
     fields: { CHANNEL: 'music' },
     values: { VALUE: num(50) }
@@ -101,50 +124,88 @@ export const KINDS: Record<string, KindDef> = {
   vd_play_sound: act('Ton abspielen', 'Spielt den Gong oder einen eigenen Ton.', 'bell', 'action', [], { fields: { SOUND: 'chime' } }),
   vd_focus: act('Fokus-Timer', 'Startet oder stoppt den Fokus-Timer.', 'timer', 'action', [], { fields: { CMD: 'start' } }),
 
-  controls_if: {
-    label: 'Wenn / Sonst',
-    desc: 'Verzweigt je nachdem, ob die Bedingung stimmt.',
-    category: 'logic',
-    icon: 'branch',
-    outputs: ['yes', 'no'],
-    values: [],
-    defaults: { cond: { a: { k: 'app', what: 'hour' }, op: 'GTE', b: num(22) } }
-  },
-  controls_repeat_ext: {
-    label: 'Wiederholen',
-    desc: 'Führt den Schleifen-Zweig mehrmals aus, danach geht es weiter.',
-    category: 'logic',
-    icon: 'repeat',
-    outputs: ['body', 'next'],
-    values: [{ key: 'TIMES', label: 'Wie oft', type: 'num', unit: '×' }],
-    defaults: { values: { TIMES: num(3) } }
-  },
-  vd_forever: {
-    label: 'Endlos',
-    desc: 'Wiederholt den Schleifen-Zweig immer wieder (mind. 0,1 s pro Runde).',
-    category: 'logic',
-    icon: 'infinity',
-    outputs: ['body'],
-    values: [],
-    defaults: {}
-  },
+  controls_if: act('Wenn / Sonst', 'Verzweigt je nachdem, ob die Bedingung stimmt.', 'branch', 'logic', [], { cond: hourCond() }, ['yes', 'no']),
+  vd_switch: act('Je nach Wert', 'Ein Ausgang pro Fall – ideal für Wochentage, Stunden oder Zähler.', 'switch', 'logic', [{ key: 'VALUE', label: 'Wert', type: 'any' }], {
+    values: { VALUE: { k: 'app', what: 'weekday' } },
+    cases: ['1', '6', '7']
+  }),
+  controls_repeat_ext: act('Wiederholen', 'Führt den Schleifen-Zweig mehrmals aus, danach geht es weiter.', 'repeat', 'logic', [{ key: 'TIMES', label: 'Wie oft', type: 'num', unit: '×' }], { values: { TIMES: num(3) } }, [
+    'body',
+    'next'
+  ]),
+  vd_forever: act('Endlos', 'Wiederholt den Schleifen-Zweig immer wieder (mind. 0,1 s pro Runde).', 'infinity', 'logic', [], {}, ['body']),
   vd_wait: act('Warten', 'Pausiert, bevor es weitergeht.', 'clock', 'logic', [{ key: 'SECONDS', label: 'Dauer', type: 'num', unit: 's' }], { values: { SECONDS: num(1) } }),
-  variables_set: act('Variable setzen', 'Merkt sich einen Wert unter einem Namen.', 'variable', 'logic', [{ key: 'VALUE', label: 'Wert', type: 'num' }], { varName: 'zähler', values: { VALUE: num(0) } }),
+  variables_set: act('Variable setzen', 'Merkt sich einen Wert unter einem Namen.', 'variable', 'logic', [{ key: 'VALUE', label: 'Wert', type: 'any' }], { varName: 'zähler', values: { VALUE: num(0) } }),
   math_change: act('Variable ändern', 'Zählt eine Variable hoch oder runter.', 'variable', 'logic', [{ key: 'DELTA', label: 'Um', type: 'num' }], { varName: 'zähler', values: { DELTA: num(1) } }),
+  vd_store_set: act('Dauerhaft merken', 'Speichert einen Wert, der auch einen Neustart überlebt.', 'save', 'logic', [{ key: 'VALUE', label: 'Wert', type: 'any' }], {
+    fields: { KEY: 'zähler' },
+    values: { VALUE: num(0) }
+  }),
 
   vd_show_notice: act('Hinweis', 'Zeigt einen kurzen Hinweis oben im Bild.', 'message', 'tool', [{ key: 'TEXT', label: 'Text', type: 'text' }], { values: { TEXT: txt('Zeit für eine Pause!') } }),
-  vd_copy_text: act('Zwischenablage', 'Kopiert Text, z. B. eine Prompt-Vorlage.', 'clipboard', 'tool', [{ key: 'TEXT', label: 'Text', type: 'text' }], { values: { TEXT: txt('') } })
+  vd_ask: act(
+    'Frage',
+    'Fragt dich mit zwei Knöpfen – je nach Antwort geht es anders weiter.',
+    'ask',
+    'tool',
+    [{ key: 'TEXT', label: 'Frage', type: 'text' }],
+    { fields: { YES_LABEL: 'Ja', NO_LABEL: 'Später' }, values: { TEXT: txt('Kurze Pause machen?') } },
+    ['yes', 'no']
+  ),
+  vd_copy_text: act('Zwischenablage', 'Kopiert Text, z. B. eine Prompt-Vorlage.', 'clipboard', 'tool', [{ key: 'TEXT', label: 'Text', type: 'text' }], { values: { TEXT: txt('') } }),
+
+  vd_on_signal: trig('Signal empfangen', 'Startet, wenn irgendwo im Addon dieses Signal gesendet wird.', 'radio', { NAME: 'mein-signal' }, 'advanced'),
+  vd_emit: act('Signal senden', 'Löst alle „Signal empfangen“ mit diesem Namen aus – optional wartend wie ein Unterprogramm.', 'send', 'advanced', [], {
+    fields: { NAME: 'mein-signal', WAIT: 'FALSE' }
+  }),
+  vd_parallel: act('Gleichzeitig', 'Startet zwei Zweige parallel; „Danach“ läuft, wenn beide fertig sind.', 'parallel', 'advanced', [], {}, ['a', 'b', 'next']),
+  vd_wait_until: act('Warten bis', 'Wartet, bis die Bedingung stimmt – höchstens bis zum Zeitlimit.', 'hourglass', 'advanced', [{ key: 'TIMEOUT', label: 'Höchstens', type: 'num', unit: 's' }], {
+    cond: { join: 'AND', items: [{ a: { k: 'app', what: 'waiting_sessions' }, op: 'EQ', b: num(0) }] },
+    values: { TIMEOUT: num(300) }
+  }),
+  vd_gate: act('Drossel', 'Lässt den Ablauf nur alle X Sekunden durch – sonst endet er hier.', 'gate', 'advanced', [{ key: 'SECONDS', label: 'Höchstens alle', type: 'num', unit: 's' }], {
+    values: { SECONDS: num(60) }
+  }),
+  vd_list_add: act('Zur Liste hinzufügen', 'Hängt einen Wert an eine Liste an (max. 500 Einträge).', 'list', 'advanced', [{ key: 'VALUE', label: 'Wert', type: 'any' }], {
+    varName: 'liste',
+    values: { VALUE: txt('') }
+  }),
+  vd_list_clear: act('Liste leeren', 'Entfernt alle Einträge einer Liste.', 'list', 'advanced', [], { varName: 'liste' })
 }
 
-export const CATEGORY_LABELS: Record<Category, string> = { trigger: 'Auslöser', action: 'Aktionen', logic: 'Logik', tool: 'Werkzeuge' }
-export const HANDLE_LABELS: Record<Handle, string> = { next: 'Weiter', yes: 'Ja', no: 'Nein', body: 'Schleife' }
+export const CATEGORY_LABELS: Record<Category, string> = { trigger: 'Auslöser', action: 'Aktionen', logic: 'Logik', tool: 'Werkzeuge', advanced: 'Erweitert' }
+
+export const isTrigger = (type: string): boolean => BLOCKS[type]?.category === 'event'
+
+/** Welche Ausgänge hat dieser Knoten? Bei „Je nach Wert“ einer pro Fall plus „Sonst“. */
+export function outputsOf(d: FlowNodeData): Handle[] {
+  if (d.type === 'vd_switch') return [...(d.cases ?? []).map((_, i) => `case${i}`), 'default']
+  return KINDS[d.type].outputs
+}
+
+/** Ausgang → Anweisungs-Eingabe im Programm (null = Verkettung über „next“) */
+function stmtInput(type: string, h: Handle): string | null {
+  if (isTrigger(type)) return h === 'next' ? 'DO' : null
+  const m = /^case(\d+)$/.exec(h)
+  if (m) return `CASE${m[1]}`
+  const map: Record<string, Record<string, string>> = {
+    controls_if: { yes: 'DO0', no: 'ELSE' },
+    vd_ask: { yes: 'DO_YES', no: 'DO_NO' },
+    vd_switch: { default: 'DEFAULT' },
+    vd_parallel: { a: 'A', b: 'B' },
+    controls_repeat_ext: { body: 'DO' },
+    vd_forever: { body: 'DO' }
+  }
+  return map[type]?.[h] ?? null
+}
 
 let seq = 0
 export function newNode(type: string, position: { x: number; y: number }, id = `n${Date.now().toString(36)}${(seq++).toString(36)}`): FlowNode {
   const d = KINDS[type].defaults
-  const data: FlowNodeData = { type, fields: { ...(d.fields ?? {}) }, values: { ...(d.values ?? {}) } }
+  const data: FlowNodeData = { type, fields: { ...(d.fields ?? {}) }, values: structuredClone(d.values ?? {}) }
   if (d.cond) data.cond = structuredClone(d.cond)
   if (d.varName !== undefined) data.varName = d.varName
+  if (d.cases) data.cases = [...d.cases]
   return { id, position: { ...position }, data }
 }
 
@@ -163,8 +224,14 @@ function valToBlock(v: Val): BlocklyBlock {
       return { type: 'vd_get', fields: { WHAT: v.what } }
     case 'prompt':
       return { type: 'vd_prompt_text', fields: { NAME: v.name } }
+    case 'store':
+      return { type: 'vd_store_get', fields: { KEY: v.key } }
     case 'random':
       return { type: 'math_random_int', inputs: { FROM: { block: valToBlock(num(v.min)) }, TO: { block: valToBlock(num(v.max)) } } }
+    case 'calc':
+      return { type: 'vd_calc', fields: { OP: v.op }, inputs: { A: { block: valToBlock(v.a) }, ...(v.b ? { B: { block: valToBlock(v.b) } } : {}) } }
+    case 'list':
+      return { type: 'vd_list_get', fields: { VAR: { id: varId(v.name) }, OP: v.op }, ...(v.arg ? { inputs: { ARG: { block: valToBlock(v.arg) } } } : {}) }
     case 'text': {
       if (!v.v.match(PLACEHOLDER)) return { type: 'text', fields: { TEXT: v.v } }
       const parts: BlocklyBlock[] = []
@@ -182,11 +249,26 @@ function valToBlock(v: Val): BlocklyBlock {
 
 function valNames(v: Val | undefined, out: Set<string>): void {
   if (!v) return
-  if (v.k === 'var') out.add(v.name)
+  if (v.k === 'var' || v.k === 'list') out.add(v.name)
   if (v.k === 'text') for (const m of v.v.matchAll(PLACEHOLDER)) out.add(m[1])
+  if (v.k === 'calc') {
+    valNames(v.a, out)
+    valNames(v.b, out)
+  }
+  if (v.k === 'list') valNames(v.arg, out)
 }
 
-function blockToVal(b: BlocklyBlock | undefined, names: Map<string, string>): Val {
+function condToBlock(c: Cond): BlocklyBlock {
+  const cmps = c.items.map(
+    (i): BlocklyBlock => ({ type: 'logic_compare', fields: { OP: i.op }, inputs: { A: { block: valToBlock(i.a) }, B: { block: valToBlock(i.b) } } })
+  )
+  if (!cmps.length) return { type: 'logic_boolean', fields: { BOOL: 'TRUE' } }
+  return cmps.reduce((acc, b) => ({ type: 'logic_operation', fields: { OP: c.join }, inputs: { A: { block: acc }, B: { block: b } } }))
+}
+
+type Names = Map<string, string>
+
+function blockToVal(b: BlocklyBlock | undefined, names: Names): Val {
   const f = (k: string): unknown => b?.fields?.[k]
   const nameOf = (bb: BlocklyBlock): string => {
     const id = String((bb.fields?.VAR as { id?: string } | undefined)?.id ?? '')
@@ -204,6 +286,18 @@ function blockToVal(b: BlocklyBlock | undefined, names: Map<string, string>): Va
       return { k: 'app', what: String(f('WHAT')) }
     case 'vd_prompt_text':
       return { k: 'prompt', name: String(f('NAME') ?? '') }
+    case 'vd_store_get':
+      return { k: 'store', key: String(f('KEY') ?? '') }
+    case 'vd_calc': {
+      const out: Val = { k: 'calc', op: String(f('OP')), a: blockToVal(inp('A'), names) }
+      if (inp('B')) out.b = blockToVal(inp('B'), names)
+      return out
+    }
+    case 'vd_list_get': {
+      const out: Val = { k: 'list', name: nameOf(b), op: String(f('OP')) }
+      if (inp('ARG')) out.arg = blockToVal(inp('ARG'), names)
+      return out
+    }
     case 'math_random_int': {
       const lo = blockToVal(inp('FROM'), names)
       const hi = blockToVal(inp('TO'), names)
@@ -226,6 +320,23 @@ function blockToVal(b: BlocklyBlock | undefined, names: Map<string, string>): Va
   }
 }
 
+function blockToCond(b: BlocklyBlock | undefined, names: Names): Cond {
+  if (!b || b.type === 'logic_boolean') return { join: 'AND', items: [] }
+  if (b.type === 'logic_operation') {
+    const join = b.fields?.OP === 'OR' ? 'OR' : 'AND'
+    const items: Cmp[] = []
+    const walk = (x: BlocklyBlock | undefined): void => {
+      if (x?.type === 'logic_operation' && x.fields?.OP === join) {
+        walk(x.inputs?.A?.block)
+        walk(x.inputs?.B?.block)
+      } else if (x) items.push(...blockToCond(x, names).items)
+    }
+    walk(b)
+    return { join, items }
+  }
+  return { join: 'AND', items: [{ a: blockToVal(b.inputs?.A?.block, names), op: String(b.fields?.OP ?? 'EQ'), b: blockToVal(b.inputs?.B?.block, names) }] }
+}
+
 // ---------- Graph → Programm ----------
 
 export function graphToProgram(nodes: FlowNode[], edges: FlowEdge[]): BlocklyProgram {
@@ -243,14 +354,9 @@ export function graphToProgram(nodes: FlowNode[], edges: FlowEdge[]): BlocklyPro
     visited.add(id)
     return toBlock(n)
   }
-  const child = (n: FlowNode, h: Handle): { block: BlocklyBlock } | undefined => {
-    const b = chain(out.get(`${n.id}:${h}`))
-    return b ? { block: b } : undefined
-  }
 
   const toBlock = (n: FlowNode): BlocklyBlock => {
     const d = n.data
-    const kind = KINDS[d.type]
     const b: BlocklyBlock = { type: d.type, id: n.id, x: Math.round(n.position.x), y: Math.round(n.position.y) }
     const fields: Record<string, unknown> = { ...d.fields }
     const inputs: Record<string, { block: BlocklyBlock }> = {}
@@ -262,34 +368,32 @@ export function graphToProgram(nodes: FlowNode[], edges: FlowEdge[]): BlocklyPro
       names.add(d.varName)
       fields.VAR = { id: varId(d.varName) }
     }
-    if (kind.category === 'trigger') {
-      const body = child(n, 'next')
-      if (body) inputs.DO = body
-    } else if (d.type === 'controls_if') {
-      const c = d.cond!
-      valNames(c.a, names)
-      valNames(c.b, names)
-      inputs.IF0 = { block: { type: 'logic_compare', fields: { OP: c.op }, inputs: { A: { block: valToBlock(c.a) }, B: { block: valToBlock(c.b) } } } }
-      const yes = child(n, 'yes')
-      const no = child(n, 'no')
-      if (yes) inputs.DO0 = yes
-      if (no) inputs.ELSE = no
-    } else if (kind.outputs.includes('body')) {
-      const body = child(n, 'body')
-      if (body) inputs.DO = body
+    if (d.cond) {
+      for (const i of d.cond.items) {
+        valNames(i.a, names)
+        valNames(i.b, names)
+      }
+      inputs[d.type === 'controls_if' ? 'IF0' : 'COND'] = { block: condToBlock(d.cond) }
+    }
+    ;(d.cases ?? []).forEach((c, i) => (fields[`V${i}`] = c))
+    for (const h of outputsOf(d)) {
+      const name = stmtInput(d.type, h)
+      if (!name) continue
+      const body = chain(out.get(`${n.id}:${h}`))
+      if (body) inputs[name] = { block: body }
     }
     if (Object.keys(fields).length) b.fields = fields
     if (Object.keys(inputs).length) b.inputs = inputs
-    if (kind.category !== 'trigger' && kind.outputs.includes('next')) {
-      const next = child(n, 'next')
-      if (next) b.next = next
+    if (!isTrigger(d.type) && outputsOf(d).includes('next')) {
+      const next = chain(out.get(`${n.id}:next`))
+      if (next) b.next = { block: next }
     }
     return b
   }
 
   const roots = nodes
     .filter((n) => !hasInput.has(n.id))
-    .sort((a, b) => Number(KINDS[b.data.type].category === 'trigger') - Number(KINDS[a.data.type].category === 'trigger') || a.position.y - b.position.y || a.position.x - b.position.x)
+    .sort((a, b) => Number(isTrigger(b.data.type)) - Number(isTrigger(a.data.type)) || a.position.y - b.position.y || a.position.x - b.position.x)
   const blocks = roots.map((r) => chain(r.id)).filter((b): b is BlocklyBlock => !!b)
   return { blocks: { languageVersion: 0, blocks }, variables: [...names].sort().map((name) => ({ name, id: varId(name) })) }
 }
@@ -297,14 +401,14 @@ export function graphToProgram(nodes: FlowNode[], edges: FlowEdge[]): BlocklyPro
 // ---------- Programm → Graph ----------
 
 export function programToGraph(program: BlocklyProgram): { nodes: FlowNode[]; edges: FlowEdge[] } {
-  const names = new Map((program.variables ?? []).map((v) => [v.id, v.name]))
+  const names: Names = new Map((program.variables ?? []).map((v) => [v.id, v.name]))
   const nodes: FlowNode[] = []
   const edges: FlowEdge[] = []
   let auto = 0
 
   const link = (source: string, handle: Handle, b: BlocklyBlock | undefined, pos: { x: number; y: number }): void => {
     if (!b) return
-    const target = visit(b, { x: pos.x, y: pos.y + 120 })
+    const target = visit(b, { x: pos.x, y: pos.y + 140 })
     if (target) edges.push({ id: `${source}-${handle}-${target}`, source, sourceHandle: handle, target })
   }
 
@@ -314,24 +418,28 @@ export function programToGraph(program: BlocklyProgram): { nodes: FlowNode[]; ed
     const id = b.id ?? `auto${auto++}`
     const position = { x: b.x ?? fallback.x, y: b.y ?? fallback.y }
     const data: FlowNodeData = { type: b.type, fields: {}, values: {} }
-    for (const [k, v] of Object.entries(b.fields ?? {})) if (k !== 'VAR') data.fields[k] = v as string | number
+    for (const [k, v] of Object.entries(b.fields ?? {})) if (k !== 'VAR' && !/^V\d+$/.test(k)) data.fields[k] = v as string | number
     for (const vs of kind.values) data.values[vs.key] = blockToVal(b.inputs?.[vs.key]?.block ?? b.inputs?.[vs.key]?.shadow, names)
     if (kind.defaults.varName !== undefined) {
       const vid = String((b.fields?.VAR as { id?: string } | undefined)?.id ?? '')
       data.varName = names.get(vid) ?? vid.replace(/^var:/, '')
     }
-    const inp = (k: string): BlocklyBlock | undefined => b.inputs?.[k]?.block
-    if (b.type === 'controls_if') {
-      const cmp = inp('IF0')
-      data.cond = { a: blockToVal(cmp?.inputs?.A?.block, names), op: String(cmp?.fields?.OP ?? 'EQ'), b: blockToVal(cmp?.inputs?.B?.block, names) }
+    if (kind.defaults.cond) data.cond = blockToCond(b.inputs?.[b.type === 'controls_if' ? 'IF0' : 'COND']?.block, names)
+    if (b.type === 'vd_switch') {
+      const idx = Object.keys(b.fields ?? {})
+        .map((k) => /^V(\d+)$/.exec(k)?.[1])
+        .filter((x): x is string => !!x)
+        .map(Number)
+        .sort((x, y) => x - y)
+      data.cases = idx.map((i) => String(b.fields![`V${i}`]))
     }
     nodes.push({ id, position, data })
-    if (kind.category === 'trigger') link(id, 'next', inp('DO'), position)
-    else if (b.type === 'controls_if') {
-      link(id, 'yes', inp('DO0'), { x: position.x - 160, y: position.y })
-      link(id, 'no', inp('ELSE'), { x: position.x + 160, y: position.y })
-    } else if (kind.outputs.includes('body')) link(id, 'body', inp('DO'), { x: position.x + 260, y: position.y })
-    if (kind.category !== 'trigger' && kind.outputs.includes('next')) link(id, 'next', b.next?.block, position)
+    const outs = outputsOf(data)
+    outs.forEach((h, i) => {
+      const name = stmtInput(b.type, h)
+      if (name) link(id, h, b.inputs?.[name]?.block, { x: position.x + (i - (outs.length - 1) / 2) * 260, y: position.y })
+    })
+    if (!isTrigger(b.type) && outs.includes('next')) link(id, 'next', b.next?.block, position)
     return id
   }
 
@@ -350,8 +458,8 @@ export function canConnect(nodes: FlowNode[], edges: FlowEdge[], c: { source: st
   const src = nodes.find((n) => n.id === c.source)
   const dst = nodes.find((n) => n.id === c.target)
   if (!src || !dst || c.source === c.target) return false
-  if (KINDS[dst.data.type].category === 'trigger') return false
-  if (!KINDS[src.data.type].outputs.includes(c.sourceHandle as Handle)) return false
+  if (isTrigger(dst.data.type)) return false
+  if (!outputsOf(src.data).includes(c.sourceHandle ?? '')) return false
   if (edges.some((e) => e.target === c.target)) return false
   if (edges.some((e) => e.source === c.source && e.sourceHandle === c.sourceHandle)) return false
   // Kreis: wäre das Ziel ein Vorgänger der Quelle?
@@ -365,7 +473,7 @@ export function unreachable(nodes: FlowNode[], edges: FlowEdge[]): Set<string> {
   const reach = new Set<string>()
   const outs = new Map<string, string[]>()
   for (const e of edges) outs.set(e.source, [...(outs.get(e.source) ?? []), e.target])
-  const stack = nodes.filter((n) => KINDS[n.data.type].category === 'trigger').map((n) => n.id)
+  const stack = nodes.filter((n) => isTrigger(n.data.type)).map((n) => n.id)
   while (stack.length) {
     const id = stack.pop()!
     if (reach.has(id)) continue
@@ -373,4 +481,10 @@ export function unreachable(nodes: FlowNode[], edges: FlowEdge[]): Set<string> {
     stack.push(...(outs.get(id) ?? []))
   }
   return new Set(nodes.filter((n) => !reach.has(n.id)).map((n) => n.id))
+}
+
+/** Entfernt Verbindungen von Ausgängen, die es nicht mehr gibt (z. B. gelöschter Fall bei „Je nach Wert“). */
+export function pruneEdges(nodes: FlowNode[], edges: FlowEdge[]): FlowEdge[] {
+  const outs = new Map(nodes.map((n) => [n.id, outputsOf(n.data)]))
+  return edges.filter((e) => outs.get(e.source)?.includes(e.sourceHandle) && outs.has(e.target))
 }

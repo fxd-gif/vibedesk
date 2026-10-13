@@ -32,7 +32,19 @@ const P: Record<string, string> = {
   copy: 'M9 9h11v11H9zM5 15V4h11',
   info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8h.01',
   puzzle: 'M10 4a2 2 0 1 1 4 0v2h4v4h-2a2 2 0 1 0 0 4h2v4h-4v-2a2 2 0 1 0-4 0v2H6v-4h2a2 2 0 1 0 0-4H6V6h4z',
-  x: 'M6 6l12 12M18 6L6 18'
+  x: 'M6 6l12 12M18 6L6 18',
+  switch: 'M4 12h5M9 12l4-6h7M9 12l4 6h7M9 12h11',
+  fade: 'M3 18c4 0 5-12 9-12s5 12 9 12M3 21h18',
+  save: 'M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6',
+  ask: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01',
+  radio: 'M12 12h.01M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8',
+  send: 'M21 3L10 14M21 3l-7 18-4-7-7-4z',
+  parallel: 'M5 4v4a4 4 0 0 0 4 4h0a4 4 0 0 1 4 4v4M19 4v4a4 4 0 0 1-4 4M12 12v0M5 20h0',
+  gate: 'M4 20V8l8-4 8 4v12M8 20v-8h8v8M4 12h4M16 12h4',
+  list: 'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',
+  sparkles: 'M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6zM19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8zM5 15l.6 1.4L7 17l-1.4.6L5 19l-.6-1.4L3 17l1.4-.6z',
+  calc: 'M5 3h14v18H5zM8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01',
+  database: 'M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3zM4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3'
 }
 
 export function FlowIcon({ name, size = 18, stroke = 1.7 }: { name: string; size?: number; stroke?: number }): React.JSX.Element {
@@ -43,4 +55,4 @@ export function FlowIcon({ name, size = 18, stroke = 1.7 }: { name: string; size
   )
 }
 
-export const CATEGORY_ICONS = { trigger: 'zap', action: 'play', logic: 'logic', tool: 'wrench' } as const
+export const CATEGORY_ICONS = { trigger: 'zap', action: 'play', logic: 'logic', tool: 'wrench', advanced: 'sparkles' } as const

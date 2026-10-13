@@ -3,6 +3,7 @@
 .cat-action { --c: #5b8cff; }
 .cat-logic { --c: #8a97b3; }
 .cat-tool { --c: #34d399; }
+.cat-advanced { --c: #f472b6; }
 .cat-addon { --c: #b9c5ff; }
 
 .fmaker {
@@ -108,11 +109,12 @@
 .fnode-title { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fnode-sub { margin-top: 3px; font-size: 12px; color: rgba(233, 237, 247, 0.62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fnode-chip { display: inline-block; max-width: 150px; margin-top: 6px; padding: 4px 8px; border-radius: 7px; font-size: 12px; color: #dfe5f2; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.fnode-branches { display: flex; justify-content: space-around; margin: 12px -14px -12px; padding: 7px 16px 10px; border-top: 1px solid rgba(255, 255, 255, 0.07); font-size: 12.5px; font-weight: 600; }
-.fnode-branches span { display: inline-flex; align-items: center; gap: 8px; }
-.fnode-branches .yes { color: #34d399; }
-.fnode-branches .no { color: #f87171; }
-.fnode-side-label { position: absolute; right: 12px; top: 6px; font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; color: var(--c); opacity: 0.85; }
+.fnode-branches { display: flex; margin: 12px -14px -12px; padding: 7px 0 10px; border-top: 1px solid rgba(255, 255, 255, 0.07); font-size: 12px; font-weight: 600; }
+.fbr { flex: 1; min-width: 0; text-align: center; padding: 0 4px; color: var(--c); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fbr-yes { color: #34d399; }
+.fbr-no { color: #f87171; }
+.fbr-default { color: #9aa4ba; }
+.fnode-side-label { position: absolute; right: 12px; top: 6px; z-index: 1; font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em; color: var(--c); opacity: 0.85; }
 
 /* Anschlüsse */
 .fnode .fh { width: 10px; height: 10px; min-width: 0; min-height: 0; border-radius: 50%; background: #0c0f18; border: 2px solid var(--c); box-shadow: 0 0 6px -1px var(--c); transition: transform 0.12s; }
@@ -120,6 +122,7 @@
 .fnode .fh-in:hover { transform: translate(-50%, -50%) scale(1.35); }
 .fnode .fh-body:hover { transform: translate(50%, -50%) scale(1.35); }
 .fnode .fh-yes { border-color: #34d399; background: #34d399; box-shadow: 0 0 6px #34d399; }
+.fnode .fh-default { border-color: #9aa4ba; box-shadow: none; }
 .fnode .fh-no { border-color: #f87171; background: #f87171; box-shadow: 0 0 6px #f87171; }
 .react-flow__handle.connectingfrom, .react-flow__handle.valid { transform: scale(1.4); }
 
@@ -187,3 +190,34 @@ textarea.finput { resize: vertical; line-height: 1.45; }
 .fassets .ficon-btn { width: 26px; height: 26px; }
 .fprompt { display: flex; flex-direction: column; gap: 6px; padding: 8px; margin-bottom: 8px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.07); }
 .fprompt-row { display: flex; gap: 4px; }
+
+/* Tabs Bausteine / Erweitert */
+.fpal-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.07); }
+.fpal-tabs button { height: 30px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 8px; background: transparent; color: #8f99b0; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.fpal-tabs button:hover { color: #e6ebf5; }
+.fpal-tabs button.on { background: rgba(255, 255, 255, 0.08); color: #f2f5fb; }
+.fpal-tabs button.adv svg { color: #f472b6; }
+.fpal-tabs button.adv.on { background: linear-gradient(135deg, rgba(244, 114, 182, 0.22), rgba(139, 124, 246, 0.22)); color: #fff; box-shadow: inset 0 0 0 1px rgba(244, 114, 182, 0.4), 0 0 16px -6px #f472b6; }
+.fpal-adv-intro { margin: 2px 2px 12px; padding: 10px 11px; border-radius: 10px; font-size: 12px; line-height: 1.5; color: #c7cfdf; background: linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(139, 124, 246, 0.08)); border: 1px solid rgba(244, 114, 182, 0.22); }
+.fpal-adv-intro i { font-family: Georgia, serif; color: #fff; }
+
+/* Verschachtelte Werte, Bedingungen, Fälle */
+.fval-wrap { display: flex; flex-direction: column; gap: 6px; }
+.fval-wrap.compound > .fval { border-color: rgba(244, 114, 182, 0.35); }
+.fcompound { display: flex; flex-direction: column; gap: 6px; margin-left: 6px; padding: 8px 0 4px 10px; border-left: 2px solid rgba(244, 114, 182, 0.35); }
+.fcompound-head { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #f9a8d4; }
+.fsel.small select { height: 30px; font-size: 12.5px; }
+.finput.small { min-height: 30px; padding: 5px 9px; font-size: 12.5px; }
+.fval-random input.wide { width: auto; flex: 1; min-width: 0; }
+.fcond { display: flex; flex-direction: column; gap: 10px; }
+.fcond-item { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.07); background: rgba(255, 255, 255, 0.02); position: relative; }
+.fcond-row { display: flex; gap: 6px; align-items: center; }
+.fcond-row .fsel { flex: 1; }
+.fcond-join { position: absolute; top: -9px; left: 12px; padding: 0 6px; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #b9c5ff; background: #0d111b; }
+.fseg { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border-radius: 9px; background: rgba(255, 255, 255, 0.04); }
+.fseg button { height: 28px; border: 0; border-radius: 7px; background: transparent; color: #8f99b0; font: inherit; font-size: 12px; cursor: pointer; }
+.fseg button.on { background: rgba(159, 184, 255, 0.16); color: #eef1f8; }
+.fcases { display: flex; flex-direction: column; gap: 6px; }
+.fcases-row { display: flex; gap: 6px; align-items: center; }
+.fcases-n { width: 20px; text-align: center; font-size: 11.5px; color: #69738b; font-variant-numeric: tabular-nums; }
+.fcases-row .finput { flex: 1; }

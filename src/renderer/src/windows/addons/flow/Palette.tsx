@@ -3,13 +3,40 @@ import { CATEGORY_LABELS, KINDS, type Category } from '../../../addons/flowModel
 import { CATEGORY_ICONS, FlowIcon } from './FlowIcon'
 
 export const DRAG_TYPE = 'application/x-vibedesk-node'
-const ORDER: Category[] = ['trigger', 'action', 'logic', 'tool']
+const STANDARD: Category[] = ['trigger', 'action', 'logic', 'tool']
 
-/** Bausteinliste: Suche, einklappbare Kategorien; Ziehen auf die Fläche oder anklicken. */
+function Item({ type, onAdd }: { type: string; onAdd(type: string): void }): React.JSX.Element {
+  const k = KINDS[type]
+  return (
+    <button
+      className={`fpal-item cat-${k.category}`}
+      draggable
+      title={k.desc}
+      onDragStart={(e) => {
+        e.dataTransfer.setData(DRAG_TYPE, type)
+        e.dataTransfer.effectAllowed = 'move'
+      }}
+      onClick={() => onAdd(type)}
+      data-testid={`fpal-${type}`}
+    >
+      <span className="fpal-item-icon">
+        <FlowIcon name={k.icon} size={15} />
+      </span>
+      {k.label}
+    </button>
+  )
+}
+
+/** Bausteinliste: Tabs Standard/Erweitert, Suche, einklappbare Kategorien; Ziehen auf die Fläche oder anklicken. */
 export function Palette({ onAdd }: { onAdd(type: string): void }): React.JSX.Element {
+  const [tab, setTab] = useState<'std' | 'adv'>('std')
   const [q, setQ] = useState('')
   const [closed, setClosed] = useState<Set<Category>>(new Set())
   const needle = q.trim().toLowerCase()
+  const match = (type: string): boolean => {
+    const k = KINDS[type]
+    return !needle || k.label.toLowerCase().includes(needle) || k.desc.toLowerCase().includes(needle)
+  }
   const toggle = (c: Category): void =>
     setClosed((s) => {
       const n = new Set(s)
@@ -17,16 +44,31 @@ export function Palette({ onAdd }: { onAdd(type: string): void }): React.JSX.Ele
       else n.add(c)
       return n
     })
+  // Bei einer Suche beide Tabs durchsuchen
+  const cats: Category[] = needle ? [...STANDARD, 'advanced'] : tab === 'std' ? STANDARD : ['advanced']
 
   return (
     <aside className="fpal">
+      <div className="fpal-tabs">
+        <button className={tab === 'std' ? 'on' : ''} onClick={() => setTab('std')} data-testid="fpal-tab-std">
+          Bausteine
+        </button>
+        <button className={`adv${tab === 'adv' ? ' on' : ''}`} onClick={() => setTab('adv')} data-testid="fpal-tab-adv">
+          <FlowIcon name="sparkles" size={13} /> Erweitert
+        </button>
+      </div>
       <label className="fpal-search">
         <FlowIcon name="search" size={15} />
         <input placeholder="Bausteine suchen…" value={q} onChange={(e) => setQ(e.target.value)} />
       </label>
       <div className="fpal-list">
-        {ORDER.map((cat) => {
-          const items = Object.entries(KINDS).filter(([, k]) => k.category === cat && (!needle || k.label.toLowerCase().includes(needle) || k.desc.toLowerCase().includes(needle)))
+        {tab === 'adv' && !needle && (
+          <p className="fpal-adv-intro">
+            Für Profis: Signale als eigene Ereignisse und Unterprogramme, parallele Zweige, Listen, Drossel und „Warten bis“. Berechnungen findest du im <i>fx</i>-Menü jedes Werts.
+          </p>
+        )}
+        {cats.map((cat) => {
+          const items = Object.keys(KINDS).filter((t) => KINDS[t].category === cat && match(t))
           if (!items.length) return null
           const open = needle !== '' || !closed.has(cat)
           return (
@@ -38,26 +80,7 @@ export function Palette({ onAdd }: { onAdd(type: string): void }): React.JSX.Ele
                   <FlowIcon name="chevron" size={14} />
                 </span>
               </button>
-              {open &&
-                items.map(([type, k]) => (
-                  <button
-                    key={type}
-                    className="fpal-item"
-                    draggable
-                    title={k.desc}
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData(DRAG_TYPE, type)
-                      e.dataTransfer.effectAllowed = 'move'
-                    }}
-                    onClick={() => onAdd(type)}
-                    data-testid={`fpal-${type}`}
-                  >
-                    <span className="fpal-item-icon">
-                      <FlowIcon name={k.icon} size={15} />
-                    </span>
-                    {k.label}
-                  </button>
-                ))}
+              {open && items.map((type) => <Item key={type} type={type} onAdd={onAdd} />)}
             </section>
           )
         })}

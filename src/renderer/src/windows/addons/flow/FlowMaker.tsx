@@ -18,7 +18,7 @@ import { ADDON_SCHEME, type AddonPackage } from '../../../../../shared/addonForm
 import { sniffAsset } from '../../../../../shared/addonValidate'
 import { useAddons } from '../../../store/addonStore'
 import { alert } from '../../../store/dialogStore'
-import { canConnect, graphToProgram, KINDS, newNode, programToGraph, unreachable, type FlowEdge, type FlowNode, type FlowNodeData, type Handle } from '../../../addons/flowModel'
+import { canConnect, graphToProgram, KINDS, newNode, outputsOf, programToGraph, unreachable, type FlowEdge, type FlowNode, type FlowNodeData, type Handle, type Val } from '../../../addons/flowModel'
 import { AddonRunner, realClock } from '../../../addons/interpreter'
 import { createActions } from '../../../addons/actions'
 import { createStorage, pauseForTest, setTestRunner } from '../../../addons/runtime'
@@ -34,8 +34,8 @@ type Snap = { nodes: RFNode[]; edges: Edge[] }
 
 const NODE_TYPES = { card: NodeCard }
 const NODE_W = 230
-const CAT_COLOR = { trigger: '#8b7cf6', action: '#5b8cff', logic: '#8a97b3', tool: '#34d399' }
-const HANDLE_COLOR: Partial<Record<Handle, string>> = { yes: '#34d399', no: '#f87171' }
+const CAT_COLOR = { trigger: '#8b7cf6', action: '#5b8cff', logic: '#8a97b3', tool: '#34d399', advanced: '#f472b6' }
+const HANDLE_COLOR: Record<string, string> = { yes: '#34d399', no: '#f87171', default: '#8a97b3' }
 
 const toRF = (n: FlowNode): RFNode => ({ id: n.id, type: 'card', position: n.position, data: n.data })
 const fromRF = (n: RFNode): FlowNode => ({ id: n.id, position: n.position, data: n.data })
@@ -156,16 +156,33 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
   const ctx: InspectorContext = useMemo(() => {
     const kinds = Object.entries(meta.assets).map(([n, b]) => [n, sniffAsset(b)?.kind] as const)
     const vars = new Set<string>()
+    const lists = new Set<string>()
+    const keys = new Set<string>()
+    const signals = new Set<string>()
+    const walk = (v: Val | undefined): void => {
+      if (!v) return
+      if (v.k === 'var') vars.add(v.name)
+      if (v.k === 'list') lists.add(v.name)
+      if (v.k === 'store') keys.add(v.key)
+      if (v.k === 'calc') (walk(v.a), walk(v.b))
+      if (v.k === 'list') walk(v.arg)
+    }
     for (const n of nodes) {
       const d = n.data
-      if (d.varName) vars.add(d.varName)
-      for (const v of [...Object.values(d.values), d.cond?.a, d.cond?.b]) if (v?.k === 'var') vars.add(v.name)
+      if (d.varName) (d.type.startsWith('vd_list') ? lists : vars).add(d.varName)
+      if (d.type === 'vd_store_set') keys.add(String(d.fields.KEY))
+      if (d.type === 'vd_emit' || d.type === 'vd_on_signal') signals.add(String(d.fields.NAME))
+      Object.values(d.values).forEach(walk)
+      d.cond?.items.forEach((c) => (walk(c.a), walk(c.b)))
     }
     return {
       images: kinds.filter(([, k]) => k === 'image').map(([n]) => n),
       sounds: kinds.filter(([, k]) => k === 'sound').map(([n]) => n),
       prompts: meta.prompts.map((p) => p.name.trim()).filter(Boolean),
-      variables: [...vars].sort()
+      variables: [...vars].sort(),
+      lists: [...lists].sort(),
+      storeKeys: [...keys].filter(Boolean).sort(),
+      signals: [...signals].filter(Boolean).sort()
     }
   }, [nodes, meta])
 
@@ -180,9 +197,13 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
     let edge: Edge | null = null
     if (!position && sel) {
       const n0 = newNode(type, { x: 0, y: 0 }, '__probe')
-      const handle = KINDS[sel.data.type].outputs.find((h) => canConnect([...all, n0], fe, { source: sel.id, sourceHandle: h, target: n0.id }))
-      const dx = handle === 'yes' ? -150 : handle === 'no' ? 150 : handle === 'body' ? 290 : 0
-      const dy = handle === 'body' ? 90 : 140
+      const outs = outputsOf(sel.data)
+      const handle = outs.find((h) => canConnect([...all, n0], fe, { source: sel.id, sourceHandle: h, target: n0.id }))
+      const side = handle === 'body' || (handle === 'next' && outs.length > 1 && !outs.includes('body'))
+      const branch = outs.filter((h) => h !== 'next' && h !== 'body')
+      const bi = handle ? branch.indexOf(handle) : -1
+      const dx = side ? 300 : bi >= 0 ? (bi - (branch.length - 1) / 2) * 260 : 0
+      const dy = side ? 90 : 150
       position = { x: sel.position.x + dx, y: sel.position.y + dy }
       if (handle) edge = edgeOf(sel.id, handle, '')
     }
@@ -200,6 +221,21 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
   const updateData = (nodeId: string, patch: Partial<FlowNodeData>): void => {
     setNodes((ns) => ns.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, ...patch } } : n)))
     commit(400)
+  }
+
+  /** Fall bei „Je nach Wert“ entfernen: Verbindung des Falls weg, spätere Fälle rücken nach. */
+  const removeCase = (nodeId: string, idx: number): void => {
+    setNodes((ns) => ns.map((n) => (n.id === nodeId ? { ...n, data: { ...n.data, cases: (n.data.cases ?? []).filter((_, i) => i !== idx) } } : n)))
+    setEdges((es) =>
+      es.flatMap((e) => {
+        const m = e.source === nodeId ? /^case(\d+)$/.exec(e.sourceHandle ?? '') : null
+        if (!m) return [e]
+        const j = Number(m[1])
+        if (j === idx) return []
+        return [j > idx ? edgeOf(e.source, `case${j - 1}`, e.target) : e]
+      })
+    )
+    commit()
   }
 
   const removeNode = (nodeId: string): void => {
@@ -327,6 +363,7 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
     const cat = new Map(nodes.map((n) => [n.id, KINDS[n.data.type].category]))
     return edges.map((e) => {
       const color = HANDLE_COLOR[e.sourceHandle as Handle] ?? CAT_COLOR[cat.get(e.source) ?? 'action']
+
       return { ...e, style: { stroke: color, strokeWidth: 1.8 }, className: dim.has(e.target) ? 'is-dim' : '' }
     })
   }, [edges, nodes, dim])
@@ -420,7 +457,15 @@ function Editor({ editId, onBack }: { editId: string | null; onBack(): void }): 
         </div>
         <aside className="fside">
           {one ? (
-            <NodeInspector key={one.id} node={fromRF(one)} ctx={ctx} onChange={(p) => updateData(one.id, p)} onDelete={() => removeNode(one.id)} onDuplicate={() => duplicate(one.id)} />
+            <NodeInspector
+              key={one.id}
+              node={fromRF(one)}
+              ctx={ctx}
+              onChange={(p) => updateData(one.id, p)}
+              onRemoveCase={(i) => removeCase(one.id, i)}
+              onDelete={() => removeNode(one.id)}
+              onDuplicate={() => duplicate(one.id)}
+            />
           ) : (
             <AddonMeta meta={meta} onChange={setMetaDirty} />
           )}
