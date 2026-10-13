@@ -12,6 +12,7 @@ import { INSPECTOR_TABS, useInspector, type InspectorTab } from '../InspectorWin
 import { panelDef } from '../panels'
 import { rank } from './fuzzy'
 import { showWhatsNew } from '../../changelog/WhatsNew'
+import { useAddonUi } from '../addons/AddonWindow'
 
 interface Cmd {
   id: string
@@ -56,6 +57,8 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     win('skills'),
     win('focus'),
     win('discord'),
+    win('addons', 'Eigene Addons bauen, importieren, exportieren'),
+    { id: 'act:addonMaker', label: 'Neues Addon bauen', group: 'Aktionen', icon: 'puzzle', run: () => (useAddonUi.getState().edit(null), openPanel('addons')) },
     ...projects
       .filter((p) => !p.missing)
       .map((p): Cmd => ({ id: 'proj:' + p.id, label: `Session starten: ${p.name}`, group: 'Projekte', icon: 'play', hint: p.path, run: () => void useSessions.getState().start(p.id) })),

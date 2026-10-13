@@ -8,35 +8,50 @@ import { focusTransition, sceneFallback, statusTransitions } from './events'
 import { AddonRunner, realClock, type AddonEvent } from './interpreter'
 
 const runners = new Map<string, AddonRunner>()
+/** Fingerabdruck je laufendem Addon – unveränderte Addons laufen beim Neuladen einfach weiter */
+const signatures = new Map<string, string>()
 let testRunner: AddonRunner | null = null
+let testId: string | null = null
 const lastInterval = new Map<string, number>()
 
-const all = (): AddonRunner[] => (testRunner ? [...runners.values(), testRunner] : [...runners.values()])
+const all = (): AddonRunner[] => {
+  const live = [...runners.entries()].filter(([id]) => id !== testId).map(([, r]) => r)
+  return testRunner ? [...live, testRunner] : live
+}
 const emit = (e: AddonEvent): void => all().forEach((r) => r.emit(e))
 
 function rebuild(): void {
   const { list, setError } = useAddons.getState()
-  const before = new Set(runners.keys())
-  runners.forEach((r) => r.stop())
-  runners.clear()
-  lastInterval.clear()
-  for (const a of list) {
-    if (!a.enabled) continue
+  const wanted = list.filter((a) => a.enabled)
+  const ids = new Set(wanted.map((a) => a.manifest.id))
+  for (const [id, r] of runners) {
+    if (ids.has(id)) continue
+    r.stop()
+    runners.delete(id)
+    signatures.delete(id)
+  }
+  for (const a of wanted) {
     const id = a.manifest.id
+    const sig = JSON.stringify([a.program, a.manifest.prompts])
+    if (signatures.get(id) === sig) continue
+    runners.get(id)?.stop()
+    for (const k of [...lastInterval.keys()]) if (k.startsWith(id + ':')) lastInterval.delete(k)
     const r = new AddonRunner({ program: a.program, prompts: a.manifest.prompts ?? {}, actions: createActions(id), clock: realClock, onError: (m) => setError(id, m) })
     runners.set(id, r)
-    // „App startet“ nur für Addons, die gerade neu dazugekommen sind
-    if (!before.has(id)) r.emit({ type: 'start' })
+    signatures.set(id, sig)
+    // neu hinzugekommen oder geändert: „VibeDesk startet“ für dieses Addon auslösen
+    if (id !== testId) r.emit({ type: 'start' })
   }
   const scene = useSettings.getState().s?.scene
   const fallback = scene ? sceneFallback(scene, list) : null
   if (fallback) useSettings.getState().set({ scene: fallback })
 }
 
-/** Der Maker testet seinen Entwurf mit einem eigenen Runner, der dieselben Ereignisse bekommt. */
-export function setTestRunner(r: AddonRunner | null): void {
+/** Der Maker testet seinen Entwurf mit eigenem Runner; das installierte Addon pausiert so lange. */
+export function setTestRunner(r: AddonRunner | null, id: string | null = null): void {
   testRunner?.stop()
   testRunner = r
+  testId = r ? id : null
   for (const k of [...lastInterval.keys()]) if (k.startsWith('test:')) lastInterval.delete(k)
   r?.emit({ type: 'start' })
 }

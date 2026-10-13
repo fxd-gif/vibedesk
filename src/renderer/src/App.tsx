@@ -228,6 +228,7 @@ export default function App(): React.JSX.Element {
           [
             panelItem('inspector'),
             { ...panelItem('editor'), onClick: () => void toggleEditor() },
+            panelItem('addons'),
             { id: 'preview', icon: 'globe', label: 'Browser-Vorschau', active: Object.keys(previews).length > 0, onClick: () => usePreview.getState().openPreview(Object.values(usePreview.getState().urls).flat()[0]) }
           ]
         ]}

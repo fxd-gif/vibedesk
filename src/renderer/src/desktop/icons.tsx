@@ -27,7 +27,8 @@ const paths: Record<string, string> = {
   search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
   code: 'M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16',
   inspect: 'M4 5h16v14H4zM4 9h16M8 13h5M8 16h8',
-  command: 'M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z'
+  command: 'M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z',
+  puzzle: 'M10 4a2 2 0 1 1 4 0v2h4v4h-2a2 2 0 1 0 0 4h2v4h-4v-2a2 2 0 1 0-4 0v2H6v-4h2a2 2 0 1 0 0-4H6V6h4z'
 }
 
 export function Icon({ name, size = 18 }: { name: keyof typeof paths | string; size?: number }): React.JSX.Element {

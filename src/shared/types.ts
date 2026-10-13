@@ -34,7 +34,7 @@ import type { Activity, PresenceConfig } from './presence'
 import type { AddonManifest, AddonPackage } from './addonFormat'
 import type { BlocklyProgram } from './addonBlocks'
 
-export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor'
+export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons'
 
 export type DiscordStatus =
   | { state: 'off' }
