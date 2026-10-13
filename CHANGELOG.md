@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.12.0
+
 ### Neu
 - **Makros, die Claude automatisieren**: Im Addon-Maker gibt es die neue Kategorie „Claude“ – Session öffnen, Prompt an Claude schicken (auf Wunsch erst weiter, wenn Claude fertig ist) und Warten bis Claude fertig. So laufen ganze Abläufe wie „Tests schreiben → reparieren → committen“ auf Knopfdruck
 - Neuer Auslöser **Makro-Befehl**: erscheint in der Befehls-Palette (Strg+K) als „Makro: Name“. Auch „Session fertig“ kann jetzt genau der Session antworten, die fertig wurde
