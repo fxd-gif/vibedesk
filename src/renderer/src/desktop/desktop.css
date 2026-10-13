@@ -41,6 +41,10 @@
 .gwin-body { flex: 1; min-height: 0; overflow: auto; position: relative; }
 .gwin-resize { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; }
 .gwin-resize::after { content: ''; position: absolute; right: 5px; bottom: 5px; width: 6px; height: 6px; border-right: 1.5px solid rgba(255,255,255,.25); border-bottom: 1.5px solid rgba(255,255,255,.25); }
+/* Hilfslinie des unsichtbaren Rasters – nur während des Ziehens, wenn etwas einrastet */
+.snap-guide { position: absolute; z-index: 9999; pointer-events: none; background: rgba(159, 184, 255, 0.55); box-shadow: 0 0 8px rgba(159, 184, 255, 0.6); animation: fade 120ms ease; }
+.snap-guide.x { top: 0; bottom: 0; width: 1px; margin-left: -0.5px; }
+.snap-guide.y { left: 0; right: 0; height: 1px; margin-top: -0.5px; }
 .snap-preview { position: absolute; z-index: 5; border-radius: var(--radius); background: rgba(159, 184, 255, 0.08); border: 1px solid rgba(159, 184, 255, 0.35); pointer-events: none; }
 
 /* ---------- Dock ---------- */

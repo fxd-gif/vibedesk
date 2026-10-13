@@ -7,6 +7,9 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Verbessert
+- **Unsichtbares Raster** beim Anordnen: Fenster rasten beim Ziehen und Größe-Ändern an anderen Fenstern (bündig oder mit sauberem Abstand), am Bildschirmrand und an Hälften, Dritteln und Vierteln ein – dezente Hilfslinien zeigen, woran. Mit gedrückter Alt-Taste frei platzieren
+
 ## 0.10.0
 
 ### Neu

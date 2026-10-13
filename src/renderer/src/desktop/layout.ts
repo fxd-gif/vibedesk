@@ -80,3 +80,93 @@ export function restoreRects(rects: Record<string, WindowRect>, screen: Screen, 
       .map(([id, r]) => [id, clampRect(r, screen, dockH)])
   )
 }
+
+// ---------- Unsichtbares Raster ----------
+
+/** feines Raster für alles, was nirgends einrastet */
+export const GRID = 8
+/** so nah (px) muss eine Kante kommen, damit sie magnetisch einrastet */
+export const MAGNET = 12
+/** Teilungslinien des Bildschirms: Hälften, Drittel, Viertel */
+const FRACTIONS = [1 / 4, 1 / 3, 1 / 2, 2 / 3, 3 / 4]
+
+/** Hilfslinie, an der gerade eingerastet wurde (Bildschirmkoordinate) */
+export interface Guide {
+  axis: 'x' | 'y'
+  at: number
+}
+
+interface Lines {
+  /** Kandidaten für die Anfangskante (links/oben) */
+  start: number[]
+  /** Kandidaten für die Endkante (rechts/unten) */
+  end: number[]
+}
+
+function lines(axis: 'x' | 'y', others: WindowRect[], screen: Screen, dockH: number): Lines {
+  const lo = MARGIN
+  const hi = axis === 'x' ? screen.w - MARGIN : screen.h - dockH - MARGIN
+  const start = [lo]
+  const end = [hi]
+  for (const f of FRACTIONS) {
+    const at = Math.round(lo + (hi - lo) * f)
+    // zwei Fenster an derselben Teilungslinie lassen genau GAP Abstand
+    start.push(at + Math.ceil(GAP / 2))
+    end.push(at - Math.floor(GAP / 2))
+  }
+  for (const o of others) {
+    const a = axis === 'x' ? o.x : o.y
+    const b = axis === 'x' ? o.x + o.w : o.y + o.h
+    start.push(a, b + GAP) // bündig mit dessen Anfang / mit Abstand dahinter
+    end.push(b, a - GAP) // bündig mit dessen Ende / mit Abstand davor
+  }
+  return { start, end }
+}
+
+function nearest(v: number, cands: number[]): number | null {
+  let best: number | null = null
+  for (const c of cands) if (Math.abs(c - v) <= MAGNET && (best === null || Math.abs(c - v) < Math.abs(best - v))) best = c
+  return best
+}
+
+const toGrid = (v: number): number => MARGIN + Math.round((v - MARGIN) / GRID) * GRID
+
+/**
+ * Lässt ein gezogenes oder skaliertes Fenster einrasten: zuerst an Fenster-, Bildschirmkanten und Teilungslinien,
+ * sonst aufs feine Raster. Beim Verschieben bleibt die Größe, beim Skalieren die linke obere Ecke.
+ */
+export function magnetize(
+  r: WindowRect,
+  others: WindowRect[],
+  screen: Screen,
+  dockH: number,
+  mode: 'move' | 'resize',
+  min: { w: number; h: number } = { w: 0, h: 0 }
+): { rect: WindowRect; guides: Guide[] } {
+  const out = { ...r }
+  const guides: Guide[] = []
+  for (const axis of ['x', 'y'] as const) {
+    const pos = axis === 'x' ? 'x' : 'y'
+    const size = axis === 'x' ? 'w' : 'h'
+    const L = lines(axis, others, screen, dockH)
+    if (mode === 'move') {
+      const s = nearest(r[pos], L.start)
+      const e = nearest(r[pos] + r[size], L.end)
+      const ds = s === null ? Infinity : Math.abs(s - r[pos])
+      const de = e === null ? Infinity : Math.abs(e - (r[pos] + r[size]))
+      if (s !== null && ds <= de) {
+        out[pos] = s
+        guides.push({ axis, at: s })
+      } else if (e !== null) {
+        out[pos] = e - r[size]
+        guides.push({ axis, at: e })
+      } else out[pos] = toGrid(r[pos])
+    } else {
+      const e = nearest(r[pos] + r[size], L.end)
+      const want = e !== null ? e - r[pos] : toGrid(r[pos] + r[size]) - r[pos]
+      out[size] = Math.max(min[size], want)
+      if (e !== null && out[size] === want) guides.push({ axis, at: e })
+    }
+  }
+  return { rect: out, guides }
+}
