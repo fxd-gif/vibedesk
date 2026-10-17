@@ -6,7 +6,14 @@ import type { UpdateStatus } from '../shared/types'
 const FIRST_CHECK_MS = 3_000
 const INTERVAL_MS = 4 * 60 * 60 * 1000
 
-export function setupUpdater(send: (s: UpdateStatus) => void): void {
+export interface UpdaterDisplay {
+  /** Start-Fensterchen läuft: erster Check sofort statt nach 3 s */
+  checkNow?: boolean
+  /** Läuft unmittelbar vor dem Installieren, z. B. um das Fensterchen zu zeigen */
+  beforeInstall?: (version: string) => Promise<void>
+}
+
+export function setupUpdater(send: (s: UpdateStatus) => void, display: UpdaterDisplay = {}): void {
   let status: UpdateStatus = { state: 'idle' }
   const set = (s: UpdateStatus): void => {
     status = s
@@ -37,7 +44,13 @@ export function setupUpdater(send: (s: UpdateStatus) => void): void {
     })
   }
   ipcMain.handle('update:check', () => check())
-  ipcMain.on('update:install', () => autoUpdater.quitAndInstall(true, true))
-  setTimeout(check, FIRST_CHECK_MS)
+  let installing = false
+  ipcMain.on('update:install', async () => {
+    if (installing) return
+    installing = true
+    await display.beforeInstall?.(status.state === 'ready' ? status.version : '').catch(() => {})
+    autoUpdater.quitAndInstall(true, true)
+  })
+  setTimeout(check, display.checkNow ? 0 : FIRST_CHECK_MS)
   setInterval(check, INTERVAL_MS)
 }

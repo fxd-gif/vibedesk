@@ -7,6 +7,11 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Update-Fensterchen** wie bei Discord: Beim Start zeigt ein kleines Fenster, ob VibeDesk nach Updates sucht, eins herunterlädt (mit Fortschritt) oder gleich startet. Ohne Internet geht es nach ein paar Sekunden normal weiter
+- Auch während der Installation bleibt das Fensterchen sichtbar, bis die neue Version da ist – kein „hat sich VibeDesk einfach geschlossen?“ mehr
+
 ## 0.13.0
 
 ### Neu

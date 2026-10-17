@@ -15,6 +15,8 @@ import { NotesStore } from './notesStore'
 import { DiscordRpc, fetchAppInfo, type DiscordStatus } from './discord/rpc'
 import { postWebhook, shouldSend, type WebhookKind } from './discord/webhook'
 import { setupUpdater } from './updater'
+import { showInstallBridge, SplashWindow } from './splashWindow'
+import { createSplashGate, splashView } from './splashGate'
 import { SkillStore } from './skillStore'
 import { localDate, StatsHistory, StatsService } from './statsService'
 import os from 'os'
@@ -42,6 +44,8 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 let mainWindow: BrowserWindow | null = null
+// Update-Fensterchen beim Start – nur in der installierten App (oder VIBEDESK_SPLASH=1 zum Ausprobieren)
+let splash: SplashWindow | null = null
 // Per Doppelklick geöffnete .vibeaddon-Datei, bis der Renderer sie abholt
 let pendingAddon: string | null = addonPathFromArgv(process.argv)
 
@@ -78,7 +82,8 @@ function createWindow(): BrowserWindow {
       webviewTag: true
     }
   })
-  win.once('ready-to-show', () => win.show())
+  // Mit Update-Fensterchen entscheidet das Gate, wann das Hauptfenster erscheint
+  if (!splash) win.once('ready-to-show', () => win.show())
   // Externe Links nie im App-Fenster öffnen
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/.test(url)) shell.openExternal(url)
@@ -93,8 +98,11 @@ const send = (ch: string, ...args: unknown[]): void => {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(ch, ...args)
 }
 
+let gate: ReturnType<typeof createSplashGate> | null = null
+
 app.whenReady().then(async () => {
   Menu.setApplicationMenu(null)
+  if (app.isPackaged || process.env.VIBEDESK_SPLASH) splash = new SplashWindow()
   if (app.isPackaged) registerRunAlias(process.execPath)
   ipcMain.handle('app:claudeInstalled', () => !!process.env.VIBEDESK_CLAUDE_CMD || claudeOnPath())
   ipcMain.handle('setup:check', () => checkTools())
@@ -266,8 +274,43 @@ app.whenReady().then(async () => {
   ipcMain.handle('streamer:user', () => basename(os.homedir()))
   app.on('before-quit', () => void overlay.stop())
 
-  setupUpdater((s) => send('update:status', s))
+  const bridgeScript = resource('update-splash.ps1')
+  setupUpdater(
+    (s) => {
+      send('update:status', s)
+      if (splash?.open) splash.set(splashView(s))
+      gate?.feed(s)
+    },
+    {
+      checkNow: !!splash,
+      beforeInstall: async (version) => {
+        // Fensterchen zeigen, Brücke für die Installer-Pause starten, dann erst beenden
+        if (!splash?.open) splash = new SplashWindow()
+        splash.set({ text: version ? `Installiere Update ${version} …` : 'Installiere Update …', percent: null })
+        showInstallBridge(bridgeScript, version)
+        await new Promise((r) => setTimeout(r, 1500))
+      }
+    }
+  )
   mainWindow = createWindow()
+  if (splash) {
+    const win = mainWindow
+    let ready = false
+    let released = false
+    const reveal = (): void => {
+      if (!ready || !released || win.isDestroyed()) return
+      win.show()
+      splash?.close()
+    }
+    win.once('ready-to-show', () => {
+      ready = true
+      reveal()
+    })
+    gate = createSplashGate(() => {
+      released = true
+      reveal()
+    })
+  }
 })
 
 // Vorschau-Webviews absichern: kein Node, keine Preloads, Popups im System-Browser, nur http(s)
