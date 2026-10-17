@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.15.0
+
 ### Neu
 
 - **„Zeig drauf“ in der Vorschau**: Auf das Lupen-Symbol klicken, ein Element der Seite anklicken und kurz sagen, was anders werden soll – Claude bekommt Selektor, Text, HTML und einen Screenshot des Ausschnitts. Die Vorschau bleibt dabei vorn, damit du die Änderung live siehst
