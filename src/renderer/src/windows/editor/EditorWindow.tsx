@@ -7,7 +7,7 @@ import { isSensitiveFile } from '../../../../shared/redact'
 import { useSettings } from '../../store/settingsStore'
 import { samePath, type Tab } from '../../store/editorModel'
 import { currentProject, editorDocs, ensureProject, selectProject, useEditor, useEditorUi } from '../../store/editorStore'
-import { createState, revealText } from './cmSetup'
+import { createState, revealLine, revealText } from './cmSetup'
 import { FileTree } from './FileTree'
 
 function extrasFor(path: string) {
@@ -169,6 +169,7 @@ export function EditorWindow(): React.JSX.Element {
     const v = view.current
     requestAnimationFrame(() => {
       if (reveal.find) revealText(v, reveal.find)
+      else if (reveal.line) revealLine(v, reveal.line)
       v.focus()
     })
   }, [reveal?.seq, activeTab?.path])

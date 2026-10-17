@@ -148,7 +148,7 @@ export async function closeEditor(): Promise<void> {
 }
 
 /** Aus dem Live-Feed: Datei öffnen und zur Stelle springen. */
-export async function openInEditor(path: string, find?: string): Promise<void> {
+export async function openInEditor(path: string, find?: string, line?: number): Promise<void> {
   const projects = await loadProjects()
   const p = projectOf(projects, path)
   if (!p) {
@@ -156,7 +156,7 @@ export async function openInEditor(path: string, find?: string): Promise<void> {
     return
   }
   if (!(await switchProject(p.id))) return
-  const r = await useEditor.getState().open(path, { find })
+  const r = await useEditor.getState().open(path, { find, line })
   if (!r.ok) {
     await alert(r.code === 'not_found' ? 'Datei existiert nicht mehr' : 'Datei konnte nicht geöffnet werden', r.message === r.code ? path : `${r.message}\n${path}`)
     return

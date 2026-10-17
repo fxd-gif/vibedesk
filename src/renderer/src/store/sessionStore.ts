@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { create } from 'zustand'
 import { api, errorText } from '../api'
 import type { SessionInfo } from '../../../shared/types'
@@ -7,10 +8,13 @@ import { useWorkflow } from './workflowStore'
 import { createTerminal, disposeTerminal } from './terminals'
 
 export const termWin = (sessionId: string): string => `term:${sessionId}`
-export const kindOf = (id: string): 'terminal' | 'panel' => (id.startsWith('term:') ? 'terminal' : 'panel')
+export const shellWin = (shellId: string): string => `shell:${shellId}`
+export const kindOf = (id: string): 'terminal' | 'panel' => (id.startsWith('term:') || id.startsWith('shell:') ? 'terminal' : 'panel')
 
 interface SessionStore {
   sessions: SessionInfo[]
+  /** Sessions aus einem früheren App-Start, die sich per Hook melden – nur Inspector, kein Terminal */
+  external: SessionInfo[]
   exited: Record<string, number>
   start(projectId: string, resumeId?: string): Promise<SessionInfo | null>
   close(id: string): Promise<void>
@@ -19,11 +23,12 @@ interface SessionStore {
 
 export const useSessions = create<SessionStore>((set, get) => ({
   sessions: [],
+  external: [],
   exited: {},
   start: async (projectId, resumeId) => {
     try {
       const info = await api.sessions.start(projectId, resumeId)
-      createTerminal(info.id)
+      createTerminal(info.id, { cwd: info.cwd })
       useWorkflow.getState().dispatch({ type: 'start', sessionId: info.id })
       set((s) => ({ sessions: [...s.sessions, info] }))
       const ui = useUi.getState()
@@ -53,9 +58,45 @@ export const useSessions = create<SessionStore>((set, get) => ({
   }
 }))
 
+const addExternal = (info: SessionInfo): void => {
+  if (useSessions.getState().external.some((x) => x.id === info.id)) return
+  useWorkflow.getState().dispatch({ type: 'start', sessionId: info.id })
+  useSessions.setState((s) => ({ external: [...s.external, info] }))
+}
+
 let wired = false
 export function wireSessions(): void {
   if (wired) return
   wired = true
   api.on.sessionExit((id, code) => useSessions.setState((s) => ({ exited: { ...s.exited, [id]: code } })))
+  api.on.sessionExternal(addExternal)
+  api.on.sessionExternalEnd((id) => {
+    useWorkflow.getState().dispatch({ type: 'remove', sessionId: id })
+    useSessions.setState((s) => ({ external: s.external.filter((x) => x.id !== id) }))
+  })
+  void api.sessions.externals().then((list) => list.forEach(addExternal))
+}
+
+/** Nach einem Neuladen des Fensters laufen die Sessions in Main weiter – wieder anzeigen (erst nach initRects aufrufen) */
+export async function restoreSessions(): Promise<void> {
+  await api.sessions.list().then((list) => {
+    const known = new Set(useSessions.getState().sessions.map((s) => s.id))
+    const fresh = list.filter((s) => !known.has(s.id))
+    if (!fresh.length) return
+    for (const info of fresh) {
+      createTerminal(info.id, { cwd: info.cwd })
+      useWorkflow.getState().dispatch({ type: 'start', sessionId: info.id })
+    }
+    useSessions.setState((s) => ({ sessions: [...s.sessions, ...fresh] }))
+    const ui = useUi.getState()
+    fresh.forEach((s) => ui.openWin(termWin(s.id)))
+    ui.arrangeAll(kindOf)
+  })
+}
+
+/** Alle Sessions für den Inspector: eigene plus übernommene aus einem früheren App-Start */
+export function useAllSessions(): SessionInfo[] {
+  const sessions = useSessions((s) => s.sessions)
+  const external = useSessions((s) => s.external)
+  return useMemo(() => (external.length ? [...sessions, ...external] : sessions), [sessions, external])
 }

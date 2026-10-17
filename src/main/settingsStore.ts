@@ -57,7 +57,9 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   approvalsOn: true,
   companion: { enabled: false, port: COMPANION_PORT },
   quickPrompt: true,
-  lastWrapped: 0
+  lastWrapped: 0,
+  terminal: { fontSize: 13, lineHeight: 1.2, cursorStyle: 'block', cursorBlink: true, theme: 'scene', shell: 'powershell', statusBar: true },
+  previewAutoOpen: true
 })
 
 export class SettingsStore {
@@ -77,6 +79,7 @@ export class SettingsStore {
     this.value.streamer = { ...defaults.streamer, ...(this.value.streamer ?? {}) }
     this.value.notify = { ...defaults.notify, ...(this.value.notify ?? {}) }
     this.value.companion = { ...defaults.companion, ...(this.value.companion ?? {}) }
+    this.value.terminal = { ...defaults.terminal, ...(this.value.terminal ?? {}) }
     this.value.notify.kinds = { ...defaults.notify.kinds, ...(this.value.notify.kinds ?? {}) }
   }
 

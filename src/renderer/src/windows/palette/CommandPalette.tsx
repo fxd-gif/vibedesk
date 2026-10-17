@@ -7,6 +7,7 @@ import { toggleMusic } from '../../ambience/toggles'
 import { openEditor } from '../../store/editorStore'
 import { useSettings } from '../../store/settingsStore'
 import { kindOf, useSessions } from '../../store/sessionStore'
+import { useShells } from '../../store/shellStore'
 import { centeredRect, useUi } from '../../store/uiStore'
 import type { PanelId, Project } from '../../../../shared/types'
 import { INSPECTOR_TABS, useInspector, type InspectorTab } from '../InspectorWindow'
@@ -75,6 +76,9 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     ...projects
       .filter((p) => !p.missing)
       .map((p): Cmd => ({ id: 'proj:' + p.id, label: `Session starten: ${p.name}`, group: 'Projekte', icon: 'play', hint: redactText(p.path), run: () => void useSessions.getState().start(p.id) })),
+    ...projects
+      .filter((p) => !p.missing)
+      .map((p): Cmd => ({ id: 'shell:' + p.id, label: `Shell öffnen: ${p.name}`, group: 'Projekte', icon: 'terminal', hint: 'PowerShell im Projektordner', searchOnly: true, run: () => void useShells.getState().open(p.id) })),
     { id: 'act:paste', label: 'Share-Code einfügen …', group: 'Teilen', icon: 'share', hint: 'Prompts, Skills, Atmosphären', run: openPaste },
     ...(s?.prompts.length ? [{ id: 'act:sharePrompts', label: 'Alle Prompts als Code teilen', group: 'Teilen', icon: 'share', searchOnly: true, run: () => sharePrompts(s.prompts) }] : []),
     { id: 'act:curtain', label: 'Vorhang zuziehen', group: 'Aktionen', icon: 'eyeoff', hint: 'Strg+Umschalt+H', searchOnly: true, run: () => toggleCurtain(true) },

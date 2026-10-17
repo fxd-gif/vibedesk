@@ -16,6 +16,10 @@ export interface FeedEntry {
 export interface TodoItem {
   content: string
   status: 'pending' | 'in_progress' | 'completed'
+  /** Task-ID bei TaskCreate/TaskUpdate (TodoWrite schickt immer die ganze Liste ohne IDs) */
+  id?: string
+  /** Text während der Arbeit, z. B. „Baue Terminal-Optik“ */
+  activeForm?: string
 }
 
 export interface AgentNode {
@@ -104,6 +108,36 @@ function parseTodos(x: unknown): TodoItem[] {
     })
 }
 
+/**
+ * Neuere Claude-Code-Versionen planen mit TaskCreate/TaskUpdate statt TodoWrite: einzelne Aufgaben mit ID.
+ * Ausgewertet nach dem Aufruf, weil erst die Antwort die ID der neuen Aufgabe kennt.
+ */
+export function applyTaskTool(todos: TodoItem[], tool: string, input: Record<string, unknown>, resp: unknown): TodoItem[] {
+  if (tool === 'TaskCreate') {
+    const content = str(input.subject).trim()
+    if (!content) return todos
+    const maxId = Math.max(0, ...todos.map((t) => Number(t.id) || 0))
+    const id = str(obj(obj(resp).task).id) || String(maxId + 1)
+    if (todos.some((t) => t.id === id)) return todos
+    const activeForm = str(input.activeForm)
+    return [...todos, { id, content, status: 'pending', ...(activeForm ? { activeForm } : {}) }]
+  }
+  if (tool === 'TaskUpdate') {
+    const id = str(input.taskId)
+    if (!id || obj(resp).success === false) return todos
+    if (str(input.status) === 'deleted') return todos.filter((t) => t.id !== id)
+    return todos.map((t) => {
+      if (t.id !== id) return t
+      const next = { ...t }
+      if (TODO_STATES.has(str(input.status))) next.status = input.status as TodoItem['status']
+      if (str(input.subject).trim()) next.content = str(input.subject).trim()
+      if (str(input.activeForm)) next.activeForm = str(input.activeForm)
+      return next
+    })
+  }
+  return todos
+}
+
 function hasError(resp: unknown): boolean {
   const r = obj(resp)
   return r.is_error === true || (r.error !== undefined && r.error !== null && r.error !== '')
@@ -168,10 +202,11 @@ function applyHook(s: SessionWorkflow, e: HookEvent, nextId: number): { s: Sessi
         }
       // Ein Tool lief zu Ende → Claude arbeitet weiter (auch nach bestätigter Berechtigungsfrage)
       const status: SessionStatus = 'working'
-      if (idx < 0) return { s: touch({ status }), usedId: false }
+      const todos = hasError(p.tool_response) ? s.todos : applyTaskTool(s.todos, tool, obj(p.tool_input), p.tool_response)
+      if (idx < 0) return { s: touch({ status, todos }), usedId: false }
       const result: FeedEntry['result'] = hasError(p.tool_response) ? 'fail' : 'ok'
       const feed = s.feed.map((f, i) => (i === idx ? { ...f, result } : f))
-      return { s: touch({ feed, status }), usedId: false }
+      return { s: touch({ feed, status, todos }), usedId: false }
     }
     default:
       return { s, usedId: false }

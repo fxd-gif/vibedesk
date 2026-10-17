@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { useSessions } from '../store/sessionStore'
+import { useAllSessions, useSessions } from '../store/sessionStore'
 import { useWorkflow } from '../store/workflowStore'
 import { StatsPanel } from './StatsPanel'
 import { AgentPanel, FeedPanel, StatusPanel, TodoPanel } from './WorkflowPanels'
@@ -39,7 +39,7 @@ export const useInspector = create<{ tab: InspectorTab; setTab(t: InspectorTab):
 
 /** Zähler hinter den Tabs: offene Todos und laufende Agents über alle Sessions. */
 function useCounts(): Partial<Record<InspectorTab, number>> {
-  const sessions = useSessions((s) => s.sessions)
+  const sessions = useAllSessions()
   const wf = useWorkflow((s) => s.sessions)
   let todos = 0
   let agents = 0

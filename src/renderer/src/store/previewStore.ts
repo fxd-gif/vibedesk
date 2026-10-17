@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 import { api } from '../api'
-import { detectLocalUrls } from '../windows/localUrls'
+import { detectLocalUrls, shouldAutoOpen } from '../windows/localUrls'
 import { centeredRect, useUi } from './uiStore'
 import { enqueue } from './queueStore'
 import { sendToSession } from './sessionPrompt'
 import { termWin, useSessions } from './sessionStore'
+import { useSettings } from './settingsStore'
 import { useWorkflow } from './workflowStore'
 
 export const previewWin = (key: string): string => `preview:${key}`
@@ -46,18 +47,28 @@ export function wirePreview(): void {
   if (wired) return
   wired = true
   const carry: Record<string, string> = {}
-  api.on.sessionData((id, data) => {
+  const seen: Record<string, Set<string>> = {}
+  const onData = (chips: boolean) => (id: string, data: string) => {
     const r = detectLocalUrls(data, carry[id] ?? '')
     carry[id] = r.carry
     if (!r.urls.length) return
-    usePreview.setState((s) => {
-      const list = [...r.urls, ...(s.urls[id] ?? []).filter((u) => !r.urls.includes(u))].slice(0, 4)
-      return { urls: { ...s.urls, [id]: list } }
-    })
-  })
-  api.on.sessionExit((id) => {
+    if (chips)
+      usePreview.setState((s) => {
+        const list = [...r.urls, ...(s.urls[id] ?? []).filter((u) => !r.urls.includes(u))].slice(0, 4)
+        return { urls: { ...s.urls, [id]: list } }
+      })
+    const enabled = useSettings.getState().s?.previewAutoOpen ?? true
+    const set = (seen[id] ??= new Set())
+    for (const url of r.urls) if (shouldAutoOpen(set, url, enabled, Object.values(usePreview.getState().open))) usePreview.getState().openPreview(url)
+  }
+  api.on.sessionData(onData(true))
+  api.on.shellData(onData(false))
+  const forget = (id: string): void => {
     delete carry[id]
-  })
+    delete seen[id]
+  }
+  api.on.sessionExit(forget)
+  api.on.shellExit(forget)
 }
 
 export function shortUrl(url: string): string {

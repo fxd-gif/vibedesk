@@ -12,13 +12,15 @@ import { CommandPalette, usePalette, wirePalette } from './windows/palette/Comma
 import type { PanelId } from '../../shared/types'
 import './desktop/desktop.css'
 import './desktop/social.css'
-import { kindOf, termWin, useSessions, wireSessions } from './store/sessionStore'
+import { kindOf, restoreSessions, termWin, useSessions, wireSessions } from './store/sessionStore'
 import { useWorkflow, wireWorkflow } from './store/workflowStore'
 import { wireStats } from './store/statsStore'
 import { wireChime } from './ambience/chime'
 import { usePreview, wirePreview } from './store/previewStore'
 import { PreviewWindow } from './windows/PreviewWindow'
 import { TerminalWindow } from './windows/TerminalWindow'
+import { ShellWindow } from './windows/ShellWindow'
+import { restoreShells, useShells, wireShells } from './store/shellStore'
 import { RainCanvas } from './ambience/RainCanvas'
 import { useSettings } from './store/settingsStore'
 import { ambienceAudio } from './ambience/audio'
@@ -105,6 +107,7 @@ export default function App(): React.JSX.Element {
   const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const sessions = useSessions((s) => s.sessions)
+  const shells = useShells((s) => s.shells)
   const settings = useSettings((s) => s.s)
   const previews = usePreview((s) => s.open)
   const focus = useFocus()
@@ -133,6 +136,7 @@ export default function App(): React.JSX.Element {
   useEffect(() => {
     wireWorkflow()
     wireSessions()
+    wireShells()
     wireStats()
     wireChime()
     wirePreview()
@@ -162,6 +166,9 @@ export default function App(): React.JSX.Element {
         const def = panelDef(id)
         if (def) ui.openWin(id, centeredRect(def.w, def.h))
       })
+      // Sessions und Shells, die ein Neuladen des Fensters überlebt haben
+      void restoreSessions()
+      void restoreShells()
       setReady(true)
       startAddonRuntime()
       // per Doppelklick geöffnete .vibeaddon-Datei
@@ -180,7 +187,7 @@ export default function App(): React.JSX.Element {
     return useUi.subscribe((s) => {
       clearTimeout(saveTimer.current)
       saveTimer.current = setTimeout(() => {
-        const rects = Object.fromEntries(Object.entries(s.rects).filter(([id]) => !id.startsWith('term:')))
+        const rects = Object.fromEntries(Object.entries(s.rects).filter(([id]) => !id.startsWith('term:') && !id.startsWith('shell:')))
         const visiblePanels = s.open.filter((id) => PANEL_IDS.includes(id)) as PanelId[]
         api.settings.set({ windowRects: rects, visiblePanels })
       }, 500)
@@ -234,6 +241,11 @@ export default function App(): React.JSX.Element {
       {sessions.map((s) => (
         <TerminalWindow key={s.id} session={s} />
       ))}
+      {shells
+        .filter((s) => !s.attachedTo)
+        .map((s) => (
+          <ShellWindow key={s.id} shell={s} />
+        ))}
       {Object.keys(previews).map((k) => (
         <PreviewWindow key={k} id={k} />
       ))}

@@ -14,6 +14,8 @@ export interface SessionInfo {
   projectId: string
   name: string
   cwd: string
+  /** nicht von dieser VibeDesk-Instanz gestartet (z. B. vor einem Update) – nur im Inspector, ohne Terminal */
+  external?: boolean
 }
 
 export interface HookEvent {
@@ -202,6 +204,37 @@ export interface Settings {
   quickPrompt: boolean
   /** wann der Wochenrückblick zuletzt angeboten wurde (0 = noch nie) */
   lastWrapped: number
+  terminal: TerminalSettings
+  /** Startet ein Terminal einen lokalen Server (localhost), öffnet sich die Vorschau von selbst */
+  previewAutoOpen: boolean
+}
+
+export type TerminalCursor = 'block' | 'bar' | 'underline'
+export type ShellKind = 'powershell' | 'pwsh' | 'cmd'
+
+/** Eigenes Shell-Terminal in einem Projektordner */
+export interface ShellInfo {
+  id: string
+  projectId: string
+  name: string
+  cwd: string
+  kind: ShellKind
+  /** Shell im geteilten Claude-Fenster dieser Session (sonst eigenes Fenster) */
+  attachedTo?: string
+}
+
+/** Aussehen und Verhalten der Terminals (Claude und Shell) */
+export interface TerminalSettings {
+  fontSize: number
+  lineHeight: number
+  cursorStyle: TerminalCursor
+  cursorBlink: boolean
+  /** Farbschema; 'scene' = passend zur gewählten Szene */
+  theme: string
+  /** Shell für eigene Terminals neben Claude */
+  shell: ShellKind
+  /** Statuszeile mit Modell, Kontext, Kosten und Laufzeit */
+  statusBar: boolean
 }
 
 export interface LoungeSettings {
@@ -316,10 +349,32 @@ export interface VibedeskApi {
     write(id: string, data: string): void
     resize(id: string, cols: number, rows: number): void
     list(): Promise<SessionInfo[]>
+    /** Sessions, die VibeDesk nicht selbst gestartet hat, die sich aber per Hook melden */
+    externals(): Promise<SessionInfo[]>
+  }
+  /** Eigene Shell-Terminals (PowerShell/cmd) im Projektordner */
+  shells: {
+    start(projectId: string, attachedTo?: string): Promise<ShellInfo>
+    stop(id: string): Promise<void>
+    write(id: string, data: string): void
+    resize(id: string, cols: number, rows: number): void
+    list(): Promise<ShellInfo[]>
+  }
+  /** Zwischenablage und Dateien fürs Terminal */
+  terminal: {
+    /** Text – oder bei einem Bild der Pfad einer Temp-Datei, die man Claude geben kann */
+    readClipboard(): Promise<{ text: string } | { image: string } | null>
+    writeClipboard(text: string): Promise<void>
+    /** Pfad einer per Drag & Drop abgelegten Datei */
+    filePath(file: File): string
   }
   on: {
     sessionData(cb: (id: string, data: string) => void): Unsubscribe
     sessionExit(cb: (id: string, code: number) => void): Unsubscribe
+    sessionExternal(cb: (info: SessionInfo) => void): Unsubscribe
+    sessionExternalEnd(cb: (id: string) => void): Unsubscribe
+    shellData(cb: (id: string, data: string) => void): Unsubscribe
+    shellExit(cb: (id: string, code: number) => void): Unsubscribe
     hookEvent(cb: (e: HookEvent) => void): Unsubscribe
     stats(cb: (s: SessionStats) => void): Unsubscribe
     discordStatus(cb: (s: DiscordStatus) => void): Unsubscribe

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
-import type { DiscordStatus, FileChange, HookEvent, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
+import type { DiscordStatus, FileChange, HookEvent, SessionInfo, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
 import type { BrainPulse } from '../shared/brain'
 import type { PermissionAsk } from '../shared/permissions'
 import type { CompanionDevice, CompanionStatus, PromptTarget } from '../shared/companion'
@@ -38,11 +38,28 @@ const api: VibedeskApi = {
     stop: (id) => ipcRenderer.invoke('sessions:stop', id),
     write: (id, data) => ipcRenderer.send('sessions:write', id, data),
     resize: (id, cols, rows) => ipcRenderer.send('sessions:resize', id, cols, rows),
-    list: () => ipcRenderer.invoke('sessions:list')
+    list: () => ipcRenderer.invoke('sessions:list'),
+    externals: () => ipcRenderer.invoke('sessions:externals')
+  },
+  shells: {
+    start: (projectId, attachedTo) => ipcRenderer.invoke('shells:start', projectId, attachedTo),
+    stop: (id) => ipcRenderer.invoke('shells:stop', id),
+    write: (id, data) => ipcRenderer.send('shells:write', id, data),
+    resize: (id, cols, rows) => ipcRenderer.send('shells:resize', id, cols, rows),
+    list: () => ipcRenderer.invoke('shells:list')
+  },
+  terminal: {
+    readClipboard: () => ipcRenderer.invoke('terminal:readClipboard'),
+    writeClipboard: (text) => ipcRenderer.invoke('terminal:writeClipboard', text),
+    filePath: (file) => webUtils.getPathForFile(file)
   },
   on: {
     sessionData: (cb) => listen<[string, string]>('session:data', cb),
     sessionExit: (cb) => listen<[string, number]>('session:exit', cb),
+    sessionExternal: (cb) => listen<[SessionInfo]>('session:external', cb),
+    sessionExternalEnd: (cb) => listen<[string]>('session:externalEnd', cb),
+    shellData: (cb) => listen<[string, string]>('shell:data', cb),
+    shellExit: (cb) => listen<[string, number]>('shell:exit', cb),
     hookEvent: (cb) => listen<[HookEvent]>('hook:event', cb),
     stats: (cb) => listen<[SessionStats]>('stats:update', cb),
     discordStatus: (cb) => listen<[DiscordStatus]>('discord:status', cb),

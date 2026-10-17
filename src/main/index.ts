@@ -31,6 +31,10 @@ import { OutputBatcher } from './outputBatcher'
 import { OverlayServer } from './overlayServer'
 import { basename } from 'path'
 import { BrainService, projectOfDir, registerBrainIpc } from './brainService'
+import { ExternalSessions } from './externalSessions'
+import { ShellManager } from './shellManager'
+import { registerTerminalIpc } from './terminalIpc'
+import type { SessionInfo } from '../shared/types'
 import { writeJsonAtomic } from './jsonFile'
 import { GitService } from './gitService'
 import { registerGitIpc } from './gitIpc'
@@ -153,8 +157,17 @@ app.whenReady().then(async () => {
   ipcMain.handle('stats:history', () => statsHistory.lastDays(7, localDate(Date.now())))
   // Wochenrückblick „Vibe Wrapped“
   const vibe = new VibeLog(join(userData, 'vibe.json'))
+  // Sessions aus einem früheren App-Start (z. B. vor einem Update) – der Inspector zeigt sie weiter an
+  const externals = new ExternalSessions({
+    known: (sid) => sessions.list().some((s) => s.id === sid),
+    projectOfDir: (dir) => projectOfDir(projects.list(), dir),
+    added: (info) => send('session:external', info),
+    ended: (sid) => send('session:externalEnd', sid)
+  })
+  ipcMain.handle('sessions:externals', () => externals.list())
+  const sessionInfo = (sid: string): SessionInfo | undefined => sessions.list().find((s) => s.id === sid) ?? externals.get(sid)
   const projectNameOf = (sid: string): string | undefined => {
-    const info = sessions.list().find((s) => s.id === sid)
+    const info = sessionInfo(sid)
     return info ? projects.get(info.projectId)?.name : undefined
   }
   ipcMain.handle('vibe:week', () => vibe.week())
@@ -168,7 +181,7 @@ app.whenReady().then(async () => {
     activityDir: join(userData, 'brain'),
     project: (id) => projects.get(id),
     projectOfSession: (sid) => {
-      const info = sessions.list().find((s) => s.id === sid)
+      const info = sessionInfo(sid)
       return info ? projects.get(info.projectId) : undefined
     },
     projectOfDir: (dir) => projectOfDir(projects.list(), dir),
@@ -203,6 +216,7 @@ app.whenReady().then(async () => {
     token,
     (e) => {
       // Gehirn-Autopflege: Claude macht nach diesem Stop noch kurz weiter – für Anzeige und Handy ist die Runde nicht fertig
+      externals.observe(e)
       const tend = e.name === 'Stop' ? brain.stopOutput(e) : undefined
       const shown = tend ? { ...e, name: 'BrainTend' } : e
       send('hook:event', shown)
@@ -244,6 +258,16 @@ app.whenReady().then(async () => {
     send('session:exit', id, code)
   })
   registerSessionIpc({ sessions, projects, claudeProjectsDir: join(os.homedir(), '.claude', 'projects') })
+  // Eigene Shells neben Claude – gleiche Bündelung der Ausgabe, eigene Kanäle
+  const shells = new ShellManager({ spawn: (file, args, o) => pty.spawn(file, args, { name: 'xterm-256color', ...o }), kind: () => settings.get().terminal.shell })
+  const shellOutput = new OutputBatcher((id, d) => send('shell:data', id, d))
+  shells.on('data', (id, d) => shellOutput.push(id, d))
+  shells.on('exit', (id, code) => {
+    shellOutput.flush(id)
+    send('shell:exit', id, code)
+  })
+  registerTerminalIpc({ shells, projects, pasteDir: join(app.getPath('temp'), 'vibedesk', 'paste') })
+  app.on('before-quit', () => shells.stopAll())
   const skills = new SkillStore(
     process.env.VIBEDESK_SKILLS_DIR || join(os.homedir(), '.claude', 'skills'),
     (id) => {

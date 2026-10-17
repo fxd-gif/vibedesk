@@ -7,6 +7,23 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Terminal wie im Windows Terminal**: Strg+C kopiert, wenn etwas markiert ist (sonst bricht es wie gewohnt ab). Strg+V fügt ein, auch Screenshots: Das Bild wird gespeichert und Claude bekommt den Pfad. Rechtsklick kopiert oder fügt ein, Dateien lassen sich ins Terminal ziehen
+- **Klickbare Links im Terminal**: Adressen öffnen sich im Browser, `localhost` in der Vorschau. Dateipfade wie `src/app.ts:42` öffnen den Editor genau an der Stelle
+- **Suche und Zoom**: Strg+F sucht im Terminal, Strg+Plus/Minus ändert die Schriftgröße, Strg+0 setzt sie zurück
+- **Shell neben Claude**: Ein Klick auf das Terminal-Symbol im Fenstertitel öffnet eine PowerShell im Projektordner daneben. Über die Befehls-Palette („Shell öffnen“) gibt es sie auch als eigenes Fenster
+- **Statuszeile**: Unter jedem Claude-Terminal stehen Modell, Kontext-Füllstand, Kosten und Laufzeit
+- **Terminal-Einstellungen** (Zahnrad im Fenstertitel): Farbschema (auch passend zur Szene), Schriftgröße, Zeilenhöhe, Cursor, Shell-Art und Statuszeile
+- **Vorschau öffnet sich von selbst**: Startet Claude oder eine Shell einen lokalen Server, geht die Vorschau mit der Seite automatisch auf. Ist der Server noch nicht ganz bereit, versucht sie es ein paar Sekunden weiter. Abschaltbar im Terminal-Menü
+
+### Verbessert
+
+- **Todos im Inspector**: Neue Claude-Code-Versionen planen mit einzelnen Aufgaben statt einer Liste. Diese Aufgaben erscheinen jetzt im Inspector, laufende mit ihrem „Baue …“-Text
+- **Sessions überleben einen Neustart von VibeDesk**: Eine Session, die noch aus der Zeit vor einem Update läuft, erscheint weiter im Inspector mit Todos, Feed und Agenten
+- **Neuladen des Fensters** (Strg+R): Laufende Sessions und Shells kommen samt Verlauf wieder
+- Ein dezenter, atmender Rand zeigt, wenn Claude gerade arbeitet
+
 ## 0.17.2
 
 ### Behoben

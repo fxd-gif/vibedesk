@@ -27,3 +27,22 @@ export function detectLocalUrls(chunk: string, carry: string): { urls: string[];
   const rest = text.slice(Math.max(lastEnd, text.length - CARRY))
   return { urls, carry: rest }
 }
+
+const originOf = (u: string): string => {
+  try {
+    return new URL(u).origin
+  } catch {
+    return u
+  }
+}
+
+/**
+ * Startet eine Session oder Shell einen lokalen Server, geht die Vorschau von selbst auf – einmal pro Adresse
+ * und Terminal. Erwähnt Claude dieselbe Adresse später noch einmal, bleibt es bei dem einen Fenster.
+ */
+export function shouldAutoOpen(seen: Set<string>, url: string, enabled: boolean, alreadyOpen: string[]): boolean {
+  const origin = originOf(url)
+  if (seen.has(origin)) return false
+  seen.add(origin)
+  return enabled && !alreadyOpen.some((u) => originOf(u) === origin)
+}

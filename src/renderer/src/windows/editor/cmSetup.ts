@@ -121,6 +121,19 @@ const flashField = StateField.define<DecorationSet>({
 })
 
 /** Springt zum Text und lässt die Zeilen ~2 s aufleuchten. false, wenn nicht gefunden. */
+/** Springt zu einer Zeile (1-basiert) und lässt sie kurz aufleuchten */
+export function revealLine(view: EditorView, line: number): void {
+  const doc = view.state.doc
+  const l = doc.line(Math.min(Math.max(1, Math.floor(line)), doc.lines))
+  view.dispatch({
+    selection: { anchor: l.from },
+    effects: [EditorView.scrollIntoView(l.from, { y: 'center' }), flashEffect.of({ from: l.from, to: Math.max(l.from, l.to - 1) })]
+  })
+  setTimeout(() => {
+    if (view.dom.isConnected) view.dispatch({ effects: flashEffect.of(null) })
+  }, 2200)
+}
+
 export function revealText(view: EditorView, find: string): boolean {
   const doc = view.state.doc.toString()
   let from = doc.indexOf(find)

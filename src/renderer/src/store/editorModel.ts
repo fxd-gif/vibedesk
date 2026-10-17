@@ -22,6 +22,8 @@ export interface Tab {
 export interface Reveal {
   path: string
   find?: string
+  /** 1-basierte Zeile (z. B. aus einem Terminal-Link datei.ts:42) */
+  line?: number
   seq: number
 }
 
@@ -31,7 +33,7 @@ export interface EditorStoreState {
   tabs: Tab[]
   active: string | null
   reveal: Reveal | null
-  open(path: string, opts?: { find?: string }): Promise<OpenResult>
+  open(path: string, opts?: { find?: string; line?: number }): Promise<OpenResult>
   activate(path: string): void
   close(path: string): void
   closeAll(): void
@@ -51,7 +53,7 @@ export function createEditorStore(files: () => FilesApi) {
     const find = (p: string): Tab | undefined => get().tabs.find((t) => samePath(t.path, p))
     const patch = (p: string, fn: (t: Tab) => Partial<Tab>): void =>
       set((s) => ({ tabs: s.tabs.map((t) => (samePath(t.path, p) ? { ...t, ...fn(t) } : t)) }))
-    const focusTab = (p: string, findText?: string): void => set({ active: p, reveal: { path: p, find: findText, seq: ++revealSeq } })
+    const focusTab = (p: string, o?: { find?: string; line?: number }): void => set({ active: p, reveal: { path: p, find: o?.find, line: o?.line, seq: ++revealSeq } })
 
     return {
       tabs: [],
@@ -61,7 +63,7 @@ export function createEditorStore(files: () => FilesApi) {
       open: async (path, opts) => {
         const existing = find(path)
         if (existing) {
-          focusTab(existing.path, opts?.find)
+          focusTab(existing.path, opts)
           return { ok: true, path: existing.path }
         }
         const r = await files().read(path)
@@ -69,7 +71,7 @@ export function createEditorStore(files: () => FilesApi) {
         const canonical = r.ok ? r.path : path
         const again = find(canonical)
         if (again) {
-          focusTab(again.path, opts?.find)
+          focusTab(again.path, opts)
           return { ok: true, path: again.path }
         }
         const base = { path: canonical, name: baseName(canonical), dirty: false, conflict: null, force: false, rev: 0 }
@@ -78,7 +80,7 @@ export function createEditorStore(files: () => FilesApi) {
           : { ...base, status: r.code as 'binary' | 'too_large', diskText: '', mtime: null, eol: 'lf', bom: false }
         set((s) => ({ tabs: [...s.tabs, tab] }))
         if (r.ok) files().watch(canonical)
-        focusTab(canonical, opts?.find)
+        focusTab(canonical, opts)
         return { ok: true, path: canonical }
       },
 

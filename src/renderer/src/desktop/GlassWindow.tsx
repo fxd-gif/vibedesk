@@ -11,9 +11,11 @@ interface Props {
   minW?: number
   minH?: number
   onClose?: () => void
+  /** zusätzliche Klasse am Fenster, z. B. Glow-Rand, solange Claude arbeitet */
+  className?: string
 }
 
-export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160, onClose }: Props): React.JSX.Element | null {
+export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160, onClose, className }: Props): React.JSX.Element | null {
   const rect = useUi((s) => s.rects[id])
   const z = useUi((s) => s.open.indexOf(id))
   const top = useUi((s) => s.open[s.open.length - 1] === id)
@@ -79,7 +81,7 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
         <div className="snap-preview" style={{ left: snapPreview.x + 8, top: snapPreview.y + 8, width: snapPreview.w - 16, height: snapPreview.h - 16 }} />
       )}
       <section
-        className={`gwin${solid ? ' solid' : ''}${top ? ' top' : ''}${minimized ? ' min' : ''}${maximized ? ' max' : ''}`}
+        className={`gwin${solid ? ' solid' : ''}${top ? ' top' : ''}${minimized ? ' min' : ''}${maximized ? ' max' : ''}${className ? ' ' + className : ''}`}
         style={{ left: shown.x, top: shown.y, width: shown.w, height: shown.h, zIndex: 10 + z }}
         onPointerDownCapture={() => !top && focus(id)}
         data-testid={`win-${id}`}

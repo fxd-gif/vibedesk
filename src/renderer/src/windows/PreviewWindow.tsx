@@ -100,8 +100,18 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
     }
     // neue Seite → alte Fehler sind Geschichte
     const onNavigate = (): void => setErrors([])
+    let retries = 0
+    let retry: ReturnType<typeof setTimeout> | undefined
     const fail = (e: Event & { errorCode?: number; errorDescription?: string; isMainFrame?: boolean }): void => {
       if (e.isMainFrame === false || e.errorCode === -3) return
+      // Server gibt seine Adresse oft aus, kurz bevor er lauscht (Verbindung abgelehnt/leer) – kurz weiter probieren
+      if ((e.errorCode === -102 || e.errorCode === -324 || e.errorCode === -101) && retries < 12) {
+        retries++
+        setFailed(null)
+        setLoading(true)
+        retry = setTimeout(() => wv.reload(), 1000)
+        return
+      }
       setFailed(e.errorDescription || 'Seite nicht erreichbar')
     }
     wv.addEventListener('did-navigate', nav)
@@ -112,6 +122,7 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
     wv.addEventListener('console-message', onConsole)
     wv.addEventListener('did-navigate', onNavigate)
     return () => {
+      clearTimeout(retry)
       wv.removeEventListener('console-message', onConsole)
       wv.removeEventListener('did-navigate', onNavigate)
       wv.removeEventListener('did-navigate', nav)

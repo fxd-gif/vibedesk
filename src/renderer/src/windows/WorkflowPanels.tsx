@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Icon } from '../desktop/icons'
-import { termWin, useSessions } from '../store/sessionStore'
+import { termWin, useAllSessions, useSessions } from '../store/sessionStore'
 import { centeredRect, useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
 import type { FeedEntry } from '../store/workflowReducer'
@@ -31,7 +31,7 @@ const NoSessions = () => (
 )
 
 export function StatusPanel(): React.JSX.Element {
-  const sessions = useSessions((s) => s.sessions)
+  const sessions = useAllSessions()
   const wf = useWorkflow((s) => s.sessions)
   const now = useNow()
   if (!sessions.length) return <NoSessions />
@@ -59,7 +59,7 @@ const resultMark = (r: FeedEntry['result']) =>
   r === 'ok' ? <span className="ok">✓</span> : r === 'fail' ? <span className="fail">✗</span> : r === 'stopped' ? <span className="dim" title="abgebrochen">–</span> : <span className="spin" />
 
 export function FeedPanel(): React.JSX.Element {
-  const sessions = useSessions((s) => s.sessions)
+  const sessions = useAllSessions()
   const wf = useWorkflow((s) => s.sessions)
   const [filter, setFilter] = useState<string | null>(null)
   const red = useRedact()
@@ -109,7 +109,7 @@ export function FeedPanel(): React.JSX.Element {
 }
 
 export function TodoPanel(): React.JSX.Element {
-  const sessions = useSessions((s) => s.sessions)
+  const sessions = useAllSessions()
   const wf = useWorkflow((s) => s.sessions)
   if (!sessions.length) return <NoSessions />
   const withTodos = sessions.filter((s) => wf[s.id]?.todos.length)
@@ -132,9 +132,9 @@ export function TodoPanel(): React.JSX.Element {
             </div>
             <ul className="todo-list">
               {todos.map((t, i) => (
-                <li key={i} className={t.status}>
+                <li key={t.id ?? i} className={t.status}>
                   <span className="todo-mark">{t.status === 'completed' ? <Icon name="check" size={12} /> : null}</span>
-                  {t.content}
+                  {t.status === 'in_progress' && t.activeForm ? `${t.activeForm} …` : t.content}
                 </li>
               ))}
             </ul>
@@ -146,7 +146,7 @@ export function TodoPanel(): React.JSX.Element {
 }
 
 export function AgentPanel(): React.JSX.Element {
-  const sessions = useSessions((s) => s.sessions)
+  const sessions = useAllSessions()
   const wf = useWorkflow((s) => s.sessions)
   if (!sessions.length) return <NoSessions />
   return (
