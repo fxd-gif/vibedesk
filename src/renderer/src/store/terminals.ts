@@ -10,6 +10,7 @@ import type { Settings, TerminalSettings } from '../../../shared/types'
 import { findFileLinks, isLocalUrl, keyAction, quotePaths, resolveLinkPath, zoomFont } from '../../../shared/terminalInput'
 import { resolveTheme } from '../terminal/themes'
 import { useSettings } from './settingsStore'
+import { recordAttachments } from './attachStore'
 
 export type TermKind = 'claude' | 'shell'
 
@@ -75,6 +76,7 @@ export async function pasteInto(id: string): Promise<void> {
   if (!c) return
   // paste() beachtet den Bracketed-Paste-Modus – mehrzeiliger Text wird nicht sofort abgeschickt
   e.term.paste('text' in c ? c.text : quotePaths([c.image]) + ' ')
+  if ('image' in c && e.kind === 'claude') recordAttachments(id, [{ path: c.image }])
   e.term.focus()
 }
 
@@ -87,13 +89,29 @@ export function copySelection(id: string): boolean {
   return true
 }
 
+/** Dateien als Pfade in die Eingabe einfügen – bei Claude landen sie zusätzlich in der Anhang-Liste */
+export function insertFiles(id: string, files: { path: string; size?: number }[]): void {
+  const e = entries.get(id)
+  const list = files.filter((f) => f.path)
+  if (!e || !list.length) return
+  e.term.paste(quotePaths(list.map((f) => f.path)) + ' ')
+  if (e.kind === 'claude') recordAttachments(id, list)
+  e.term.focus()
+}
+
 /** Abgelegte Dateien als Pfade einfügen */
 export function dropFiles(id: string, files: File[]): void {
-  const e = entries.get(id)
-  const paths = files.map((f) => api.terminal.filePath(f)).filter(Boolean)
-  if (!e || !paths.length) return
-  e.term.paste(quotePaths(paths) + ' ')
-  e.term.focus()
+  insertFiles(
+    id,
+    files.map((f) => ({ path: api.terminal.filePath(f), size: f.size }))
+  )
+}
+
+/** Windows-Dateidialog öffnen und die gewählten Dateien anhängen */
+export async function pickFiles(id: string): Promise<number> {
+  const picked = await api.terminal.pickFiles(entries.get(id)?.cwd || undefined)
+  insertFiles(id, picked)
+  return picked.length
 }
 
 function zoom(action: 'zoomIn' | 'zoomOut' | 'zoomReset'): void {

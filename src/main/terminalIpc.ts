@@ -1,5 +1,5 @@
 // Main-Seite der Terminals: Shells (PowerShell/cmd) und Zwischenablage (Text oder Bild als Temp-Datei).
-import { clipboard, ipcMain } from 'electron'
+import { BrowserWindow, clipboard, dialog, ipcMain } from 'electron'
 import fs from 'fs'
 import { join } from 'path'
 import type { ShellManager } from './shellManager'
@@ -36,6 +36,23 @@ export function registerTerminalIpc(d: { shells: ShellManager; projects: Project
       return { image: file }
     }
     return null
+  })
+  ipcMain.handle('terminal:pickFiles', async (e, defaultPath: unknown) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    const opts: Electron.OpenDialogOptions = {
+      title: 'Dateien für Claude anhängen',
+      properties: ['openFile', 'multiSelections'],
+      defaultPath: typeof defaultPath === 'string' && fs.existsSync(defaultPath) ? defaultPath : undefined
+    }
+    const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    if (r.canceled) return []
+    return r.filePaths.slice(0, 50).map((p) => {
+      try {
+        return { path: p, size: fs.statSync(p).size }
+      } catch {
+        return { path: p, size: 0 }
+      }
+    })
   })
   ipcMain.handle('terminal:writeClipboard', (_e, text: unknown) => (typeof text === 'string' ? clipboard.writeText(text) : undefined))
 

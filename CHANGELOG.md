@@ -7,6 +7,10 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Anhänge im Terminal**: Die Büroklammer oben im Claude-Fenster öffnet den Windows-Dateidialog. Eine Liste zeigt dann, was du angehängt hast und wie weit es ist: *noch nicht abgeschickt*, *abgeschickt* oder *Claude hat sie gelesen*. Dateien, die du ins Terminal ziehst, und Screenshots per Strg+V landen auch in der Liste. Von dort lässt sich ein Pfad noch einmal einfügen oder wieder entfernen
+
 ## 0.18.0
 
 ### Neu

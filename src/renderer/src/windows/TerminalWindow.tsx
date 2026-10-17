@@ -14,6 +14,7 @@ import { TermPane } from '../terminal/TermPane'
 import { TermSettings } from '../terminal/TermSettings'
 import { TermStatus } from '../terminal/TermStatus'
 import { QueueChip, TermQueue } from './TermQueue'
+import { AttachButton, TermAttach } from './TermAttach'
 
 export const STATUS_TEXT = {
   idle: 'bereit',
@@ -33,7 +34,10 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
   const shell = useShells((s) => attachedShell(s.shells, session.id))
   const shellExit = useShells((s) => (shell ? s.exited[shell.id] : undefined))
   const statusBar = useSettings((s) => s.s?.terminal?.statusBar ?? true)
-  const [queueOpen, setQueueOpen] = useState(false)
+  // unten ist Platz für eine Leiste: Warteschlange oder Anhänge
+  const [panel, setPanel] = useState<'queue' | 'attach' | null>(null)
+  const queueOpen = panel === 'queue'
+  const togglePanel = (p: 'queue' | 'attach'): void => setPanel((v) => (v === p ? null : p))
   const [settingsOpen, setSettingsOpen] = useState(false)
   // welche Hälfte zuletzt angeklickt wurde – die bekommt den Fokus, wenn das Fenster nach vorn kommt
   const [active, setActive] = useState<'claude' | 'shell'>('claude')
@@ -55,7 +59,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
   }
 
   // Unten Platz für Warteschlange und Statuszeile lassen
-  const bottom = (queueOpen ? 120 : 6) + (statusBar ? 22 : 0)
+  const bottom = (panel === 'attach' ? 162 : panel ? 120 : 6) + (statusBar ? 22 : 0)
 
   return (
     <GlassWindow
@@ -77,8 +81,9 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
               ▸ {shortUrl(u)}
             </button>
           ))}
-          <QueueChip sessionId={session.id} open={queueOpen} onToggle={() => setQueueOpen((v) => !v)} />
+          <QueueChip sessionId={session.id} open={queueOpen} onToggle={() => togglePanel('queue')} />
           <span className="term-tools" onPointerDown={(e) => e.stopPropagation()}>
+            <AttachButton sessionId={session.id} open={panel === 'attach'} onToggle={() => togglePanel('attach')} />
             <button className={`term-tool${shell ? ' on' : ''}`} title={shell ? 'Shell schließen' : 'Shell daneben öffnen (PowerShell im Projektordner)'} onClick={() => void toggleShell()} data-testid="term-split">
               <Icon name="terminal" size={13} />
             </button>
@@ -100,6 +105,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
         )}
       </div>
       {queueOpen && <TermQueue sessionId={session.id} />}
+      {panel === 'attach' && <TermAttach sessionId={session.id} />}
       {statusBar && <TermStatus sessionId={session.id} startedAt={startedAt} />}
       {settingsOpen && <TermSettings onClose={() => setSettingsOpen(false)} />}
       {exitCode !== undefined && (

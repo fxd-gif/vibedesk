@@ -17,6 +17,7 @@ import { useWorkflow, wireWorkflow } from './store/workflowStore'
 import { wireStats } from './store/statsStore'
 import { wireChime } from './ambience/chime'
 import { usePreview, wirePreview } from './store/previewStore'
+import { wireAttachments } from './store/attachStore'
 import { PreviewWindow } from './windows/PreviewWindow'
 import { TerminalWindow } from './windows/TerminalWindow'
 import { ShellWindow } from './windows/ShellWindow'
@@ -140,6 +141,7 @@ export default function App(): React.JSX.Element {
     wireStats()
     wireChime()
     wirePreview()
+    wireAttachments()
     wireFocus()
     wireDiscord()
     wireWebhook()

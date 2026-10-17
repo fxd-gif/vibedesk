@@ -608,3 +608,16 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
   .gwin.claude-working { animation: claude-glow 2.8s ease-in-out infinite; }
 }
 @keyframes claude-glow { 50% { box-shadow: 0 0 0 1px rgba(159, 184, 255, .3), 0 0 40px rgba(124, 156, 255, .26), 0 30px 80px rgba(0, 0, 0, .5); } }
+
+/* Anhänge im Claude-Terminal */
+.attach-btn { position: relative; width: auto; min-width: 24px; padding: 0 5px; gap: 3px; display: inline-flex; align-items: center; }
+.attach-count { font-size: 10px; font-weight: 600; color: #c7d4ff; }
+.attach-count.pending { color: #fde68a; }
+.term-attach { max-height: 150px; }
+.ta-empty { color: var(--text-dim); padding: 2px 4px 4px; }
+.ta-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; }
+.ta-dot.sent { background: #7c9cff; }
+.ta-dot.read { background: #4ade80; }
+.ta-status { flex: none; font-size: 10.5px; color: #fde68a; }
+.ta-status.sent { color: #c7d4ff; }
+.ta-status.read { color: #86efac; }

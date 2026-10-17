@@ -367,6 +367,8 @@ export interface VibedeskApi {
     writeClipboard(text: string): Promise<void>
     /** Pfad einer per Drag & Drop abgelegten Datei */
     filePath(file: File): string
+    /** Windows-Dateidialog (Mehrfachauswahl) – leer, wenn abgebrochen */
+    pickFiles(defaultPath?: string): Promise<{ path: string; size: number }[]>
   }
   on: {
     sessionData(cb: (id: string, data: string) => void): Unsubscribe
