@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import '@xterm/xterm/css/xterm.css'
 import { GlassWindow } from '../desktop/GlassWindow'
 import { Icon } from '../desktop/icons'
@@ -9,6 +9,7 @@ import { useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
 import type { SessionInfo } from '../../../shared/types'
 import { shortUrl, usePreview } from '../store/previewStore'
+import { QueueChip, TermQueue } from './TermQueue'
 
 export const STATUS_TEXT = {
   idle: 'bereit',
@@ -26,6 +27,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
   const exitCode = useSessions((s) => s.exited[session.id])
   const isTop = useUi((s) => s.open[s.open.length - 1] === id)
   const urls = usePreview((s) => s.urls[session.id])
+  const [queueOpen, setQueueOpen] = useState(false)
 
   useEffect(() => {
     const el = host.current
@@ -81,10 +83,12 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
               ▸ {shortUrl(u)}
             </button>
           ))}
+          <QueueChip sessionId={session.id} open={queueOpen} onToggle={() => setQueueOpen((v) => !v)} />
         </>
       }
     >
-      <div className="term-host" ref={host} data-testid={`terminal-${session.name}`} data-session={session.id} />
+      <div className={`term-host${queueOpen ? ' with-queue' : ''}`} ref={host} data-testid={`terminal-${session.name}`} data-session={session.id} />
+      {queueOpen && <TermQueue sessionId={session.id} />}
       {exitCode !== undefined && (
         <div className="term-overlay">
           <span className="dim">Session beendet{exitCode !== 0 ? ` (Code ${exitCode})` : ''}</span>

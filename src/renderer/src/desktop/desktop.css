@@ -551,3 +551,18 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
 .setup-log { margin: 0; max-height: 110px; overflow: hidden; padding: 8px 10px; border-radius: 9px; background: rgba(0,0,0,.3); font-family: var(--mono); font-size: 11px; line-height: 1.5; color: var(--text-dim); white-space: pre-wrap; word-break: break-all; }
 .setup-recheck { align-self: center; }
 .setup-dlg { width: min(460px, calc(100vw - 32px)); }
+/* Prompt-Warteschlange im Terminal */
+.queue-chip { margin-left: 6px; padding: 2px 8px; border-radius: 999px; border: 1px dashed rgba(159, 184, 255, .35); background: transparent; color: var(--dim, #9aa3b8); font-size: 11px; cursor: pointer; }
+.queue-chip:hover, .queue-chip.open { border-style: solid; color: var(--text); background: rgba(159, 184, 255, .1); }
+.queue-chip.on { border-style: solid; border-color: rgba(159, 184, 255, .55); color: #c7d4ff; background: rgba(159, 184, 255, .14); }
+.term-host.with-queue { bottom: 120px; }
+.term-queue { position: absolute; left: 10px; right: 10px; bottom: 8px; max-height: 108px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 10px; background: rgba(10, 12, 18, .82); border: 1px solid var(--glass-border); font-size: 12px; }
+.tq-item { display: flex; align-items: center; gap: 8px; padding: 2px 4px; border-radius: 6px; }
+.tq-item:hover { background: rgba(255, 255, 255, .05); }
+.tq-n { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: rgba(159, 184, 255, .18); font-size: 10.5px; }
+.tq-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.term-queue .icon-btn { flex: none; background: none; border: 0; color: var(--dim, #9aa3b8); cursor: pointer; padding: 2px 4px; border-radius: 5px; }
+.term-queue .icon-btn:hover { color: var(--text); background: rgba(255, 255, 255, .08); }
+.tq-add { display: flex; gap: 6px; }
+.tq-add .field { flex: 1; }
+.tq-paused { display: flex; align-items: center; gap: 8px; color: #fde68a; }
