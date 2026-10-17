@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.15.1
+
 ### Behoben
 
 - **Handy über Tailscale jetzt ganz ohne Firewall-Freigabe**: VibeDesk lässt Tailscale die Verbindungen selbst annehmen (`tailscale serve`) und weiterreichen. Der Tailscale-Dienst darf das in allen Netzen, darum braucht es keine Adminrechte und keine Windows-Abfrage mehr. Der QR-Code nutzt dafür den Tailscale-Namen deines PCs. Klappt das einmal nicht, bleibt „Firewall freigeben“ als Rückfallweg
