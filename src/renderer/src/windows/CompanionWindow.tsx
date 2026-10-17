@@ -148,7 +148,7 @@ export function CompanionWindow(): React.JSX.Element {
                   <li>Hier auf „Handy koppeln“ tippen und den Code am Handy eingeben.</li>
                   <li className="dim">
                     {link.via === 'tailscale'
-                      ? 'Lädt die Seite am Handy nicht: In der Windows-Firewall VibeDesk auch für öffentliche Netzwerke erlauben – Windows führt Tailscale oft so.'
+                      ? 'Lädt die Seite am Handy nicht: In der Windows-Firewall VibeDesk für das Tailscale-Netz erlauben (Windows führt es meist als privates Netz).'
                       : 'Fragt Windows nach der Firewall: Zugriff für private Netzwerke erlauben.'}
                   </li>
                 </ol>
