@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 1.0.0
+
 ### Neu
 
 - **Weiter nach dem Limit**: Meldet Claude „Limit erreicht · resets 22:30“, macht VibeDesk nach dem Reset von selbst weiter. Oben im Terminal steht, wann es losgeht, ein Klick bricht es ab. Abschalten lässt es sich in den Terminal-Einstellungen
