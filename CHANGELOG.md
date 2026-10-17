@@ -7,6 +7,19 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **„Zeig drauf“ in der Vorschau**: Auf das Lupen-Symbol klicken, ein Element der Seite anklicken und kurz sagen, was anders werden soll – Claude bekommt Selektor, Text, HTML und einen Screenshot des Ausschnitts. Die Vorschau bleibt dabei vorn, damit du die Änderung live siehst
+- **Konsolenfehler an Claude**: Fehler aus der Browser-Konsole der Vorschau sammeln sich als rotes Abzeichen – ein Klick auf „Claude soll das beheben“ schickt sie an die passende Session
+- **Prompt-Warteschlange**: „＋ Danach“ in der Titelleiste des Terminals – Aufträge vormerken, die automatisch losgehen, sobald Claude fertig ist. Umsortieren und entfernen geht jederzeit
+- **Wächter**: VibeDesk meldet sich, wenn eine Session lange ohne Lebenszeichen hängt, dreimal am selben Befehl scheitert oder der Kontext zu 85 % voll ist – mit passender Hilfe wie „Unterbrechen“, „Anders versuchen“ oder „/compact“. Auch auf dem Handy
+- **Schnell-Prompt von überall**: Strg+Alt+Leertaste öffnet über jeder App ein Eingabefeld – Tab wählt die Session, Enter schickt ab. Arbeitet Claude noch, wird der Auftrag vorgemerkt. Abschaltbar im Mehr-Menü
+- **Vibe Wrapped**: Dein Wochenrückblick mit aktiver Zeit, Prompts, geänderten Dateien, Lieblingswerkzeug, Top-Projekten und einer Persona – als Bild in die Zwischenablage kopieren und teilen. Im Stats-Fenster, in der Befehls-Palette und einmal pro Woche als Hinweis
+
+### Behoben
+
+- **Handy über Tailscale kam nicht an**: Windows führt das Tailscale-Netz als privates Netz, die Firewall-Freigabe galt aber nur für öffentliche Netze. Der neue Verbindungs-Check im Handy-Begleiter erkennt das und gibt die Firewall per Klick frei – nur für Tailscale und dein eigenes Netz. Er zeigt außerdem, ob dein Handy überhaupt im Tailnet angemeldet ist und mit welchem Konto
+
 ## 0.14.0
 
 ### Neu
