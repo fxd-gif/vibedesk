@@ -68,7 +68,8 @@ export interface Prompt {
 }
 
 /** Arten von Mitteilungen – jede lässt sich einzeln abschalten */
-export type NoticeKind = 'waiting' | 'done' | 'error'
+/** watch = Wächter: Session hängt, Fehlerschleife, Kontext fast voll */
+export type NoticeKind = 'waiting' | 'done' | 'error' | 'watch'
 
 export interface NotifySettings {
   /** Karten unten rechts */

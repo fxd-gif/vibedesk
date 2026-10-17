@@ -43,7 +43,7 @@ export const useNotify = create<NotifyState>(() => ({ log: [], toasts: [], unrea
 
 const MAX_TOASTS = 3
 /** wichtige Karten bleiben, bis sie erledigt sind – der Rest verschwindet von selbst */
-const TOAST_MS: Record<Notice['kind'], number> = { waiting: 0, error: 0, done: 8000, info: 10_000 }
+const TOAST_MS: Record<Notice['kind'], number> = { waiting: 0, error: 0, watch: 0, done: 8000, info: 10_000 }
 
 let seq = 0
 

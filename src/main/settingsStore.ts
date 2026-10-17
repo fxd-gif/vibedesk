@@ -51,7 +51,7 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
     chatCommand: '!vibe',
     chatModsOnly: false
   },
-  notify: { toasts: true, windows: true, focusQuiet: true, kinds: { waiting: true, done: true, error: true } },
+  notify: { toasts: true, windows: true, focusQuiet: true, kinds: { waiting: true, done: true, error: true, watch: true } },
   dockAll: false,
   brainOn: true,
   approvalsOn: true,

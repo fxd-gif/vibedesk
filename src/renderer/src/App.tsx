@@ -43,6 +43,7 @@ import { ShareDialogs } from './windows/ShareDialogs'
 import { openPanel } from './windows/palette/CommandPalette'
 import { NotifyPanel, ToastStack } from './desktop/NotifyCenter'
 import { setPanel as setNotifyPanel, useNotify, wireNotify } from './store/notifyStore'
+import { wireWatcher } from './store/watcher'
 import { StartCard } from './desktop/StartCard'
 import { MoreMenu } from './desktop/MoreMenu'
 import { dockPlan, showPreviewInDock } from './desktop/dockPlan'
@@ -143,6 +144,7 @@ export default function App(): React.JSX.Element {
     wireLounge()
     wireStreamer()
     wireNotify()
+    wireWatcher()
     wireBrainActivity()
     wirePermissions()
     wireCompanion()

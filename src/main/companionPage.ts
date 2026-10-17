@@ -302,7 +302,7 @@ export function companionPage(nonce: string): string {
     var box = $('notes'); clear(box);
     n.forEach(function (x) {
       var row = el('div', 'note');
-      row.appendChild(el('span', 'dot ' + (x.kind === 'error' ? 'error' : x.kind === 'waiting' ? 'waiting' : 'done')));
+      row.appendChild(el('span', 'dot ' + (x.kind === 'error' ? 'error' : x.kind === 'waiting' || x.kind === 'watch' ? 'waiting' : 'done')));
       row.appendChild(el('span', '', x.title));
       var t = el('time', '', ago(x.time)); row.appendChild(t);
       box.appendChild(row);

@@ -10,7 +10,7 @@ import { UpdateToast } from './UpdateToast'
 import { PermissionCards } from './PermissionCards'
 import './notify.css'
 
-const KIND_DOT: Record<Notice['kind'], string> = { waiting: 'waiting', done: 'done', error: 'error', info: '' }
+const KIND_DOT: Record<Notice['kind'], string> = { waiting: 'waiting', done: 'done', error: 'error', watch: 'waiting', info: '' }
 
 function NoticeCard({ n }: { n: Notice }): React.JSX.Element {
   return (
@@ -60,7 +60,8 @@ export function ToastStack(): React.JSX.Element {
 const KINDS: { id: NoticeKind; label: string }[] = [
   { id: 'waiting', label: 'Session wartet auf dich' },
   { id: 'done', label: 'Session ist fertig' },
-  { id: 'error', label: 'Session abgestürzt' }
+  { id: 'error', label: 'Session abgestürzt' },
+  { id: 'watch', label: 'Wächter: hängt, Fehlerschleife, Kontext voll' }
 ]
 
 function NotifySettingsView(): React.JSX.Element | null {

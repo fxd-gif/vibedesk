@@ -2,7 +2,7 @@
 import type { NoticeKind, NotifySettings } from '../../../shared/types'
 
 /** Wichtig genug, um auch in Fokus-Runden sofort zu erscheinen */
-export const URGENT: ReadonlySet<NoticeKind> = new Set(['waiting', 'error'])
+export const URGENT: ReadonlySet<NoticeKind> = new Set(['waiting', 'error', 'watch'])
 
 export const LOG_MAX = 50
 
