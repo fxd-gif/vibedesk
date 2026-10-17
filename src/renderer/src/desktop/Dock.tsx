@@ -3,6 +3,8 @@ import { Icon } from './icons'
 
 export interface DockItem {
   id: string
+  /** Test-ID, falls sie von der (eindeutigen) id abweicht */
+  testId?: string
   icon?: string
   label: string
   /** ein Satz, wofür das Symbol da ist */
@@ -29,7 +31,7 @@ export function Dock({ groups }: { groups: DockItem[][] }): React.JSX.Element {
                 data-tip={it.label}
                 data-hint={it.hint}
                 aria-label={it.label}
-                data-testid={`dock-${it.id}`}
+                data-testid={`dock-${it.testId ?? it.id}`}
               >
                 {it.content ?? <Icon name={it.icon ?? ''} />}
                 {it.badge}

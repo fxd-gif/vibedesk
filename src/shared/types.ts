@@ -18,6 +18,15 @@ export interface SessionInfo {
   external?: boolean
 }
 
+export interface AppInfo {
+  version: string
+  electron: string
+  os: string
+  claude: string | null
+  /** steht etwas im Fehlerprotokoll? */
+  hasErrors: boolean
+}
+
 export interface HookEvent {
   sessionId: string
   name: string
@@ -337,6 +346,12 @@ export interface VibedeskApi {
     claudeVersion(): Promise<string | null>
     /** Windows-Benachrichtigung; ein Klick darauf holt VibeDesk nach vorn und meldet die id zurück */
     notify(id: number, title: string, body: string): void
+    /** Render-Fehler ins lokale Protokoll (userData/logs/fehler.log) */
+    logError(where: string, msg: string): void
+    /** öffnet ein vorausgefülltes GitHub-Issue im Browser */
+    reportBug(summary?: string): void
+    openLog(): void
+    info(): Promise<AppInfo>
   }
   setup: {
     check(): Promise<ToolStatus>

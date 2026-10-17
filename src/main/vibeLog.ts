@@ -3,7 +3,8 @@
 import { localDate } from './statsService'
 import fs from 'fs'
 import path from 'path'
-import { readJson } from './jsonFile'
+import { readJson, writeJsonAtomic } from './jsonFile'
+import { logError } from './errorLog'
 import type { HookEvent, VibeWeek } from '../shared/types'
 
 const KEEP_DAYS = 60
@@ -99,10 +100,13 @@ export class VibeLog {
     const keys = Object.keys(this.days).sort()
     for (const k of keys.slice(0, Math.max(0, keys.length - KEEP_DAYS))) delete this.days[k]
     // kompakt – die Minutenlisten wären eingerückt riesig
-    fs.mkdirSync(path.dirname(this.file), { recursive: true })
-    const tmp = `${this.file}.${process.pid}.tmp`
-    fs.writeFileSync(tmp, JSON.stringify(this.days), 'utf8')
-    fs.renameSync(tmp, this.file)
+    try {
+      writeJsonAtomic(this.file, this.days, true)
+    } catch (e) {
+      // läuft aus einem Timer – ein Wurf wäre ein Main-Prozess-Fehlerdialog; beim nächsten Mal neu versuchen
+      this.dirty = true
+      logError('vibe.json', e)
+    }
   }
 
   /** Die letzten 7 Tage bis einschließlich today (YYYY-MM-DD) */

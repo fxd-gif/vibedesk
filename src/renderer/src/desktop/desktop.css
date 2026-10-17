@@ -621,3 +621,10 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
 .ta-status { flex: none; font-size: 10.5px; color: #fde68a; }
 .ta-status.sent { color: #c7d4ff; }
 .ta-status.read { color: #86efac; }
+
+/* Fehler-Fallback (Error Boundary) */
+.crash-card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; font-size: 13px; }
+.crash-card.full { position: fixed; z-index: 9999; background: #07090d; }
+.crash-card b { font-size: 15px; font-weight: 600; }
+.crash-card code { max-width: 90%; padding: 6px 10px; border-radius: 8px; background: rgba(255, 255, 255, .05); color: var(--text-dim); font-size: 11px; overflow-wrap: anywhere; }
+.crash-actions { display: flex; gap: 8px; margin-top: 4px; }

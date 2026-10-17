@@ -1,5 +1,6 @@
-import { app, BrowserWindow, Menu, net, protocol, shell } from 'electron'
+import { app, BrowserWindow, dialog, Menu, net, protocol, session, shell } from 'electron'
 import { pathToFileURL } from 'url'
+import { errorLogFile, installErrorLog, logError, registerErrorIpc } from './errorLog'
 import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
 import { ADDON_SCHEME, addonPathFromArgv, AddonStore } from './addonStore'
 import { registerAddonIpc } from './addonIpc'
@@ -45,6 +46,7 @@ import { VibeLog } from './vibeLog'
 import { captureCard } from './vibeCapture'
 
 if (process.env.VIBEDESK_USERDATA) app.setPath('userData', process.env.VIBEDESK_USERDATA)
+installErrorLog(app.getPath('userData'))
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
 protocol.registerSchemesAsPrivileged([
   { scheme: SCENE_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
@@ -61,7 +63,9 @@ let pendingAddon: string | null = addonPathFromArgv(process.argv)
 // Ohne feste App-ID zeigt Windows keine Benachrichtigungen (im Installer setzt electron-builder dieselbe)
 if (process.platform === 'win32') app.setAppUserModelId('dev.vibedesk.app')
 
-if (!app.requestSingleInstanceLock()) app.quit()
+// Eine zweite Instanz darf nichts starten – sie würde endpoint.json mit ihrem Port überschreiben und Hooks/Gehirn kappen
+const primary = app.requestSingleInstanceLock()
+if (!primary) app.exit(0)
 app.on('second-instance', (_e, argv) => {
   const addon = addonPathFromArgv(argv)
   if (addon) {
@@ -85,7 +89,7 @@ function createWindow(): BrowserWindow {
     show: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
       webviewTag: true
     }
@@ -97,6 +101,19 @@ function createWindow(): BrowserWindow {
     if (/^https?:/.test(url)) shell.openExternal(url)
     return { action: 'deny' }
   })
+  // Das Hauptfenster navigiert nie weg – sonst bekäme eine hineingezogene Seite oder ein Link das Preload samt window.api
+  const stay = (ev: Electron.Event, url: string): void => {
+    ev.preventDefault()
+    if (/^https?:/.test(url)) shell.openExternal(url)
+  }
+  win.webContents.on('will-navigate', stay)
+  // Abgestürzter Renderer: neu laden statt leeres Vollbild – die Sessions in Main laufen weiter und werden wieder angehängt
+  win.webContents.on('render-process-gone', (_e, d) => {
+    logError('Renderer', d.reason)
+    if (d.reason !== 'clean-exit' && !win.isDestroyed()) win.reload()
+  })
+  win.on('unresponsive', () => logError('Renderer', 'reagiert nicht'))
+  win.webContents.on('will-redirect', stay)
   if (process.env['ELECTRON_RENDERER_URL']) win.loadURL(process.env['ELECTRON_RENDERER_URL'])
   else win.loadFile(join(__dirname, '../renderer/index.html'))
   return win
@@ -109,6 +126,7 @@ const send = (ch: string, ...args: unknown[]): void => {
 let gate: ReturnType<typeof createSplashGate> | null = null
 
 app.whenReady().then(async () => {
+  if (!primary) return
   Menu.setApplicationMenu(null)
   if (app.isPackaged || process.env.VIBEDESK_SPLASH) splash = new SplashWindow()
   if (app.isPackaged) registerRunAlias(process.execPath)
@@ -120,6 +138,7 @@ app.whenReady().then(async () => {
   })
   ipcMain.on('setup:openDownload', (_e, tool: string) => shell.openExternal(tool === 'node' ? NODE_DOWNLOAD_URL : CLAUDE_DOCS_URL))
   ipcMain.handle('app:claudeVersion', () => claudeVersion())
+  registerErrorIpc(claudeVersion)
   const userData = app.getPath('userData')
   const settings = new SettingsStore(join(userData, 'settings.json'), DEFAULT_SETTINGS(app.getPath('documents')))
   const projects = new ProjectStore(
@@ -173,7 +192,14 @@ app.whenReady().then(async () => {
   ipcMain.handle('vibe:week', () => vibe.week())
   ipcMain.on('vibe:focusDone', () => vibe.focusDone())
   ipcMain.handle('vibe:capture', (_e, r: unknown) => captureCard(mainWindow, r, process.env.VIBEDESK_PICTURES_DIR || app.getPath('pictures')))
-  app.on('before-quit', () => vibe.flush())
+  app.on('before-quit', () => {
+    // ein Fehler hier darf das übrige Aufräumen (Sessions, Gehirn, Server) nicht abbrechen
+    try {
+      vibe.flush()
+    } catch (e) {
+      logError('vibe.flush', e)
+    }
+  })
   ipcMain.on('app:openExternal', (_e, url: string) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url)
   })
@@ -257,7 +283,7 @@ app.whenReady().then(async () => {
     broker.dropSession(id)
     send('session:exit', id, code)
   })
-  registerSessionIpc({ sessions, projects, claudeProjectsDir: join(os.homedir(), '.claude', 'projects') })
+  registerSessionIpc({ sessions, projects, claudeProjectsDir: join(process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude'), 'projects') })
   // Eigene Shells neben Claude – gleiche Bündelung der Ausgabe, eigene Kanäle
   const shells = new ShellManager({ spawn: (file, args, o) => pty.spawn(file, args, { name: 'xterm-256color', ...o }), kind: () => settings.get().terminal.shell })
   const shellOutput = new OutputBatcher((id, d) => send('shell:data', id, d))
@@ -373,6 +399,19 @@ app.whenReady().then(async () => {
       reveal()
     })
   }
+}).catch((e) => {
+  // Startfehler nie als unsichtbar hängende App enden lassen
+  logError('Start', e)
+  dialog.showErrorBox('VibeDesk konnte nicht starten', `${e instanceof Error ? e.message : String(e)}\n\nDetails stehen in ${errorLogFile()}`)
+  app.exit(1)
+})
+
+// Seiten in der Vorschau bekommen keine Kamera, kein Mikrofon, keinen Standort usw. – nur Vollbild und Zwischenablage-Schreiben
+const PREVIEW_ALLOWED = new Set(['fullscreen', 'clipboard-sanitized-write'])
+app.whenReady().then(() => {
+  const preview = session.fromPartition('persist:vibedesk-preview')
+  preview.setPermissionRequestHandler((_wc, permission, cb) => cb(PREVIEW_ALLOWED.has(permission)))
+  preview.setPermissionCheckHandler((_wc, permission) => PREVIEW_ALLOWED.has(permission))
 })
 
 // Vorschau-Webviews absichern: kein Node, keine Preloads, Popups im System-Browser, nur http(s)

@@ -27,7 +27,7 @@ import { useSettings } from './store/settingsStore'
 import { ambienceAudio } from './ambience/audio'
 import { isMuted } from './ambience/toggles'
 import { AmbienceMenu } from './windows/AmbienceMenu'
-import { fmtClock, useFocus, wireFocus } from './store/focusStore'
+import { useFocus, wireFocus } from './store/focusStore'
 import { phaseTotal, remaining } from './store/focusTimer'
 import { Ring, toneOf } from './windows/FocusPanel'
 import { Icon } from './desktop/icons'
@@ -111,7 +111,10 @@ export default function App(): React.JSX.Element {
   const shells = useShells((s) => s.shells)
   const settings = useSettings((s) => s.s)
   const previews = usePreview((s) => s.open)
-  const focus = useFocus()
+  const focusPhase = useFocus((s) => s.state.phase)
+  // nur minutengenau – sonst würde die ganze App jede Sekunde neu rendern
+  const focusMinutes = useFocus((s) => Math.ceil(remaining(s.state, s.now) / 60_000))
+  const focusBanner = useFocus((s) => s.banner)
   const [menu, setMenu] = useState(false)
   const paletteOpen = usePalette((s) => s.open)
   const openAmbience = useCallback(() => setMenu(true), [])
@@ -124,7 +127,8 @@ export default function App(): React.JSX.Element {
   useEffect(() => {
     if (settings) ambienceAudio.setRain(settings.rainSoundOn, settings.rainSoundVolume, settings.rainIntensity)
   }, [settings?.rainSoundOn, settings?.rainSoundVolume, settings?.rainIntensity])
-  const statuses = useWorkflow((s) => s.sessions)
+  const statusKey = useWorkflow((s) => sessions.map((x) => s.sessions[x.id]?.status ?? 'idle').join(','))
+  const statuses = statusKey.split(',')
   const loungeState = useLounge((s) => s.state)
   const loungePeers = useLounge((s) => Object.keys(s.peers).length)
   const loungeUnread = useLounge((s) => s.unread)
@@ -269,28 +273,23 @@ export default function App(): React.JSX.Element {
               onClick: () => setMenu((m) => !m)
             },
             (() => {
-              const s = focus.state
-              const total = settings ? phaseTotal(s, settings.focus) : 0
-              const left = remaining(s, focus.now)
               const def = panelDef('focus')!
               return {
                 id: 'focus',
-                label: s.phase === 'idle' ? 'Fokus-Timer' : `${s.phase === 'work' ? 'Fokus' : 'Pause'} · noch ${fmtClock(left)}`,
+                label: focusPhase === 'idle' ? 'Fokus-Timer' : `${focusPhase === 'work' ? 'Fokus' : 'Pause'} · noch ${focusMinutes} min`,
                 active: isOn('focus'),
                 onClick: () => ui.toggleWin('focus', centeredRect(def.w, def.h)),
-                content: (
-                  <Ring progress={total ? 1 - left / total : 0} size={30} stroke={2.5} tone={toneOf(s.phase)}>
-                    <Icon name="timer" size={14} />
-                  </Ring>
-                )
+                content: <FocusRing />
               }
             })()
           ],
-          sessions.map((s) => {
+          sessions.map((s, i) => {
             const id = termWin(s.id)
-            const st = statuses[s.id]?.status ?? 'idle'
+            const st = statuses[i] || 'idle'
             return {
-              id: 'sess-' + s.name,
+              // die ID der Session, nicht der Name – mehrere Sessions pro Projekt haben denselben Namen
+              id: 'sess-' + s.id,
+              testId: 'sess-' + s.name,
               label: s.name,
               active: isOn(id),
               className: 'dock-session',
@@ -340,9 +339,9 @@ export default function App(): React.JSX.Element {
       <ShareDialogs />
       <DialogHost />
       <Curtain />
-      {focus.banner && (
-        <div className="focus-banner" key={focus.banner.text}>
-          {focus.banner.text}
+      {focusBanner && (
+        <div className="focus-banner" key={focusBanner.text}>
+          {focusBanner.text}
         </div>
       )}
       {holding && (
@@ -352,5 +351,19 @@ export default function App(): React.JSX.Element {
         </div>
       )}
     </div>
+  )
+}
+
+/** Fortschrittsring des Fokus-Timers im Dock – tickt für sich, ohne die App neu zu rendern */
+function FocusRing(): React.JSX.Element {
+  const state = useFocus((s) => s.state)
+  const now = useFocus((s) => s.now)
+  const cfg = useSettings((s) => s.s?.focus)
+  const total = cfg ? phaseTotal(state, cfg) : 0
+  const left = remaining(state, now)
+  return (
+    <Ring progress={total ? 1 - left / total : 0} size={30} stroke={2.5} tone={toneOf(state.phase)}>
+      <Icon name="timer" size={14} />
+    </Ring>
   )
 }

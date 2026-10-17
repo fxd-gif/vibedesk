@@ -31,7 +31,11 @@ const api: VibedeskApi = {
     quit: () => ipcRenderer.send('app:quit'),
     claudeInstalled: () => ipcRenderer.invoke('app:claudeInstalled'),
     claudeVersion: () => ipcRenderer.invoke('app:claudeVersion'),
-    notify: (id, title, body) => ipcRenderer.send('app:notify', id, title, body)
+    notify: (id, title, body) => ipcRenderer.send('app:notify', id, title, body),
+    logError: (where, msg) => ipcRenderer.send('app:logError', where, msg),
+    reportBug: (summary) => ipcRenderer.send('app:reportBug', summary),
+    openLog: () => ipcRenderer.send('app:openLog'),
+    info: () => ipcRenderer.invoke('app:info')
   },
   sessions: {
     start: (projectId, resumeId) => ipcRenderer.invoke('sessions:start', projectId, resumeId),

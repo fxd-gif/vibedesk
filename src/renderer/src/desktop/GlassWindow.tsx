@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode, type PointerEvent as RPointerEvent } from 'react'
 import { DOCK_H, useUi } from '../store/uiStore'
 import { magnetize, snapRect, type Guide } from './layout'
+import { ErrorBoundary } from './ErrorBoundary'
 import type { WindowRect } from '../../../shared/types'
 
 interface Props {
@@ -106,7 +107,9 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
             </button>
           </div>
         </header>
-        <div className="gwin-body">{children}</div>
+        <div className="gwin-body">
+          <ErrorBoundary where={id}>{children}</ErrorBoundary>
+        </div>
         {!maximized && (
           <div className="gwin-resize" onPointerDown={(e) => onDown(e, true)} onPointerMove={onMove} onPointerUp={onUp} />
         )}
