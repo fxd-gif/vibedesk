@@ -166,6 +166,7 @@ const api: VibedeskApi = {
   },
   companion: {
     configure: (enabled, port) => ipcRenderer.invoke('companion:configure', enabled, port),
+    status: () => ipcRenderer.invoke('companion:status'),
     startPairing: () => ipcRenderer.invoke('companion:startPairing'),
     cancelPairing: () => ipcRenderer.send('companion:cancelPairing'),
     devices: () => ipcRenderer.invoke('companion:devices'),

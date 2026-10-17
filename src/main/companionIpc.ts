@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto'
 import fs from 'fs'
 import os from 'os'
 import QRCode from 'qrcode'
+import { tailscaleState } from './tailscale'
 import { companionUrl, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../shared/companion'
 import { isDecision } from '../shared/permissions'
 import { defaultRunner } from './gitService'
@@ -80,13 +81,18 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
   const status = async (error?: string): Promise<CompanionStatus> => {
     if (!server.running) return error ? { running: false, error } : { running: false }
     const port = server.boundPort
+    const ifs = os.networkInterfaces()
+    const ts = await tailscaleState(ifs)
+    const targets: { ip: string; via: 'lan' | 'tailscale'; name?: string }[] = lanAddresses(ifs).map((ip) => ({ ip, via: 'lan' }))
+    // Tailscale zuerst: funktioniert zu Hause und unterwegs
+    if (ts.state === 'ready') targets.unshift({ ip: ts.ip, via: 'tailscale', name: ts.name })
     const links = await Promise.all(
-      lanAddresses(os.networkInterfaces()).map(async (ip) => {
-        const url = companionUrl(ip, port)
-        return { ip, url, qr: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b0e17', light: '#ffffff' } }) }
+      targets.map(async (t) => {
+        const url = companionUrl(t.ip, port)
+        return { ...t, url, qr: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b0e17', light: '#ffffff' } }) }
       })
     )
-    return { running: true, port, links }
+    return { running: true, port, links, remote: ts.state }
   }
 
   ipcMain.handle('companion:configure', async (_e, enabled: unknown, p: unknown) => {
@@ -104,6 +110,7 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     server.push(hub.state())
     return status()
   })
+  ipcMain.handle('companion:status', () => status())
   ipcMain.handle('companion:startPairing', () => auth.startPairing())
   ipcMain.on('companion:cancelPairing', () => auth.cancelPairing())
   ipcMain.handle('companion:devices', () => auth.list())

@@ -14,3 +14,6 @@
 .comp-code b { font: 700 30px/1.15 var(--mono); letter-spacing: .12em; color: var(--text); }
 .comp-code b.blurred { filter: blur(9px); user-select: none; }
 .comp-dev svg { vertical-align: -2px; margin-right: 4px; opacity: .8; }
+.comp-remote { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: rgba(96,165,250,.08); border: 1px solid rgba(96,165,250,.25); margin-top: 8px; }
+.comp-remote b { font-size: 13px; }
+.comp-remote > svg { flex-shrink: 0; margin-top: 2px; }

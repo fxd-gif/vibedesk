@@ -51,9 +51,16 @@ export interface CompanionLink {
   ip: string
   url: string
   qr: string
+  /** 'tailscale' = privates Tailscale-Netz, erreichbar auch unterwegs */
+  via?: 'lan' | 'tailscale'
+  /** Gerätename im Tailscale-Netz (nur Anzeige) */
+  name?: string
 }
 
-export type CompanionStatus = { running: false; error?: string } | { running: true; port: number; links: CompanionLink[] }
+/** Zugang von unterwegs über Tailscale */
+export type TailscaleState = { state: 'missing' } | { state: 'stopped' } | { state: 'ready'; ip: string; name?: string }
+
+export type CompanionStatus = { running: false; error?: string } | { running: true; port: number; links: CompanionLink[]; remote: TailscaleState['state'] }
 
 export interface CompanionSettings {
   enabled: boolean
@@ -239,6 +246,16 @@ export function lanAddresses(ifs: Record<string, NetIf[] | undefined>): string[]
     }
   }
   return [...new Set(found.sort((a, b) => b.score - a.score).map((f) => f.ip))]
+}
+
+/** Tailscale vergibt Adressen aus 100.64.0.0/10 */
+export const isTailnet = (ip: string): boolean => /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(ip)
+
+export function tailnetAddress(ifs: Record<string, NetIf[] | undefined>): string | null {
+  for (const list of Object.values(ifs)) {
+    for (const i of list ?? []) if (!i.internal && (i.family === 'IPv4' || i.family === 4) && isTailnet(i.address)) return i.address
+  }
+  return null
 }
 
 export const companionUrl = (ip: string, port: number): string => `http://${ip}:${port}/`

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { api } from '../api'
 import { Icon } from '../desktop/icons'
 import type { CompanionSettings } from '../../../shared/companion'
 import { confirm } from '../store/dialogStore'
@@ -7,6 +8,44 @@ import { useSettings } from '../store/settingsStore'
 import { relTime } from '../util'
 import { Toggle } from './AmbienceMenu'
 import './companion.css'
+
+const TAILSCALE_URL = 'https://tailscale.com/download'
+
+/** Zugang von unterwegs: erklärt, was für Tailscale noch fehlt */
+function RemoteHint({ state }: { state: 'missing' | 'stopped' }): React.JSX.Element {
+  const [checking, setChecking] = useState(false)
+  const recheck = async (): Promise<void> => {
+    setChecking(true)
+    useCompanion.setState({ status: await api.companion.status() })
+    setChecking(false)
+  }
+  return (
+    <div className="comp-remote" data-testid="companion-remote">
+      <Icon name="globe" size={16} />
+      <div>
+        <b>Auch von unterwegs?</b>
+        {state === 'missing' ? (
+          <div className="dim small">
+            Mit Tailscale (kostenlos) erreichst du VibeDesk überall – über ein privates, verschlüsseltes Netz nur zwischen deinen Geräten. Dein PC wird dabei nicht offen ins Internet gestellt.
+            Installiere Tailscale auf diesem PC und auf dem Handy und melde dich auf beiden mit demselben Konto an.
+          </div>
+        ) : (
+          <div className="dim small">Tailscale ist installiert, aber nicht verbunden. Öffne Tailscale (Symbol unten rechts) und melde dich an.</div>
+        )}
+        <div className="row" style={{ marginTop: 6 }}>
+          {state === 'missing' && (
+            <button className="btn small primary" onClick={() => api.openExternal(TAILSCALE_URL)}>
+              Tailscale holen
+            </button>
+          )}
+          <button className="btn small ghost" disabled={checking} onClick={() => void recheck()}>
+            {checking ? 'Prüfe …' : 'Erneut prüfen'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function PairCode(): React.JSX.Element | null {
   const pairing = useCompanion((x) => x.pairing)
@@ -83,12 +122,22 @@ export function CompanionWindow(): React.JSX.Element {
               </div>
               <div className="comp-side">
                 <ol className="comp-steps">
-                  <li>Handy ins selbe WLAN wie diesen PC.</li>
+                  {link.via === 'tailscale' ? (
+                    <li>
+                      Tailscale-App aufs Handy und mit demselben Konto anmelden. <span className="dim">Dann klappt es zu Hause und unterwegs.</span>
+                    </li>
+                  ) : (
+                    <li>Handy ins selbe WLAN wie diesen PC.</li>
+                  )}
                   <li>
                     QR-Code mit der Kamera scannen <span className="dim">oder</span> <code className="mono">{link.url}</code> öffnen.
                   </li>
                   <li>Hier auf „Handy koppeln“ tippen und den Code am Handy eingeben.</li>
-                  <li className="dim">Fragt Windows nach der Firewall: Zugriff für private Netzwerke erlauben.</li>
+                  <li className="dim">
+                    {link.via === 'tailscale'
+                      ? 'Lädt die Seite am Handy nicht: In der Windows-Firewall VibeDesk auch für öffentliche Netzwerke erlauben – Windows führt Tailscale oft so.'
+                      : 'Fragt Windows nach der Firewall: Zugriff für private Netzwerke erlauben.'}
+                  </li>
                 </ol>
                 {pairing ? (
                   <PairCode />
@@ -104,12 +153,13 @@ export function CompanionWindow(): React.JSX.Element {
             <div className="row chips">
               <span className="dim small">Netz:</span>
               {links.map((l, i) => (
-                <button key={l.ip} className={`chip${i === pick ? ' on' : ''}`} onClick={() => setPick(i)}>
-                  {l.ip}
+                <button key={l.ip} className={`chip${i === pick ? ' on' : ''}`} onClick={() => setPick(i)} title={l.name ?? l.ip}>
+                  {l.via === 'tailscale' ? 'Überall (Tailscale)' : `WLAN · ${l.ip}`}
                 </button>
               ))}
             </div>
           )}
+          {status.running && status.remote !== 'ready' && <RemoteHint state={status.remote} />}
           <div className="row">
             <span className="small">Port</span>
             <input
