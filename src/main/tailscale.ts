@@ -1,6 +1,6 @@
 // Handy von unterwegs: Tailscale verbindet PC und Handy in einem privaten, verschlüsselten Netz.
 // VibeDesk muss dafür nichts ins Internet öffnen – es erkennt nur die Tailscale-Adresse des PCs.
-import { execFile } from 'child_process'
+import { execFile, spawn } from 'child_process'
 import fs from 'fs'
 import { join } from 'path'
 import { tailnetAddress, type NetIf, type TailscaleState } from '../shared/companion'
@@ -40,5 +40,51 @@ export function tailscaleState(ifs: Record<string, NetIf[] | undefined>): Promis
       const s = parseTailscaleStatus(String(out ?? ''))
       resolve(err && s.state !== 'ready' ? fallback() : s)
     })
+  })
+}
+
+const exePath = (name: string): string => join(process.env.ProgramFiles || 'C:\\Program Files', 'Tailscale', name)
+
+/** Tailscale per winget installieren (feste Befehle, nichts aus dem Renderer) */
+export function installTailscale(): Promise<boolean> {
+  if (process.platform !== 'win32') return Promise.resolve(false)
+  const args = ['install', '-e', '--id', 'Tailscale.Tailscale', '--source', 'winget', '--silent', '--accept-source-agreements', '--accept-package-agreements', '--disable-interactivity']
+  return new Promise((resolve) => {
+    execFile('winget', args, { timeout: 10 * 60_000, windowsHide: true }, () => resolve(fs.existsSync(exePath('tailscale.exe'))))
+  })
+}
+
+/** Login-Link aus der Ausgabe von `tailscale up` */
+export function loginUrl(out: string): string | null {
+  return /https:\/\/login\.tailscale\.com\/[^\s]+/.exec(out)?.[0] ?? null
+}
+
+/**
+ * Anmelden: startet die Tailscale-App (Symbol im Infobereich) und `tailscale up`.
+ * Braucht es eine Anmeldung, kommt der Link zurück – VibeDesk öffnet ihn im Browser.
+ */
+export function startTailscaleLogin(open: (url: string) => void): Promise<boolean> {
+  const ipn = exePath('tailscale-ipn.exe')
+  const exe = exePath('tailscale.exe')
+  if (!fs.existsSync(exe)) return Promise.resolve(false)
+  if (fs.existsSync(ipn)) spawn(ipn, [], { detached: true, stdio: 'ignore' }).unref()
+  return new Promise((resolve) => {
+    let opened = false
+    let out = ''
+    const p = spawn(exe, ['up', '--timeout=5m'], { windowsHide: true })
+    const onData = (d: Buffer): void => {
+      out += d.toString()
+      const url = loginUrl(out)
+      if (url && !opened) {
+        opened = true
+        open(url)
+        resolve(true)
+      }
+    }
+    p.stdout.on('data', onData)
+    p.stderr.on('data', onData)
+    p.on('error', () => resolve(false))
+    // ohne Link: schon angemeldet (Exit 0) oder Fehler
+    p.on('exit', (code) => !opened && resolve(code === 0))
   })
 }

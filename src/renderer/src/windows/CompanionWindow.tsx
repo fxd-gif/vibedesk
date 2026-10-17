@@ -14,10 +14,17 @@ const TAILSCALE_URL = 'https://tailscale.com/download'
 /** Zugang von unterwegs: erklärt, was für Tailscale noch fehlt */
 function RemoteHint({ state }: { state: 'missing' | 'stopped' }): React.JSX.Element {
   const [checking, setChecking] = useState(false)
+  const [setup, setSetup] = useState<'idle' | 'busy' | 'login' | 'failed'>('idle')
   const recheck = async (): Promise<void> => {
     setChecking(true)
     useCompanion.setState({ status: await api.companion.status() })
     setChecking(false)
+  }
+  const runSetup = async (): Promise<void> => {
+    setSetup('busy')
+    const ok = await api.companion.setupTailscale()
+    setSetup(ok ? 'login' : 'failed')
+    await recheck()
   }
   return (
     <div className="comp-remote" data-testid="companion-remote">
@@ -33,15 +40,21 @@ function RemoteHint({ state }: { state: 'missing' | 'stopped' }): React.JSX.Elem
           <div className="dim small">Tailscale ist installiert, aber nicht verbunden. Öffne Tailscale (Symbol unten rechts) und melde dich an.</div>
         )}
         <div className="row" style={{ marginTop: 6 }}>
+          <button className="btn small primary" disabled={setup === 'busy'} onClick={() => void runSetup()} data-testid="companion-tailscale">
+            {setup === 'busy' ? (state === 'missing' ? 'Installiere Tailscale …' : 'Verbinde …') : state === 'missing' ? 'Tailscale installieren' : 'Bei Tailscale anmelden'}
+          </button>
           {state === 'missing' && (
-            <button className="btn small primary" onClick={() => api.openExternal(TAILSCALE_URL)}>
-              Tailscale holen
+            <button className="btn small ghost" onClick={() => api.openExternal(TAILSCALE_URL)}>
+              Selbst herunterladen
             </button>
           )}
           <button className="btn small ghost" disabled={checking} onClick={() => void recheck()}>
             {checking ? 'Prüfe …' : 'Erneut prüfen'}
           </button>
         </div>
+        {setup === 'busy' && state === 'missing' && <div className="dim small">Fragt Windows nach Administratorrechten, bitte bestätigen. Das dauert etwa eine Minute.</div>}
+        {setup === 'login' && <div className="dim small">Melde dich im Browser bei Tailscale an und tippe danach auf „Erneut prüfen“. Aufs Handy kommt die Tailscale-App mit demselben Konto.</div>}
+        {setup === 'failed' && <div className="dim small">Das hat nicht geklappt. Lade Tailscale selbst herunter oder öffne die Tailscale-App und melde dich dort an.</div>}
       </div>
     </div>
   )

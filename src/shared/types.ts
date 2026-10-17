@@ -408,6 +408,8 @@ export interface VibedeskApi {
     configure(enabled: boolean, port: number): Promise<CompanionStatus>
     /** Adressen neu ermitteln (z. B. nachdem Tailscale gestartet wurde) */
     status(): Promise<CompanionStatus>
+    /** Tailscale installieren (falls nötig) und Anmeldung im Browser starten */
+    setupTailscale(): Promise<boolean>
     /** Einmal-Code zum Koppeln eines Handys (5 Minuten gültig) */
     startPairing(): Promise<CompanionPairing>
     cancelPairing(): void

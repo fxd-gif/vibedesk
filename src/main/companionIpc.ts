@@ -1,10 +1,10 @@
 // Handy-Begleiter verdrahten: Server an/aus, Koppeln per Code, Geräte, QR-Codes, Strom, KI-Aufrufe und Prompts über den Renderer.
-import { ipcMain, powerMonitor, powerSaveBlocker } from 'electron'
+import { ipcMain, powerMonitor, powerSaveBlocker, shell } from 'electron'
 import { randomBytes } from 'crypto'
 import fs from 'fs'
 import os from 'os'
 import QRCode from 'qrcode'
-import { tailscaleState } from './tailscale'
+import { installTailscale, startTailscaleLogin, tailscaleState } from './tailscale'
 import { companionUrl, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../shared/companion'
 import { isDecision } from '../shared/permissions'
 import { defaultRunner } from './gitService'
@@ -111,6 +111,18 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     return status()
   })
   ipcMain.handle('companion:status', () => status())
+  // Tailscale einrichten: fehlt es, per winget installieren – dann anmelden (Link öffnet sich im Browser)
+  let settingUp = false
+  ipcMain.handle('companion:setupTailscale', async () => {
+    if (settingUp) return false
+    settingUp = true
+    try {
+      if ((await tailscaleState(os.networkInterfaces())).state === 'missing' && !(await installTailscale())) return false
+      return await startTailscaleLogin((url) => void shell.openExternal(url))
+    } finally {
+      settingUp = false
+    }
+  })
   ipcMain.handle('companion:startPairing', () => auth.startPairing())
   ipcMain.on('companion:cancelPairing', () => auth.cancelPairing())
   ipcMain.handle('companion:devices', () => auth.list())
