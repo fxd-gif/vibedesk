@@ -1,7 +1,7 @@
 // Handy-Begleiter: Server an/aus, Live-Stand fürs Handy und Prompts vom Handy in die richtige Session.
 import { create } from 'zustand'
 import { api } from '../api'
-import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget } from '../../../shared/companion'
+import { internetOn, type CompanionDevice, type CompanionPairing, type CompanionSettings, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../../../shared/companion'
 import type { Project } from '../../../shared/types'
 import { inform, useNotify } from './notifyStore'
 import { promptProject, sendToSession } from './sessionPrompt'
@@ -110,12 +110,12 @@ export function wireCompanion(): void {
   const sync = async (): Promise<void> => {
     const c = cfg()
     if (!c) return
-    const key = `${c.enabled}|${c.port}|${!!c.internet}`
+    const key = `${c.enabled}|${c.port}|${internetOn(c)}`
     if (key === lastKey) return
     lastKey = key
     useCompanion.setState({ busy: true })
     try {
-      useCompanion.setState({ status: await api.companion.configure(c.enabled, c.port, !!c.internet) })
+      useCompanion.setState({ status: await api.companion.configure(c.enabled, c.port, internetOn(c)) })
     } finally {
       useCompanion.setState({ busy: false })
     }

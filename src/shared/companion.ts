@@ -51,39 +51,8 @@ export interface CompanionLink {
   ip: string
   url: string
   qr: string
-  /** 'tailscale' = privates Tailscale-Netz, 'internet' = Cloudflare-Link (ohne App, überall) */
-  via?: 'lan' | 'tailscale' | 'internet'
-  /** Gerätename im Tailscale-Netz (nur Anzeige) */
-  name?: string
-}
-
-/** Zugang von unterwegs über Tailscale */
-export type TailscaleState =
-  | { state: 'missing' }
-  | { state: 'stopped' }
-  | {
-      state: 'ready'
-      ip: string
-      name?: string
-      /** Konto des Tailnets – damit man am Handy dasselbe nimmt */
-      account?: string
-      /** andere Geräte im Tailnet (ohne diesen PC); undefined = unbekannt */
-      peers?: number
-      /** davon Handys (iOS/Android) */
-      phones?: number
-    }
-
-/** Lässt die Windows-Firewall Verbindungen aus dem Tailscale-Netz zu VibeDesk durch? */
-export type FirewallState = 'ok' | 'blocked' | 'unknown'
-
-/** Verbindungs-Check für unterwegs (nur wenn Tailscale verbunden ist) */
-export interface RemoteCheck {
-  account?: string
-  peers?: number
-  phones?: number
-  firewall: FirewallState
-  /** Tailscale nimmt selbst an (`tailscale serve`) – keine eigene Firewall-Freigabe nötig */
-  viaServe?: boolean
+  /** 'internet' = Cloudflare-Link (ohne App, überall) */
+  via?: 'lan' | 'internet'
 }
 
 /** Internet-Link über einen Cloudflare-Quick-Tunnel */
@@ -95,33 +64,18 @@ export type CompanionStatus =
       running: true
       port: number
       links: CompanionLink[]
-      remote: TailscaleState['state']
-      check?: RemoteCheck
       internet?: { state: TunnelState; error?: string }
     }
-
-/**
- * Entscheidet aus den Firewall-Regeln von VibeDesk, ob das Tailscale-Netz durchkommt.
- * category = Netzwerkprofil des Tailscale-Adapters (Private/Public/DomainAuthenticated),
- * rules = eingehende, aktive Regeln für das VibeDesk-Programm.
- */
-export function firewallVerdict(category: string | undefined, rules: { action: string; profile: string; remote?: string }[]): FirewallState {
-  if (!category) return 'unknown'
-  const prof = category === 'DomainAuthenticated' ? 'Domain' : category
-  const covers = (r: { profile: string }): boolean => r.profile.split(/[,\s]+/).some((x) => /^(any|all)$/i.test(x) || x.toLowerCase() === prof.toLowerCase())
-  // Block-Regeln gewinnen in Windows immer gegen Allow
-  const reaches = (r: { remote?: string }): boolean => !r.remote || /^(any|\*)$/i.test(r.remote) || /100\.64\.0\.0|LocalSubnet/i.test(r.remote)
-  const hits = rules.filter((r) => covers(r) && reaches(r))
-  if (hits.some((r) => /block/i.test(r.action))) return 'blocked'
-  return hits.some((r) => /allow/i.test(r.action)) ? 'ok' : 'blocked'
-}
 
 export interface CompanionSettings {
   enabled: boolean
   port: number
-  /** Internet-Link (Cloudflare-Tunnel): Handy von überall, ohne App */
+  /** Internet-Link (Cloudflare-Tunnel): Handy von überall, ohne App – an, solange nicht ausdrücklich false */
   internet?: boolean
 }
+
+/** Internet-Link ist der Standardweg: nur ein ausdrückliches false schaltet ihn ab */
+export const internetOn = (c: CompanionSettings): boolean => c.internet !== false
 
 /** Gekoppeltes Handy (der Schlüssel selbst bleibt nur auf dem Handy, Main kennt nur seinen Hash) */
 export interface CompanionDevice {

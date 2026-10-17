@@ -7,6 +7,14 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Verbessert
+
+- **Handy von überall ist jetzt Standard**: Der Internet-Link über Cloudflare ist von Haus aus an. Handy-Begleiter einschalten, QR-Code scannen, koppeln – fertig, im WLAN wie unterwegs. Abschalten geht weiter mit dem Schalter „Von überall – ohne App“
+
+### Entfernt
+
+- Tailscale ist komplett raus: keine Tailscale-Hinweise, kein Verbindungs-Check und keine Firewall-Freigabe mehr. Am Handy reicht der Browser
+
 ## 0.16.0
 
 ### Neu

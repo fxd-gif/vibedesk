@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { Icon } from '../desktop/icons'
-import type { CompanionSettings, CompanionStatus, RemoteCheck } from '../../../shared/companion'
+import { internetOn, type CompanionSettings, type CompanionStatus } from '../../../shared/companion'
 import { confirm } from '../store/dialogStore'
 import { cancelPairing, revokeAllDevices, revokeDevice, startPairing, useCompanion } from '../store/companionStore'
 import { useSettings } from '../store/settingsStore'
 import { relTime } from '../util'
 import { Toggle } from './AmbienceMenu'
 import './companion.css'
-
-const TAILSCALE_URL = 'https://tailscale.com/download'
 
 const TUNNEL_TEXT = {
   off: '',
@@ -43,122 +41,6 @@ function InternetCard({ on, status, onChange }: { on: boolean; status: Companion
           </div>
         )}
         {state === 'ready' && <div className="dim tiny">Der Link bleibt, solange VibeDesk läuft. Nach einem Neustart gibt es einen neuen – dann einmal neu scannen und koppeln.</div>}
-      </div>
-    </div>
-  )
-}
-
-/** Zugang von unterwegs: erklärt, was für Tailscale noch fehlt */
-function RemoteHint({ state }: { state: 'missing' | 'stopped' }): React.JSX.Element {
-  const [checking, setChecking] = useState(false)
-  const [setup, setSetup] = useState<'idle' | 'busy' | 'login' | 'failed'>('idle')
-  const recheck = async (): Promise<void> => {
-    setChecking(true)
-    useCompanion.setState({ status: await api.companion.status() })
-    setChecking(false)
-  }
-  const runSetup = async (): Promise<void> => {
-    setSetup('busy')
-    const ok = await api.companion.setupTailscale()
-    setSetup(ok ? 'login' : 'failed')
-    await recheck()
-  }
-  return (
-    <div className="comp-remote" data-testid="companion-remote">
-      <Icon name="globe" size={16} />
-      <div>
-        <b>Auch von unterwegs?</b>
-        {state === 'missing' ? (
-          <div className="dim small">
-            Mit Tailscale (kostenlos) erreichst du VibeDesk überall – über ein privates, verschlüsseltes Netz nur zwischen deinen Geräten. Dein PC wird dabei nicht offen ins Internet gestellt.
-            Installiere Tailscale auf diesem PC und auf dem Handy und melde dich auf beiden mit demselben Konto an.
-          </div>
-        ) : (
-          <div className="dim small">Tailscale ist installiert, aber nicht verbunden. Öffne Tailscale (Symbol unten rechts) und melde dich an.</div>
-        )}
-        <div className="row" style={{ marginTop: 6 }}>
-          <button className="btn small primary" disabled={setup === 'busy'} onClick={() => void runSetup()} data-testid="companion-tailscale">
-            {setup === 'busy' ? (state === 'missing' ? 'Installiere Tailscale …' : 'Verbinde …') : state === 'missing' ? 'Tailscale installieren' : 'Bei Tailscale anmelden'}
-          </button>
-          {state === 'missing' && (
-            <button className="btn small ghost" onClick={() => api.openExternal(TAILSCALE_URL)}>
-              Selbst herunterladen
-            </button>
-          )}
-          <button className="btn small ghost" disabled={checking} onClick={() => void recheck()}>
-            {checking ? 'Prüfe …' : 'Erneut prüfen'}
-          </button>
-        </div>
-        {setup === 'busy' && state === 'missing' && <div className="dim small">Fragt Windows nach Administratorrechten, bitte bestätigen. Das dauert etwa eine Minute.</div>}
-        {setup === 'login' && <div className="dim small">Melde dich im Browser bei Tailscale an und tippe danach auf „Erneut prüfen“. Aufs Handy kommt die Tailscale-App mit demselben Konto.</div>}
-        {setup === 'failed' && <div className="dim small">Das hat nicht geklappt. Lade Tailscale selbst herunter oder öffne die Tailscale-App und melde dich dort an.</div>}
-      </div>
-    </div>
-  )
-}
-
-/** Verbindungs-Check für unterwegs: zeigt, woran es hakt, und behebt die Firewall per Klick */
-function RemoteCheckCard({ check }: { check: RemoteCheck }): React.JSX.Element {
-  const [fw, setFw] = useState<'idle' | 'busy' | 'failed'>('idle')
-  const [checking, setChecking] = useState(false)
-  const recheck = async (): Promise<void> => {
-    setChecking(true)
-    useCompanion.setState({ status: await api.companion.status() })
-    setChecking(false)
-  }
-  const openFw = async (): Promise<void> => {
-    setFw('busy')
-    const ok = await api.companion.openFirewall()
-    setFw(ok ? 'idle' : 'failed')
-    await recheck()
-  }
-  const phoneOk = (check.phones ?? 0) > 0
-  const lonely = check.peers === 0
-  const allOk = check.firewall === 'ok' && phoneOk
-  return (
-    <div className={`comp-check${allOk ? ' ok' : ''}`} data-testid="companion-check">
-      <div className="row between">
-        <b>Verbindungs-Check {allOk ? '· alles bereit' : ''}</b>
-        <button className="btn small ghost" disabled={checking} onClick={() => void recheck()}>
-          {checking ? 'Prüfe …' : 'Erneut prüfen'}
-        </button>
-      </div>
-      <div className="comp-check-row">
-        <span className="ok-dot on" />
-        <span>
-          Tailscale verbunden{check.account ? <span className="dim"> · Konto {check.account}</span> : null}
-        </span>
-      </div>
-      <div className="comp-check-row" data-testid="companion-check-phone">
-        <span className={`ok-dot ${phoneOk ? 'on' : lonely ? 'off' : 'maybe'}`} />
-        <span>
-          {phoneOk
-            ? `Handy im Tailnet (${check.phones})`
-            : lonely
-              ? <>Noch kein Handy im Tailnet. Installiere die Tailscale-App aufs Handy und melde dich mit <b>{check.account ?? 'demselben Konto'}</b> an.</>
-              : 'Kein Handy erkannt – andere Geräte sind da. Prüfe, ob das Handy mit demselben Konto angemeldet ist.'}
-        </span>
-      </div>
-      <div className="comp-check-row" data-testid="companion-check-firewall">
-        <span className={`ok-dot ${check.firewall === 'ok' ? 'on' : check.firewall === 'blocked' ? 'off' : 'maybe'}`} />
-        <span>
-          {check.viaServe
-            ? 'Tailscale nimmt die Verbindung selbst an – keine Firewall-Freigabe nötig'
-            : check.firewall === 'ok'
-            ? 'Firewall lässt das Tailscale-Netz durch'
-            : check.firewall === 'blocked'
-              ? 'Die Windows-Firewall blockt VibeDesk im Tailscale-Netz – das Handy kommt nicht an.'
-              : 'Firewall konnte nicht geprüft werden.'}
-          {check.firewall !== 'ok' && (
-            <span className="row" style={{ marginTop: 4 }}>
-              <button className="btn small primary" disabled={fw === 'busy'} onClick={() => void openFw()} data-testid="companion-firewall">
-                {fw === 'busy' ? 'Warte auf Windows …' : 'Firewall freigeben'}
-              </button>
-            </span>
-          )}
-          {fw === 'busy' && <span className="dim small"> Windows fragt nach Administratorrechten. Freigegeben wird nur für Tailscale und dein eigenes Netz.</span>}
-          {fw === 'failed' && <span className="dim small"> Hat nicht geklappt – wurde die Windows-Abfrage abgelehnt?</span>}
-        </span>
       </div>
     </div>
   )
@@ -202,6 +84,7 @@ export function CompanionWindow(): React.JSX.Element {
   const [pick, setPick] = useState(0)
   if (!s) return <></>
   const c = s.companion
+  const internet = internetOn(c)
   const patch = (p: Partial<CompanionSettings>): void => set({ companion: { ...c, ...p } })
   const links = status.running ? status.links : []
   const link = links[Math.min(pick, links.length - 1)]
@@ -231,7 +114,7 @@ export function CompanionWindow(): React.JSX.Element {
             Verbinden{' '}
             <span className={`badge ${status.running ? 'ok' : ''}`}>{status.running ? `läuft auf Port ${status.port}` : busy ? 'startet …' : (status.error ?? 'aus')}</span>
           </h4>
-          {status.running && <InternetCard on={!!c.internet} status={status} onChange={(v) => patch({ internet: v })} />}
+          {status.running && <InternetCard on={internet} status={status} onChange={(v) => patch({ internet: v })} />}
           {status.running && !links.length && <div className="comp-warn">Kein WLAN gefunden. Verbinde den PC mit demselben Netz wie dein Handy.</div>}
           {link && (
             <div className="comp-pair">
@@ -244,10 +127,6 @@ export function CompanionWindow(): React.JSX.Element {
                     <li>
                       Klappt überall – WLAN oder Mobilfunk. <span className="dim">Keine App nötig, nur der Browser.</span>
                     </li>
-                  ) : link.via === 'tailscale' ? (
-                    <li>
-                      Tailscale-App aufs Handy und mit demselben Konto anmelden. <span className="dim">Dann klappt es zu Hause und unterwegs.</span>
-                    </li>
                   ) : (
                     <li>Handy ins selbe WLAN wie diesen PC.</li>
                   )}
@@ -258,8 +137,6 @@ export function CompanionWindow(): React.JSX.Element {
                   <li className="dim">
                     {link.via === 'internet'
                       ? 'Tipp: Am Handy „Zum Startbildschirm hinzufügen“ – dann ist VibeDesk wie eine App da.'
-                      : link.via === 'tailscale'
-                      ? 'Lädt die Seite am Handy nicht: Der Verbindungs-Check unten zeigt, woran es liegt.'
                       : 'Fragt Windows nach der Firewall: Zugriff für private Netzwerke erlauben.'}
                   </li>
                 </ol>
@@ -277,15 +154,12 @@ export function CompanionWindow(): React.JSX.Element {
             <div className="row chips">
               <span className="dim small">Netz:</span>
               {links.map((l, i) => (
-                <button key={l.ip} className={`chip${i === pick ? ' on' : ''}`} onClick={() => setPick(i)} title={l.name ?? l.ip}>
-                  {l.via === 'internet' ? 'Überall (Internet)' : l.via === 'tailscale' ? 'Tailscale' : `WLAN · ${l.ip}`}
+                <button key={l.ip} className={`chip${i === pick ? ' on' : ''}`} onClick={() => setPick(i)} title={l.ip}>
+                  {l.via === 'internet' ? 'Überall (Internet)' : `WLAN · ${l.ip}`}
                 </button>
               ))}
             </div>
           )}
-          {/* Tailscale nur noch als Alternative, wenn es schon eingerichtet ist und kein Internet-Link läuft */}
-          {status.running && !c.internet && status.remote === 'stopped' && <RemoteHint state={status.remote} />}
-          {status.running && !c.internet && status.remote === 'ready' && status.check && <RemoteCheckCard check={status.check} />}
           <div className="row">
             <span className="small">Port</span>
             <input
@@ -330,7 +204,7 @@ export function CompanionWindow(): React.JSX.Element {
             </div>
           )}
           <div className="dim tiny">
-            {c.internet
+            {internet
               ? 'Der Internet-Link ist öffentlich, aber ohne Code vom PC-Bildschirm kommt niemand hinein. Verlorenes Handy? Hier abmelden.'
               : 'Nur im eigenen WLAN nutzen – in Café-, Uni- oder Hotelnetzen lieber ausschalten.'}
           </div>

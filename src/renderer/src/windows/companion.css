@@ -18,11 +18,6 @@
 .comp-remote b { font-size: 13px; }
 .comp-remote > svg { flex-shrink: 0; margin-top: 2px; }
 .comp-remote.ok { background: rgba(74,222,128,.08); border-color: rgba(74,222,128,.3); }
-.comp-check { display: flex; flex-direction: column; gap: 7px; padding: 10px 12px; border-radius: 10px; background: rgba(250,204,21,.07); border: 1px solid rgba(250,204,21,.3); margin-top: 8px; font-size: 12.5px; line-height: 1.45; }
-.comp-check.ok { background: rgba(74,222,128,.07); border-color: rgba(74,222,128,.3); }
-.comp-check b { font-size: 13px; }
-.comp-check-row { display: flex; gap: 8px; align-items: flex-start; }
-.comp-check-row > span:last-child { display: flex; flex-direction: column; gap: 2px; }
 .ok-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; background: rgba(255,255,255,.3); }
 .ok-dot.on { background: var(--green, #4ade80); box-shadow: 0 0 6px var(--green, #4ade80); }
 .ok-dot.off { background: var(--red, #f87171); box-shadow: 0 0 6px var(--red, #f87171); }

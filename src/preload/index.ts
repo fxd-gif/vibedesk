@@ -182,8 +182,6 @@ const api: VibedeskApi = {
   companion: {
     configure: (enabled, port, internet) => ipcRenderer.invoke('companion:configure', enabled, port, internet),
     status: () => ipcRenderer.invoke('companion:status'),
-    setupTailscale: () => ipcRenderer.invoke('companion:setupTailscale'),
-    openFirewall: () => ipcRenderer.invoke('companion:openFirewall'),
     startPairing: () => ipcRenderer.invoke('companion:startPairing'),
     cancelPairing: () => ipcRenderer.send('companion:cancelPairing'),
     devices: () => ipcRenderer.invoke('companion:devices'),

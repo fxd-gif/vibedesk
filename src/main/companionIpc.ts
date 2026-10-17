@@ -1,11 +1,9 @@
 // Handy-Begleiter verdrahten: Server an/aus, Koppeln per Code, Geräte, QR-Codes, Strom, KI-Aufrufe und Prompts über den Renderer.
-import { ipcMain, powerMonitor, powerSaveBlocker, shell } from 'electron'
+import { ipcMain, powerMonitor, powerSaveBlocker } from 'electron'
 import { randomBytes } from 'crypto'
 import fs from 'fs'
 import os from 'os'
 import QRCode from 'qrcode'
-import { installTailscale, servePort, startServe, startTailscaleLogin, stopServe, tailscaleState } from './tailscale'
-import { firewallState, openFirewall } from './firewall'
 import { QuickTunnel } from './cloudflareTunnel'
 import { companionUrl, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../shared/companion'
 import { isDecision } from '../shared/permissions'
@@ -80,15 +78,6 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
   })
   const server = new CompanionServer(auth, hub, power, (dev) => d.send('companion:devices', auth.list(), dev))
 
-  /** lokaler Port, für den `tailscale serve` gerade eingerichtet ist */
-  let served: number | null = null
-  const unserve = async (): Promise<void> => {
-    if (served === null) return
-    const p = served
-    served = null
-    await stopServe(p)
-  }
-
   // Internet-Link: Ändert sich der Tunnel, bekommt das Fenster den neuen Stand (samt QR-Code)
   let pushing: ReturnType<typeof setTimeout> | null = null
   const tunnel = new QuickTunnel(() => {
@@ -102,42 +91,28 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
   const status = async (error?: string): Promise<CompanionStatus> => {
     if (!server.running) return error ? { running: false, error } : { running: false }
     const port = server.boundPort
-    const ifs = os.networkInterfaces()
-    const ts = await tailscaleState(ifs)
-    const targets: { ip: string; port: number; via: 'lan' | 'tailscale'; name?: string }[] = lanAddresses(ifs).map((ip) => ({ ip, port, via: 'lan' }))
-    // Über `tailscale serve` nimmt der Tailscale-Dienst an – der hat schon eine Firewall-Freigabe, keine Adminrechte nötig
-    if (ts.state === 'ready' && served !== port) served = (await startServe(port)) ? port : null
-    else if (ts.state !== 'ready') served = null
-    const tsPort = served === port ? servePort(port) : port
-    // Tailscale zuerst: funktioniert zu Hause und unterwegs
-    // serve ordnet über den Hostnamen zu – über die nackte 100.x-Adresse käme 404
-    if (ts.state === 'ready') targets.unshift({ ip: served === port && ts.name ? ts.name : ts.ip, port: tsPort, via: 'tailscale', name: ts.name })
-    // Internet-Link ganz vorn: braucht am Handy keine App
+    const lan = lanAddresses(os.networkInterfaces()).map((ip) => ({ ip, url: companionUrl(ip, port), via: 'lan' as const }))
+    // Internet-Link ganz vorn: braucht am Handy keine App und klappt überall
     const web = tunnel.url && tunnel.wanted === port ? [{ ip: new URL(tunnel.url).hostname, url: tunnel.url + '/', via: 'internet' as const }] : []
-    // Verbindungs-Check: Kommt das Handy überhaupt an? Mit serve ist die Firewall kein Thema
-    const firewall = ts.state !== 'ready' ? undefined : served === port ? ('ok' as const) : await firewallState()
-    const check = ts.state === 'ready' ? { account: ts.account, peers: ts.peers, phones: ts.phones, firewall: firewall!, viaServe: served === port } : undefined
     const links = await Promise.all(
-      [...web, ...targets.map(({ port: p, ...t }) => ({ ...t, url: companionUrl(t.ip, p) }))].map(async (t) => {
+      [...web, ...lan].map(async (t) => {
         const url = t.url
         return { ...t, qr: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b0e17', light: '#ffffff' } }) }
       })
     )
     const internet = tunnel.wanted === port ? { state: tunnel.state, ...(tunnel.error ? { error: tunnel.error } : {}) } : undefined
-    return { running: true, port, links, remote: ts.state, check, internet }
+    return { running: true, port, links, internet }
   }
 
   ipcMain.handle('companion:configure', async (_e, enabled: unknown, p: unknown, internet: unknown) => {
     if (enabled !== true) {
       tunnel.stop()
-      await unserve()
       await server.stop()
       power.keepAwake(false)
       auth.cancelPairing()
       return status()
     }
     const want = Number.isInteger(p) && (p as number) >= 1024 && (p as number) <= 65535 ? (p as number) : 17350
-    if (served !== null && served !== want) await unserve()
     const r = await server.start(want)
     if (!r.ok) return status(r.error)
     // Solange das Handy steuern kann, geht der PC nicht in den Standby (der Bildschirm darf aus)
@@ -149,20 +124,6 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     return status()
   })
   ipcMain.handle('companion:status', () => status())
-  // Tailscale einrichten: fehlt es, per winget installieren – dann anmelden (Link öffnet sich im Browser)
-  let settingUp = false
-  ipcMain.handle('companion:setupTailscale', async () => {
-    if (settingUp) return false
-    settingUp = true
-    try {
-      if ((await tailscaleState(os.networkInterfaces())).state === 'missing' && !(await installTailscale())) return false
-      return await startTailscaleLogin((url) => void shell.openExternal(url))
-    } finally {
-      settingUp = false
-    }
-  })
-  // Firewall für Tailscale + eigenes Subnetz öffnen (Windows fragt per UAC)
-  ipcMain.handle('companion:openFirewall', () => openFirewall())
   ipcMain.handle('companion:startPairing', () => auth.startPairing())
   ipcMain.on('companion:cancelPairing', () => auth.cancelPairing())
   ipcMain.handle('companion:devices', () => auth.list())
@@ -194,7 +155,6 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     stop: async () => {
       tunnel.stop()
       power.keepAwake(false)
-      await unserve()
       await server.stop()
     }
   }

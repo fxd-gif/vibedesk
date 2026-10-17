@@ -459,12 +459,8 @@ export interface VibedeskApi {
   companion: {
     /** internet = Internet-Link über Cloudflare (Handy von überall, ohne App) */
     configure(enabled: boolean, port: number, internet: boolean): Promise<CompanionStatus>
-    /** Adressen neu ermitteln (z. B. nachdem Tailscale gestartet wurde) */
+    /** Adressen neu ermitteln (z. B. nach einem WLAN-Wechsel) */
     status(): Promise<CompanionStatus>
-    /** Tailscale installieren (falls nötig) und Anmeldung im Browser starten */
-    setupTailscale(): Promise<boolean>
-    /** Windows-Firewall für Tailscale und das eigene Netz öffnen (fragt per UAC) */
-    openFirewall(): Promise<boolean>
     /** Einmal-Code zum Koppeln eines Handys (5 Minuten gültig) */
     startPairing(): Promise<CompanionPairing>
     cancelPairing(): void
