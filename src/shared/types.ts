@@ -339,6 +339,8 @@ export interface VibedeskApi {
     companionDevices(cb: (list: CompanionDevice[], paired?: CompanionDevice) => void): Unsubscribe
     /** Handy hat Herunterfahren/Standby ausgelöst oder abgebrochen */
     companionPower(cb: (action: 'shutdown' | 'sleep' | 'cancel', at: number | null) => void): Unsubscribe
+    /** Neuer Stand von Main (z. B. Internet-Link ist da oder hat sich geändert) */
+    companionStatus(cb: (s: CompanionStatus) => void): Unsubscribe
     /** Schnell-Prompt (Strg+Alt+Leertaste): Text und gewählte Session (null = keine offen) */
     quickPrompt(cb: (text: string, sessionId: string | null) => void): Unsubscribe
   }
@@ -455,7 +457,8 @@ export interface VibedeskApi {
     answer(id: string, decision: PermissionDecision): Promise<boolean>
   }
   companion: {
-    configure(enabled: boolean, port: number): Promise<CompanionStatus>
+    /** internet = Internet-Link über Cloudflare (Handy von überall, ohne App) */
+    configure(enabled: boolean, port: number, internet: boolean): Promise<CompanionStatus>
     /** Adressen neu ermitteln (z. B. nachdem Tailscale gestartet wurde) */
     status(): Promise<CompanionStatus>
     /** Tailscale installieren (falls nötig) und Anmeldung im Browser starten */

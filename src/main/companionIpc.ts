@@ -6,6 +6,7 @@ import os from 'os'
 import QRCode from 'qrcode'
 import { installTailscale, servePort, startServe, startTailscaleLogin, stopServe, tailscaleState } from './tailscale'
 import { firewallState, openFirewall } from './firewall'
+import { QuickTunnel } from './cloudflareTunnel'
 import { companionUrl, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../shared/companion'
 import { isDecision } from '../shared/permissions'
 import { defaultRunner } from './gitService'
@@ -88,6 +89,16 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     await stopServe(p)
   }
 
+  // Internet-Link: Ändert sich der Tunnel, bekommt das Fenster den neuen Stand (samt QR-Code)
+  let pushing: ReturnType<typeof setTimeout> | null = null
+  const tunnel = new QuickTunnel(() => {
+    if (pushing) return
+    pushing = setTimeout(() => {
+      pushing = null
+      void status().then((s) => d.send('companion:status', s))
+    }, 100)
+  })
+
   const status = async (error?: string): Promise<CompanionStatus> => {
     if (!server.running) return error ? { running: false, error } : { running: false }
     const port = server.boundPort
@@ -101,20 +112,24 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     // Tailscale zuerst: funktioniert zu Hause und unterwegs
     // serve ordnet über den Hostnamen zu – über die nackte 100.x-Adresse käme 404
     if (ts.state === 'ready') targets.unshift({ ip: served === port && ts.name ? ts.name : ts.ip, port: tsPort, via: 'tailscale', name: ts.name })
+    // Internet-Link ganz vorn: braucht am Handy keine App
+    const web = tunnel.url && tunnel.wanted === port ? [{ ip: new URL(tunnel.url).hostname, url: tunnel.url + '/', via: 'internet' as const }] : []
     // Verbindungs-Check: Kommt das Handy überhaupt an? Mit serve ist die Firewall kein Thema
     const firewall = ts.state !== 'ready' ? undefined : served === port ? ('ok' as const) : await firewallState()
     const check = ts.state === 'ready' ? { account: ts.account, peers: ts.peers, phones: ts.phones, firewall: firewall!, viaServe: served === port } : undefined
     const links = await Promise.all(
-      targets.map(async ({ port: p, ...t }) => {
-        const url = companionUrl(t.ip, p)
-        return { ...t, url, qr: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b0e17', light: '#ffffff' } }) }
+      [...web, ...targets.map(({ port: p, ...t }) => ({ ...t, url: companionUrl(t.ip, p) }))].map(async (t) => {
+        const url = t.url
+        return { ...t, qr: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b0e17', light: '#ffffff' } }) }
       })
     )
-    return { running: true, port, links, remote: ts.state, check }
+    const internet = tunnel.wanted === port ? { state: tunnel.state, ...(tunnel.error ? { error: tunnel.error } : {}) } : undefined
+    return { running: true, port, links, remote: ts.state, check, internet }
   }
 
-  ipcMain.handle('companion:configure', async (_e, enabled: unknown, p: unknown) => {
+  ipcMain.handle('companion:configure', async (_e, enabled: unknown, p: unknown, internet: unknown) => {
     if (enabled !== true) {
+      tunnel.stop()
       await unserve()
       await server.stop()
       power.keepAwake(false)
@@ -128,6 +143,9 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     // Solange das Handy steuern kann, geht der PC nicht in den Standby (der Bildschirm darf aus)
     power.keepAwake(true)
     server.push(hub.state())
+    // Tunnel startet im Hintergrund (Installieren dauert) – der Link kommt per companion:status nach
+    if (internet === true) void tunnel.start(server.boundPort)
+    else tunnel.stop()
     return status()
   })
   ipcMain.handle('companion:status', () => status())
@@ -174,6 +192,7 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
   return {
     hub,
     stop: async () => {
+      tunnel.stop()
       power.keepAwake(false)
       await unserve()
       await server.stop()

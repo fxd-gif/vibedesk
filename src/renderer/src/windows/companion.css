@@ -17,6 +17,7 @@
 .comp-remote { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 10px; background: rgba(96,165,250,.08); border: 1px solid rgba(96,165,250,.25); margin-top: 8px; }
 .comp-remote b { font-size: 13px; }
 .comp-remote > svg { flex-shrink: 0; margin-top: 2px; }
+.comp-remote.ok { background: rgba(74,222,128,.08); border-color: rgba(74,222,128,.3); }
 .comp-check { display: flex; flex-direction: column; gap: 7px; padding: 10px 12px; border-radius: 10px; background: rgba(250,204,21,.07); border: 1px solid rgba(250,204,21,.3); margin-top: 8px; font-size: 12.5px; line-height: 1.45; }
 .comp-check.ok { background: rgba(74,222,128,.07); border-color: rgba(74,222,128,.3); }
 .comp-check b { font-size: 13px; }

@@ -51,8 +51,8 @@ export interface CompanionLink {
   ip: string
   url: string
   qr: string
-  /** 'tailscale' = privates Tailscale-Netz, erreichbar auch unterwegs */
-  via?: 'lan' | 'tailscale'
+  /** 'tailscale' = privates Tailscale-Netz, 'internet' = Cloudflare-Link (ohne App, überall) */
+  via?: 'lan' | 'tailscale' | 'internet'
   /** Gerätename im Tailscale-Netz (nur Anzeige) */
   name?: string
 }
@@ -86,9 +86,19 @@ export interface RemoteCheck {
   viaServe?: boolean
 }
 
+/** Internet-Link über einen Cloudflare-Quick-Tunnel */
+export type TunnelState = 'off' | 'installing' | 'starting' | 'ready' | 'error'
+
 export type CompanionStatus =
   | { running: false; error?: string }
-  | { running: true; port: number; links: CompanionLink[]; remote: TailscaleState['state']; check?: RemoteCheck }
+  | {
+      running: true
+      port: number
+      links: CompanionLink[]
+      remote: TailscaleState['state']
+      check?: RemoteCheck
+      internet?: { state: TunnelState; error?: string }
+    }
 
 /**
  * Entscheidet aus den Firewall-Regeln von VibeDesk, ob das Tailscale-Netz durchkommt.
@@ -109,6 +119,8 @@ export function firewallVerdict(category: string | undefined, rules: { action: s
 export interface CompanionSettings {
   enabled: boolean
   port: number
+  /** Internet-Link (Cloudflare-Tunnel): Handy von überall, ohne App */
+  internet?: boolean
 }
 
 /** Gekoppeltes Handy (der Schlüssel selbst bleibt nur auf dem Handy, Main kennt nur seinen Hash) */

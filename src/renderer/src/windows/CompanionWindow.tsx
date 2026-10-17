@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { Icon } from '../desktop/icons'
-import type { CompanionSettings, RemoteCheck } from '../../../shared/companion'
+import type { CompanionSettings, CompanionStatus, RemoteCheck } from '../../../shared/companion'
 import { confirm } from '../store/dialogStore'
 import { cancelPairing, revokeAllDevices, revokeDevice, startPairing, useCompanion } from '../store/companionStore'
 import { useSettings } from '../store/settingsStore'
@@ -10,6 +10,43 @@ import { Toggle } from './AmbienceMenu'
 import './companion.css'
 
 const TAILSCALE_URL = 'https://tailscale.com/download'
+
+const TUNNEL_TEXT = {
+  off: '',
+  installing: 'Richte den Internet-Link ein (einmalig, etwa eine Minute) …',
+  starting: 'Baue den Internet-Link auf …',
+  ready: 'Läuft – dein Handy erreicht VibeDesk von überall, ganz ohne App.',
+  error: 'Hat nicht geklappt.'
+} as const
+
+/** Handy von überall: Internet-Link über einen Cloudflare-Tunnel – am Handy reicht der Browser */
+function InternetCard({ on, status, onChange }: { on: boolean; status: CompanionStatus; onChange(v: boolean): void }): React.JSX.Element {
+  const net = status.running ? status.internet : undefined
+  const state = on ? (net?.state ?? 'starting') : 'off'
+  return (
+    <div className={`comp-remote${state === 'ready' ? ' ok' : ''}`} data-testid="companion-internet">
+      <Icon name="globe" size={16} />
+      <div style={{ flex: 1 }}>
+        <div className="row">
+          <b>Von überall – ohne App</b>
+          <span style={{ flex: 1 }} />
+          <Toggle label="Internet-Link" on={on} onChange={onChange} />
+        </div>
+        {state === 'off' ? (
+          <div className="dim small">
+            Gibt dem Handy-Begleiter einen sicheren HTTPS-Link im Internet. Am Handy reicht der Browser, unterwegs im Mobilfunk genauso wie zu Hause. Ohne den Code von diesem Bildschirm kommt niemand
+            hinein.
+          </div>
+        ) : (
+          <div className="dim small" data-testid="companion-internet-state">
+            {state === 'error' ? (net?.error ?? TUNNEL_TEXT.error) : state === 'starting' && net?.error ? net.error : TUNNEL_TEXT[state]}
+          </div>
+        )}
+        {state === 'ready' && <div className="dim tiny">Der Link bleibt, solange VibeDesk läuft. Nach einem Neustart gibt es einen neuen – dann einmal neu scannen und koppeln.</div>}
+      </div>
+    </div>
+  )
+}
 
 /** Zugang von unterwegs: erklärt, was für Tailscale noch fehlt */
 function RemoteHint({ state }: { state: 'missing' | 'stopped' }): React.JSX.Element {
@@ -194,6 +231,7 @@ export function CompanionWindow(): React.JSX.Element {
             Verbinden{' '}
             <span className={`badge ${status.running ? 'ok' : ''}`}>{status.running ? `läuft auf Port ${status.port}` : busy ? 'startet …' : (status.error ?? 'aus')}</span>
           </h4>
+          {status.running && <InternetCard on={!!c.internet} status={status} onChange={(v) => patch({ internet: v })} />}
           {status.running && !links.length && <div className="comp-warn">Kein WLAN gefunden. Verbinde den PC mit demselben Netz wie dein Handy.</div>}
           {link && (
             <div className="comp-pair">
@@ -202,7 +240,11 @@ export function CompanionWindow(): React.JSX.Element {
               </div>
               <div className="comp-side">
                 <ol className="comp-steps">
-                  {link.via === 'tailscale' ? (
+                  {link.via === 'internet' ? (
+                    <li>
+                      Klappt überall – WLAN oder Mobilfunk. <span className="dim">Keine App nötig, nur der Browser.</span>
+                    </li>
+                  ) : link.via === 'tailscale' ? (
                     <li>
                       Tailscale-App aufs Handy und mit demselben Konto anmelden. <span className="dim">Dann klappt es zu Hause und unterwegs.</span>
                     </li>
@@ -214,7 +256,9 @@ export function CompanionWindow(): React.JSX.Element {
                   </li>
                   <li>Hier auf „Handy koppeln“ tippen und den Code am Handy eingeben.</li>
                   <li className="dim">
-                    {link.via === 'tailscale'
+                    {link.via === 'internet'
+                      ? 'Tipp: Am Handy „Zum Startbildschirm hinzufügen“ – dann ist VibeDesk wie eine App da.'
+                      : link.via === 'tailscale'
                       ? 'Lädt die Seite am Handy nicht: Der Verbindungs-Check unten zeigt, woran es liegt.'
                       : 'Fragt Windows nach der Firewall: Zugriff für private Netzwerke erlauben.'}
                   </li>
@@ -234,13 +278,14 @@ export function CompanionWindow(): React.JSX.Element {
               <span className="dim small">Netz:</span>
               {links.map((l, i) => (
                 <button key={l.ip} className={`chip${i === pick ? ' on' : ''}`} onClick={() => setPick(i)} title={l.name ?? l.ip}>
-                  {l.via === 'tailscale' ? 'Überall (Tailscale)' : `WLAN · ${l.ip}`}
+                  {l.via === 'internet' ? 'Überall (Internet)' : l.via === 'tailscale' ? 'Tailscale' : `WLAN · ${l.ip}`}
                 </button>
               ))}
             </div>
           )}
-          {status.running && status.remote !== 'ready' && <RemoteHint state={status.remote} />}
-          {status.running && status.remote === 'ready' && status.check && <RemoteCheckCard check={status.check} />}
+          {/* Tailscale nur noch als Alternative, wenn es schon eingerichtet ist und kein Internet-Link läuft */}
+          {status.running && !c.internet && status.remote === 'stopped' && <RemoteHint state={status.remote} />}
+          {status.running && !c.internet && status.remote === 'ready' && status.check && <RemoteCheckCard check={status.check} />}
           <div className="row">
             <span className="small">Port</span>
             <input
@@ -284,7 +329,11 @@ export function CompanionWindow(): React.JSX.Element {
               </button>
             </div>
           )}
-          <div className="dim tiny">Nur im eigenen WLAN nutzen – in Café-, Uni- oder Hotelnetzen lieber ausschalten.</div>
+          <div className="dim tiny">
+            {c.internet
+              ? 'Der Internet-Link ist öffentlich, aber ohne Code vom PC-Bildschirm kommt niemand hinein. Verlorenes Handy? Hier abmelden.'
+              : 'Nur im eigenen WLAN nutzen – in Café-, Uni- oder Hotelnetzen lieber ausschalten.'}
+          </div>
         </section>
       )}
 

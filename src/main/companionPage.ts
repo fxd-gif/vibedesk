@@ -383,12 +383,31 @@ export function companionPage(nonce: string): string {
   // ---------- Live-Verbindung (SSE über fetch, damit der Schlüssel im Header bleibt) ----------
 
   var ctrl = null, retry = null;
+  // Über den Internet-Link (Cloudflare) kommt SSE erst am Ende an – dort Long-Polling
+  var polling = /\\.trycloudflare\\.com$/i.test(location.hostname);
+  function poll(my, v) {
+    return fetch('/api/poll?v=' + v, { headers: { authorization: 'Bearer ' + key }, cache: 'no-store', signal: my.signal }).then(function (r) {
+      if (r.status === 401) return unpaired();
+      if (!r.ok) throw new Error('http ' + r.status);
+      return r.json().then(function (j) {
+        if (my !== ctrl) return;
+        setConn('on', 'verbunden');
+        if (j.state && j.state.sessions) { state = j.state; render(); }
+        return poll(my, j.v);
+      });
+    });
+  }
   function connect() {
     if (!key) return unpaired();
     if (ctrl) ctrl.abort();
     clearTimeout(retry);
     var my = ctrl = new AbortController();
     setConn('', 'verbinde …');
+    if (polling) return poll(my, -1).catch(function () {
+      if (my !== ctrl || !key) return;
+      setConn('off', 'getrennt – versuche erneut …');
+      retry = setTimeout(connect, 2500);
+    });
     fetch('/api/events', { headers: { authorization: 'Bearer ' + key }, cache: 'no-store', signal: my.signal }).then(function (r) {
       if (r.status === 401) return unpaired();
       if (!r.ok || !r.body) throw new Error('http ' + r.status);

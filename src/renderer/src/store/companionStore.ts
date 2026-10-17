@@ -110,12 +110,12 @@ export function wireCompanion(): void {
   const sync = async (): Promise<void> => {
     const c = cfg()
     if (!c) return
-    const key = `${c.enabled}|${c.port}`
+    const key = `${c.enabled}|${c.port}|${!!c.internet}`
     if (key === lastKey) return
     lastKey = key
     useCompanion.setState({ busy: true })
     try {
-      useCompanion.setState({ status: await api.companion.configure(c.enabled, c.port) })
+      useCompanion.setState({ status: await api.companion.configure(c.enabled, c.port, !!c.internet) })
     } finally {
       useCompanion.setState({ busy: false })
     }
@@ -144,6 +144,7 @@ export function wireCompanion(): void {
       inform('Handy gekoppelt', `„${paired.name}“ kann jetzt Freigaben geben und Claude Aufträge schicken.`)
     }
   })
+  api.on.companionStatus((status) => on() && useCompanion.setState({ status }))
   api.on.companionPower((action, at) => {
     if (action === 'shutdown' && at) {
       const s = Math.max(1, Math.round((at - Date.now()) / 1000))

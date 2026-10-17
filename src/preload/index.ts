@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { DiscordStatus, FileChange, HookEvent, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
 import type { BrainPulse } from '../shared/brain'
 import type { PermissionAsk } from '../shared/permissions'
-import type { CompanionDevice, PromptTarget } from '../shared/companion'
+import type { CompanionDevice, CompanionStatus, PromptTarget } from '../shared/companion'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
   const h = (_e: unknown, ...args: unknown[]): void => cb(...(args as A))
@@ -59,6 +59,7 @@ const api: VibedeskApi = {
     companionPrompt: (cb) => listen<[string, PromptTarget, string]>('companion:prompt', cb),
     companionDevices: (cb) => listen<[CompanionDevice[], CompanionDevice | undefined]>('companion:devices', cb),
     companionPower: (cb) => listen<['shutdown' | 'sleep' | 'cancel', number | null]>('companion:power', cb),
+    companionStatus: (cb) => listen<[CompanionStatus]>('companion:status', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb)
   },
   vibe: {
@@ -179,7 +180,7 @@ const api: VibedeskApi = {
     answer: (id, decision) => ipcRenderer.invoke('permissions:answer', id, decision)
   },
   companion: {
-    configure: (enabled, port) => ipcRenderer.invoke('companion:configure', enabled, port),
+    configure: (enabled, port, internet) => ipcRenderer.invoke('companion:configure', enabled, port, internet),
     status: () => ipcRenderer.invoke('companion:status'),
     setupTailscale: () => ipcRenderer.invoke('companion:setupTailscale'),
     openFirewall: () => ipcRenderer.invoke('companion:openFirewall'),

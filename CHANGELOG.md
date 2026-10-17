@@ -7,6 +7,15 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Handy von überall – ohne App**: Im Handy-Begleiter gibt es jetzt den Schalter „Von überall – ohne App“. VibeDesk richtet einen sicheren HTTPS-Link über Cloudflare ein (ohne Konto, ohne Router-Einstellungen, ohne Firewall-Freigabe). Am Handy reicht der Browser, im WLAN genauso wie unterwegs im Mobilfunk. Gekoppelt wird wie immer mit dem Code vom PC-Bildschirm, ohne ihn kommt niemand hinein. Der Link bleibt, solange VibeDesk läuft. Nach einem Neustart einmal neu scannen und koppeln
+- Beim ersten Einschalten installiert VibeDesk das kleine Cloudflare-Programm selbst. Fällt der Tunnel aus, baut VibeDesk ihn von allein neu auf
+
+### Verbessert
+
+- Tailscale ist nur noch eine Alternative für alle, die es schon nutzen. Die Handy-App wird nicht mehr gebraucht
+
 ## 0.15.1
 
 ### Behoben

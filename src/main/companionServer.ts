@@ -15,12 +15,27 @@ import type { PowerControl } from './powerControl'
 
 const MAX_BODY = 16 * 1024
 const MAX_CLIENTS = 8
+/** Long-Polling hält höchstens so lange, dann kommt der unveränderte Stand */
+export const POLL_HOLD_MS = 25_000
+
+/**
+ * Absender für die Fehlversuch-Bremse. Hinter dem Cloudflare-Tunnel kommt alles von 127.0.0.1 –
+ * dann zählt die Adresse, die Cloudflare mitschickt. Nur von loopback, sonst könnte man sie fälschen.
+ */
+export function clientIp(remote: string | undefined, cf: string | string[] | undefined): string {
+  const r = remote ?? '?'
+  const loop = r === '127.0.0.1' || r === '::1' || r === '::ffff:127.0.0.1'
+  return loop && typeof cf === 'string' && cf.trim() ? `cf:${cf.trim().slice(0, 64)}` : r
+}
 
 export class CompanionServer {
   private server: http.Server | null = null
   private port = 0
   private clients = new Map<http.ServerResponse, string>()
   private state = '{}'
+  /** zählt jeden neuen Stand hoch – fürs Long-Polling */
+  private version = 0
+  private waiters = new Set<() => void>()
   private heartbeat: ReturnType<typeof setInterval> | null = null
   /** Fehlversuche (falscher Schlüssel oder Code) pro Adresse und insgesamt */
   private fails = new RateLimiter(20, 10 * 60_000)
@@ -67,6 +82,7 @@ export class CompanionServer {
     this.heartbeat = null
     this.clients.forEach((_d, c) => c.end())
     this.clients.clear()
+    this.wake()
     const s = this.server
     this.server = null
     if (!s) return Promise.resolve()
@@ -83,17 +99,30 @@ export class CompanionServer {
       c.end()
       this.clients.delete(c)
     }
+    this.wake()
+  }
+
+  private wake(): void {
+    const w = [...this.waiters]
+    this.waiters.clear()
+    w.forEach((f) => f())
   }
 
   push(state: CompanionState): void {
     this.state = JSON.stringify(state)
+    this.version++
     const msg = `data: ${this.state}\n\n`
     this.clients.forEach((_d, c) => c.write(msg))
+    this.wake()
+  }
+
+  private token(req: http.IncomingMessage): string {
+    const h = req.headers.authorization
+    return typeof h === 'string' && h.startsWith('Bearer ') ? h.slice(7).trim() : ''
   }
 
   private device(req: http.IncomingMessage): CompanionDevice | null {
-    const h = req.headers.authorization
-    const given = typeof h === 'string' && h.startsWith('Bearer ') ? h.slice(7).trim() : ''
+    const given = this.token(req)
     return given ? this.auth.verify(given) : null
   }
 
@@ -106,7 +135,7 @@ export class CompanionServer {
     }
     const json = (code: number, x: unknown): void => send(code, JSON.stringify(x))
     const url = new URL(req.url ?? '/', 'http://companion')
-    const ip = req.socket.remoteAddress ?? '?'
+    const ip = clientIp(req.socket.remoteAddress, req.headers['cf-connecting-ip'])
 
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
       const nonce = randomBytes(16).toString('base64')
@@ -146,6 +175,30 @@ export class CompanionServer {
       res.write(`retry: 2000\ndata: ${this.state}\n\n`)
       this.clients.set(res, dev.id)
       req.on('close', () => this.clients.delete(res))
+      return
+    }
+      // Long-Polling für den Internet-Link: Cloudflare-Quick-Tunnels puffern SSE bis zum Ende
+    if (req.method === 'GET' && url.pathname === '/api/poll') {
+      const since = Number(url.searchParams.get('v'))
+      const reply = (): void => send(200, `{"v":${this.version},"state":${this.state}}`)
+      if (since !== this.version || this.waiters.size >= MAX_CLIENTS * 2) return reply()
+      let done = false
+      const finish = (): void => {
+        if (done) return
+        done = true
+        clearTimeout(t)
+        this.waiters.delete(finish)
+        // abgemeldet, während gewartet wurde?
+        if (!this.server || !this.auth.verify(this.token(req))) return json(401, { ok: false, error: 'Nicht gekoppelt' })
+        reply()
+      }
+      const t = setTimeout(finish, POLL_HOLD_MS)
+      this.waiters.add(finish)
+      req.on('close', () => {
+        done = true
+        clearTimeout(t)
+        this.waiters.delete(finish)
+      })
       return
     }
     if (req.method !== 'POST') return json(405, { ok: false, error: 'Methode nicht erlaubt' })
