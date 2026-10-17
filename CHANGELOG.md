@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.18.0
+
 ### Neu
 
 - **Terminal wie im Windows Terminal**: Strg+C kopiert, wenn etwas markiert ist (sonst bricht es wie gewohnt ab). Strg+V fügt ein, auch Screenshots: Das Bild wird gespeichert und Claude bekommt den Pfad. Rechtsklick kopiert oder fügt ein, Dateien lassen sich ins Terminal ziehen
