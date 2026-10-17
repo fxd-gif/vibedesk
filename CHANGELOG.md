@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.16.0
+
 ### Neu
 
 - **Handy von überall – ohne App**: Im Handy-Begleiter gibt es jetzt den Schalter „Von überall – ohne App“. VibeDesk richtet einen sicheren HTTPS-Link über Cloudflare ein (ohne Konto, ohne Router-Einstellungen, ohne Firewall-Freigabe). Am Handy reicht der Browser, im WLAN genauso wie unterwegs im Mobilfunk. Gekoppelt wird wie immer mit dem Code vom PC-Bildschirm, ohne ihn kommt niemand hinein. Der Link bleibt, solange VibeDesk läuft. Nach einem Neustart einmal neu scannen und koppeln
