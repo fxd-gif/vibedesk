@@ -58,7 +58,13 @@ const api: VibedeskApi = {
     permissions: (cb) => listen<[PermissionAsk[]]>('permissions:list', cb),
     companionPrompt: (cb) => listen<[string, PromptTarget, string]>('companion:prompt', cb),
     companionDevices: (cb) => listen<[CompanionDevice[], CompanionDevice | undefined]>('companion:devices', cb),
-    companionPower: (cb) => listen<['shutdown' | 'sleep' | 'cancel', number | null]>('companion:power', cb)
+    companionPower: (cb) => listen<['shutdown' | 'sleep' | 'cancel', number | null]>('companion:power', cb),
+    quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb)
+  },
+  quick: {
+    configure: (enabled) => ipcRenderer.invoke('quick:configure', enabled),
+    targets: (list) => ipcRenderer.send('quick:targets', list),
+    open: () => ipcRenderer.send('quick:open')
   },
   setup: {
     check: () => ipcRenderer.invoke('setup:check'),

@@ -35,6 +35,7 @@ import { GitService } from './gitService'
 import { registerGitIpc } from './gitIpc'
 import { PermissionBroker } from './permissionBroker'
 import { setupCompanion } from './companionIpc'
+import { QuickPrompt, type QuickTarget } from './quickPrompt'
 
 if (process.env.VIBEDESK_USERDATA) app.setPath('userData', process.env.VIBEDESK_USERDATA)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
@@ -237,6 +238,20 @@ app.whenReady().then(async () => {
   const fileWatcher = new FileWatcher((c) => send('files:change', c))
   registerFileIpc(new FileService(() => projects.list().filter((p) => !p.missing).map((p) => p.path)), fileWatcher)
   app.on('before-quit', () => fileWatcher.closeAll())
+
+  // Schnell-Prompt von überall (Strg+Alt+Leertaste)
+  const quick = new QuickPrompt((text, sessionId) => send('quick:prompt', text, sessionId))
+  ipcMain.handle('quick:configure', (_e, enabled: unknown) => quick.configure(enabled === true))
+  ipcMain.on('quick:targets', (_e, list: unknown) => {
+    if (!Array.isArray(list)) return
+    quick.setTargets(
+      list
+        .filter((x): x is QuickTarget => !!x && typeof x.id === 'string' && typeof x.name === 'string' && typeof x.status === 'string')
+        .map((x) => ({ id: x.id.slice(0, 80), name: x.name.slice(0, 80), status: x.status.slice(0, 20) }))
+    )
+  })
+  ipcMain.on('quick:open', () => quick.toggle())
+  app.on('will-quit', () => quick.dispose())
 
   let discordStatus: DiscordStatus = { state: 'off' }
   const discord = new DiscordRpc((st) => {

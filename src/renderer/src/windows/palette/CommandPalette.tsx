@@ -81,6 +81,7 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     { id: 'act:ambience', label: 'Atmosphäre & Musik einstellen', group: 'Aktionen', icon: 'rain', run: onAmbience },
     ...(s ? [{ id: 'act:music', label: s.musicOn ? 'Lofi-Radio aus' : 'Lofi-Radio an', group: 'Aktionen', icon: 'music', run: () => useSettings.getState().set(toggleMusic(s)) }] : []),
     { id: 'act:fullscreen', label: 'Vollbild umschalten', group: 'Aktionen', icon: 'exit', hint: 'F11 · Esc halten', run: () => api.app.toggleFullscreen() },
+    { id: 'act:quick', label: 'Schnell-Prompt öffnen', group: 'Aktionen', icon: 'send', hint: 'Strg+Alt+Leertaste, auch in anderen Apps', run: () => api.quick.open() },
     { id: 'act:news', label: 'Was ist neu?', group: 'Aktionen', icon: 'spark', run: showWhatsNew },
     { id: 'act:update', label: 'Nach Updates suchen', group: 'Aktionen', icon: 'restart', run: () => void api.update.check() },
     { id: 'act:quit', label: 'VibeDesk beenden', group: 'Aktionen', icon: 'exit', run: () => api.app.quit() }

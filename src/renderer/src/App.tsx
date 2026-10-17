@@ -45,6 +45,7 @@ import { NotifyPanel, ToastStack } from './desktop/NotifyCenter'
 import { setPanel as setNotifyPanel, useNotify, wireNotify } from './store/notifyStore'
 import { wireWatcher } from './store/watcher'
 import { wireQueue } from './store/queueStore'
+import { wireQuick } from './store/quickStore'
 import { StartCard } from './desktop/StartCard'
 import { MoreMenu } from './desktop/MoreMenu'
 import { dockPlan, showPreviewInDock } from './desktop/dockPlan'
@@ -147,6 +148,7 @@ export default function App(): React.JSX.Element {
     wireNotify()
     wireWatcher()
     wireQueue()
+    wireQuick()
     wireBrainActivity()
     wirePermissions()
     wireCompanion()

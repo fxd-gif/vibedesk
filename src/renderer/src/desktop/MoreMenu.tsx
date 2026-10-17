@@ -10,6 +10,7 @@ import { Icon } from './icons'
 export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void }): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
   const dockAll = useSettings((s) => !!s.s?.dockAll)
+  const quick = useSettings((s) => s.s?.quickPrompt !== false)
 
   useEffect(() => {
     const down = (e: PointerEvent): void => {
@@ -52,6 +53,12 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
       <div className="more-foot">
         <span>Alle Symbole im Dock zeigen</span>
         <Toggle on={dockAll} onChange={(v) => useSettings.getState().set({ dockAll: v })} label="Alle Symbole im Dock zeigen" />
+      </div>
+      <div className="more-foot">
+        <span title="Öffnet über jeder App ein Eingabefeld – der Text geht an Claude">
+          Schnell-Prompt <kbd className="mono">Strg+Alt+Leertaste</kbd>
+        </span>
+        <Toggle on={quick} onChange={(v) => useSettings.getState().set({ quickPrompt: v })} label="Schnell-Prompt von überall" />
       </div>
     </div>
   )
