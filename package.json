@@ -1,6 +1,6 @@
 {
   "name": "vibedesk",
-  "version": "0.17.1",
+  "version": "0.17.2",
   "description": "Immersive Vibecoding-Umgebung für Windows mit Claude Code",
   "main": "./out/main/index.js",
   "author": "fxd-gif",

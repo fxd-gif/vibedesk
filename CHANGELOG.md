@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.17.2
+
 ### Behoben
 
 - **Update-Fensterchen bleibt beim Neustart offen**: Während VibeDesk sich für ein Update beendet, zeigt das kleine Fenster jetzt durchgehend „Installiere Update …“, bis die neue Version da ist. Bisher war es in dieser Zeit verschwunden
