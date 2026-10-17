@@ -4,7 +4,7 @@ import { randomBytes } from 'crypto'
 import fs from 'fs'
 import os from 'os'
 import QRCode from 'qrcode'
-import { installTailscale, startTailscaleLogin, tailscaleState } from './tailscale'
+import { installTailscale, servePort, startServe, startTailscaleLogin, stopServe, tailscaleState } from './tailscale'
 import { firewallState, openFirewall } from './firewall'
 import { companionUrl, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../shared/companion'
 import { isDecision } from '../shared/permissions'
@@ -79,19 +79,34 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
   })
   const server = new CompanionServer(auth, hub, power, (dev) => d.send('companion:devices', auth.list(), dev))
 
+  /** lokaler Port, für den `tailscale serve` gerade eingerichtet ist */
+  let served: number | null = null
+  const unserve = async (): Promise<void> => {
+    if (served === null) return
+    const p = served
+    served = null
+    await stopServe(p)
+  }
+
   const status = async (error?: string): Promise<CompanionStatus> => {
     if (!server.running) return error ? { running: false, error } : { running: false }
     const port = server.boundPort
     const ifs = os.networkInterfaces()
     const ts = await tailscaleState(ifs)
-    const targets: { ip: string; via: 'lan' | 'tailscale'; name?: string }[] = lanAddresses(ifs).map((ip) => ({ ip, via: 'lan' }))
+    const targets: { ip: string; port: number; via: 'lan' | 'tailscale'; name?: string }[] = lanAddresses(ifs).map((ip) => ({ ip, port, via: 'lan' }))
+    // Über `tailscale serve` nimmt der Tailscale-Dienst an – der hat schon eine Firewall-Freigabe, keine Adminrechte nötig
+    if (ts.state === 'ready' && served !== port) served = (await startServe(port)) ? port : null
+    else if (ts.state !== 'ready') served = null
+    const tsPort = served === port ? servePort(port) : port
     // Tailscale zuerst: funktioniert zu Hause und unterwegs
-    if (ts.state === 'ready') targets.unshift({ ip: ts.ip, via: 'tailscale', name: ts.name })
-    // Verbindungs-Check: Kommt das Handy überhaupt an? (Handy im Tailnet, Firewall)
-    const check = ts.state === 'ready' ? { account: ts.account, peers: ts.peers, phones: ts.phones, firewall: await firewallState() } : undefined
+    // serve ordnet über den Hostnamen zu – über die nackte 100.x-Adresse käme 404
+    if (ts.state === 'ready') targets.unshift({ ip: served === port && ts.name ? ts.name : ts.ip, port: tsPort, via: 'tailscale', name: ts.name })
+    // Verbindungs-Check: Kommt das Handy überhaupt an? Mit serve ist die Firewall kein Thema
+    const firewall = ts.state !== 'ready' ? undefined : served === port ? ('ok' as const) : await firewallState()
+    const check = ts.state === 'ready' ? { account: ts.account, peers: ts.peers, phones: ts.phones, firewall: firewall!, viaServe: served === port } : undefined
     const links = await Promise.all(
-      targets.map(async (t) => {
-        const url = companionUrl(t.ip, port)
+      targets.map(async ({ port: p, ...t }) => {
+        const url = companionUrl(t.ip, p)
         return { ...t, url, qr: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b0e17', light: '#ffffff' } }) }
       })
     )
@@ -100,12 +115,14 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
 
   ipcMain.handle('companion:configure', async (_e, enabled: unknown, p: unknown) => {
     if (enabled !== true) {
+      await unserve()
       await server.stop()
       power.keepAwake(false)
       auth.cancelPairing()
       return status()
     }
     const want = Number.isInteger(p) && (p as number) >= 1024 && (p as number) <= 65535 ? (p as number) : 17350
+    if (served !== null && served !== want) await unserve()
     const r = await server.start(want)
     if (!r.ok) return status(r.error)
     // Solange das Handy steuern kann, geht der PC nicht in den Standby (der Bildschirm darf aus)
@@ -158,6 +175,7 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     hub,
     stop: async () => {
       power.keepAwake(false)
+      await unserve()
       await server.stop()
     }
   }

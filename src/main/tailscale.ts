@@ -69,6 +69,36 @@ export function installTailscale(): Promise<boolean> {
   })
 }
 
+/** Port, unter dem Tailscale den Handy-Begleiter im Tailnet anbietet */
+export const servePort = (local: number): number => (local < 65535 ? local + 1 : local - 1)
+
+/** Feste Argumente für `tailscale serve` – nur Zahlen, nichts aus dem Renderer */
+export function serveArgs(local: number, on: boolean): string[] {
+  const p = servePort(local)
+  return on ? ['serve', '--bg', `--http=${p}`, `http://127.0.0.1:${local}`] : ['serve', `--http=${p}`, 'off']
+}
+
+/**
+ * Tailscale nimmt Verbindungen aus dem Tailnet selbst an und reicht sie lokal weiter.
+ * Vorteil: Der Tailscale-Dienst hat schon eine Firewall-Freigabe für alle Netze –
+ * VibeDesk braucht keine eigene und damit keine Adminrechte. Liefert den Port oder null.
+ */
+export function startServe(local: number): Promise<number | null> {
+  const exe = exePath('tailscale.exe')
+  if (process.platform !== 'win32' || !Number.isInteger(local) || !fs.existsSync(exe)) return Promise.resolve(null)
+  return new Promise((resolve) => {
+    execFile(exe, serveArgs(local, true), { timeout: 10_000, windowsHide: true }, (err) => resolve(err ? null : servePort(local)))
+  })
+}
+
+export function stopServe(local: number): Promise<void> {
+  const exe = exePath('tailscale.exe')
+  if (process.platform !== 'win32' || !fs.existsSync(exe)) return Promise.resolve()
+  return new Promise((resolve) => {
+    execFile(exe, serveArgs(local, false), { timeout: 10_000, windowsHide: true }, () => resolve())
+  })
+}
+
 /** Login-Link aus der Ausgabe von `tailscale up` */
 export function loginUrl(out: string): string | null {
   return /https:\/\/login\.tailscale\.com\/[^\s]+/.exec(out)?.[0] ?? null

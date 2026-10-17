@@ -105,7 +105,9 @@ function RemoteCheckCard({ check }: { check: RemoteCheck }): React.JSX.Element {
       <div className="comp-check-row" data-testid="companion-check-firewall">
         <span className={`ok-dot ${check.firewall === 'ok' ? 'on' : check.firewall === 'blocked' ? 'off' : 'maybe'}`} />
         <span>
-          {check.firewall === 'ok'
+          {check.viaServe
+            ? 'Tailscale nimmt die Verbindung selbst an – keine Firewall-Freigabe nötig'
+            : check.firewall === 'ok'
             ? 'Firewall lässt das Tailscale-Netz durch'
             : check.firewall === 'blocked'
               ? 'Die Windows-Firewall blockt VibeDesk im Tailscale-Netz – das Handy kommt nicht an.'

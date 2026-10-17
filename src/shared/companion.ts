@@ -82,6 +82,8 @@ export interface RemoteCheck {
   peers?: number
   phones?: number
   firewall: FirewallState
+  /** Tailscale nimmt selbst an (`tailscale serve`) – keine eigene Firewall-Freigabe nötig */
+  viaServe?: boolean
 }
 
 export type CompanionStatus =
