@@ -15,6 +15,7 @@ import { pickAndInstall } from '../addons/InstallDialog'
 import { panelDef } from '../panels'
 import { rank } from './fuzzy'
 import { showWhatsNew } from '../../changelog/WhatsNew'
+import { showWrapped } from '../../wrapped/VibeWrapped'
 import { findShareCode } from '../../../../shared/shareCode'
 import { openPaste, sharePrompts, startImport } from '../../store/shareStore'
 import { redactText, toggleCurtain } from '../../store/streamerStore'
@@ -82,6 +83,7 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     ...(s ? [{ id: 'act:music', label: s.musicOn ? 'Lofi-Radio aus' : 'Lofi-Radio an', group: 'Aktionen', icon: 'music', run: () => useSettings.getState().set(toggleMusic(s)) }] : []),
     { id: 'act:fullscreen', label: 'Vollbild umschalten', group: 'Aktionen', icon: 'exit', hint: 'F11 · Esc halten', run: () => api.app.toggleFullscreen() },
     { id: 'act:quick', label: 'Schnell-Prompt öffnen', group: 'Aktionen', icon: 'send', hint: 'Strg+Alt+Leertaste, auch in anderen Apps', run: () => api.quick.open() },
+    { id: 'act:wrapped', label: 'Vibe Wrapped – deine Woche', group: 'Aktionen', icon: 'stats', hint: 'Rückblick als teilbares Bild', run: () => void showWrapped() },
     { id: 'act:news', label: 'Was ist neu?', group: 'Aktionen', icon: 'spark', run: showWhatsNew },
     { id: 'act:update', label: 'Nach Updates suchen', group: 'Aktionen', icon: 'restart', run: () => void api.update.check() },
     { id: 'act:quit', label: 'VibeDesk beenden', group: 'Aktionen', icon: 'exit', run: () => api.app.quit() }

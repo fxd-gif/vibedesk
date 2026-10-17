@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { api } from '../api'
 import { ambienceAudio } from '../ambience/audio'
 import { playChime } from '../ambience/chime'
 import { focusReducer, idleFocus, type FocusAction, type FocusState, type Phase } from './focusTimer'
@@ -24,6 +25,8 @@ const BANNERS: Record<Phase, string> = {
 function applyPhase(prev: Phase, next: Phase): void {
   if (prev === next) return
   const breakNow = next === 'short' || next === 'long'
+  // Arbeitsphase zu Ende gebracht → zählt für den Wochenrückblick
+  if (prev === 'work' && breakNow) api.vibe.focusDone()
   ambienceAudio.setDuck(breakNow ? 0.25 : 1, breakNow ? 0.6 : 1)
   if (next === 'idle') return
   const vol = useSettings.getState().s?.chimeVolume ?? 0.5

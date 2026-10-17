@@ -61,6 +61,11 @@ const api: VibedeskApi = {
     companionPower: (cb) => listen<['shutdown' | 'sleep' | 'cancel', number | null]>('companion:power', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb)
   },
+  vibe: {
+    week: () => ipcRenderer.invoke('vibe:week'),
+    focusDone: () => ipcRenderer.send('vibe:focusDone'),
+    capture: (rect) => ipcRenderer.invoke('vibe:capture', rect)
+  },
   quick: {
     configure: (enabled) => ipcRenderer.invoke('quick:configure', enabled),
     targets: (list) => ipcRenderer.send('quick:targets', list),

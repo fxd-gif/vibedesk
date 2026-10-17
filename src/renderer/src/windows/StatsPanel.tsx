@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSessions } from '../store/sessionStore'
 import { fmtDuration, fmtTokens, fmtUsd, modelLabel, useStats } from '../store/statsStore'
 import { useWorkflow } from '../store/workflowStore'
+import { showWrapped } from '../wrapped/VibeWrapped'
 
 const level = (p: number): string => (p >= 0.95 ? 'crit' : p >= 0.8 ? 'warn' : 'ok')
 
@@ -26,6 +27,9 @@ export function StatsPanel(): React.JSX.Element {
           <div className="dim small">Heute</div>
           <div className="big">{fmtTokens(today?.tokens ?? 0)}</div>
           <div className="dim small">Tokens · {fmtUsd(today?.costUsd ?? 0)} ≈ · {fmtTokens(today?.cacheRead ?? 0)} aus Cache</div>
+          <button className="btn small ghost" style={{ marginTop: 6 }} onClick={() => void showWrapped()} data-testid="stats-wrapped">
+            ✨ Deine Woche ansehen
+          </button>
         </div>
         <div className="spark" title="Letzte 7 Tage">
           {days.map((d) => (

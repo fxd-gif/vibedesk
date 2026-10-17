@@ -56,7 +56,8 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   brainOn: true,
   approvalsOn: true,
   companion: { enabled: false, port: COMPANION_PORT },
-  quickPrompt: true
+  quickPrompt: true,
+  lastWrapped: 0
 })
 
 export class SettingsStore {

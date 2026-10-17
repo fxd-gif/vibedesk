@@ -132,6 +132,29 @@ export interface DayStats {
   costUsd: number
 }
 
+/** Wochenrückblick „Vibe Wrapped“ */
+export interface VibeWeek {
+  from: string
+  to: string
+  /** aktive Minuten (mit Claude-Aktivität) */
+  minutes: number
+  prompts: number
+  toolCalls: number
+  fails: number
+  agents: number
+  focus: number
+  /** verschiedene bearbeitete Dateien */
+  files: number
+  tools: { name: string; count: number }[]
+  projects: { name: string; count: number }[]
+  peakHour: number | null
+  bestDay: string | null
+  /** Tage in Folge mit Aktivität bis heute */
+  streak: number
+  days: { date: string; minutes: number; prompts: number }[]
+  persona: string
+}
+
 export interface ClaudeSessionMeta {
   id: string
   title: string
@@ -177,6 +200,8 @@ export interface Settings {
   companion: CompanionSettings
   /** Schnell-Prompt von überall per Strg+Alt+Leertaste */
   quickPrompt: boolean
+  /** wann der Wochenrückblick zuletzt angeboten wurde (0 = noch nie) */
+  lastWrapped: number
 }
 
 export interface LoungeSettings {
@@ -316,6 +341,14 @@ export interface VibedeskApi {
     companionPower(cb: (action: 'shutdown' | 'sleep' | 'cancel', at: number | null) => void): Unsubscribe
     /** Schnell-Prompt (Strg+Alt+Leertaste): Text und gewählte Session (null = keine offen) */
     quickPrompt(cb: (text: string, sessionId: string | null) => void): Unsubscribe
+  }
+  vibe: {
+    /** Wochenrückblick der letzten 7 Tage */
+    week(): Promise<VibeWeek>
+    /** eine Fokus-Runde ist geschafft */
+    focusDone(): void
+    /** Bereich des Fensters als Bild → Zwischenablage + Bilder\VibeDesk; liefert den Pfad */
+    capture(rect: { x: number; y: number; width: number; height: number }): Promise<string | null>
   }
   quick: {
     /** globales Tastenkürzel an/aus – false, wenn es schon belegt ist */

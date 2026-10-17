@@ -36,6 +36,8 @@ import { registerGitIpc } from './gitIpc'
 import { PermissionBroker } from './permissionBroker'
 import { setupCompanion } from './companionIpc'
 import { QuickPrompt, type QuickTarget } from './quickPrompt'
+import { VibeLog } from './vibeLog'
+import { captureCard } from './vibeCapture'
 
 if (process.env.VIBEDESK_USERDATA) app.setPath('userData', process.env.VIBEDESK_USERDATA)
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
@@ -148,6 +150,16 @@ app.whenReady().then(async () => {
   const statsHistory = new StatsHistory(join(userData, 'stats.json'))
   const stats = new StatsService({ history: statsHistory, emit: (s) => send('stats:update', s) })
   ipcMain.handle('stats:history', () => statsHistory.lastDays(7, localDate(Date.now())))
+  // Wochenrückblick „Vibe Wrapped“
+  const vibe = new VibeLog(join(userData, 'vibe.json'))
+  const projectNameOf = (sid: string): string | undefined => {
+    const info = sessions.list().find((s) => s.id === sid)
+    return info ? projects.get(info.projectId)?.name : undefined
+  }
+  ipcMain.handle('vibe:week', () => vibe.week())
+  ipcMain.on('vibe:focusDone', () => vibe.focusDone())
+  ipcMain.handle('vibe:capture', (_e, r: unknown) => captureCard(mainWindow, r, process.env.VIBEDESK_PICTURES_DIR || app.getPath('pictures')))
+  app.on('before-quit', () => vibe.flush())
   ipcMain.on('app:openExternal', (_e, url: string) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url)
   })
@@ -193,6 +205,7 @@ app.whenReady().then(async () => {
       const shown = tend ? { ...e, name: 'BrainTend' } : e
       send('hook:event', shown)
       stats.onHook(e)
+      vibe.record(e, projectNameOf(e.sessionId))
       brain.onHook(e)
       broker.onHook(e)
       companion.hub.onHook(shown)

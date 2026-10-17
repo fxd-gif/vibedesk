@@ -6,6 +6,7 @@ import { DialogHost } from './desktop/Dialog'
 import { Dock, type DockItem } from './desktop/Dock'
 import { migratePanels, PANELS, PANEL_IDS, panelDef } from './windows/panels'
 import { checkWhatsNew, WhatsNew } from './changelog/WhatsNew'
+import { checkWrapped, VibeWrapped } from './wrapped/VibeWrapped'
 import { checkSetupOnStart, SetupPrompt, wireSetup } from './windows/ToolSetup'
 import { CommandPalette, usePalette, wirePalette } from './windows/palette/CommandPalette'
 import type { PanelId } from '../../shared/types'
@@ -168,6 +169,7 @@ export default function App(): React.JSX.Element {
         if (p) void openInstallDialog(p)
       })
       checkWhatsNew()
+      void checkWrapped()
       if (s.onboarded) checkSetupOnStart()
     })
   }, [])
@@ -316,6 +318,7 @@ export default function App(): React.JSX.Element {
       <NotifyPanel />
       {more && <MoreMenu items={plan.more} onClose={closeMore} />}
       <WhatsNew />
+      <VibeWrapped />
       <SetupPrompt />
       <Onboarding />
       <InstallDialog />
