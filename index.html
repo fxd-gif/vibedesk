@@ -36,7 +36,7 @@
   body { margin: 0; background: var(--night); color: var(--text); font: 17px/1.6 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
   a { color: var(--accent); text-underline-offset: 3px; }
   a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
-  img { display: block; max-width: 100%; }
+  img { display: block; max-width: 100%; height: auto; }
   .wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter); }
 
   /* Die Seite ist das Fenster: unscharfe Lichter dahinter, Tropfen davor */
@@ -155,6 +155,9 @@
   @media (max-width: 820px) {
     .split, .split.flip, .compare { grid-template-columns: 1fr; }
     .split.flip > .media { order: 0; }
+    .media img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+    .media img.crop-left { aspect-ratio: 1 / 1; object-position: 0 0; }
+    .media img.crop-center { object-position: 50% 45%; }
     .compare > div + div { border-left: 0; border-top: 1px solid var(--edge); }
     .steps { grid-template-columns: 1fr; }
     .bar nav a:not(.gh) { display: none; }
@@ -238,7 +241,7 @@
         <li><b>See the result while it is built</b><span>When Claude starts a dev server, the preview opens by itself. Point at an element to tell Claude what to change, console errors go straight back to it.</span></li>
         <li><b>A terminal that behaves</b><span>Copy and paste like Windows Terminal, attach files with a click, paste screenshots, clickable file paths, search, and a shell right next to Claude.</span></li>
       </ul>
-      <div class="media"><img src="img/hero.jpg" alt="VibeDesk with two Claude Code sessions, a todo list, token stats and an agent tree" loading="lazy" width="1600" height="960"></div>
+      <div class="media"><img class="crop-left" src="img/hero.jpg" alt="VibeDesk with two Claude Code sessions, a todo list, token stats and an agent tree" loading="lazy" width="1600" height="960"></div>
     </div>
     <div class="split flip">
       <ul class="things">
@@ -247,7 +250,7 @@
         <li><b>A watcher that taps your shoulder</b><span>If a session hangs, loops on the same error or runs out of context, you get a calm notice with a fix button.</span></li>
         <li><b>Git without the command line</b><span>See what changed, commit, push and undo from a window instead of memorising commands.</span></li>
       </ul>
-      <div class="media"><img src="img/focus.jpg" alt="The focus timer floating over a rainy, neon-lit scene" loading="lazy" width="1600" height="960"></div>
+      <div class="media"><img class="crop-center" src="img/focus.jpg" alt="The focus timer floating over a rainy, neon-lit scene" loading="lazy" width="1600" height="960"></div>
     </div>
   </section>
 
