@@ -58,9 +58,51 @@ export interface CompanionLink {
 }
 
 /** Zugang von unterwegs über Tailscale */
-export type TailscaleState = { state: 'missing' } | { state: 'stopped' } | { state: 'ready'; ip: string; name?: string }
+export type TailscaleState =
+  | { state: 'missing' }
+  | { state: 'stopped' }
+  | {
+      state: 'ready'
+      ip: string
+      name?: string
+      /** Konto des Tailnets – damit man am Handy dasselbe nimmt */
+      account?: string
+      /** andere Geräte im Tailnet (ohne diesen PC); undefined = unbekannt */
+      peers?: number
+      /** davon Handys (iOS/Android) */
+      phones?: number
+    }
 
-export type CompanionStatus = { running: false; error?: string } | { running: true; port: number; links: CompanionLink[]; remote: TailscaleState['state'] }
+/** Lässt die Windows-Firewall Verbindungen aus dem Tailscale-Netz zu VibeDesk durch? */
+export type FirewallState = 'ok' | 'blocked' | 'unknown'
+
+/** Verbindungs-Check für unterwegs (nur wenn Tailscale verbunden ist) */
+export interface RemoteCheck {
+  account?: string
+  peers?: number
+  phones?: number
+  firewall: FirewallState
+}
+
+export type CompanionStatus =
+  | { running: false; error?: string }
+  | { running: true; port: number; links: CompanionLink[]; remote: TailscaleState['state']; check?: RemoteCheck }
+
+/**
+ * Entscheidet aus den Firewall-Regeln von VibeDesk, ob das Tailscale-Netz durchkommt.
+ * category = Netzwerkprofil des Tailscale-Adapters (Private/Public/DomainAuthenticated),
+ * rules = eingehende, aktive Regeln für das VibeDesk-Programm.
+ */
+export function firewallVerdict(category: string | undefined, rules: { action: string; profile: string; remote?: string }[]): FirewallState {
+  if (!category) return 'unknown'
+  const prof = category === 'DomainAuthenticated' ? 'Domain' : category
+  const covers = (r: { profile: string }): boolean => r.profile.split(/[,\s]+/).some((x) => /^(any|all)$/i.test(x) || x.toLowerCase() === prof.toLowerCase())
+  // Block-Regeln gewinnen in Windows immer gegen Allow
+  const reaches = (r: { remote?: string }): boolean => !r.remote || /^(any|\*)$/i.test(r.remote) || /100\.64\.0\.0|LocalSubnet/i.test(r.remote)
+  const hits = rules.filter((r) => covers(r) && reaches(r))
+  if (hits.some((r) => /block/i.test(r.action))) return 'blocked'
+  return hits.some((r) => /allow/i.test(r.action)) ? 'ok' : 'blocked'
+}
 
 export interface CompanionSettings {
   enabled: boolean

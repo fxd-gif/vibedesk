@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { Icon } from '../desktop/icons'
-import type { CompanionSettings } from '../../../shared/companion'
+import type { CompanionSettings, RemoteCheck } from '../../../shared/companion'
 import { confirm } from '../store/dialogStore'
 import { cancelPairing, revokeAllDevices, revokeDevice, startPairing, useCompanion } from '../store/companionStore'
 import { useSettings } from '../store/settingsStore'
@@ -55,6 +55,71 @@ function RemoteHint({ state }: { state: 'missing' | 'stopped' }): React.JSX.Elem
         {setup === 'busy' && state === 'missing' && <div className="dim small">Fragt Windows nach Administratorrechten, bitte bestätigen. Das dauert etwa eine Minute.</div>}
         {setup === 'login' && <div className="dim small">Melde dich im Browser bei Tailscale an und tippe danach auf „Erneut prüfen“. Aufs Handy kommt die Tailscale-App mit demselben Konto.</div>}
         {setup === 'failed' && <div className="dim small">Das hat nicht geklappt. Lade Tailscale selbst herunter oder öffne die Tailscale-App und melde dich dort an.</div>}
+      </div>
+    </div>
+  )
+}
+
+/** Verbindungs-Check für unterwegs: zeigt, woran es hakt, und behebt die Firewall per Klick */
+function RemoteCheckCard({ check }: { check: RemoteCheck }): React.JSX.Element {
+  const [fw, setFw] = useState<'idle' | 'busy' | 'failed'>('idle')
+  const [checking, setChecking] = useState(false)
+  const recheck = async (): Promise<void> => {
+    setChecking(true)
+    useCompanion.setState({ status: await api.companion.status() })
+    setChecking(false)
+  }
+  const openFw = async (): Promise<void> => {
+    setFw('busy')
+    const ok = await api.companion.openFirewall()
+    setFw(ok ? 'idle' : 'failed')
+    await recheck()
+  }
+  const phoneOk = (check.phones ?? 0) > 0
+  const lonely = check.peers === 0
+  const allOk = check.firewall === 'ok' && phoneOk
+  return (
+    <div className={`comp-check${allOk ? ' ok' : ''}`} data-testid="companion-check">
+      <div className="row between">
+        <b>Verbindungs-Check {allOk ? '· alles bereit' : ''}</b>
+        <button className="btn small ghost" disabled={checking} onClick={() => void recheck()}>
+          {checking ? 'Prüfe …' : 'Erneut prüfen'}
+        </button>
+      </div>
+      <div className="comp-check-row">
+        <span className="ok-dot on" />
+        <span>
+          Tailscale verbunden{check.account ? <span className="dim"> · Konto {check.account}</span> : null}
+        </span>
+      </div>
+      <div className="comp-check-row" data-testid="companion-check-phone">
+        <span className={`ok-dot ${phoneOk ? 'on' : lonely ? 'off' : 'maybe'}`} />
+        <span>
+          {phoneOk
+            ? `Handy im Tailnet (${check.phones})`
+            : lonely
+              ? <>Noch kein Handy im Tailnet. Installiere die Tailscale-App aufs Handy und melde dich mit <b>{check.account ?? 'demselben Konto'}</b> an.</>
+              : 'Kein Handy erkannt – andere Geräte sind da. Prüfe, ob das Handy mit demselben Konto angemeldet ist.'}
+        </span>
+      </div>
+      <div className="comp-check-row" data-testid="companion-check-firewall">
+        <span className={`ok-dot ${check.firewall === 'ok' ? 'on' : check.firewall === 'blocked' ? 'off' : 'maybe'}`} />
+        <span>
+          {check.firewall === 'ok'
+            ? 'Firewall lässt das Tailscale-Netz durch'
+            : check.firewall === 'blocked'
+              ? 'Die Windows-Firewall blockt VibeDesk im Tailscale-Netz – das Handy kommt nicht an.'
+              : 'Firewall konnte nicht geprüft werden.'}
+          {check.firewall !== 'ok' && (
+            <span className="row" style={{ marginTop: 4 }}>
+              <button className="btn small primary" disabled={fw === 'busy'} onClick={() => void openFw()} data-testid="companion-firewall">
+                {fw === 'busy' ? 'Warte auf Windows …' : 'Firewall freigeben'}
+              </button>
+            </span>
+          )}
+          {fw === 'busy' && <span className="dim small"> Windows fragt nach Administratorrechten. Freigegeben wird nur für Tailscale und dein eigenes Netz.</span>}
+          {fw === 'failed' && <span className="dim small"> Hat nicht geklappt – wurde die Windows-Abfrage abgelehnt?</span>}
+        </span>
       </div>
     </div>
   )
@@ -148,7 +213,7 @@ export function CompanionWindow(): React.JSX.Element {
                   <li>Hier auf „Handy koppeln“ tippen und den Code am Handy eingeben.</li>
                   <li className="dim">
                     {link.via === 'tailscale'
-                      ? 'Lädt die Seite am Handy nicht: In der Windows-Firewall VibeDesk für das Tailscale-Netz erlauben (Windows führt es meist als privates Netz).'
+                      ? 'Lädt die Seite am Handy nicht: Der Verbindungs-Check unten zeigt, woran es liegt.'
                       : 'Fragt Windows nach der Firewall: Zugriff für private Netzwerke erlauben.'}
                   </li>
                 </ol>
@@ -173,6 +238,7 @@ export function CompanionWindow(): React.JSX.Element {
             </div>
           )}
           {status.running && status.remote !== 'ready' && <RemoteHint state={status.remote} />}
+          {status.running && status.remote === 'ready' && status.check && <RemoteCheckCard check={status.check} />}
           <div className="row">
             <span className="small">Port</span>
             <input

@@ -410,6 +410,8 @@ export interface VibedeskApi {
     status(): Promise<CompanionStatus>
     /** Tailscale installieren (falls nötig) und Anmeldung im Browser starten */
     setupTailscale(): Promise<boolean>
+    /** Windows-Firewall für Tailscale und das eigene Netz öffnen (fragt per UAC) */
+    openFirewall(): Promise<boolean>
     /** Einmal-Code zum Koppeln eines Handys (5 Minuten gültig) */
     startPairing(): Promise<CompanionPairing>
     cancelPairing(): void

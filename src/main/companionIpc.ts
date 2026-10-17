@@ -5,6 +5,7 @@ import fs from 'fs'
 import os from 'os'
 import QRCode from 'qrcode'
 import { installTailscale, startTailscaleLogin, tailscaleState } from './tailscale'
+import { firewallState, openFirewall } from './firewall'
 import { companionUrl, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../shared/companion'
 import { isDecision } from '../shared/permissions'
 import { defaultRunner } from './gitService'
@@ -86,13 +87,15 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     const targets: { ip: string; via: 'lan' | 'tailscale'; name?: string }[] = lanAddresses(ifs).map((ip) => ({ ip, via: 'lan' }))
     // Tailscale zuerst: funktioniert zu Hause und unterwegs
     if (ts.state === 'ready') targets.unshift({ ip: ts.ip, via: 'tailscale', name: ts.name })
+    // Verbindungs-Check: Kommt das Handy überhaupt an? (Handy im Tailnet, Firewall)
+    const check = ts.state === 'ready' ? { account: ts.account, peers: ts.peers, phones: ts.phones, firewall: await firewallState() } : undefined
     const links = await Promise.all(
       targets.map(async (t) => {
         const url = companionUrl(t.ip, port)
         return { ...t, url, qr: await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'M', color: { dark: '#0b0e17', light: '#ffffff' } }) }
       })
     )
-    return { running: true, port, links, remote: ts.state }
+    return { running: true, port, links, remote: ts.state, check }
   }
 
   ipcMain.handle('companion:configure', async (_e, enabled: unknown, p: unknown) => {
@@ -123,6 +126,8 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
       settingUp = false
     }
   })
+  // Firewall für Tailscale + eigenes Subnetz öffnen (Windows fragt per UAC)
+  ipcMain.handle('companion:openFirewall', () => openFirewall())
   ipcMain.handle('companion:startPairing', () => auth.startPairing())
   ipcMain.on('companion:cancelPairing', () => auth.cancelPairing())
   ipcMain.handle('companion:devices', () => auth.list())

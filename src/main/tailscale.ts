@@ -7,7 +7,13 @@ import { tailnetAddress, type NetIf, type TailscaleState } from '../shared/compa
 
 /** Antwort von `tailscale status --json` → Zustand */
 export function parseTailscaleStatus(raw: string): TailscaleState {
-  let j: { BackendState?: unknown; Self?: { TailscaleIPs?: unknown; DNSName?: unknown } }
+  let j: {
+    BackendState?: unknown
+    Self?: { TailscaleIPs?: unknown; DNSName?: unknown }
+    CurrentTailnet?: { Name?: unknown }
+    User?: Record<string, { LoginName?: unknown }>
+    Peer?: Record<string, { OS?: unknown }> | null
+  }
   try {
     j = JSON.parse(raw)
   } catch {
@@ -18,7 +24,16 @@ export function parseTailscaleStatus(raw: string): TailscaleState {
   const ip = ips.find((x) => /^\d+\.\d+\.\d+\.\d+$/.test(x))
   if (!ip) return { state: 'stopped' }
   const dns = typeof j.Self?.DNSName === 'string' ? j.Self.DNSName.replace(/\.$/, '') : ''
-  return dns ? { state: 'ready', ip, name: dns } : { state: 'ready', ip }
+  const out: Extract<TailscaleState, { state: 'ready' }> = dns ? { state: 'ready', ip, name: dns } : { state: 'ready', ip }
+  const account = typeof j.CurrentTailnet?.Name === 'string' ? j.CurrentTailnet.Name : undefined
+  if (account) out.account = account
+  // Peer fehlt oder ist null, wenn nur dieser PC im Tailnet ist
+  if ('Peer' in j || 'CurrentTailnet' in j) {
+    const peers = j.Peer && typeof j.Peer === 'object' ? Object.values(j.Peer) : []
+    out.peers = peers.length
+    out.phones = peers.filter((p) => typeof p?.OS === 'string' && /^(ios|android)$/i.test(p.OS)).length
+  }
+  return out
 }
 
 const cli = (): string | null => {
