@@ -566,3 +566,12 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
 .tq-add { display: flex; gap: 6px; }
 .tq-add .field { flex: 1; }
 .tq-paused { display: flex; align-items: center; gap: 8px; color: #fde68a; }
+/* Vorschau → Claude */
+.pv-pick.on { color: #c7d4ff; background: rgba(124, 156, 255, .22); }
+.pv-errs { padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(248, 113, 113, .45); background: rgba(248, 113, 113, .14); color: #fecaca; font-size: 11px; cursor: pointer; }
+.pv-hint { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); padding: 5px 12px; border-radius: 999px; background: rgba(15, 18, 28, .9); color: #dfe6ff; font-size: 12px; pointer-events: none; }
+.pv-compose, .pv-errlist { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: 12px; background: rgba(12, 15, 22, .95); border: 1px solid var(--glass-border); box-shadow: 0 12px 36px rgba(0, 0, 0, .45); color: var(--text); }
+.pv-compose textarea { resize: none; font-family: inherit; }
+.pv-sel, .pv-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pv-errlist { max-height: 60%; overflow-y: auto; }
+.pv-err { font-size: 11px; color: #fecaca; padding: 4px 6px; border-radius: 6px; background: rgba(248, 113, 113, .08); word-break: break-word; }

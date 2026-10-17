@@ -383,6 +383,10 @@ export interface VibedeskApi {
     reveal(projectId: string): Promise<boolean>
   }
   openExternal(url: string): void
+  preview: {
+    /** PNG (Data-URL) speichern → Dateipfad für Claude */
+    saveShot(dataUrl: string): Promise<string | null>
+  }
   files: FilesApi
   scenes: {
     addCustom(path: string): Promise<string>

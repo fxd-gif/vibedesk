@@ -2,6 +2,10 @@ import { create } from 'zustand'
 import { api } from '../api'
 import { detectLocalUrls } from '../windows/localUrls'
 import { centeredRect, useUi } from './uiStore'
+import { enqueue } from './queueStore'
+import { sendToSession } from './sessionPrompt'
+import { termWin, useSessions } from './sessionStore'
+import { useWorkflow } from './workflowStore'
 
 export const previewWin = (key: string): string => `preview:${key}`
 
@@ -63,4 +67,39 @@ export function shortUrl(url: string): string {
   } catch {
     return url
   }
+}
+
+/** Welche Session gehört zur Vorschau? Die, deren Terminal die URL ausgegeben hat – sonst die oberste. */
+export function sessionForUrl(url: string): string | null {
+  const origin = (u: string): string => {
+    try {
+      return new URL(u).origin
+    } catch {
+      return u
+    }
+  }
+  const sessions = useSessions.getState().sessions
+  const urls = usePreview.getState().urls
+  const hit = sessions.find((s) => (urls[s.id] ?? []).some((u) => origin(u) === origin(url)))
+  if (hit) return hit.id
+  const ui = useUi.getState()
+  for (let i = ui.open.length - 1; i >= 0; i--) {
+    const s = sessions.find((x) => termWin(x.id) === ui.open[i])
+    if (s) return s.id
+  }
+  return sessions[0]?.id ?? null
+}
+
+/** Auftrag aus der Vorschau an Claude – läuft Claude gerade, wird er vorgemerkt */
+export function askClaudeFromPreview(url: string, text: string): 'sent' | 'queued' | 'none' {
+  const id = sessionForUrl(url)
+  if (!id) return 'none'
+  const st = useWorkflow.getState().sessions[id]?.status
+  if (st === 'working' || st === 'waiting') {
+    enqueue(id, text)
+    return 'queued'
+  }
+  // Vorschau bleibt vorn – man will ja sehen, wie sich die Seite ändert
+  sendToSession(id, text, false)
+  return 'sent'
 }

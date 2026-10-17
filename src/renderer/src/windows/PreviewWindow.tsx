@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { GlassWindow } from '../desktop/GlassWindow'
 import { Icon } from '../desktop/icons'
-import { previewWin, usePreview } from '../store/previewStore'
+import { inform } from '../store/notifyStore'
+import { askClaudeFromPreview, previewWin, usePreview } from '../store/previewStore'
+import { CANCEL_PICK_SCRIPT, consoleError, errorsPrompt, PICK_SCRIPT, pickPrompt, pushError, type PickedElement, type PreviewError } from './previewTools'
 
 interface WebviewEl extends HTMLElement {
   reload(): void
@@ -10,6 +12,53 @@ interface WebviewEl extends HTMLElement {
   canGoBack(): boolean
   getURL(): string
   loadURL(url: string): Promise<void>
+  executeJavaScript(code: string, userGesture?: boolean): Promise<unknown>
+  capturePage(rect?: { x: number; y: number; width: number; height: number }): Promise<{ toDataURL(): string; isEmpty(): boolean }>
+}
+
+const SENT: Record<'sent' | 'queued' | 'none', string> = {
+  sent: 'An Claude geschickt',
+  queued: 'Claude arbeitet noch – vorgemerkt, geht danach los',
+  none: 'Keine Claude-Session offen – starte zuerst eine'
+}
+
+/** Element ausgewählt → kurz sagen, was anders werden soll */
+function PickComposer({ pick, onSend, onCancel }: { pick: PickedElement; onSend(wish: string): void; onCancel(): void }): React.JSX.Element {
+  const [wish, setWish] = useState('')
+  return (
+    <div className="pv-compose" data-testid="preview-compose">
+      <div className="dim small mono pv-sel" title={pick.selector}>
+        {pick.selector}
+      </div>
+      {pick.text && <div className="small pv-text">„{pick.text.slice(0, 120)}“</div>}
+      <textarea
+        className="field small"
+        autoFocus
+        rows={2}
+        placeholder="Was soll Claude daran ändern? z. B. „größer und in Grün“"
+        value={wish}
+        onChange={(e) => setWish(e.target.value)}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === 'Enter' && !e.shiftKey && wish.trim()) {
+            e.preventDefault()
+            onSend(wish)
+          }
+          if (e.key === 'Escape') onCancel()
+        }}
+        data-testid="preview-wish"
+      />
+      <div className="row">
+        <span style={{ flex: 1 }} />
+        <button className="btn small ghost" onClick={onCancel}>
+          Abbrechen
+        </button>
+        <button className="btn small primary" disabled={!wish.trim()} onClick={() => onSend(wish)} data-testid="preview-send">
+          An Claude
+        </button>
+      </div>
+    </div>
+  )
 }
 
 function normalize(input: string): string {
@@ -27,6 +76,10 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
   const [loading, setLoading] = useState(false)
   const [failed, setFailed] = useState<string | null>(null)
   const ref = useRef<WebviewEl>(null)
+  const [errors, setErrors] = useState<PreviewError[]>([])
+  const [showErrors, setShowErrors] = useState(false)
+  const [picking, setPicking] = useState(false)
+  const [pick, setPick] = useState<PickedElement | null>(null)
 
   useEffect(() => setInput(url), [url])
 
@@ -41,6 +94,12 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
       setFailed(null)
     }
     const stop = (): void => setLoading(false)
+    const onConsole = (e: Event & { level?: unknown; message?: unknown; line?: unknown; sourceId?: unknown }): void => {
+      const err = consoleError(e)
+      if (err) setErrors((l) => pushError(l, err))
+    }
+    // neue Seite → alte Fehler sind Geschichte
+    const onNavigate = (): void => setErrors([])
     const fail = (e: Event & { errorCode?: number; errorDescription?: string; isMainFrame?: boolean }): void => {
       if (e.isMainFrame === false || e.errorCode === -3) return
       setFailed(e.errorDescription || 'Seite nicht erreichbar')
@@ -50,7 +109,11 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
     wv.addEventListener('did-start-loading', start)
     wv.addEventListener('did-stop-loading', stop)
     wv.addEventListener('did-fail-load', fail)
+    wv.addEventListener('console-message', onConsole)
+    wv.addEventListener('did-navigate', onNavigate)
     return () => {
+      wv.removeEventListener('console-message', onConsole)
+      wv.removeEventListener('did-navigate', onNavigate)
       wv.removeEventListener('did-navigate', nav)
       wv.removeEventListener('did-navigate-in-page', nav)
       wv.removeEventListener('did-start-loading', start)
@@ -58,6 +121,55 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
       wv.removeEventListener('did-fail-load', fail)
     }
   }, [url])
+
+  const current = (): string => ref.current?.getURL() || url
+
+  const startPick = async (): Promise<void> => {
+    const wv = ref.current
+    if (!wv) return
+    if (picking) {
+      void wv.executeJavaScript(CANCEL_PICK_SCRIPT).catch(() => undefined)
+      return
+    }
+    setPick(null)
+    setPicking(true)
+    try {
+      const r = (await wv.executeJavaScript(PICK_SCRIPT, true)) as PickedElement | null
+      if (r && typeof r.selector === 'string') setPick(r)
+    } catch {
+      /* Seite gewechselt */
+    } finally {
+      setPicking(false)
+    }
+  }
+
+  const sendPick = async (wish: string): Promise<void> => {
+    const p = pick
+    const wv = ref.current
+    if (!p) return
+    setPick(null)
+    let shot: string | undefined
+    try {
+      const pad = 6
+      const img = await wv?.capturePage({
+        x: Math.max(0, Math.floor(p.rect.x - pad)),
+        y: Math.max(0, Math.floor(p.rect.y - pad)),
+        width: Math.max(1, Math.ceil(p.rect.w + pad * 2)),
+        height: Math.max(1, Math.ceil(p.rect.h + pad * 2))
+      })
+      if (img && !img.isEmpty()) shot = (await api.preview.saveShot(img.toDataURL())) ?? undefined
+    } catch {
+      /* ohne Bild geht es auch */
+    }
+    inform(SENT[askClaudeFromPreview(current(), pickPrompt(current(), p, wish, shot))])
+  }
+
+  const sendErrors = (): void => {
+    setShowErrors(false)
+    const r = askClaudeFromPreview(current(), errorsPrompt(current(), errors))
+    if (r !== 'none') setErrors([])
+    inform(SENT[r])
+  }
 
   const go = (): void => {
     const u = normalize(input)
@@ -82,6 +194,20 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
             onKeyDown={(e) => e.key === 'Enter' && go()}
           />
           {loading && <span className="spin" />}
+          <button
+            className={`gbtn pv-pick${picking ? ' on' : ''}`}
+            title="Zeig drauf: Element anklicken und Claude sagen, was anders werden soll (Esc bricht ab)"
+            disabled={!url}
+            onClick={() => void startPick()}
+            data-testid="preview-pick"
+          >
+            <Icon name="inspect" size={14} />
+          </button>
+          {errors.length > 0 && (
+            <button className="pv-errs" title="Fehler in der Browser-Konsole" onClick={() => setShowErrors((v) => !v)} data-testid="preview-errors">
+              ⚠ {errors.reduce((n, e) => n + e.count, 0)}
+            </button>
+          )}
           <button className="gbtn" title="Im Browser öffnen" disabled={!url} onClick={() => api.openExternal(ref.current?.getURL() || url)}>
             <Icon name="external" size={14} />
           </button>
@@ -91,6 +217,27 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
             <webview ref={ref} src={url} partition="persist:vibedesk-preview" className="preview-view" />
           ) : (
             <div className="panel-empty">Gib eine Adresse oder einen Port ein – oder klick im Terminal auf einen erkannten Dev-Server.</div>
+          )}
+          {picking && <div className="pv-hint">Zeig auf ein Element und klick drauf · Esc bricht ab</div>}
+          {pick && <PickComposer pick={pick} onSend={(w) => void sendPick(w)} onCancel={() => setPick(null)} />}
+          {showErrors && errors.length > 0 && (
+            <div className="pv-errlist" data-testid="preview-errlist">
+              {errors.slice(0, 6).map((e, i) => (
+                <div key={i} className="pv-err mono">
+                  {e.message.slice(0, 220)}
+                  {e.count > 1 && <span className="dim"> ×{e.count}</span>}
+                </div>
+              ))}
+              <div className="row">
+                <button className="btn small ghost" onClick={() => setErrors([])}>
+                  Leeren
+                </button>
+                <span style={{ flex: 1 }} />
+                <button className="btn small primary" onClick={sendErrors} data-testid="preview-errors-send">
+                  Claude soll das beheben
+                </button>
+              </div>
+            </div>
           )}
           {failed && (
             <div className="preview-fail">

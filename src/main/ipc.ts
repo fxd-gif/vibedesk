@@ -8,6 +8,7 @@ import { candidatesFromFiles, candidatesFromPath, readSkillFiles } from './skill
 import { decodeShare, encodeShare, fileBytes, toSharedFile } from '../shared/shareCode'
 import { fetchGithubCandidates } from './github'
 import { listClaudeSessions } from './claudeHistory'
+import { saveShot } from './shots'
 import type { SkillTarget } from '../shared/types'
 
 export interface IpcDeps {
@@ -34,6 +35,8 @@ export function suggestDirs(prefix: string): string[] {
 }
 
 export function registerCoreIpc(d: IpcDeps): void {
+  // „Zeig drauf“: Ausschnitt der Vorschau als PNG, Claude liest ihn über den Pfad
+  ipcMain.handle('preview:saveShot', (_e, dataUrl: unknown) => saveShot(path.join(app.getPath('userData'), 'shots'), dataUrl))
   ipcMain.handle('settings:get', () => d.settings.get())
   ipcMain.handle('settings:set', (_e, patch) => d.settings.set(patch))
 

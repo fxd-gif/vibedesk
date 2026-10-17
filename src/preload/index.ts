@@ -119,6 +119,9 @@ const api: VibedeskApi = {
     reveal: (projectId) => ipcRenderer.invoke('brain:reveal', projectId)
   },
   openExternal: (url) => ipcRenderer.send('app:openExternal', url),
+  preview: {
+    saveShot: (dataUrl) => ipcRenderer.invoke('preview:saveShot', dataUrl)
+  },
   files: {
     list: (dir) => ipcRenderer.invoke('files:list', dir),
     read: (p) => ipcRenderer.invoke('files:read', p),
