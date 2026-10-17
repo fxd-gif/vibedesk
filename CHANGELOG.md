@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 0.17.0
+
 ### Verbessert
 
 - **Handy von überall ist jetzt Standard**: Der Internet-Link über Cloudflare ist von Haus aus an. Handy-Begleiter einschalten, QR-Code scannen, koppeln – fertig, im WLAN wie unterwegs. Abschalten geht weiter mit dem Schalter „Von überall – ohne App“
