@@ -11,6 +11,11 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 - **Update-Fensterchen** wie bei Discord: Beim Start zeigt ein kleines Fenster, ob VibeDesk nach Updates sucht, eins herunterlädt (mit Fortschritt) oder gleich startet. Ohne Internet geht es nach ein paar Sekunden normal weiter
 - Auch während der Installation bleibt das Fensterchen sichtbar, bis die neue Version da ist – kein „hat sich VibeDesk einfach geschlossen?“ mehr
+- **Gehirn pflegt sich selbst**: Hat Claude in einer Runde Dateien geändert, aber nichts im Gehirn festgehalten, bittet VibeDesk es vor dem Abschluss kurz darum – ganz ohne Klick. Im Terminal steht dann „pflegt Gehirn …“, und eine kleine Karte zeigt, welche Notizen aktualisiert wurden
+
+### Entfernt
+
+- Die Karte „Gehirn pflegen?“ – das passiert jetzt automatisch
 
 ## 0.13.0
 

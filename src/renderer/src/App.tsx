@@ -47,10 +47,9 @@ import { StartCard } from './desktop/StartCard'
 import { MoreMenu } from './desktop/MoreMenu'
 import { dockPlan, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
-import { wireBrainNudge } from './store/brainNudge'
+import { wireBrainActivity } from './store/brainActivity'
 import { wirePermissions } from './store/permissionStore'
 import { wireCompanion } from './store/companionStore'
-import { TEND_PROMPT } from './windows/brain/BrainWindow'
 
 
 const initials = (n: string): string => {
@@ -144,7 +143,7 @@ export default function App(): React.JSX.Element {
     wireLounge()
     wireStreamer()
     wireNotify()
-    wireBrainNudge(TEND_PROMPT)
+    wireBrainActivity()
     wirePermissions()
     wireCompanion()
     useSettings.getState().load().then((s) => {

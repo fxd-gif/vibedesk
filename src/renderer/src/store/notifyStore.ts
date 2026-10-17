@@ -77,8 +77,8 @@ export function notify(input: NoticeInput & { kind: NoticeKind }, visible = fals
 }
 
 /** Karte ohne Verlauf – für Hinweise von VibeDesk selbst */
-export function inform(title: string, body?: string, actions?: NoticeAction[]): void {
-  showToast({ id: ++seq, kind: 'info', title, body, actions, time: Date.now() })
+export function inform(title: string, body?: string, actions?: NoticeAction[], key?: string): void {
+  showToast({ id: ++seq, kind: 'info', title, body, actions, key, time: Date.now() })
 }
 
 export function dismiss(id: number): void {

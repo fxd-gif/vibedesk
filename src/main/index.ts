@@ -187,11 +187,15 @@ app.whenReady().then(async () => {
   const hookServer = new HookServer(
     token,
     (e) => {
-      send('hook:event', e)
+      // Gehirn-Autopflege: Claude macht nach diesem Stop noch kurz weiter – für Anzeige und Handy ist die Runde nicht fertig
+      const tend = e.name === 'Stop' ? brain.stopOutput(e) : undefined
+      const shown = tend ? { ...e, name: 'BrainTend' } : e
+      send('hook:event', shown)
       stats.onHook(e)
       brain.onHook(e)
       broker.onHook(e)
-      companion.hub.onHook(e)
+      companion.hub.onHook(shown)
+      if (tend) return tend
       if (e.name === 'SessionStart') return brain.sessionStartOutput(e.sessionId)
     },
     (sid, tool, args) => brain.tool(sid, tool, args),

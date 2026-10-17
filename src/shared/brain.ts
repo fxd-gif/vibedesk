@@ -370,6 +370,8 @@ export interface BrainPulse {
   projectId: string
   id: string
   kind: 'read' | 'edit' | 'write'
+  /** bei 'write': Titel der geschriebenen Notiz */
+  title?: string
 }
 
 // ---------- Aktivität ----------

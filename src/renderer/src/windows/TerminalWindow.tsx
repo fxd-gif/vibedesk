@@ -22,6 +22,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
   const id = termWin(session.id)
   const host = useRef<HTMLDivElement>(null)
   const status = useWorkflow((s) => s.sessions[session.id]?.status ?? 'idle')
+  const tending = useWorkflow((s) => !!s.sessions[session.id]?.tending && s.sessions[session.id]?.status === 'working')
   const exitCode = useSessions((s) => s.exited[session.id])
   const isTop = useUi((s) => s.open[s.open.length - 1] === id)
   const urls = usePreview((s) => s.urls[session.id])
@@ -73,7 +74,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
           <span className={`dot ${status}`} />
           <span>{session.name}</span>
           <span className="dim" style={{ fontWeight: 400 }}>
-            · {STATUS_TEXT[status]}
+            · {tending ? 'pflegt Gehirn …' : STATUS_TEXT[status]}
           </span>
           {urls?.slice(0, 2).map((u) => (
             <button key={u} className="url-chip" title={'Vorschau: ' + u} onClick={() => usePreview.getState().openPreview(u)} data-testid="url-chip">

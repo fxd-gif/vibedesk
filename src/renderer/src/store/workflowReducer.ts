@@ -37,6 +37,8 @@ export interface SessionWorkflow {
   todos: TodoItem[]
   agents: AgentNode[]
   lastActivity: number
+  /** Claude pflegt gerade auf Anstoß von VibeDesk das Gehirn */
+  tending?: boolean
 }
 
 export interface WorkflowState {
@@ -113,12 +115,14 @@ function applyHook(s: SessionWorkflow, e: HookEvent, nextId: number): { s: Sessi
   const touch = (patch: Partial<SessionWorkflow>): SessionWorkflow => ({ ...s, ...patch, lastActivity: e.ts })
   switch (e.name) {
     case 'UserPromptSubmit':
-      return { s: touch({ status: 'working' }), usedId: false }
+      return { s: touch({ status: 'working', tending: false }), usedId: false }
+    case 'BrainTend':
+      return { s: touch({ status: 'working', tending: true }), usedId: false }
     case 'Notification':
     case 'PermissionRequest':
       return { s: touch({ status: 'waiting' }), usedId: false }
     case 'Stop':
-      return { s: touch({ status: 'done', feed: settle(s.feed) }), usedId: false }
+      return { s: touch({ status: 'done', feed: settle(s.feed), tending: false }), usedId: false }
     case 'SessionStart':
       return { s: touch({ status: s.status === 'idle' ? 'idle' : s.status }), usedId: false }
     case 'SubagentStart': {

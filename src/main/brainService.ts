@@ -26,6 +26,7 @@ import {
 import type { BrainNoteInput, HookEvent, Project } from '../shared/types'
 import { BrainStore, type NoteInput } from './brainStore'
 import { readJson, writeJsonAtomic } from './jsonFile'
+import { shouldTend, stopHookReply, type TurnActivity } from './brainTend'
 
 const READ_TOOLS = new Set(['Read', 'NotebookRead'])
 const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
@@ -44,6 +45,8 @@ export class BrainService {
   private acts = new Map<string, Activity>()
   private saveTimers = new Map<string, NodeJS.Timeout>()
   private prompts = new Map<string, string>()
+  /** laufende Runde je Session – für die Gehirn-Autopflege beim Stop */
+  private turns = new Map<string, TurnActivity>()
   private watchers = new Map<string, fs.FSWatcher>()
   private changeTimers = new Map<string, NodeJS.Timeout>()
 
@@ -98,12 +101,14 @@ export class BrainService {
   onHook(e: HookEvent): void {
     const p = this.d.projectOfSession(e.sessionId)
     if (!p) return
+    if (e.name === 'UserPromptSubmit') this.turns.set(e.sessionId, { edits: 0, tended: false })
     if (e.name === 'UserPromptSubmit' && typeof e.payload.prompt === 'string') {
       if (!this.prompts.has(e.sessionId)) this.prompts.set(e.sessionId, e.payload.prompt.replace(/\s+/g, ' ').slice(0, 160))
       return
     }
     if (e.name === 'SessionEnd') {
       this.prompts.delete(e.sessionId)
+      this.turns.delete(e.sessionId)
       return
     }
     if (e.name !== 'PostToolUse' && e.name !== 'PreToolUse') return
@@ -113,12 +118,15 @@ export class BrainService {
     const input = (e.payload.tool_input ?? {}) as Record<string, unknown>
     const raw = typeof input.file_path === 'string' ? input.file_path : typeof input.notebook_path === 'string' ? input.notebook_path : ''
     const rel = raw && relPath(raw, p.path)
+    if (rel && rel.startsWith(BRAIN_DIR + '/') && kind === 'edit' && e.name === 'PostToolUse') this.markTended(e.sessionId)
     if (!rel || rel.startsWith(BRAIN_DIR + '/') || rel.startsWith('.git/')) return
     // Pre: nur fürs Aufleuchten im Graph; gezählt wird nach erfolgreicher Ausführung
     if (e.name === 'PreToolUse') {
       this.d.emit('brain:pulse', { projectId: p.id, id: fileId(rel), kind } satisfies BrainPulse)
       return
     }
+    const turn = this.turns.get(e.sessionId)
+    if (turn && kind === 'edit') turn.edits++
     recordTouch(this.activity(p.id), { id: e.sessionId, prompt: this.prompts.get(e.sessionId) }, rel, kind, e.ts)
     this.scheduleSave(p.id)
   }
@@ -134,6 +142,20 @@ export class BrainService {
     return JSON.stringify({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: text } })
   }
 
+  /** Hook-Antwort beim Stop: Runde mit Änderungen, aber ohne Gehirn-Pflege → Claude macht kurz weiter */
+  stopOutput(e: HookEvent): string | undefined {
+    if (!this.d.enabled() || !this.d.projectOfSession(e.sessionId)) return undefined
+    const turn = this.turns.get(e.sessionId)
+    if (!shouldTend(turn, e.payload.stop_hook_active === true)) return undefined
+    turn!.tended = true
+    return stopHookReply()
+  }
+
+  private markTended(sessionId: string): void {
+    const turn = this.turns.get(sessionId)
+    if (turn) turn.tended = true
+  }
+
   /** Werkzeug-Aufruf vom MCP-Server. Antwort ist Text für Claude. */
   tool(sessionId: string, name: string, args: Record<string, unknown>): { text: string; isError?: boolean } {
     if (!this.d.enabled()) return { text: 'Das VibeDesk-Gehirn ist ausgeschaltet.', isError: true }
@@ -142,7 +164,8 @@ export class BrainService {
     const store = this.store(p)
     const act = this.activity(p.id)
     const s = (k: string): string => (typeof args[k] === 'string' ? (args[k] as string) : '')
-    const pulse = (title: string, kind: BrainPulse['kind']): void => this.d.emit('brain:pulse', { projectId: p.id, id: noteId(title), kind } satisfies BrainPulse)
+    const pulse = (title: string, kind: BrainPulse['kind']): void =>
+      this.d.emit('brain:pulse', { projectId: p.id, id: noteId(title), kind, ...(kind === 'write' ? { title } : {}) } satisfies BrainPulse)
     try {
       switch (name) {
         case 'brain_overview':
@@ -191,6 +214,7 @@ export class BrainService {
             } satisfies NoteInput
           )
           pulse(note.title, 'write')
+          this.markTended(sessionId)
           this.watch(p)
           this.changed(p.id)
           const missing = note.links.filter((l) => !store.get(l))
