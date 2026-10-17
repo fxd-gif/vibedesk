@@ -7,6 +7,10 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Verbessert
+
+- **Vibe Wrapped in neuem Look**: Der Wochenrückblick ist jetzt eine ruhige, dunkle Karte. Klare Zahlen, ein Akzent für deinen besten Tag, keine bunten Verläufe mehr. Sieht auch als geteiltes Bild besser aus
+
 ## 0.17.0
 
 ### Verbessert

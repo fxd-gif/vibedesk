@@ -55,7 +55,14 @@ export function VibeWrapped(): React.JSX.Element | null {
   if (!w) return null
   const active = fmtActive(w.minutes)
   const maxDay = Math.max(1, ...w.days.map((d) => d.minutes))
-  const maxProj = Math.max(1, ...w.projects.map((p) => p.count))
+  const fmtProj = (min: number): string => (min < 60 ? `${min} Min.` : `${fmtActive(min).big} Std.`)
+  const facts: [string, string][] = [
+    ...(w.tools[0] ? [['Lieblingswerkzeug', TOOL_LABEL[w.tools[0].name] ?? w.tools[0].name] as [string, string]] : []),
+    ...(w.peakHour !== null ? [['Beste Zeit', `${w.peakHour} bis ${(w.peakHour + 1) % 24} Uhr`] as [string, string]] : []),
+    ['Serie', w.streak === 1 ? '1 Tag' : `${w.streak} Tage in Folge`],
+    ...(w.agents > 0 ? [['Agenten', String(w.agents)] as [string, string]] : []),
+    ...(w.focus > 0 ? [['Fokus-Runden', String(w.focus)] as [string, string]] : [])
+  ]
   // im Stream keine Projektnamen zeigen
   const projName = (name: string, i: number): string => (streaming ? `Projekt ${i + 1}` : name)
 
@@ -75,85 +82,72 @@ export function VibeWrapped(): React.JSX.Element | null {
     <div className="vw-backdrop" onPointerDown={(e) => e.target === e.currentTarget && close()} data-testid="vibe-wrapped">
       <div className="vw-stack">
         <div className="vw-card" ref={card}>
-          <div className="vw-glow" />
-          <header>
-            <span className="vw-kicker">Vibe Wrapped · {fmtDate(w.from)} – {fmtDate(w.to)}</span>
-            <h2 data-testid="vw-persona">{w.persona}</h2>
+          <header className="vw-top">
+            <b>VibeDesk</b>
+            <span>
+              {fmtDate(w.from)} bis {fmtDate(w.to)}
+            </span>
           </header>
 
-          <div className="vw-hero">
-            <div className="vw-big">{active.big}</div>
-            <div className="vw-unit">
-              {active.unit}
-              <br />
-              <span>mit Claude im Flow</span>
-            </div>
-          </div>
+          <p className="vw-lede">Deine Arbeitswoche mit Claude</p>
+          <h2 data-testid="vw-persona">{w.persona}</h2>
 
-          <div className="vw-grid">
-            <div>
-              <b data-testid="vw-prompts">{w.prompts}</b>
-              <span>Prompts</span>
-            </div>
-            <div>
-              <b>{w.files}</b>
-              <span>Dateien geändert</span>
-            </div>
-            <div>
-              <b>{w.toolCalls}</b>
-              <span>Werkzeug-Aufrufe</span>
-            </div>
-            <div>
-              <b>{w.streak}🔥</b>
-              <span>Tage in Folge</span>
-            </div>
+          <div className="vw-hero">
+            <span className="vw-big">{active.big}</span>
+            <span className="vw-unit">{active.unit} aktiv</span>
           </div>
 
           <div className="vw-days" aria-label="Aktive Minuten pro Tag">
-            {w.days.map((d) => (
-              <div key={d.date} className={d.date === w.bestDay ? 'best' : ''} title={`${fmtDate(d.date)}: ${d.minutes} Min., ${d.prompts} Prompts`}>
-                <i style={{ height: `${Math.max(4, (d.minutes / maxDay) * 100)}%` }} />
-                <span>{weekday(d.date)}</span>
-              </div>
-            ))}
+            {w.days.map((d, i) => {
+              const best = d.date === w.bestDay
+              return (
+                <div key={d.date} className={best ? 'best' : ''} title={`${fmtDate(d.date)}: ${d.minutes} Min., ${d.prompts} Prompts`}>
+                  {best && <em>{d.minutes}m</em>}
+                  <i style={{ height: `${Math.max(3, (d.minutes / maxDay) * 100)}%`, animationDelay: `${120 + i * 40}ms` }} />
+                  <span>{weekday(d.date)}</span>
+                </div>
+              )
+            })}
           </div>
 
+          <dl className="vw-stats">
+            <div>
+              <dd data-testid="vw-prompts">{w.prompts}</dd>
+              <dt>Prompts</dt>
+            </div>
+            <div>
+              <dd>{w.files}</dd>
+              <dt>Dateien geändert</dt>
+            </div>
+            <div>
+              <dd>{w.toolCalls}</dd>
+              <dt>Werkzeug-Aufrufe</dt>
+            </div>
+          </dl>
+
           {w.projects.length > 0 && (
-            <section className="vw-sec">
-              <h4>Deine Projekte</h4>
-              {w.projects.slice(0, 3).map((p, i) => (
-                <div key={p.name} className="vw-bar">
-                  <span>{projName(p.name, i)}</span>
-                  <i style={{ width: `${(p.count / maxProj) * 100}%` }} />
-                  <em>{fmtActive(p.count).big}{p.count < 60 ? ' Min.' : ' Std.'}</em>
-                </div>
-              ))}
+            <section className="vw-projects">
+              <h3>Meiste Zeit in</h3>
+              <ol>
+                {w.projects.slice(0, 3).map((p, i) => (
+                  <li key={p.name}>
+                    <span className="vw-rank">{i + 1}</span>
+                    <span className="vw-name">{projName(p.name, i)}</span>
+                    <span className="vw-time">{fmtProj(p.count)}</span>
+                  </li>
+                ))}
+              </ol>
             </section>
           )}
 
-          <footer className="vw-foot">
-            {w.tools[0] && (
-              <span>
-                Lieblingswerkzeug: <b>{TOOL_LABEL[w.tools[0].name] ?? w.tools[0].name}</b>
-              </span>
-            )}
-            {w.peakHour !== null && (
-              <span>
-                Beste Zeit: <b>{w.peakHour}–{(w.peakHour + 1) % 24} Uhr</b>
-              </span>
-            )}
-            {w.agents > 0 && (
-              <span>
-                <b>{w.agents}</b> Agenten losgeschickt
-              </span>
-            )}
-            {w.focus > 0 && (
-              <span>
-                <b>{w.focus}</b> Fokus-Runden
-              </span>
-            )}
-          </footer>
-          <div className="vw-brand">VibeDesk</div>
+          <dl className="vw-facts">
+            {facts.map(([k, v]) => (
+              <div key={k}>
+                <dt>{k}</dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
         <div className="row vw-actions">
           <button className="btn ghost" onClick={close}>

@@ -1,34 +1,57 @@
-/* Vibe Wrapped – Wochenrückblick */
-.vw-backdrop { position: fixed; inset: 0; z-index: 5850; display: grid; place-items: center; background: rgba(4, 6, 10, .55); backdrop-filter: blur(4px); animation: fade 250ms; }
-.vw-stack { display: flex; flex-direction: column; align-items: center; gap: 14px; animation: vw-pop 420ms cubic-bezier(.2, .9, .3, 1.2); }
-@keyframes vw-pop { from { transform: translateY(18px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
-.vw-card { position: relative; overflow: hidden; width: 420px; padding: 26px 26px 18px; border-radius: 26px; color: #fff;
-  background: radial-gradient(120% 90% at 0% 0%, #6d4aff 0%, transparent 55%), radial-gradient(110% 80% at 100% 100%, #ff4f8b 0%, transparent 55%), linear-gradient(160deg, #1b1446, #0d0b1f 70%);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, .55), inset 0 0 0 1px rgba(255, 255, 255, .08); }
-.vw-glow { position: absolute; width: 260px; height: 260px; right: -80px; top: -90px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 214, 102, .55), transparent 65%); filter: blur(8px); animation: vw-float 7s ease-in-out infinite; pointer-events: none; }
-@keyframes vw-float { 50% { transform: translate(-30px, 24px) scale(1.1); } }
-.vw-card header { position: relative; }
-.vw-kicker { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .75; }
-.vw-card h2 { margin: 6px 0 0; font-size: 28px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; background: linear-gradient(90deg, #fff, #ffd166); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.vw-hero { position: relative; display: flex; align-items: flex-end; gap: 12px; margin: 22px 0 18px; }
-.vw-big { font-size: 76px; line-height: .85; font-weight: 900; letter-spacing: -.04em; }
-.vw-unit { font-size: 18px; font-weight: 700; line-height: 1.15; padding-bottom: 4px; }
-.vw-unit span { font-size: 13px; font-weight: 500; opacity: .7; }
-.vw-grid { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.vw-grid > div { display: flex; flex-direction: column; gap: 2px; padding: 10px 8px; border-radius: 14px; background: rgba(255, 255, 255, .08); }
-.vw-grid b { font-size: 20px; font-weight: 800; }
-.vw-grid span { font-size: 10.5px; opacity: .7; line-height: 1.2; }
-.vw-days { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; height: 74px; margin: 16px 0 4px; }
-.vw-days > div { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; }
-.vw-days i { width: 100%; border-radius: 6px 6px 3px 3px; background: rgba(255, 255, 255, .28); }
-.vw-days .best i { background: linear-gradient(180deg, #ffd166, #ff4f8b); box-shadow: 0 0 16px rgba(255, 209, 102, .55); }
-.vw-days span { font-size: 10px; opacity: .65; }
-.vw-sec { position: relative; margin-top: 14px; }
-.vw-sec h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; opacity: .7; font-weight: 600; }
-.vw-bar { display: grid; grid-template-columns: 110px 1fr auto; align-items: center; gap: 8px; font-size: 12.5px; margin: 4px 0; }
-.vw-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-.vw-bar i { height: 8px; border-radius: 4px; background: linear-gradient(90deg, #8f7bff, #ff7aa8); }
-.vw-bar em { font-style: normal; font-size: 11px; opacity: .75; }
-.vw-foot { position: relative; display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 14px; font-size: 12px; opacity: .9; }
-.vw-brand { position: relative; margin-top: 14px; font-size: 11px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase; opacity: .45; text-align: right; }
+/* Vibe Wrapped – Wochenrückblick als teilbare Karte.
+   Bewusst ruhig: Off-Black, ein einziger Akzent (bester Tag), Zahlen in Mono, keine Verläufe. */
+.vw-backdrop { position: fixed; inset: 0; z-index: 5850; display: grid; place-items: center; background: rgba(6, 7, 9, .62); backdrop-filter: blur(6px); animation: fade 200ms; }
+.vw-stack { display: flex; flex-direction: column; align-items: center; gap: 14px; animation: vw-in 320ms cubic-bezier(.16, 1, .3, 1); }
+@keyframes vw-in { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.vw-card {
+  --vw-bg: #121316; --vw-ink: #ededeb; --vw-mute: #8a8c92; --vw-line: rgba(255, 255, 255, .09); --vw-bar: #2b2d32; --vw-accent: #c8f04a;
+  position: relative; width: 440px; padding: 22px 26px 24px; border-radius: 18px; color: var(--vw-ink); background: var(--vw-bg);
+  box-shadow: 0 24px 70px rgba(4, 5, 7, .6), inset 0 1px 0 rgba(255, 255, 255, .05); font-family: var(--ui-font);
+}
+/* :where hält den Reset bei Spezifität 0, sonst schluckt er die Abstände der Abschnitte */
+.vw-card :where(dl, dd, ol) { margin: 0; padding: 0; }
+
+.vw-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
+.vw-top b { font-weight: 700; letter-spacing: -.01em; }
+.vw-top span { font-family: var(--mono); color: var(--vw-mute); font-size: 11.5px; }
+
+.vw-lede { margin: 26px 0 4px; font-size: 13px; color: var(--vw-mute); }
+.vw-card h2 { margin: 0; font-size: 30px; line-height: 1.1; font-weight: 750; letter-spacing: -.025em; }
+
+.vw-hero { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 20px; }
+.vw-big { font-family: var(--mono); font-size: 84px; line-height: .9; font-weight: 700; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+.vw-unit { font-size: 15px; color: var(--vw-mute); }
+
+.vw-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; height: 88px; }
+.vw-days > div { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; min-height: 0; }
+.vw-days i { width: 100%; border-radius: 3px; background: var(--vw-bar); transform-origin: bottom; animation: vw-grow 520ms cubic-bezier(.16, 1, .3, 1) both; }
+.vw-days .best i { background: var(--vw-accent); }
+.vw-days em { font-style: normal; font-family: var(--mono); font-size: 10.5px; color: var(--vw-accent); }
+.vw-days span { font-size: 10.5px; color: var(--vw-mute); }
+.vw-days .best span { color: var(--vw-ink); }
+@keyframes vw-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+.vw-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--vw-line); }
+.vw-stats > div { display: flex; flex-direction: column; gap: 3px; }
+.vw-stats dd { font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.vw-stats dt { font-size: 11.5px; color: var(--vw-mute); }
+
+.vw-projects { margin-top: 20px; }
+.vw-projects h3 { margin: 0 0 8px; font-size: 11.5px; font-weight: 400; color: var(--vw-mute); }
+.vw-projects ol { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.vw-projects li { display: grid; grid-template-columns: 18px 1fr auto; align-items: baseline; gap: 8px; font-size: 13.5px; }
+.vw-rank { font-family: var(--mono); font-size: 11px; color: var(--vw-mute); }
+.vw-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.vw-time { font-family: var(--mono); font-size: 12px; color: var(--vw-mute); font-variant-numeric: tabular-nums; }
+
+.vw-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--vw-line); }
+.vw-facts > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vw-facts dt { font-size: 11px; color: var(--vw-mute); }
+.vw-facts dd { font-size: 13px; font-weight: 600; }
+
 .vw-actions { gap: 8px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vw-stack, .vw-days i { animation: none; }
+}
