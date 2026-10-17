@@ -1,6 +1,8 @@
 import { app, BrowserWindow, dialog, Menu, net, protocol, session, shell } from 'electron'
 import { pathToFileURL } from 'url'
 import { errorLogFile, installErrorLog, logError, registerErrorIpc } from './errorLog'
+import '../shared/i18n/en'
+import { resolveLang, setLang } from '../shared/i18n'
 import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
 import { ADDON_SCHEME, addonPathFromArgv, AddonStore } from './addonStore'
 import { registerAddonIpc } from './addonIpc'
@@ -141,6 +143,7 @@ app.whenReady().then(async () => {
   registerErrorIpc(claudeVersion)
   const userData = app.getPath('userData')
   const settings = new SettingsStore(join(userData, 'settings.json'), DEFAULT_SETTINGS(app.getPath('documents')))
+  setLang(resolveLang(settings.get().language, app.getLocale()))
   const projects = new ProjectStore(
     join(userData, 'projects.json'),
     () => process.env.VIBEDESK_PROJECTS_DIR || settings.get().projectsDir,

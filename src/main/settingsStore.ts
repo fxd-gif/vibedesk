@@ -61,6 +61,7 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   terminal: { fontSize: 13, lineHeight: 1.2, cursorStyle: 'block', cursorBlink: true, theme: 'scene', shell: 'powershell', statusBar: true },
   previewAutoOpen: true,
   autoResume: true,
+  language: 'auto',
   energySaver: 'auto'
 })
 

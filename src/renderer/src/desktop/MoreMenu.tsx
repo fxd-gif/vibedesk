@@ -7,11 +7,13 @@ import { panelDef } from '../windows/panels'
 import { openPanel } from '../windows/palette/CommandPalette'
 import { Icon } from './icons'
 import { openAbout } from './About'
+import { t, type LangSetting } from '../../../shared/i18n'
 
 export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void }): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
   const dockAll = useSettings((s) => !!s.s?.dockAll)
   const quick = useSettings((s) => s.s?.quickPrompt !== false)
+  const lang = useSettings((s) => s.s?.language ?? 'auto')
 
   useEffect(() => {
     const down = (e: PointerEvent): void => {
@@ -60,6 +62,20 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
           Schnell-Prompt <kbd className="mono">Strg+Alt+Leertaste</kbd>
         </span>
         <Toggle on={quick} onChange={(v) => useSettings.getState().set({ quickPrompt: v })} label="Schnell-Prompt von überall" />
+      </div>
+      <div className="more-foot">
+        {/* bewusst zweisprachig – man muss den Umschalter auch finden, wenn man die andere Sprache nicht liest */}
+        <span>Sprache · Language</span>
+        <select
+          className="field small"
+          value={lang}
+          onChange={(e) => useSettings.getState().set({ language: e.target.value as LangSetting })}
+          data-testid="more-language"
+        >
+          <option value="auto">{t('Automatisch')}</option>
+          <option value="de">Deutsch</option>
+          <option value="en">English</option>
+        </select>
       </div>
       <div className="more-foot">
         <button

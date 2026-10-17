@@ -1,4 +1,5 @@
 import { app, BrowserWindow, clipboard, ipcMain, Notification, shell } from 'electron'
+import { resolveLang, setLang } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import type { ProjectStore } from './projectStore'
@@ -38,7 +39,12 @@ export function registerCoreIpc(d: IpcDeps): void {
   // „Zeig drauf“: Ausschnitt der Vorschau als PNG, Claude liest ihn über den Pfad
   ipcMain.handle('preview:saveShot', (_e, dataUrl: unknown) => saveShot(path.join(app.getPath('userData'), 'shots'), dataUrl))
   ipcMain.handle('settings:get', () => d.settings.get())
-  ipcMain.handle('settings:set', (_e, patch) => d.settings.set(patch))
+  ipcMain.handle('settings:set', (_e, patch) => {
+    const s = d.settings.set(patch)
+    // Texte aus Main (Dialoge, Benachrichtigungen) folgen der Sprache sofort
+    setLang(resolveLang(s.language, app.getLocale()))
+    return s
+  })
 
   ipcMain.handle('projects:list', () => d.projects.list())
   ipcMain.handle('projects:create', (_e, name: string) => d.projects.create(name))

@@ -1,3 +1,5 @@
+// Sprache zuerst – alle anderen Module bauen ihre Texte schon beim Laden
+import './i18nInit'
 import { createRoot } from 'react-dom/client'
 import '@fontsource/inter/400.css'
 import '@fontsource/inter/500.css'

@@ -50,6 +50,7 @@ import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
 import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget } from './companion'
 import type { PermissionAsk, PermissionDecision } from './permissions'
+import type { LangSetting } from './i18n'
 
 export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion'
 
@@ -218,6 +219,8 @@ export interface Settings {
   previewAutoOpen: boolean
   /** Meldet Claude „Limit erreicht“, schickt VibeDesk nach dem Reset von selbst „mach weiter“ */
   autoResume: boolean
+  /** Sprache der Oberfläche; 'auto' folgt der Systemsprache */
+  language: LangSetting
   /** Regen-Hintergrund sparsamer zeichnen: 'auto' nur im Akkubetrieb, 'on' immer, 'off' nie */
   energySaver: EnergySaver
 }
