@@ -11,7 +11,20 @@ guard.unref()
 const PERMISSION_MS = 595000
 
 const { VIBEDESK_SESSION_ID: sessionId, VIBEDESK_PORT: port, VIBEDESK_TOKEN: token } = process.env
+// Sessions von vor v0.17.2 kennen VIBEDESK_ENDPOINT noch nicht – dann der Standardort von userData
+const endpointFile = process.env.VIBEDESK_ENDPOINT || (process.env.APPDATA ? require('path').join(process.env.APPDATA, 'vibedesk', 'endpoint.json') : '')
 if (!sessionId || !port || !token) done()
+
+/** Nach einem Neustart von VibeDesk (z. B. Update) stehen Port und Token nur noch in der Endpunkt-Datei */
+function freshEndpoint() {
+  try {
+    const e = JSON.parse(require('fs').readFileSync(endpointFile, 'utf8'))
+    if (Number.isInteger(e.port) && typeof e.token === 'string' && (e.port !== Number(port) || e.token !== token)) return e
+  } catch {
+    /* keine Datei */
+  }
+  return null
+}
 
 let input = ''
 process.stdin.setEncoding('utf8')
@@ -31,30 +44,42 @@ process.stdin.on('end', () => {
     guard.unref()
   }
   const body = JSON.stringify({ sessionId, payload })
-  const req = http.request(
-    {
-      host: '127.0.0.1',
-      port: Number(port),
-      path: permission ? '/permission' : '/event',
-      method: 'POST',
-      timeout: permission ? PERMISSION_MS - 1000 : 1200,
-      headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'x-vibedesk-token': token }
-    },
-    (res) => {
-      // Antwort (z. B. Kontext beim Session-Start oder eine Freigabe-Entscheidung) geht an Claude Code
-      let out = ''
-      res.setEncoding('utf8')
-      res.on('data', (c) => (out += c))
-      res.on('end', () => {
-        if (res.statusCode === 200 && out) process.stdout.write(out, done)
-        else done()
-      })
+  const send = (ep, retry) => {
+    const again = () => {
+      const fresh = retry && freshEndpoint()
+      if (fresh) send(fresh, false)
+      else done()
     }
-  )
-  req.on('error', done)
-  req.on('timeout', () => {
-    req.destroy()
-    done()
-  })
-  req.end(body)
+    const req = http.request(
+      {
+        host: '127.0.0.1',
+        port: Number(ep.port),
+        path: permission ? '/permission' : '/event',
+        method: 'POST',
+        timeout: permission ? PERMISSION_MS - 1000 : 1200,
+        headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'x-vibedesk-token': ep.token }
+      },
+      (res) => {
+        if (res.statusCode === 403) {
+          res.resume()
+          return again()
+        }
+        // Antwort (z. B. Kontext beim Session-Start oder eine Freigabe-Entscheidung) geht an Claude Code
+        let out = ''
+        res.setEncoding('utf8')
+        res.on('data', (c) => (out += c))
+        res.on('end', () => {
+          if (res.statusCode === 200 && out) process.stdout.write(out, done)
+          else done()
+        })
+      }
+    )
+    req.on('error', again)
+    req.on('timeout', () => {
+      req.destroy()
+      done()
+    })
+    req.end(body)
+  }
+  send({ port, token }, true)
 })

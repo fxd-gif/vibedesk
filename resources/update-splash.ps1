@@ -1,6 +1,18 @@
 # VibeDesk-Update-Brücke: dasselbe kleine Fensterchen wie in der App, solange der stille
 # Installer läuft. Schließt sich, sobald die neue VibeDesk-Version ein Fenster zeigt (spätestens nach 90 s).
-param([string]$Version)
+#
+# Aufruf aus VibeDesk mit -Launch: Dieser kurze Starter startet das eigentliche Fensterchen per Start-Process
+# und endet sofort. Nur so überlebt es das Beenden von VibeDesk: Direkt gestartete Kindprozesse liegen im
+# Job-Objekt von Electron und sterben mit; mit "detached" bekommt PowerShell keine Konsole und endet sofort.
+# -Ready: Datei, die angelegt wird, sobald das Fensterchen voll sichtbar ist – erst dann beendet sich VibeDesk.
+param([string]$Version, [string]$Ready, [switch]$Launch)
+
+if ($Launch) {
+  $ps = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+  $quote = { param($s) '"' + ($s -replace '"', '') + '"' }
+  Start-Process -FilePath $ps -WindowStyle Hidden -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-STA', '-File', (& $quote $PSCommandPath), '-Version', (& $quote $Version), '-Ready', (& $quote $Ready))
+  exit 0
+}
 
 Add-Type -TypeDefinition 'using System.Runtime.InteropServices; public class VdDpi { [DllImport("user32.dll")] public static extern bool SetProcessDPIAware(); }'
 [VdDpi]::SetProcessDPIAware() | Out-Null
@@ -60,8 +72,12 @@ $timer.Add_Tick({
   if ($script:pos -gt 1) { $script:pos = -0.35 }
   $form.Invalidate()
   if ($script:state -eq 'in') {
-    $form.Opacity = [Math]::Min(1, $form.Opacity + 0.1)
-    if ($form.Opacity -ge 1) { $script:state = 'wait' }
+    # 1.0 statt 1: sonst nimmt PowerShell Math.Min(int, int), aus 0.1 wird 0 und das Fenster bleibt unsichtbar
+    $form.Opacity = [Math]::Min(1.0, $form.Opacity + 0.1)
+    if ($form.Opacity -ge 1) {
+      $script:state = 'wait'
+      if ($Ready) { try { [IO.File]::WriteAllText($Ready, 'ok') } catch {} }
+    }
   } elseif ($script:state -eq 'wait') {
     if ($script:ticks % 15 -eq 0) {
       # nur neu gestartete VibeDesk-Prozesse zählen – die alte Version schließt sich gerade erst
@@ -69,7 +85,7 @@ $timer.Add_Tick({
       if ($app -or ((Get-Date) - $start).TotalSeconds -gt 90) { $script:state = 'out' }
     }
   } else {
-    $form.Opacity = [Math]::Max(0, $form.Opacity - 0.08)
+    $form.Opacity = [Math]::Max(0.0, $form.Opacity - 0.08)
     if ($form.Opacity -le 0) { $timer.Stop(); $form.Close() }
   }
 })

@@ -9,7 +9,7 @@ const MAX_BODY = 1024 * 1024
 export type HookReply = string | void | undefined
 
 /** Werkzeug-Aufruf des Gehirn-MCP-Servers */
-export type BrainHandler = (sessionId: string, tool: string, args: Record<string, unknown>) => { text: string; isError?: boolean }
+export type BrainHandler = (sessionId: string, tool: string, args: Record<string, unknown>, cwd?: string) => { text: string; isError?: boolean }
 
 /** Freigabe-Anfrage: wartet auf eine Antwort ('' = keine Entscheidung); cancel, wenn der Hook vorher aufgibt */
 export type PermissionHandler = (e: HookEvent) => { reply: Promise<string>; cancel(): void }
@@ -122,12 +122,12 @@ export class HookServer {
   }
 
   private brain(body: Record<string, unknown>, reply: (code: number, body?: string, type?: string) => void): void {
-    const { sessionId, tool, args } = (body ?? {}) as { sessionId?: unknown; tool?: unknown; args?: unknown }
+    const { sessionId, tool, args, cwd } = (body ?? {}) as { sessionId?: unknown; tool?: unknown; args?: unknown; cwd?: unknown }
     if (typeof sessionId !== 'string' || typeof tool !== 'string') return reply(400)
     const a = args && typeof args === 'object' && !Array.isArray(args) ? (args as Record<string, unknown>) : {}
     let r: { text: string; isError?: boolean }
     try {
-      r = this.onBrain!(sessionId, tool, a)
+      r = this.onBrain!(sessionId, tool, a, typeof cwd === 'string' && cwd.length < 1024 ? cwd : undefined)
     } catch (err) {
       r = { text: err instanceof Error ? err.message : String(err), isError: true }
     }

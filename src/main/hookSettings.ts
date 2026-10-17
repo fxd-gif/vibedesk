@@ -43,14 +43,20 @@ export function buildHookSettings(nodeExe: string, forwarderPath: string, opts: 
 }
 
 /** MCP-Konfiguration für --mcp-config: startet den Gehirn-Server dieser Session */
-export function buildBrainMcpConfig(nodeExe: string, mcpPath: string, env: { sessionId: string; port: number; token: string }): object {
+export function buildBrainMcpConfig(nodeExe: string, mcpPath: string, env: { sessionId: string; port: number; token: string; endpoint?: string }): object {
   return {
     mcpServers: {
       [BRAIN_SERVER]: {
         type: 'stdio',
         command: nodeExe,
         args: [mcpPath],
-        env: { VIBEDESK_SESSION_ID: env.sessionId, VIBEDESK_PORT: String(env.port), VIBEDESK_TOKEN: env.token }
+        env: {
+          VIBEDESK_SESSION_ID: env.sessionId,
+          VIBEDESK_PORT: String(env.port),
+          VIBEDESK_TOKEN: env.token,
+          // aktueller Port + Token, falls VibeDesk neu startet, während die Session weiterläuft
+          ...(env.endpoint ? { VIBEDESK_ENDPOINT: env.endpoint } : {})
+        }
       }
     }
   }

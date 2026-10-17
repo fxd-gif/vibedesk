@@ -66,25 +66,35 @@ export class SplashWindow {
   }
 }
 
+/** Wie lange VibeDesk höchstens wartet, bis das Brücken-Fensterchen steht */
+const BRIDGE_READY_MS = 6000
+
 /**
  * Überbrückt die Zeit, in der VibeDesk für den Installer schon beendet ist: ein eigenständiger
  * PowerShell-Prozess zeigt dasselbe Fensterchen, bis die neue Version ihr Fenster öffnet.
  * Das Skript wird nach %TEMP% kopiert, weil der Installer den Ressourcen-Ordner austauscht.
+ * Wird erfüllt, sobald das Fensterchen sichtbar ist (oder nach spätestens 6 s) – erst dann darf VibeDesk enden.
  */
-export function showInstallBridge(script: string, version: string): void {
+export async function showInstallBridge(script: string, version: string): Promise<void> {
   if (process.platform !== 'win32' || !fs.existsSync(script)) return
+  let ready = ''
   try {
     const dir = join(os.tmpdir(), 'vibedesk-update')
     fs.mkdirSync(dir, { recursive: true })
     const copy = join(dir, 'update-splash.ps1')
     fs.copyFileSync(script, copy)
+    ready = join(dir, `ready-${process.pid}-${Date.now()}.txt`)
     const ps = join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
-    spawn(ps, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-STA', '-WindowStyle', 'Hidden', '-File', copy, version], {
-      detached: true,
+    // Nicht detached: PowerShell braucht eine (versteckte) Konsole. Das Skript startet sich mit -Launch selbst
+    // per Start-Process neu – dieser Enkelprozess liegt nicht mehr im Job von Electron und überlebt das Beenden.
+    spawn(ps, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', copy, '-Launch', '-Version', version.replace(/[^\w.+-]/g, ''), '-Ready', ready], {
       stdio: 'ignore',
       windowsHide: true
     }).unref()
   } catch {
-    /* nur Anzeige – das Update läuft auch ohne */
+    return /* nur Anzeige – das Update läuft auch ohne */
   }
+  const until = Date.now() + BRIDGE_READY_MS
+  while (Date.now() < until && !fs.existsSync(ready)) await new Promise((r) => setTimeout(r, 100))
+  fs.rmSync(ready, { force: true })
 }

@@ -37,6 +37,8 @@ export interface BrainDeps {
   project: (id: string) => Project | undefined
   /** Projekt einer laufenden VibeDesk-Session */
   projectOfSession: (sessionId: string) => Project | undefined
+  /** Projekt, in dessen Ordner dieser Pfad liegt (für Sessions, die die App nicht mehr kennt) */
+  projectOfDir?: (dir: string) => Project | undefined
   enabled: () => boolean
   emit: (channel: 'brain:changed' | 'brain:pulse', payload: unknown) => void
 }
@@ -157,9 +159,10 @@ export class BrainService {
   }
 
   /** Werkzeug-Aufruf vom MCP-Server. Antwort ist Text für Claude. */
-  tool(sessionId: string, name: string, args: Record<string, unknown>): { text: string; isError?: boolean } {
+  tool(sessionId: string, name: string, args: Record<string, unknown>, cwd?: string): { text: string; isError?: boolean } {
     if (!this.d.enabled()) return { text: 'Das VibeDesk-Gehirn ist ausgeschaltet.', isError: true }
-    const p = this.d.projectOfSession(sessionId)
+    // Session aus einem früheren App-Start (z. B. vor einem Update): Projekt über den Arbeitsordner finden
+    const p = this.d.projectOfSession(sessionId) ?? (cwd ? this.d.projectOfDir?.(cwd) : undefined)
     if (!p) return { text: 'Diese Session gehört zu keinem VibeDesk-Projekt.', isError: true }
     const store = this.store(p)
     const act = this.activity(p.id)
@@ -325,6 +328,15 @@ export class BrainService {
 }
 
 const str = (v: unknown): string => (typeof v === 'string' ? v : '')
+
+/** Projekt, das den Ordner enthält – das innerste gewinnt (Windows: Groß-/Kleinschreibung egal) */
+export function projectOfDir(projects: Project[], dir: string): Project | undefined {
+  const norm = (p: string): string => path.resolve(p).replace(/[\\/]+$/, '').toLowerCase()
+  const d = norm(dir)
+  return projects
+    .filter((p) => !p.missing && (d === norm(p.path) || d.startsWith(norm(p.path) + path.sep)))
+    .sort((a, b) => b.path.length - a.path.length)[0]
+}
 
 export function registerBrainIpc(brain: BrainService): void {
   ipcMain.handle('brain:view', (_e, projectId: unknown) => brain.view(str(projectId)))

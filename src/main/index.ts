@@ -30,7 +30,8 @@ import { SessionManager } from './sessionManager'
 import { OutputBatcher } from './outputBatcher'
 import { OverlayServer } from './overlayServer'
 import { basename } from 'path'
-import { BrainService, registerBrainIpc } from './brainService'
+import { BrainService, projectOfDir, registerBrainIpc } from './brainService'
+import { writeJsonAtomic } from './jsonFile'
 import { GitService } from './gitService'
 import { registerGitIpc } from './gitIpc'
 import { PermissionBroker } from './permissionBroker'
@@ -170,6 +171,7 @@ app.whenReady().then(async () => {
       const info = sessions.list().find((s) => s.id === sid)
       return info ? projects.get(info.projectId) : undefined
     },
+    projectOfDir: (dir) => projectOfDir(projects.list(), dir),
     enabled: () => settings.get().brainOn,
     emit: (ch, payload) => send(ch, payload)
   })
@@ -212,10 +214,13 @@ app.whenReady().then(async () => {
       if (tend) return tend
       if (e.name === 'SessionStart') return brain.sessionStartOutput(e.sessionId)
     },
-    (sid, tool, args) => brain.tool(sid, tool, args),
+    (sid, tool, args, cwd) => brain.tool(sid, tool, args, cwd),
     (e) => broker.ask(e.sessionId, e.payload)
   )
   const port = await hookServer.start()
+  // Laufende Sessions überleben einen Neustart der App (Update) – über diese Datei finden sie die neue wieder
+  const endpointFile = join(userData, 'endpoint.json')
+  writeJsonAtomic(endpointFile, { port, token })
   const resource = (f: string): string => (app.isPackaged ? join(process.resourcesPath, f) : join(app.getAppPath(), 'resources', f))
   const forwarderPath = resource('hook-forwarder.js')
   const sessions = new SessionManager({
@@ -226,7 +231,8 @@ app.whenReady().then(async () => {
     port: () => port,
     token,
     maxSessions: () => settings.get().maxSessions,
-    brain: { mcpPath: resource('brain-mcp.js'), enabled: () => settings.get().brainOn }
+    brain: { mcpPath: resource('brain-mcp.js'), enabled: () => settings.get().brainOn },
+    endpointFile
   })
   const output = new OutputBatcher((id, d) => send('session:data', id, d))
   sessions.on('data', (id, d) => output.push(id, d))
@@ -319,8 +325,8 @@ app.whenReady().then(async () => {
         // Fensterchen zeigen, Brücke für die Installer-Pause starten, dann erst beenden
         if (!splash?.open) splash = new SplashWindow()
         splash.set({ text: version ? `Installiere Update ${version} …` : 'Installiere Update …', percent: null })
-        showInstallBridge(bridgeScript, version)
-        await new Promise((r) => setTimeout(r, 1500))
+        // erst beenden, wenn das Brücken-Fensterchen steht – sonst gibt es eine Lücke ohne Fenster
+        await showInstallBridge(bridgeScript, version)
       }
     }
   )

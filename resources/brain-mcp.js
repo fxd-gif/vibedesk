@@ -2,8 +2,23 @@
 // jede Werkzeug-Anfrage geht an die laufende VibeDesk-App (nur 127.0.0.1, Token-geschützt).
 'use strict'
 const http = require('http')
+const fs = require('fs')
 
-const { VIBEDESK_SESSION_ID: sessionId, VIBEDESK_PORT: port, VIBEDESK_TOKEN: token } = process.env
+const { VIBEDESK_SESSION_ID: sessionId, VIBEDESK_PORT: envPort, VIBEDESK_TOKEN: envToken } = process.env
+// Sessions von vor v0.17.2 kennen VIBEDESK_ENDPOINT noch nicht – dann der Standardort von userData
+const endpointFile = process.env.VIBEDESK_ENDPOINT || (process.env.APPDATA ? require('path').join(process.env.APPDATA, 'vibedesk', 'endpoint.json') : '')
+
+/** Startet VibeDesk neu (z. B. nach einem Update), gelten Port und Token aus der Umgebung nicht mehr – die App legt die aktuellen in einer Datei ab */
+function freshEndpoint() {
+  try {
+    const e = JSON.parse(fs.readFileSync(endpointFile, 'utf8'))
+    if (Number.isInteger(e.port) && typeof e.token === 'string') return { port: e.port, token: e.token }
+  } catch {
+    /* keine Datei – App läuft nicht */
+  }
+  return null
+}
+let endpoint = envPort && envToken ? { port: Number(envPort), token: envToken } : freshEndpoint()
 const PROTOCOL = '2025-06-18'
 
 const TYPES = ['module', 'decision', 'pitfall', 'convention', 'task', 'fact']
@@ -52,24 +67,28 @@ const TOOLS = [
   }
 ]
 
-function callApp(tool, args) {
+const UNREACHABLE = { text: 'VibeDesk ist nicht erreichbar – läuft die App noch?', isError: true }
+
+/** null = Verbindung abgelehnt oder Token falsch – dann lohnt ein zweiter Versuch mit frischem Endpunkt */
+function post(ep, tool, args) {
   return new Promise((resolve) => {
-    if (!sessionId || !port || !token) return resolve({ text: 'VibeDesk ist nicht erreichbar.', isError: true })
-    const body = JSON.stringify({ sessionId, tool, args: args || {} })
+    // cwd: Kennt eine neu gestartete App die Session nicht, findet sie das Projekt über den Ordner
+    const body = JSON.stringify({ sessionId, tool, args: args || {}, cwd: process.cwd() })
     const req = http.request(
       {
         host: '127.0.0.1',
-        port: Number(port),
+        port: ep.port,
         path: '/brain',
         method: 'POST',
         timeout: 10000,
-        headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'x-vibedesk-token': token }
+        headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'x-vibedesk-token': ep.token }
       },
       (res) => {
         let data = ''
         res.setEncoding('utf8')
         res.on('data', (c) => (data += c))
         res.on('end', () => {
+          if (res.statusCode === 403) return resolve(null)
           try {
             const r = JSON.parse(data)
             resolve({ text: String(r.text ?? ''), isError: !!r.isError })
@@ -79,10 +98,22 @@ function callApp(tool, args) {
         })
       }
     )
-    req.on('error', () => resolve({ text: 'VibeDesk ist nicht erreichbar – läuft die App noch?', isError: true }))
+    req.on('error', () => resolve(null))
     req.on('timeout', () => req.destroy(new Error('timeout')))
     req.end(body)
   })
+}
+
+async function callApp(tool, args) {
+  if (!sessionId) return { text: 'VibeDesk ist nicht erreichbar.', isError: true }
+  // mit dem Endpunkt vergleichen, den dieser Aufruf benutzt hat – parallele Aufrufe können ihn inzwischen erneuert haben
+  const used = endpoint
+  const first = used && (await post(used, tool, args))
+  if (first) return first
+  const fresh = freshEndpoint()
+  if (!fresh || (used && fresh.port === used.port && fresh.token === used.token)) return UNREACHABLE
+  endpoint = fresh
+  return (await post(endpoint, tool, args)) || UNREACHABLE
 }
 
 const send = (msg) => process.stdout.write(JSON.stringify({ jsonrpc: '2.0', ...msg }) + '\n')

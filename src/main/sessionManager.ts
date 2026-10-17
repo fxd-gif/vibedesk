@@ -30,6 +30,8 @@ export interface SessionManagerOptions {
   isClaudeInstalled?: () => boolean
   /** Gehirn: MCP-Server mitgeben, solange eingeschaltet */
   brain?: { mcpPath: string; enabled: () => boolean }
+  /** Datei mit aktuellem Port + Token – Hooks und Gehirn finden darüber eine neu gestartete App */
+  endpointFile?: string
 }
 
 interface Running {
@@ -82,14 +84,15 @@ export class SessionManager {
     let mcpFile: string | undefined
     if (brain) {
       mcpFile = path.join(this.o.tmpDir, `session-${id}-mcp.json`)
-      fs.writeFileSync(mcpFile, JSON.stringify(buildBrainMcpConfig(this.o.nodeExe, this.o.brain!.mcpPath, { sessionId: id, port: this.o.port(), token: this.o.token })))
+      fs.writeFileSync(mcpFile, JSON.stringify(buildBrainMcpConfig(this.o.nodeExe, this.o.brain!.mcpPath, { sessionId: id, port: this.o.port(), token: this.o.token, endpoint: this.o.endpointFile })))
     }
 
     const env: Record<string, string> = {
       ...(process.env as Record<string, string>),
       VIBEDESK_SESSION_ID: id,
       VIBEDESK_PORT: String(this.o.port()),
-      VIBEDESK_TOKEN: this.o.token
+      VIBEDESK_TOKEN: this.o.token,
+      ...(this.o.endpointFile ? { VIBEDESK_ENDPOINT: this.o.endpointFile } : {})
     }
     delete env.ELECTRON_RUN_AS_NODE
     // Kein /s: der erste Token bleibt unquotiert, damit cmd die Anführungszeichen des Pfads stehen lässt

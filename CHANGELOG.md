@@ -7,6 +7,11 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Behoben
+
+- **Update-Fensterchen bleibt beim Neustart offen**: Während VibeDesk sich für ein Update beendet, zeigt das kleine Fenster jetzt durchgehend „Installiere Update …“, bis die neue Version da ist. Bisher war es in dieser Zeit verschwunden
+- **Gehirn nach einem Update**: Laufende Claude-Sessions finden VibeDesk nach einem Neustart (z. B. durch ein Update) wieder. Das Gehirn und die Live-Anzeige funktionieren weiter, statt „VibeDesk ist nicht erreichbar“ zu melden
+
 ## 0.17.1
 
 ### Verbessert
