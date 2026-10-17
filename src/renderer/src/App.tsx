@@ -18,6 +18,8 @@ import { wireStats } from './store/statsStore'
 import { wireChime } from './ambience/chime'
 import { usePreview, wirePreview } from './store/previewStore'
 import { wireAttachments } from './store/attachStore'
+import { wireResume } from './store/resumeStore'
+import { About } from './desktop/About'
 import { PreviewWindow } from './windows/PreviewWindow'
 import { TerminalWindow } from './windows/TerminalWindow'
 import { ShellWindow } from './windows/ShellWindow'
@@ -146,6 +148,7 @@ export default function App(): React.JSX.Element {
     wireChime()
     wirePreview()
     wireAttachments()
+    wireResume()
     wireFocus()
     wireDiscord()
     wireWebhook()
@@ -338,6 +341,7 @@ export default function App(): React.JSX.Element {
       <AskToast />
       <ShareDialogs />
       <DialogHost />
+      <About />
       <Curtain />
       {focusBanner && (
         <div className="focus-banner" key={focusBanner.text}>

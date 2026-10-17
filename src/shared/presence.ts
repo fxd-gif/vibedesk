@@ -26,6 +26,8 @@ export interface PresenceConfig {
   statusIcons: boolean
   /** Lounge-Größe als Party anzeigen („3 von 16“) */
   showParty: boolean
+  /** Knopf „VibeDesk holen“ – belegt nur einen freien Platz; fehlt das Feld (alte Settings), gilt an */
+  promoButton?: boolean
 }
 
 /** Was das Status-Icon zeigt – Fokus-Phasen haben Vorrang vor dem Session-Status. */
@@ -61,6 +63,9 @@ export interface Activity {
   status_display_type?: 0 | 1 | 2
 }
 
+/** Wer VibeDesk in deinem Discord-Profil sieht, kommt hierüber zur Seite */
+export const PROMO_BUTTON: PresenceButton = { label: 'VibeDesk holen (kostenlos)', url: 'https://fxd-gif.github.io/vibedesk/' }
+
 export const DEFAULT_CLIENT_ID = '1322704722276257822'
 /** Öffentlich gehostetes App-Icon – Fallback, wenn kein eigenes großes Bild gesetzt ist */
 export const DEFAULT_LARGE_IMAGE = 'https://raw.githubusercontent.com/fxd-gif/vibedesk/main/resources/icon.png'
@@ -91,7 +96,8 @@ export const DEFAULT_PRESENCE: PresenceConfig = {
   privacy: false,
   statusDisplay: 'name',
   statusIcons: true,
-  showParty: true
+  showParty: true,
+  promoButton: true
 }
 
 export const PRESENCE_PRESETS: { id: string; label: string; patch: Partial<PresenceConfig> }[] = [
@@ -162,6 +168,7 @@ export function renderPresence(cfg: PresenceConfig, vars: PresenceVars): Activit
     .filter((b) => b.label.trim() && /^https?:\/\/\S+$/.test(b.url.trim()))
     .slice(0, 2)
     .map((b) => ({ label: b.label.trim().slice(0, 32), url: b.url.trim() }))
+  if (cfg.promoButton !== false && buttons.length < 2 && !buttons.some((b) => b.url === PROMO_BUTTON.url)) buttons.push(PROMO_BUTTON)
   if (buttons.length) a.buttons = buttons
 
   // Party-Größe hängt Discord hinter Zeile 2 an – ohne Zeile 2 zeigt es nichts

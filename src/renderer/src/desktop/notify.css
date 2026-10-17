@@ -65,3 +65,14 @@
 /* Freigabe-Karten: bleiben, bis entschieden ist */
 .perm-card { width: 380px; border-color: rgba(250, 204, 21, .38); }
 .perm-detail { margin: 10px 0 0; padding: 8px 10px; max-height: 140px; overflow: auto; border-radius: 9px; background: rgba(0,0,0,.32); font: 11.5px/1.45 var(--mono, 'JetBrains Mono', Consolas, monospace); white-space: pre-wrap; word-break: break-word; color: var(--text); }
+
+/* Über VibeDesk */
+.link-btn { background: none; border: 0; padding: 0; color: var(--text-dim); font: inherit; cursor: pointer; }
+.link-btn:hover { color: var(--text); text-decoration: underline; }
+.about-backdrop { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; background: rgba(5, 7, 12, .45); backdrop-filter: blur(6px); }
+.about-card { width: min(460px, calc(100vw - 32px)); padding: 22px 24px; border-radius: 16px; background: rgba(16, 20, 32, .95); border: 1px solid var(--glass-border); box-shadow: 0 30px 90px rgba(0, 0, 0, .5); font-size: 13.5px; }
+.about-card h3 { margin: 0 0 8px; font-size: 18px; }
+.about-card dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 14px 0; }
+.about-card dt { color: var(--text-dim); }
+.about-card dd { margin: 0; font-family: var(--mono); font-size: 12px; }
+.about-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }

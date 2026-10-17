@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { create } from 'zustand'
 import { api } from '../api'
 import { Icon } from '../desktop/icons'
+import { installFailReason, SETUP_LINKS } from '../../../shared/setupHints'
 import type { ToolId, ToolStatus } from '../../../shared/types'
 
 interface SetupState {
@@ -9,6 +10,7 @@ interface SetupState {
   checking: boolean
   installing: ToolId | null
   failed: ToolId | null
+  /** Ausgabe der letzten Installation (gekürzt) – bei Fehlschlag aufklappbar */
   log: string[]
   /** Start-Hinweis für bestehende Installationen, wenn etwas fehlt */
   prompt: boolean
@@ -43,7 +45,7 @@ let wired = false
 export function wireSetup(): void {
   if (wired) return
   wired = true
-  api.on.setupLog((_tool, line) => useSetup.setState((s) => ({ log: [...s.log, line].slice(-6) })))
+  api.on.setupLog((_tool, line) => useSetup.setState((s) => ({ log: [...s.log, line].slice(-200) })))
 }
 
 /** Bestehende Installation: beim Start prüfen und nur bei Lücken nachfragen. */
@@ -51,6 +53,15 @@ export async function checkSetupOnStart(): Promise<void> {
   const st = await useSetup.getState().check()
   if (!st.node || !st.claude) useSetup.setState({ prompt: true })
 }
+
+/** Einrichtung als Dialog öffnen (z. B. wenn eine Session nicht starten kann) */
+export function openSetup(): void {
+  useSetup.setState({ prompt: true })
+  void useSetup.getState().check()
+}
+
+/** Fehlt etwas, ohne das keine Session läuft? */
+export const missingTools = (st: ToolStatus | null): boolean => !!st && (!st.node || !st.claude)
 
 const LABEL: Record<ToolId, { name: string; why: string }> = {
   node: { name: 'Node.js', why: 'für Live-Status, Feed und Stats' },
@@ -67,7 +78,7 @@ function Row({ tool }: { tool: ToolId }): React.JSX.Element {
       <span className="setup-mark">{version ? <Icon name="check" size={15} /> : busy ? <span className="spin" /> : <i />}</span>
       <div className="setup-text">
         <b>{LABEL[tool].name}</b>
-        <span>{version ? `Version ${version}` : busy ? 'wird installiert …' : LABEL[tool].why}</span>
+        <span>{version ? `Version ${version}` : busy ? 'wird installiert …' : failed === tool ? 'Installation hat nicht geklappt' : LABEL[tool].why}</span>
       </div>
       {!version && !busy && (
         <div className="setup-actions">
@@ -82,6 +93,55 @@ function Row({ tool }: { tool: ToolId }): React.JSX.Element {
             </button>
           )}
         </div>
+      )}
+    </div>
+  )
+}
+
+/** Dritter Punkt: Anmeldung bei Claude – lässt sich nicht per Klick erledigen, nur erklären. */
+function LoginRow(): React.JSX.Element {
+  const status = useSetup((s) => s.status)
+  const ok = !!status?.login
+  const text = ok
+    ? 'Angemeldet'
+    : status?.claude
+      ? 'Beim ersten Start fragt Claude im Terminal nach deiner Anmeldung – du brauchst ein Claude-Pro/Max-Abo oder einen API-Schlüssel.'
+      : 'Kommt nach der Installation: Beim ersten Start fragt Claude im Terminal nach deiner Anmeldung – du brauchst ein Claude-Pro/Max-Abo oder einen API-Schlüssel.'
+  return (
+    <div className={`setup-row${ok ? ' ok' : ''}`} data-testid="setup-login">
+      <span className="setup-mark">{ok ? <Icon name="check" size={15} /> : <i />}</span>
+      <div className="setup-text">
+        <b>Bei Claude anmelden</b>
+        <span>{text}</span>
+      </div>
+      {!ok && (
+        <div className="setup-actions">
+          <button className="btn small" onClick={() => api.openExternal(SETUP_LINKS.login)}>
+            Mehr dazu
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Nach einem Fehlschlag: Ursache in einem Satz, die letzten Zeilen zum Aufklappen */
+function FailInfo(): React.JSX.Element | null {
+  const failed = useSetup((s) => s.failed)
+  const installing = useSetup((s) => s.installing)
+  const log = useSetup((s) => s.log)
+  if (!failed || installing) return null
+  const reason = installFailReason(log) ?? `Die Installation von ${LABEL[failed].name} hat nicht geklappt. Versuch es nochmal oder folge der Anleitung.`
+  return (
+    <div data-testid="setup-fail">
+      <p className="setup-hint">{reason}</p>
+      {log.length > 0 && (
+        <details style={{ fontSize: 12 }}>
+          <summary style={{ cursor: 'pointer', color: 'var(--text-dim)' }}>Was genau ist passiert?</summary>
+          <pre className="setup-log" style={{ marginTop: 6 }}>
+            {log.slice(-12).join('\n')}
+          </pre>
+        </details>
       )}
     </div>
   )
@@ -102,18 +162,31 @@ export function ToolSetupPanel(): React.JSX.Element {
     <div className="setup">
       <Row tool="node" />
       <Row tool="claude" />
+      <LoginRow />
       {installing === 'node' && <p className="setup-hint">Windows fragt eventuell nach Administrator-Rechten – bitte bestätigen.</p>}
       {installing && log.length > 0 && (
         <pre className="setup-log" data-testid="setup-log">
-          {log.join('\n')}
+          {log.slice(-6).join('\n')}
         </pre>
       )}
-      {!installing && (!status.node || !status.claude) && (
+      <FailInfo />
+      {!installing && (!status.node || !status.claude || !status.login) && (
         <button className="btn small ghost setup-recheck" onClick={() => check()} disabled={checking}>
           {checking ? 'Prüfe …' : 'Erneut prüfen'}
         </button>
       )}
     </div>
+  )
+}
+
+/** Ruhiger Hinweis, wenn man ohne Node.js oder Claude Code weitergeht */
+export function MissingHint(): React.JSX.Element | null {
+  const status = useSetup((s) => s.status)
+  if (!missingTools(status)) return null
+  return (
+    <p className="setup-hint" data-testid="setup-missing-hint">
+      Ohne Node.js und Claude Code kann VibeDesk noch keine Claude-Sessions starten. Du kannst trotzdem weitergehen – beim Start einer Session bietet VibeDesk dir die Einrichtung wieder an.
+    </p>
   )
 }
 
@@ -128,8 +201,10 @@ export function SetupPrompt(): React.JSX.Element | null {
   return (
     <div className="dlg-backdrop" onPointerDown={(e) => e.target === e.currentTarget && !installing && close()}>
       <div className="dlg setup-dlg" role="dialog" data-testid="setup-prompt">
-        <h3>{done ? 'Alles bereit' : 'Da fehlt noch etwas'}</h3>
-        <p className="dlg-msg">{done ? 'Node.js und Claude Code sind installiert.' : 'VibeDesk braucht Node.js und Claude Code. Mit einem Klick installiert:'}</p>
+        <h3>{!status ? 'Einrichtung' : done ? 'Alles bereit' : 'Da fehlt noch etwas'}</h3>
+        <p className="dlg-msg">
+          {!status ? 'Einen Moment, ich schaue nach …' : done ? 'Node.js und Claude Code sind installiert.' : 'VibeDesk braucht Node.js und Claude Code. Mit einem Klick installiert:'}
+        </p>
         <ToolSetupPanel />
         <div className="dlg-actions">
           <button className={`btn ${done ? 'primary' : 'ghost'}`} disabled={!!installing} onClick={close}>

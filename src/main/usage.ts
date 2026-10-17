@@ -123,45 +123,79 @@ export function costUsd(model: string | null, u: Usage): { usd: number; estimate
 
 // ---------- Inkrementelles Lesen ----------
 
+/** Stückgröße beim Lesen – groß genug für wenige Aufrufe, klein genug, dass Parsen pro Stück kurz bleibt */
+export const TAIL_CHUNK = 1 << 20
+
+const yieldLoop = (): Promise<void> => new Promise((r) => setImmediate(r))
+
+/**
+ * Liest ein wachsendes JSONL-Protokoll inkrementell – asynchron und in Stücken,
+ * damit auch ein viele MB großes Transkript beim ersten Lesen den Main-Prozess nicht blockiert.
+ * Für die Token-Summen braucht es alle Zeilen, deshalb wird nichts übersprungen.
+ * Nicht parallel aufrufen – der Aufrufer (StatsService) serialisiert.
+ */
 export class TranscriptTail {
   private offset = 0
   /** Bytes nach dem letzten Zeilenumbruch – als Buffer, damit Multibyte-Zeichen nicht zerbrechen */
   private carry: Buffer = Buffer.alloc(0)
 
-  constructor(private file: string) {}
+  constructor(
+    private file: string,
+    private chunk = TAIL_CHUNK
+  ) {}
 
-  readNew(): string[] {
-    let size: number
+  /** Neue ganze Zeilen stückweise an onLines geben. Wirft nie (gelöschte/gesperrte Datei → einfach nichts). */
+  async read(onLines: (lines: string[]) => void): Promise<void> {
+    let fh: fs.promises.FileHandle | null = null
     try {
-      size = fs.statSync(this.file).size
+      fh = await fs.promises.open(this.file, 'r')
+      const size = (await fh.stat()).size
+      if (size < this.offset) {
+        this.offset = 0
+        this.carry = Buffer.alloc(0)
+      }
+      const buf = Buffer.alloc(Math.min(this.chunk, Math.max(0, size - this.offset)))
+      let first = true
+      while (this.offset < size) {
+        if (!first) await yieldLoop()
+        first = false
+        const want = Math.min(buf.length, size - this.offset)
+        const { bytesRead } = await fh.read(buf, 0, want, this.offset)
+        if (bytesRead <= 0) break
+        this.offset += bytesRead
+        const lines = this.split(buf.subarray(0, bytesRead))
+        if (lines.length) onLines(lines)
+      }
     } catch {
+      // Datei fehlt, wurde zwischendurch gelöscht oder ist gesperrt – beim nächsten Mal wieder versuchen
+    } finally {
+      await fh?.close().catch(() => {})
+    }
+  }
+
+  /** Alle neuen ganzen Zeilen auf einmal (für kleine Dateien und Tests) */
+  async readNew(): Promise<string[]> {
+    const out: string[] = []
+    await this.read((l) => {
+      for (const x of l) out.push(x)
+    })
+    return out
+  }
+
+  private split(part: Buffer): string[] {
+    const all = this.carry.length ? Buffer.concat([this.carry, part]) : part
+    const nl = all.lastIndexOf(0x0a)
+    if (nl < 0) {
+      this.carry = Buffer.from(all)
       return []
     }
-    if (size < this.offset) {
-      this.offset = 0
-      this.carry = Buffer.alloc(0)
-    }
-    if (size === this.offset) return []
-    const fd = fs.openSync(this.file, 'r')
-    try {
-      const buf = Buffer.alloc(size - this.offset)
-      fs.readSync(fd, buf, 0, buf.length, this.offset)
-      this.offset = size
-      const all = Buffer.concat([this.carry, buf])
-      const nl = all.lastIndexOf(0x0a)
-      if (nl < 0) {
-        this.carry = all
-        return []
-      }
-      this.carry = all.subarray(nl + 1)
-      return all
-        .subarray(0, nl)
-        .toString('utf8')
-        .split('\n')
-        .map((l) => l.replace(/\r$/, ''))
-        .filter(Boolean)
-    } finally {
-      fs.closeSync(fd)
-    }
+    // kopieren: part ist der wiederverwendete Lesepuffer
+    this.carry = Buffer.from(all.subarray(nl + 1))
+    return all
+      .subarray(0, nl)
+      .toString('utf8')
+      .split('\n')
+      .map((l) => l.replace(/\r$/, ''))
+      .filter(Boolean)
   }
 }

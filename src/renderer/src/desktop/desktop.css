@@ -628,3 +628,10 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
 .crash-card b { font-size: 15px; font-weight: 600; }
 .crash-card code { max-width: 90%; padding: 6px 10px; border-radius: 8px; background: rgba(255, 255, 255, .05); color: var(--text-dim); font-size: 11px; overflow-wrap: anywhere; }
 .crash-actions { display: flex; gap: 8px; margin-top: 4px; }
+
+/* Weiter nach dem Limit */
+.resume-chip { margin-left: 6px; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(250, 204, 21, .45); background: rgba(250, 204, 21, .1); color: #fde68a; font-size: 11px; cursor: pointer; }
+.resume-chip:hover { background: rgba(250, 204, 21, .18); }
+.ts-rewind { margin-left: auto; padding: 0 6px; border: 0; border-radius: 5px; background: none; color: var(--text-dim); font: inherit; cursor: pointer; }
+.ts-rewind:hover { color: var(--text); background: rgba(255, 255, 255, .08); }
+.ts-rewind + .ts-time { margin-left: 0; }

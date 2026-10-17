@@ -1,0 +1,23 @@
+name: Feature request
+description: An idea for VibeDesk
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: German or English, both are fine.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like to do?
+      description: Describe the situation or problem, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: How could VibeDesk help?
+  - type: textarea
+    id: other
+    attributes:
+      label: Anything else?
+      description: Workarounds you use today, screenshots, examples from other tools.

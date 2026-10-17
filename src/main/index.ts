@@ -174,6 +174,10 @@ app.whenReady().then(async () => {
   const statsHistory = new StatsHistory(join(userData, 'stats.json'))
   const stats = new StatsService({ history: statsHistory, emit: (s) => send('stats:update', s) })
   ipcMain.handle('stats:history', () => statsHistory.lastDays(7, localDate(Date.now())))
+  // Energiesparen: Akku/Netz an den Renderer melden (Regen-Hintergrund drosselt im Akkubetrieb)
+  ipcMain.handle('power:onBattery', () => powerMonitor.isOnBatteryPower())
+  powerMonitor.on('on-battery', () => send('power:battery', true))
+  powerMonitor.on('on-ac', () => send('power:battery', false))
   // Wochenrückblick „Vibe Wrapped“
   const vibe = new VibeLog(join(userData, 'vibe.json'))
   // Sessions aus einem früheren App-Start (z. B. vor einem Update) – der Inspector zeigt sie weiter an

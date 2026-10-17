@@ -7,6 +7,22 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Weiter nach dem Limit**: Meldet Claude „Limit erreicht · resets 22:30“, macht VibeDesk nach dem Reset von selbst weiter. Oben im Terminal steht, wann es losgeht, ein Klick bricht es ab. Abschalten lässt es sich in den Terminal-Einstellungen
+- **Zurückspulen**: Ein Knopf in der Statuszeile öffnet Claudes eigenes Zurückspulen. Du wählst einen früheren Schritt, und Gespräch und Code gehen auf diesen Stand zurück
+- **Über VibeDesk** im Mehr-Menü: Version, Lizenz, Fehlerprotokoll und „Fehler melden“. Das öffnet ein vorausgefülltes GitHub-Issue, du siehst alles, bevor du es abschickst
+- **Energiesparen** im Atmosphäre-Menü: Im Akkubetrieb zeichnet der Regen sparsamer, auf Wunsch auch immer
+
+### Verbessert
+
+- **Erststart ohne Sackgassen**: Die Einrichtung zeigt, ob du bei Claude angemeldet bist, und sagt in einem Satz, warum eine Installation gescheitert ist. Kann eine Session ohne Claude Code nicht starten, wird die Einrichtung direkt angeboten. Ein beendetes Claude wird verständlich erklärt
+- **Stabiler**: Ein Fehler in einem Fenster macht nicht mehr die ganze App weiß. Das Fenster zeigt dann „Neu laden“. Ein zweites `vibe` stört laufende Sessions nicht mehr. Startfehler zeigen eine Meldung statt einer hängenden App
+- **Schneller**: Der Regen zeichnet höchstens 30 Bilder pro Sekunde und pausiert gar nicht mehr. Große Claude-Protokolle bremsen VibeDesk nicht mehr aus. Die Oberfläche zeichnet bei Claude-Ereignissen und im Fokus-Timer nicht mehr alles neu
+- **Sicherer**: Das Hauptfenster lädt keine fremden Seiten mehr, Seiten in der Vorschau bekommen weder Kamera noch Mikrofon oder Standort. Prompts von Addons, Handy und Warteschlange können Claude nicht mehr in den Bash-Modus schalten
+- Discord-Profil, Vibe-Wrapped-Bild und Streamer-Overlay zeigen dezent, woher VibeDesk kommt. Alles lässt sich abschalten
+- VibeDesk ist jetzt offiziell Open Source unter der MIT-Lizenz, mit englischer README und eigener Website
+
 ## 0.19.0
 
 ### Neu

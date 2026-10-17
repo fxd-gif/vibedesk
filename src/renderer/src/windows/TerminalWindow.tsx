@@ -9,12 +9,15 @@ import { useSettings } from '../store/settingsStore'
 import { useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
 import type { SessionInfo } from '../../../shared/types'
+import { sessionExitText } from '../../../shared/setupHints'
+import { openSetup } from './ToolSetup'
 import { shortUrl, usePreview } from '../store/previewStore'
 import { TermPane } from '../terminal/TermPane'
 import { TermSettings } from '../terminal/TermSettings'
 import { TermStatus } from '../terminal/TermStatus'
 import { QueueChip, TermQueue } from './TermQueue'
 import { AttachButton, TermAttach } from './TermAttach'
+import { cancelResume, fmtTime, useResume } from '../store/resumeStore'
 
 export const STATUS_TEXT = {
   idle: 'bereit',
@@ -34,6 +37,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
   const shell = useShells((s) => attachedShell(s.shells, session.id))
   const shellExit = useShells((s) => (shell ? s.exited[shell.id] : undefined))
   const statusBar = useSettings((s) => s.s?.terminal?.statusBar ?? true)
+  const resumeAt = useResume((s) => s.plans[session.id])
   // unten ist Platz für eine Leiste: Warteschlange oder Anhänge
   const [panel, setPanel] = useState<'queue' | 'attach' | null>(null)
   const queueOpen = panel === 'queue'
@@ -82,6 +86,11 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
             </button>
           ))}
           <QueueChip sessionId={session.id} open={queueOpen} onToggle={() => togglePanel('queue')} />
+          {resumeAt && (
+            <button className="resume-chip" title="Claude hat das Nutzungslimit erreicht. Danach geht es von selbst weiter – klicken zum Abbrechen." onClick={() => cancelResume(session.id)} data-testid="resume-chip">
+              ⏰ weiter um {fmtTime(resumeAt)} ✕
+            </button>
+          )}
           <span className="term-tools" onPointerDown={(e) => e.stopPropagation()}>
             <AttachButton sessionId={session.id} open={panel === 'attach'} onToggle={() => togglePanel('attach')} />
             <button className={`term-tool${shell ? ' on' : ''}`} title={shell ? 'Shell schließen' : 'Shell daneben öffnen (PowerShell im Projektordner)'} onClick={() => void toggleShell()} data-testid="term-split">
@@ -109,8 +118,15 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
       {statusBar && <TermStatus sessionId={session.id} startedAt={startedAt} />}
       {settingsOpen && <TermSettings onClose={() => setSettingsOpen(false)} />}
       {exitCode !== undefined && (
-        <div className="term-overlay">
-          <span className="dim">Session beendet{exitCode !== 0 ? ` (Code ${exitCode})` : ''}</span>
+        <div className="term-overlay" data-testid="term-exit">
+          <span className="dim" style={{ maxWidth: 420 }}>
+            {sessionExitText(exitCode)}
+          </span>
+          {exitCode !== 0 && (
+            <button className="btn" onClick={openSetup}>
+              Einrichtung
+            </button>
+          )}
           <button className="btn primary" onClick={() => useSessions.getState().restart(session.id)}>
             <Icon name="restart" size={15} /> Neu starten
           </button>

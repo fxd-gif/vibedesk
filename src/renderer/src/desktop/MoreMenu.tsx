@@ -6,6 +6,7 @@ import { Toggle } from '../windows/AmbienceMenu'
 import { panelDef } from '../windows/panels'
 import { openPanel } from '../windows/palette/CommandPalette'
 import { Icon } from './icons'
+import { openAbout } from './About'
 
 export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void }): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
@@ -59,6 +60,18 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
           Schnell-Prompt <kbd className="mono">Strg+Alt+Leertaste</kbd>
         </span>
         <Toggle on={quick} onChange={(v) => useSettings.getState().set({ quickPrompt: v })} label="Schnell-Prompt von überall" />
+      </div>
+      <div className="more-foot">
+        <button
+          className="link-btn"
+          onClick={() => {
+            onClose()
+            openAbout()
+          }}
+          data-testid="more-about"
+        >
+          Über VibeDesk · Fehler melden
+        </button>
       </div>
     </div>
   )

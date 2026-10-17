@@ -98,6 +98,10 @@ export function TermSettings({ onClose }: { onClose(): void }): React.JSX.Elemen
         <span>Vorschau öffnet sich, wenn ein Server startet</span>
         <Toggle label="Vorschau automatisch öffnen" on={s.previewAutoOpen ?? true} onChange={(v) => set({ previewAutoOpen: v })} />
       </div>
+      <div className="ts-row">
+        <span>Nach dem Nutzungslimit von selbst weitermachen</span>
+        <Toggle label="Nach dem Limit weitermachen" on={s.autoResume ?? true} onChange={(v) => set({ autoResume: v })} />
+      </div>
       <label className="ts-row">
         <span>Shell</span>
         <select className="field small" value={t.shell} onChange={(e) => patch({ shell: e.target.value as ShellKind })}>

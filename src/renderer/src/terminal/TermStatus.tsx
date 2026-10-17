@@ -1,6 +1,15 @@
 // Statuszeile unter dem Claude-Terminal: Modell, Kontext, Kosten, Laufzeit (aus den Token-Protokollen).
 import { useEffect, useState } from 'react'
 import { fmtDuration, fmtTokens, fmtUsd, modelLabel, useStats } from '../store/statsStore'
+import { api } from '../api'
+import { getTerminal } from '../store/terminals'
+
+/** Doppel-Esc öffnet in Claude Code das Zurückspulen (Gespräch und Code auf einen früheren Stand) */
+function rewind(id: string): void {
+  api.sessions.write(id, '\x1b')
+  setTimeout(() => api.sessions.write(id, '\x1b'), 120)
+  getTerminal(id)?.term.focus()
+}
 
 export function TermStatus({ sessionId, startedAt }: { sessionId: string; startedAt: number }): React.JSX.Element {
   const st = useStats((s) => s.sessions[sessionId])
@@ -21,6 +30,9 @@ export function TermStatus({ sessionId, startedAt }: { sessionId: string; starte
         </span>
       )}
       {st && st.costUsd > 0 && <span title={st.estimated ? 'geschätzt nach API-Preisen' : 'nach API-Preisen'}>{fmtUsd(st.costUsd)}</span>}
+      <button className="ts-rewind" title="Zurückspulen: Claude zeigt seine bisherigen Schritte – wähl einen aus, um Gespräch und Code auf diesen Stand zurückzusetzen" onClick={() => rewind(sessionId)} data-testid="term-rewind">
+        ↶ Zurückspulen
+      </button>
       <span className="ts-time" title="Laufzeit der Session">
         {fmtDuration(now - (st?.startedAt ?? startedAt))}
       </span>

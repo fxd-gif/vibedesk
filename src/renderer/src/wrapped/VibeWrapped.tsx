@@ -148,6 +148,8 @@ export function VibeWrapped(): React.JSX.Element | null {
               </div>
             ))}
           </dl>
+          {/* steht mit auf dem geteilten Bild – so finden andere VibeDesk */}
+          <footer className="vw-foot">fxd-gif.github.io/vibedesk · kostenlos &amp; Open Source</footer>
         </div>
         <div className="row vw-actions">
           <button className="btn ghost" onClick={close}>

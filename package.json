@@ -1,10 +1,24 @@
 {
   "name": "vibedesk",
   "version": "0.19.0",
-  "description": "Immersive Vibecoding-Umgebung für Windows mit Claude Code",
+  "description": "A calm, immersive Windows desktop for Claude Code: rain on the window, lofi radio and all your sessions at a glance",
   "main": "./out/main/index.js",
   "author": "fxd-gif",
-  "private": true,
+  "license": "MIT",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "ai-coding",
+    "vibe-coding",
+    "desktop",
+    "electron",
+    "windows",
+    "lofi",
+    "productivity",
+    "terminal",
+    "developer-tools"
+  ],
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
@@ -72,5 +86,8 @@
     "type": "git",
     "url": "https://github.com/fxd-gif/vibedesk.git"
   },
-  "homepage": "https://github.com/fxd-gif/vibedesk"
+  "homepage": "https://github.com/fxd-gif/vibedesk",
+  "bugs": {
+    "url": "https://github.com/fxd-gif/vibedesk/issues"
+  }
 }

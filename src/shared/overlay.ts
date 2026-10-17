@@ -30,7 +30,7 @@ export const OVERLAY_WIDGETS = [
 
 export type OverlayWidget = (typeof OVERLAY_WIDGETS)[number]['id']
 
-export function overlayUrl(port: number, token: string, widgets: string[]): string {
+export function overlayUrl(port: number, token: string, widgets: string[], credit = true): string {
   const w = widgets.length && widgets.length < OVERLAY_WIDGETS.length ? `&w=${widgets.join(',')}` : ''
-  return `http://127.0.0.1:${port}/overlay?token=${token}${w}`
+  return `http://127.0.0.1:${port}/overlay?token=${token}${w}${credit ? '' : '&credit=0'}`
 }

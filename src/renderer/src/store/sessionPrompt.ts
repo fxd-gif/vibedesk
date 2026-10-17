@@ -1,6 +1,6 @@
 // Prompts an Claude-Sessions schicken – startet sie bei Bedarf und wartet, bis Claude bereit bzw. fertig ist.
 import { api } from '../api'
-import { bracketedPaste } from '../../../shared/paste'
+import { bracketedPaste, safePrompt } from '../../../shared/paste'
 import type { SessionStatus } from '../../../shared/types'
 import { termWin, useSessions } from './sessionStore'
 import { useUi } from './uiStore'
@@ -44,8 +44,8 @@ export async function ensureSession(projectId: string): Promise<string | null> {
 export const SUBMIT_DELAY_MS = 150
 
 export function sendToSession(sessionId: string, text: string, focus = true): void {
-  // Zeilenumbrüche würden die Eingabe vorzeitig abschicken
-  api.sessions.write(sessionId, bracketedPaste(text.replace(/\s*\n\s*/g, ' ')))
+  // Zeilenumbrüche würden die Eingabe vorzeitig abschicken; Steuerzeichen und `!` (Bash-Modus) fliegen raus
+  api.sessions.write(sessionId, bracketedPaste(safePrompt(text.replace(/\s*\n\s*/g, ' '))))
   setTimeout(() => api.sessions.write(sessionId, '\r'), SUBMIT_DELAY_MS)
   if (focus) useUi.getState().focus(termWin(sessionId))
 }

@@ -216,7 +216,13 @@ export interface Settings {
   terminal: TerminalSettings
   /** Startet ein Terminal einen lokalen Server (localhost), öffnet sich die Vorschau von selbst */
   previewAutoOpen: boolean
+  /** Meldet Claude „Limit erreicht“, schickt VibeDesk nach dem Reset von selbst „mach weiter“ */
+  autoResume: boolean
+  /** Regen-Hintergrund sparsamer zeichnen: 'auto' nur im Akkubetrieb, 'on' immer, 'off' nie */
+  energySaver: EnergySaver
 }
+
+export type EnergySaver = 'auto' | 'on' | 'off'
 
 export type TerminalCursor = 'block' | 'bar' | 'underline'
 export type ShellKind = 'powershell' | 'pwsh' | 'cmd'
@@ -264,6 +270,8 @@ export interface StreamerSettings {
   overlayCost: boolean
   /** Bash-Befehle im Overlay zeigen (sonst nur „Befehl“) */
   overlayBash: boolean
+  /** kleine Zeile „made with VibeDesk“ unter dem Overlay; fehlt das Feld (alte Settings), gilt an */
+  overlayCredit?: boolean
   overlayPort: number
   overlayToken: string
   twitchChannel: string
@@ -303,6 +311,8 @@ export interface ToolStatus {
   node: string | null
   claude: string | null
   winget: boolean
+  /** Anmeldedaten von Claude Code gefunden (Abo-Anmeldung oder API-Schlüssel) – geprüft ohne Netz */
+  login: boolean
 }
 
 export interface SkillInfo {
@@ -415,6 +425,8 @@ export interface VibedeskApi {
     companionStatus(cb: (s: CompanionStatus) => void): Unsubscribe
     /** Schnell-Prompt (Strg+Alt+Leertaste): Text und gewählte Session (null = keine offen) */
     quickPrompt(cb: (text: string, sessionId: string | null) => void): Unsubscribe
+    /** Wechsel zwischen Akku (true) und Netzteil (false) */
+    power(cb: (onBattery: boolean) => void): Unsubscribe
   }
   vibe: {
     /** Wochenrückblick der letzten 7 Tage */
@@ -463,6 +475,10 @@ export interface VibedeskApi {
   }
   stats: {
     history(): Promise<DayStats[]>
+  }
+  power: {
+    /** läuft der Rechner gerade im Akkubetrieb? */
+    onBattery(): Promise<boolean>
   }
   history: {
     list(projectId: string): Promise<ClaudeSessionMeta[]>

@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { execFile, execFileSync } from 'child_process'
+import { CLAUDE_MISSING_MESSAGE } from '../shared/setupHints'
 import type { Project, SessionInfo } from '../shared/types'
 import { buildBrainMcpConfig, buildHookSettings } from './hookSettings'
 
@@ -74,7 +75,7 @@ export class SessionManager {
     if (this.sessions.size >= max) throw new Error(`Maximal ${max} Sessions gleichzeitig – schließe zuerst eine.`)
     const cmd = process.env.VIBEDESK_CLAUDE_CMD || 'claude'
     if (cmd === 'claude' && !(this.o.isClaudeInstalled ?? claudeOnPath)())
-      throw new Error('Claude Code nicht gefunden. Installiere es mit: npm i -g @anthropic-ai/claude-code')
+      throw new Error(CLAUDE_MISSING_MESSAGE)
 
     const id = randomUUID()
     fs.mkdirSync(this.o.tmpDir, { recursive: true })

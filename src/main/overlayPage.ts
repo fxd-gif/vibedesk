@@ -34,6 +34,7 @@ export function overlayPage(nonce: string): string {
   .shout b { color: #c4b5fd; }
   @keyframes pop { from { transform: translateY(14px) scale(.96); opacity: 0; } }
   .off { opacity: .55; }
+  .credit { font-size: 11px; color: var(--dim); padding-left: 4px; letter-spacing: .02em; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
 </style></head>
 <body>
 <div id="root">
@@ -43,6 +44,7 @@ export function overlayPage(nonce: string): string {
   <div class="card" id="w-feed" hidden><div class="label"><span>Live</span></div><ul id="fd-list" class="mono"></ul></div>
   <div class="card" id="w-stats" hidden><div class="row"><div><div class="label">Session</div><div class="big" id="st-time">–</div></div><div><div class="label">Tokens</div><div class="big" id="st-tokens">–</div></div><div id="st-cost-box"><div class="label">Kosten</div><div class="big" id="st-cost">–</div></div></div></div>
   <div class="card" id="w-status" hidden><div class="head"><span class="dot" id="s-dot"></span><span id="s-text">Verbinde …</span></div><div class="sub mono" id="s-current"></div></div>
+  <div class="credit" id="credit">made with VibeDesk · fxd-gif.github.io/vibedesk</div>
 </div>
 <script nonce="${nonce}">
 (function () {
@@ -51,6 +53,7 @@ export function overlayPage(nonce: string): string {
   var want = (q.get('w') || all.join(',')).split(',').filter(function (w) { return all.indexOf(w) >= 0; });
   var scale = Math.min(3, Math.max(0.5, parseFloat(q.get('scale') || '1') || 1));
   if (q.get('align') === 'right') document.body.classList.add('right');
+  if (q.get('credit') === '0') document.getElementById('credit').hidden = true;
   var root = document.getElementById('root');
   root.style.transform = 'scale(' + scale + ')';
   var $ = function (id) { return document.getElementById(id); };

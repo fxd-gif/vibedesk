@@ -318,6 +318,7 @@ export function DiscordWindow(): React.JSX.Element | null {
 
         <section>
           <h4>Buttons (max. 2)</h4>
+          <Toggle label="„VibeDesk holen“ zeigen, solange ein Platz frei ist" on={cfg.promoButton !== false} onChange={(v) => set({ promoButton: v })} testid="dc-promo" />
           {buttons.map((b, i) => (
             <div key={i} className="row">
               <input

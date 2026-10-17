@@ -281,7 +281,7 @@ function wire(): void {
   }
   api.on.sessionData(write)
   api.on.shellData(write)
-  api.on.sessionExit((id, code) => entries.get(id)?.term.write(`\r\n\x1b[2m— Session beendet (Code ${code}) —\x1b[0m\r\n`))
+  api.on.sessionExit((id, code) => entries.get(id)?.term.write(`\r\n\x1b[2m— ${code === 0 ? 'Claude wurde beendet.' : `Claude ist unerwartet beendet (Code ${code}).`} —\x1b[0m\r\n`))
   api.on.shellExit((id, code) => entries.get(id)?.term.write(`\r\n\x1b[2m— Shell beendet (Code ${code}) —\x1b[0m\r\n`))
   let last = useSettings.getState().s
   useSettings.subscribe((st) => {

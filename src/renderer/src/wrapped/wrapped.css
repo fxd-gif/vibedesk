@@ -55,3 +55,4 @@
 @media (prefers-reduced-motion: reduce) {
   .vw-stack, .vw-days i { animation: none; }
 }
+.vw-foot { margin-top: 16px; font-family: var(--mono); font-size: 10.5px; color: var(--vw-mute); text-align: center; letter-spacing: .02em; }

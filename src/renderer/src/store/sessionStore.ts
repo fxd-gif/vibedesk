@@ -2,7 +2,9 @@ import { useMemo } from 'react'
 import { create } from 'zustand'
 import { api, errorText } from '../api'
 import type { SessionInfo } from '../../../shared/types'
-import { alert } from './dialogStore'
+import { CLAUDE_MISSING_MESSAGE } from '../../../shared/setupHints'
+import { openSetup } from '../windows/ToolSetup'
+import { alert, confirm } from './dialogStore'
 import { useUi } from './uiStore'
 import { useWorkflow } from './workflowStore'
 import { createTerminal, disposeTerminal } from './terminals'
@@ -36,7 +38,11 @@ export const useSessions = create<SessionStore>((set, get) => ({
       ui.arrangeAll(kindOf)
       return info
     } catch (err) {
-      await alert('Session konnte nicht gestartet werden', errorText(err))
+      const msg = errorText(err)
+      if (msg.includes(CLAUDE_MISSING_MESSAGE)) {
+        // Statt einer Sackgasse: gleich die Einrichtung anbieten
+        if (await confirm({ title: 'Claude Code fehlt noch', message: msg, confirmLabel: 'Jetzt einrichten' })) openSetup()
+      } else await alert('Session konnte nicht gestartet werden', msg)
       return null
     }
   },

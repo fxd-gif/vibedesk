@@ -5,7 +5,7 @@ import { Icon } from '../desktop/icons'
 import { useSettings } from '../store/settingsStore'
 import { centeredRect, useUi } from '../store/uiStore'
 import { PathInput } from './PathInput'
-import { ToolSetupPanel, useSetup } from './ToolSetup'
+import { MissingHint, missingTools, ToolSetupPanel, useSetup } from './ToolSetup'
 import iconUrl from '../assets/icon.png'
 
 const STEPS = ['welcome', 'claude', 'folder', 'mood', 'discord', 'done'] as const
@@ -24,6 +24,7 @@ export function Onboarding(): React.JSX.Element | null {
   const set = useSettings((x) => x.set)
   const [i, setI] = useState(0)
   const installing = useSetup((x) => x.installing)
+  const missing = useSetup((x) => missingTools(x.status))
   const [dir, setDir] = useState('')
   const [leaving, setLeaving] = useState(false)
   const step: Step = STEPS[i]
@@ -63,8 +64,9 @@ export function Onboarding(): React.JSX.Element | null {
         {step === 'claude' && (
           <>
             <h2>Werkzeuge</h2>
-            <p>VibeDesk braucht Node.js und Claude Code. Fehlt etwas, installierst du es hier mit einem Klick.</p>
+            <p>VibeDesk braucht Node.js und Claude Code – fehlt etwas, installierst du es hier mit einem Klick. Danach meldest du dich einmal bei Claude an.</p>
             <ToolSetupPanel />
+            {!installing && <MissingHint />}
             <button className="btn primary big" onClick={next} disabled={!!installing} data-testid="onb-next">
               Weiter
             </button>
@@ -140,7 +142,12 @@ export function Onboarding(): React.JSX.Element | null {
 
         {step === 'done' && (
           <>
-            <h2>Alles bereit</h2>
+            <h2>{missing ? 'Fast geschafft' : 'Alles bereit'}</h2>
+            {missing && (
+              <p className="setup-hint" data-testid="onb-missing">
+                Node.js oder Claude Code fehlen noch. Sobald du eine Session startest, hilft dir VibeDesk beim Einrichten.
+              </p>
+            )}
             <div className="onb-tips">
               <div>
                 <kbd>Win</kbd> + <kbd>R</kbd> → <code>vibe</code>

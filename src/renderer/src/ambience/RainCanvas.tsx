@@ -1,6 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import { FRAG, VERT } from './rainShader'
 import { renderImageScene, renderScene, type SceneTextures } from './scenes'
+import { canvasDpr, frameInterval, saverActive, shouldDraw } from './framePolicy'
+import { api } from '../api'
+import { useSettings } from '../store/settingsStore'
+
+/** Akkubetrieb aus dem Main-Prozess (Electron powerMonitor) – zuverlässiger als navigator.getBattery */
+function useOnBattery(): boolean {
+  const [onBattery, setOnBattery] = useState(false)
+  useEffect(() => {
+    let alive = true
+    api.power
+      ?.onBattery()
+      .then((b) => alive && setOnBattery(b))
+      .catch(() => {})
+    const off = api.on.power?.((b) => setOnBattery(b))
+    return () => {
+      alive = false
+      off?.()
+    }
+  }, [])
+  return onBattery
+}
 
 interface Props {
   scene: string
@@ -35,9 +56,18 @@ export function RainCanvas({ scene, customImage, intensity, blur, paused }: Prop
   const ref = useRef<HTMLCanvasElement>(null)
   const fallbackRef = useRef<HTMLCanvasElement>(null)
   const [fallback, setFallback] = useState(false)
-  const params = useRef({ intensity, blur, paused })
-  params.current = { intensity, blur, paused }
+  const mode = useSettings((x) => x.s?.energySaver)
+  const onBattery = useOnBattery()
+  const saver = saverActive(mode, onBattery)
+  const params = useRef({ intensity, blur, paused, saver })
+  params.current = { intensity, blur, paused, saver }
   const glState = useRef<{ gl: WebGL2RenderingContext; sharp: WebGLTexture | null; blurred: WebGLTexture | null } | null>(null)
+  /** Bild neu zeichnen (auch im Standbild) und ggf. die Schleife wieder anwerfen */
+  const wake = useRef<(resize?: boolean) => void>(() => {})
+
+  // Änderungen an Stärke/Beschlag/Pause → einmal neu zeichnen; Sparmodus ändert die Auflösung
+  useEffect(() => wake.current(), [intensity, blur, paused])
+  useEffect(() => wake.current(true), [saver])
 
   // Szene (neu) rendern und als Texturen hochladen
   useEffect(() => {
@@ -53,6 +83,7 @@ export function RainCanvas({ scene, customImage, intensity, blur, paused }: Prop
       if (st) {
         st.sharp = texture(st.gl, 0, tx.sharp, st.sharp)
         st.blurred = texture(st.gl, 1, tx.blurred, st.blurred)
+        wake.current()
       }
       const fb = fallbackRef.current
       if (fb) {
@@ -105,26 +136,22 @@ export function RainCanvas({ scene, customImage, intensity, blur, paused }: Prop
     glState.current.blurred = texture(gl, 1, tx.blurred)
 
     const resize = (): void => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
+      const dpr = canvasDpr(params.current.saver, window.devicePixelRatio)
       canvas.width = Math.round(window.innerWidth * dpr)
       canvas.height = Math.round(window.innerHeight * dpr)
       gl.viewport(0, 0, canvas.width, canvas.height)
     }
     resize()
-    window.addEventListener('resize', resize)
 
     let raf = 0
-    let last = 0
+    let last = -Infinity
     let t = 0
     let prev = performance.now()
-    const frame = (now: number): void => {
-      raf = requestAnimationFrame(frame)
+    /** Standbild muss neu gezeichnet werden (Resize, neue Szene, geänderte Regler) */
+    let dirty = true
+    const draw = (now: number): void => {
       const p = params.current
-      const idle = p.paused || document.hidden || !document.hasFocus()
-      // Im Hintergrund auf ~5 FPS drosseln
-      if (idle && now - last < 200) return
-      last = now
-      const dt = Math.min(0.1, (now - prev) / 1000)
+      const dt = Math.min(0.1, Math.max(0, now - prev) / 1000)
       prev = now
       if (!p.paused) t += dt
       gl.uniform2f(uRes, canvas.width, canvas.height)
@@ -132,11 +159,37 @@ export function RainCanvas({ scene, customImage, intensity, blur, paused }: Prop
       gl.uniform1f(uRain, p.intensity)
       gl.uniform1f(uBlur, p.blur)
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+      last = now
+      dirty = false
     }
-    raf = requestAnimationFrame(frame)
+    const frame = (now: number): void => {
+      raf = 0
+      const p = params.current
+      const interval = frameInterval({ paused: !!p.paused, idle: document.hidden || !document.hasFocus(), saver: p.saver })
+      if (interval === null) {
+        // Pausiert: nur ein Standbild, keine laufende Schleife
+        if (dirty) draw(now)
+        return
+      }
+      if (dirty || shouldDraw(now, last, interval)) draw(now)
+      raf = requestAnimationFrame(frame)
+    }
+    const kick = (): void => {
+      if (!raf) raf = requestAnimationFrame(frame)
+    }
+    wake.current = (withResize) => {
+      if (withResize) resize()
+      dirty = true
+      kick()
+    }
+    const onResize = (): void => wake.current(true)
+    window.addEventListener('resize', onResize)
+    kick()
     return () => {
       cancelAnimationFrame(raf)
-      window.removeEventListener('resize', resize)
+      raf = 0
+      wake.current = () => {}
+      window.removeEventListener('resize', onResize)
       glState.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -82,7 +82,11 @@ const api: VibedeskApi = {
     companionDevices: (cb) => listen<[CompanionDevice[], CompanionDevice | undefined]>('companion:devices', cb),
     companionPower: (cb) => listen<['shutdown' | 'sleep' | 'cancel', number | null]>('companion:power', cb),
     companionStatus: (cb) => listen<[CompanionStatus]>('companion:status', cb),
-    quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb)
+    quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),
+    power: (cb) => listen<[boolean]>('power:battery', cb)
+  },
+  power: {
+    onBattery: () => ipcRenderer.invoke('power:onBattery')
   },
   vibe: {
     week: () => ipcRenderer.invoke('vibe:week'),

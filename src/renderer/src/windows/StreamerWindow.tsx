@@ -52,7 +52,7 @@ export function StreamerWindow(): React.JSX.Element {
     patch({ enabled: on })
   }
 
-  const url = overlayUrl(c.overlayPort, c.overlayToken, widgets)
+  const url = overlayUrl(c.overlayPort, c.overlayToken, widgets, c.overlayCredit !== false)
   const shownUrl = showUrl ? url : url.replace(c.overlayToken, '•'.repeat(12))
   const twitchText =
     twitch.state === 'connected' ? `verbunden mit #${twitch.channel}` : twitch.state === 'connecting' ? 'verbinde …' : twitch.state === 'error' ? twitch.message : 'aus'
@@ -121,6 +121,7 @@ export function StreamerWindow(): React.JSX.Element {
         <div className="dim tiny">Tipp: &amp;align=right setzt das Overlay nach rechts, &amp;scale=1.5 macht es größer. Die URL nie im Stream zeigen.</div>
         <Opt label="Kosten im Overlay zeigen" on={c.overlayCost} onChange={(v) => patch({ overlayCost: v })} />
         <Opt label="Bash-Befehle im Overlay zeigen" hint="sonst nur „Bash“" on={c.overlayBash} onChange={(v) => patch({ overlayBash: v })} />
+        <Opt label="„made with VibeDesk“ unter dem Overlay" hint="eine kleine Zeile – so finden Zuschauer VibeDesk" on={c.overlayCredit !== false} onChange={(v) => patch({ overlayCredit: v })} />
         <div className="row">
           <span className="small">Port</span>
           <input

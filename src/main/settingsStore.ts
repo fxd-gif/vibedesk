@@ -59,7 +59,9 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   quickPrompt: true,
   lastWrapped: 0,
   terminal: { fontSize: 13, lineHeight: 1.2, cursorStyle: 'block', cursorBlink: true, theme: 'scene', shell: 'powershell', statusBar: true },
-  previewAutoOpen: true
+  previewAutoOpen: true,
+  autoResume: true,
+  energySaver: 'auto'
 })
 
 export class SettingsStore {

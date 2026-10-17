@@ -8,11 +8,18 @@ import { toggleMusic, toggleRainSound } from '../ambience/toggles'
 import { useUpdate } from '../store/updateStore'
 import { showWhatsNew } from '../changelog/WhatsNew'
 import { shareAmbience } from '../store/shareStore'
+import type { EnergySaver } from '../../../shared/types'
 
 export const STREAMS = [
   { label: 'laut.fm · lofi', url: 'https://stream.laut.fm/lofi' },
   { label: 'I Love Chillhop', url: 'https://streams.ilovemusic.de/iloveradio17.mp3' },
   { label: 'Zeno · Lofi Beats', url: 'https://stream.zeno.fm/0r0xa792kwzuv' }
+]
+
+const ENERGY_MODES: { id: EnergySaver; label: string }[] = [
+  { id: 'auto', label: 'Automatisch (bei Akku)' },
+  { id: 'on', label: 'An' },
+  { id: 'off', label: 'Aus' }
 ]
 
 export function Toggle({ on, onChange, label }: { on: boolean; onChange(v: boolean): void; label: string }): React.JSX.Element {
@@ -119,6 +126,22 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
           <Toggle label="Regengeräusch" on={s.rainSoundOn} onChange={() => set(toggleRainSound(s))} />
         </div>
         {s.rainSoundOn && <Slider label="Lautstärke" value={s.rainSoundVolume} onChange={(v) => set({ rainSoundVolume: v })} />}
+        <div className="row between" title="Sparsamer Regen: 15 statt 30 Bilder pro Sekunde und geringere Auflösung">
+          <span className="dim small">Energiesparen</span>
+          <div className="row chips" role="radiogroup" aria-label="Energiesparen">
+            {ENERGY_MODES.map((m) => (
+              <button
+                key={m.id}
+                role="radio"
+                aria-checked={(s.energySaver ?? 'auto') === m.id}
+                className={`chip${(s.energySaver ?? 'auto') === m.id ? ' on' : ''}`}
+                onClick={() => set({ energySaver: m.id })}
+              >
+                {m.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
 
       <section>
