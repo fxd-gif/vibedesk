@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 1.1.0
+
 ### Neu
 
 - **Claude lernt dich kennen**: Neben dem Gehirn jedes Projekts gibt es jetzt ein persönliches Gehirn „Über dich“. Darin hält Claude fest, wie du arbeitest, was du magst und was nicht, und jede neue Session startet in jedem Projekt mit diesem Wissen. Je länger du VibeDesk nutzt, desto besser passt Claude zu dir. Die Notizen liegen nur auf deinem PC, nie im Projekt. Ansehen und bearbeiten im Gehirn-Fenster unter „Über dich (alle Projekte)“. Der Knopf „Claude lernt mich kennen“ legt die ersten Notizen an, und Vibe Wrapped zeigt, wie viel Claude in der Woche über dich gelernt hat
