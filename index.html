@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="cyberpunk">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,16 +11,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
+    /* Cyberpunk Night (Default) */
     --bg-dark: #07090f;
     --bg-glow: #10162a;
-    --glass-bg: rgba(18, 23, 40, 0.4);
+    --glass-bg: rgba(18, 23, 40, 0.45);
     --glass-border: rgba(255, 255, 255, 0.08);
     --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     
     --text-main: #f1f4fb;
     --text-muted: #94a3b8;
     --accent: #9fb8ff;
+    --accent-glow: rgba(159, 184, 255, 0.25);
     --accent-hover: #c2d1ff;
+    --hero-gradient: linear-gradient(135deg, #ffffff 0%, #9fb8ff 100%);
     
     --work: #60a5fa;
     --wait: #facc15;
@@ -37,16 +40,32 @@
     --radius-sm: 10px;
   }
 
+  /* Cozy Sunset Theme Overrides */
+  [data-theme="sunset"] {
+    --bg-dark: #120907;
+    --bg-glow: #2a140e;
+    --glass-bg: rgba(38, 21, 18, 0.5);
+    --glass-border: rgba(255, 180, 140, 0.12);
+    --text-main: #fdf5f0;
+    --text-muted: #b89f92;
+    --accent: #ffb380;
+    --accent-glow: rgba(255, 179, 128, 0.25);
+    --accent-hover: #ffd1b3;
+    --hero-gradient: linear-gradient(135deg, #ffffff 0%, #ffb380 50%, #f472b6 100%);
+    --work: #f97316;
+  }
+
   /* Base Reset & Styling */
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body { 
     background-color: var(--bg-dark); 
-    background-image: radial-gradient(circle at 50% 0%, var(--bg-glow) 0%, var(--bg-dark) 60%);
+    background-image: radial-gradient(circle at 50% 0%, var(--bg-glow) 0%, var(--bg-dark) 65%);
     color: var(--text-main); 
     font: 17px/1.6 var(--font-body); 
     -webkit-font-smoothing: antialiased; 
     overflow-x: hidden; 
+    transition: background 0.8s ease, color 0.8s ease;
   }
   
   a { color: var(--accent); text-decoration: none; transition: color 0.2s; }
@@ -56,40 +75,51 @@
   
   .wrap { width: 100%; max-width: var(--wrap); margin: 0 auto; padding: 0 var(--gutter); }
 
-  /* Window / Rain Environment */
+  /* Window / Rain / Fog Canvas Stack */
   .window { position: relative; overflow: hidden; isolation: isolate; padding-bottom: 10vh; }
   .window::before { 
-    content: ''; position: absolute; inset: -50px; z-index: -3; 
+    content: ''; position: absolute; inset: -50px; z-index: -4; 
     background: url(img/focus.jpg) center / cover; 
-    filter: blur(30px) saturate(1.1) brightness(0.5); 
+    filter: blur(30px) saturate(1.1) brightness(0.45); 
     transition: filter 1.2s ease-in-out; 
   }
-  body.raining .window::before { filter: blur(24px) saturate(1.3) brightness(0.7); }
+  body.raining .window::before { filter: blur(22px) saturate(1.3) brightness(0.65); }
   .window::after { 
-    content: ''; position: absolute; inset: 0; z-index: -2; 
-    background: linear-gradient(180deg, rgba(7,9,15,0.4) 0%, rgba(7,9,15,0.8) 60%, var(--bg-dark) 100%); 
+    content: ''; position: absolute; inset: 0; z-index: -3; 
+    background: linear-gradient(180deg, rgba(7,9,15,0.3) 0%, rgba(7,9,15,0.85) 70%, var(--bg-dark) 100%); 
   }
-  #rain { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
+  #rain, #fog { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; pointer-events: none; }
+  #fog { z-index: -1; opacity: 0; transition: opacity 1.5s ease; }
+  body.raining #fog { opacity: 1; pointer-events: auto; }
 
   /* Navigation Bar */
   .bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 24px var(--gutter); }
   .brand { display: flex; align-items: center; gap: 12px; color: var(--text-main); font: 600 18px var(--font-display); letter-spacing: -0.02em; }
   .brand img { width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-  .bar nav { display: flex; gap: 28px; font-size: 15px; font-weight: 500; }
+  .bar nav { display: flex; align-items: center; gap: 24px; font-size: 15px; font-weight: 500; }
   .bar nav a { color: var(--text-muted); }
   .bar nav a:hover { color: var(--text-main); }
 
+  .vibe-toggle-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 99px; font-size: 13px; font-weight: 600;
+    background: rgba(255,255,255,0.05); color: var(--text-main);
+    border: 1px solid var(--glass-border); cursor: pointer; transition: all 0.3s;
+  }
+  .vibe-toggle-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.03); }
+
   /* Hero Section */
-  .hero { padding-top: 8vh; padding-bottom: 6vh; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .hero { padding-top: 7vh; padding-bottom: 6vh; text-align: center; display: flex; flex-direction: column; align-items: center; }
   .hero h1 { 
-    font: 800 clamp(48px, 7.5vw, 100px)/1.05 var(--font-display); 
+    font: 800 clamp(48px, 7.5vw, 98px)/1.05 var(--font-display); 
     letter-spacing: -0.04em; 
     max-width: 12ch; 
     text-wrap: balance;
-    background: linear-gradient(135deg, #ffffff 0%, #9fb8ff 100%);
+    background: var(--hero-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 24px;
+    transition: background 0.8s ease;
   }
   .hero p { max-width: 600px; font-size: clamp(18px, 1.8vw, 21px); color: var(--text-muted); line-height: 1.5; }
   
@@ -98,9 +128,9 @@
   
   .btn.primary { 
     background: #ffffff; color: #000000; 
-    box-shadow: 0 8px 24px rgba(159, 184, 255, 0.2); 
+    box-shadow: 0 8px 24px var(--accent-glow); 
   }
-  .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(159, 184, 255, 0.3); }
+  .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px var(--accent-glow); }
   
   .btn.ghost { 
     background: rgba(255,255,255,0.03); color: var(--text-main); 
@@ -108,25 +138,34 @@
     backdrop-filter: blur(12px); 
   }
   .btn.ghost:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
-  .btn.ghost[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: rgba(159,184,255,0.05); }
+  .btn.ghost[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: rgba(255,255,255,0.05); }
   .btn svg { width: 20px; height: 20px; flex: none; }
   
   .facts { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 24px; margin-top: 24px; font-size: 14px; font-weight: 500; color: var(--text-muted); }
   .facts span { display: flex; align-items: center; gap: 6px; }
   .facts span::before { content: '✓'; color: var(--done); font-weight: bold; }
 
-  /* Animated Live Demo Component */
+  /* Animated Live Demo Component with 3D Tilt & Cursor Glow */
+  .demo-perspective { perspective: 1200px; width: 100%; max-width: 1000px; margin: 8vh auto 0; }
   .demo { 
     position: relative; 
-    width: 100%; max-width: 1000px; 
+    width: 100%; 
     height: clamp(480px, 55vw, 640px); 
-    margin: 8vh auto 0; 
     border-radius: var(--radius-lg); 
-    background: rgba(12, 16, 32, 0.6); 
+    background: rgba(12, 16, 32, 0.65); 
     border: 1px solid var(--glass-border);
     box-shadow: 0 24px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); 
     overflow: hidden; 
+    transform-style: preserve-3d;
+    transition: transform 0.15s ease-out, border-color 0.5s;
   }
+  /* Dynamic Mouse Glow inside Demo */
+  .demo::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), var(--accent-glow), transparent 60%);
+    opacity: 0.6; transition: opacity 0.3s;
+  }
+
   .dwin { 
     position: absolute; top: 5%; width: 46%; height: 65%; 
     border-radius: var(--radius-md); 
@@ -135,6 +174,7 @@
     backdrop-filter: blur(20px); 
     display: flex; flex-direction: column; overflow: hidden; 
     box-shadow: var(--glass-shadow);
+    z-index: 1;
     transition: all 0.5s ease; 
   }
   .dwin.a { left: 3%; }
@@ -173,10 +213,10 @@
   
   /* Permission Overlay (Ask) */
   .ask { 
-    position: absolute; right: 5%; bottom: 18%; 
+    position: absolute; right: 5%; bottom: 18%; z-index: 2;
     width: min(340px, 80%); padding: 20px; 
     border-radius: var(--radius-md); 
-    background: rgba(15, 23, 42, 0.85); 
+    background: rgba(15, 23, 42, 0.88); 
     backdrop-filter: blur(24px);
     border: 1px solid rgba(250, 204, 21, 0.4); 
     box-shadow: 0 32px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); 
@@ -195,7 +235,7 @@
 
   /* Notification Toast */
   .toast { 
-    position: absolute; left: 4%; bottom: 18%; 
+    position: absolute; left: 4%; bottom: 18%; z-index: 2;
     padding: 12px 18px; 
     border-radius: var(--radius-sm); 
     background: rgba(15, 23, 42, 0.9); 
@@ -208,9 +248,9 @@
   }
   .toast.on { transform: translateY(0); opacity: 1; }
   
-  /* macOS-like Dock */
+  /* Dock */
   .ddock { 
-    position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); 
+    position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%); z-index: 2;
     display: flex; align-items: center; gap: 10px; padding: 10px 14px; 
     border-radius: 24px; 
     background: rgba(15, 23, 42, 0.65); 
@@ -232,6 +272,22 @@
   .ddock svg { width: 20px; height: 20px; }
   
   .hero .demo-note { margin: 24px 0 0; font-size: 14px; color: var(--text-muted); opacity: 0.8; }
+
+  /* Interactive Glow-Card Effect */
+  .glow-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .glow-card::before {
+    content: ''; position: absolute; inset: -1px; pointer-events: none; border-radius: inherit;
+    background: radial-gradient(400px circle at var(--x, 50%) var(--y, 50%), var(--accent-glow), transparent 60%);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .glow-card:hover::before { opacity: 1; }
 
   /* Main Content Sections */
   main section { padding-top: clamp(80px, 12vw, 160px); }
@@ -258,7 +314,7 @@
   /* Compare Section */
   .compare { margin-top: 56px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border: 1px solid var(--glass-border); border-radius: var(--radius-lg); overflow: hidden; background: rgba(255,255,255,0.01); }
   .compare > div { padding: 40px; }
-  .compare > div + div { background: rgba(96,165,250,0.04); border-left: 1px solid var(--glass-border); }
+  .compare > div + div { background: rgba(159,184,255,0.03); border-left: 1px solid var(--glass-border); }
   .compare h3 { margin: 0 0 24px; font: 700 22px var(--font-display); }
   .compare ul { margin: 0; padding-left: 20px; color: var(--text-muted); display: flex; flex-direction: column; gap: 14px; }
   .compare > div + div ul { color: var(--text-main); }
@@ -304,8 +360,6 @@
     .split, .split.flip, .compare, .steps { grid-template-columns: 1fr; }
     .split.flip > .media { order: 0; }
     .media img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
-    .media img.crop-left { object-position: left center; }
-    .media img.crop-center { object-position: center; }
     .compare > div + div { border-left: 0; border-top: 1px solid var(--glass-border); }
     .bar nav a:not(.gh) { display: none; }
     
@@ -323,8 +377,10 @@
 </style>
 </head>
 <body>
-<div class="window">
+<div class="window" id="hero-window">
   <canvas id="rain" aria-hidden="true"></canvas>
+  <canvas id="fog" aria-hidden="true"></canvas>
+  
   <header class="bar wrap">
     <a class="brand" href="./"><img src="img/icon.png" alt="">VibeDesk</a>
     <nav aria-label="Main">
@@ -332,8 +388,10 @@
       <a href="#install">Install</a>
       <a href="#faq">FAQ</a>
       <a class="gh" href="https://github.com/fxd-gif/vibedesk">GitHub</a>
+      <button class="vibe-toggle-btn" id="vibe-toggle" aria-label="Switch Vibe Theme">🌆 Sunset Vibe</button>
     </nav>
   </header>
+  
   <div class="hero wrap">
     <h1>Rain on the window. Claude at work.</h1>
     <p>VibeDesk is a calm Windows desktop for Claude Code. Run several sessions side by side, see at a glance which one is working and which one needs you, approve requests, preview your app, and keep the lofi playing.</p>
@@ -344,36 +402,38 @@
       </a>
       <button class="btn ghost" id="rain-btn" aria-pressed="false">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 15a5 5 0 1 1 1.5-9.8A6 6 0 0 1 20 9a4 4 0 0 1-2 7.5M8 19l-1 2M12 18l-1 3M16 19l-1 2"/></svg>
-        <span>Turn on the rain</span>
+        <span>Turn on rain & lofi</span>
       </button>
     </div>
     <div class="facts"><span>Free, no account</span><span>Open source (MIT)</span><span>No telemetry</span><span>Windows 10 and 11</span></div>
 
-    <div class="demo" id="demo" aria-label="Animated preview: two Claude Code sessions in VibeDesk, one asks for permission">
-      <div class="dwin a" id="wa">
-        <div class="dhead"><span class="dot" id="da"></span><b>shop-frontend</b><i id="sa">ready</i><span class="chip" id="ca">▸ :5173</span></div>
-        <pre class="term" id="ta"></pre>
-      </div>
-      <div class="dwin b" id="wb">
-        <div class="dhead"><span class="dot" id="db"></span><b>api-server</b><i id="sb">ready</i></div>
-        <pre class="term" id="tb"></pre>
-      </div>
-      <div class="ask" id="ask" role="dialog" aria-label="Permission request">
-        <p><b>api-server</b> wants to run a command</p>
-        <code>npm test</code>
-        <div class="row"><button class="yes" id="allow">Allow</button><button id="deny">Deny</button></div>
-      </div>
-      <div class="toast" id="toast">shop-frontend is done. Preview opened.</div>
-      <div class="ddock" aria-hidden="true">
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 18V6l11-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg></span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3.5c2.8 3.7 5.5 7 5.5 10.2a5.5 5.5 0 0 1-11 0C6.5 10.5 9.2 7.2 12 3.5z"/></svg></span>
-        <em></em>
-        <span class="s">SF<i class="dot" id="ka"></i></span>
-        <span class="s">AS<i class="dot" id="kb"></i></span>
-        <em></em>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6l2 2 3-3M4 13l2 2 3-3M12 7h8M12 14h8M4 19h16"/></svg></span>
-        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+    <div class="demo-perspective">
+      <div class="demo" id="demo" aria-label="Animated preview: two Claude Code sessions in VibeDesk, one asks for permission">
+        <div class="dwin a" id="wa">
+          <div class="dhead"><span class="dot" id="da"></span><b>shop-frontend</b><i id="sa">ready</i><span class="chip" id="ca">▸ :5173</span></div>
+          <pre class="term" id="ta"></pre>
+        </div>
+        <div class="dwin b" id="wb">
+          <div class="dhead"><span class="dot" id="db"></span><b>api-server</b><i id="sb">ready</i></div>
+          <pre class="term" id="tb"></pre>
+        </div>
+        <div class="ask" id="ask" role="dialog" aria-label="Permission request">
+          <p><b>api-server</b> wants to run a command</p>
+          <code>npm test</code>
+          <div class="row"><button class="yes" id="allow">Allow</button><button id="deny">Deny</button></div>
+        </div>
+        <div class="toast" id="toast">shop-frontend is done. Preview opened.</div>
+        <div class="ddock" aria-hidden="true">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 18V6l11-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3.5c2.8 3.7 5.5 7 5.5 10.2a5.5 5.5 0 0 1-11 0C6.5 10.5 9.2 7.2 12 3.5z"/></svg></span>
+          <em></em>
+          <span class="s">SF<i class="dot" id="ka"></i></span>
+          <span class="s">AS<i class="dot" id="kb"></i></span>
+          <em></em>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6l2 2 3-3M4 13l2 2 3-3M12 7h8M12 14h8M4 19h16"/></svg></span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></span>
+        </div>
       </div>
     </div>
     <p class="demo-note">This is a live sketch of the app, not a video. Click “Allow” when it asks.</p>
@@ -386,19 +446,19 @@
     <p class="lead">Claude Code is great in a terminal. It gets hard to follow when three sessions run at once. VibeDesk keeps them in view without getting loud.</p>
     <div class="split">
       <ul class="things">
-        <li><b>Sessions you can read at a glance</b><span>A dot per session: working, waiting for you, done. A soft chime when one finishes, a card when Claude asks for permission.</span></li>
-        <li><b>Approve from your desk or your phone</b><span>Permission requests show up as cards. Pair your phone once and answer from the couch, no app to install.</span></li>
-        <li><b>See the result while it is built</b><span>When Claude starts a dev server, the preview opens by itself. Point at an element to tell Claude what to change, console errors go straight back to it.</span></li>
-        <li><b>A terminal that behaves</b><span>Copy and paste like Windows Terminal, attach files with a click, paste screenshots, clickable file paths, search, and a shell right next to Claude.</span></li>
+        <li class="glow-card" style="padding: 24px;"><b>Sessions you can read at a glance</b><span>A dot per session: working, waiting for you, done. A soft chime when one finishes, a card when Claude asks for permission.</span></li>
+        <li class="glow-card" style="padding: 24px;"><b>Approve from your desk or your phone</b><span>Permission requests show up as cards. Pair your phone once and answer from the couch, no app to install.</span></li>
+        <li class="glow-card" style="padding: 24px;"><b>See the result while it is built</b><span>When Claude starts a dev server, the preview opens by itself. Point at an element to tell Claude what to change, console errors go straight back to it.</span></li>
+        <li class="glow-card" style="padding: 24px;"><b>A terminal that behaves</b><span>Copy and paste like Windows Terminal, attach files with a click, paste screenshots, clickable file paths, search, and a shell right next to Claude.</span></li>
       </ul>
       <div class="media"><img class="crop-left" src="img/hero.jpg" alt="VibeDesk with two Claude Code sessions, a todo list, token stats and an agent tree" loading="lazy" width="1600" height="960"></div>
     </div>
     <div class="split flip">
       <ul class="things">
-        <li><b>Rain, lofi and a focus timer</b><span>Animated scenes with rain on the glass, an internet lofi radio and a pomodoro timer that lowers the music during breaks.</span></li>
-        <li><b>A memory for every project</b><span>VibeDesk keeps notes about your project and hands them to Claude at the start of each session, so it does not have to rediscover everything.</span></li>
-        <li><b>A watcher that taps your shoulder</b><span>If a session hangs, loops on the same error or runs out of context, you get a calm notice with a fix button.</span></li>
-        <li><b>Git without the command line</b><span>See what changed, commit, push and undo from a window instead of memorising commands.</span></li>
+        <li class="glow-card" style="padding: 24px;"><b>Rain, lofi and a focus timer</b><span>Animated scenes with rain on the glass, an internet lofi radio and a pomodoro timer that lowers the music during breaks.</span></li>
+        <li class="glow-card" style="padding: 24px;"><b>A memory for every project</b><span>VibeDesk keeps notes about your project and hands them to Claude at the start of each session, so it does not have to rediscover everything.</span></li>
+        <li class="glow-card" style="padding: 24px;"><b>A watcher that taps your shoulder</b><span>If a session hangs, loops on the same error or runs out of context, you get a calm notice with a fix button.</span></li>
+        <li class="glow-card" style="padding: 24px;"><b>Git without the command line</b><span>See what changed, commit, push and undo from a window instead of memorising commands.</span></li>
       </ul>
       <div class="media"><img class="crop-center" src="img/focus.jpg" alt="The focus timer floating over a rainy, neon-lit scene" loading="lazy" width="1600" height="960"></div>
     </div>
@@ -407,7 +467,7 @@
   <section>
     <h2>Same Claude Code, better room</h2>
     <p class="lead">VibeDesk runs the official Claude Code CLI with your own plan. It adds the parts a terminal can’t show.</p>
-    <div class="compare">
+    <div class="compare glow-card">
       <div>
         <h3>Claude Code in a terminal</h3>
         <ul>
@@ -474,7 +534,103 @@
 <script>
 var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Tropfen an der Scheibe: kleine Linsen, ab und zu rutscht einer und zieht eine Spur
+// Theme Switcher Logic
+(function() {
+  var toggle = document.getElementById('vibe-toggle');
+  var html = document.documentElement;
+  toggle.addEventListener('click', function() {
+    var current = html.getAttribute('data-theme');
+    var next = current === 'cyberpunk' ? 'sunset' : 'cyberpunk';
+    html.setAttribute('data-theme', next);
+    toggle.textContent = next === 'cyberpunk' ? '🌆 Sunset Vibe' : '🌃 Cyberpunk Vibe';
+  });
+})();
+
+// Interactive Mouse Glow for Cards & 3D Tilt for Demo
+(function() {
+  document.querySelectorAll('.glow-card').forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var rect = card.getBoundingClientRect();
+      card.style.setProperty('--x', (e.clientX - rect.left) + 'px');
+      card.style.setProperty('--y', (e.clientY - rect.top) + 'px');
+    });
+  });
+
+  var demo = document.getElementById('demo');
+  if (demo && !still) {
+    demo.addEventListener('mousemove', function(e) {
+      var rect = demo.getBoundingClientRect();
+      var x = e.clientX - rect.left;
+      var y = e.clientY - rect.top;
+      var centerX = rect.width / 2;
+      var centerY = rect.height / 2;
+      
+      var rotateX = ((y - centerY) / centerY) * -5;
+      var rotateY = ((x - centerX) / centerX) * 5;
+      
+      demo.style.transform = 'rotateX(' + rotateX + 'deg) rotateY(' + rotateY + 'deg)';
+      demo.style.setProperty('--mouse-x', x + 'px');
+      demo.style.setProperty('--mouse-y', y + 'px');
+    });
+
+    demo.addEventListener('mouseleave', function() {
+      demo.style.transform = 'rotateX(0deg) rotateY(0deg)';
+    });
+  }
+})();
+
+// Fog (Beschlag) Window Canvas & Wiping Logic
+(function() {
+  var fogCanvas = document.getElementById('fog');
+  var ctx = fogCanvas.getContext('2d');
+  var w = 0, h = 0, dpr = Math.min(2, window.devicePixelRatio || 1);
+
+  function resize() {
+    var r = fogCanvas.getBoundingClientRect();
+    w = r.width; h = r.height;
+    fogCanvas.width = w * dpr; fogCanvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawFog();
+  }
+
+  function drawFog() {
+    ctx.fillStyle = 'rgba(200, 225, 255, 0.12)';
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Clear fog on mouse move over the hero window
+  var windowEl = document.getElementById('hero-window');
+  windowEl.addEventListener('mousemove', function(e) {
+    if (!document.body.classList.contains('raining')) return;
+    var rect = fogCanvas.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    var y = e.clientY - rect.top;
+    
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    var grad = ctx.createRadialGradient(x, y, 10, x, y, 45);
+    grad.addColorStop(0, 'rgba(0,0,0,0.8)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, 45, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Slowly re-fog window over time
+  setInterval(function() {
+    if (document.body.classList.contains('raining')) {
+      ctx.fillStyle = 'rgba(200, 225, 255, 0.008)';
+      ctx.fillRect(0, 0, w, h);
+    }
+  }, 100);
+})();
+
+// Rain Animation Engine
 (function () {
   var c = document.getElementById('rain');
   var ctx = c.getContext('2d');
@@ -516,7 +672,7 @@ var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   function paint() { ctx.clearRect(0, 0, w, h); for (var i = 0; i < drops.length; i++) draw(drops[i]); }
   function frame(t) {
     requestAnimationFrame(frame);
-    if (t - last < 33 || document.hidden) return; // höchstens ~30 Bilder pro Sekunde
+    if (t - last < 33 || document.hidden) return;
     last = t;
     var speed = document.body.classList.contains('raining') ? 1.8 : 1;
     for (var i = 0; i < drops.length; i++) {
@@ -534,7 +690,7 @@ var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!still) requestAnimationFrame(frame);
 })();
 
-// Regenrauschen aus gefiltertem Rauschen – kein Download, startet erst auf Klick
+// Web Audio API: Filtered Rain Noise + Generative Lofi Vinyl Crackle
 var audio = null;
 function chime() {
   if (!audio) return;
@@ -549,12 +705,15 @@ function chime() {
     o.start(t + i * .14); o.stop(t + i * .14 + 1.5);
   });
 }
+
 (function () {
   var btn = document.getElementById('rain-btn');
   btn.addEventListener('click', function () {
     var on = btn.getAttribute('aria-pressed') !== 'true';
     if (!audio) {
       var ac = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // 1. Rain Noise Buffer
       var len = ac.sampleRate * 4, buf = ac.createBuffer(2, len, ac.sampleRate);
       for (var ch = 0; ch < 2; ch++) {
         var data = buf.getChannelData(ch), b = 0;
@@ -566,17 +725,33 @@ function chime() {
       var gain = ac.createGain(); gain.gain.value = 0;
       src.connect(hp).connect(lp).connect(gain).connect(ac.destination);
       src.start();
-      audio = { ctx: ac, gain: gain };
+
+      // 2. Lofi Vinyl Crackle Buffer
+      var cLen = ac.sampleRate * 2, cBuf = ac.createBuffer(1, cLen, ac.sampleRate);
+      var cData = cBuf.getChannelData(0);
+      for (var j = 0; j < cLen; j++) {
+        var pop = Math.random() < 0.0006 ? (Math.random() * 2 - 1) * 0.7 : 0;
+        var hiss = (Math.random() * 2 - 1) * 0.012;
+        cData[j] = pop + hiss;
+      }
+      var cSrc = ac.createBufferSource(); cSrc.buffer = cBuf; cSrc.loop = true;
+      var cGain = ac.createGain(); cGain.gain.value = 0;
+      cSrc.connect(cGain).connect(ac.destination);
+      cSrc.start();
+
+      audio = { ctx: ac, gain: gain, cGain: cGain };
     }
     audio.ctx.resume();
-    audio.gain.gain.setTargetAtTime(on ? .55 : 0, audio.ctx.currentTime, .6);
+    audio.gain.gain.setTargetAtTime(on ? .5 : 0, audio.ctx.currentTime, .6);
+    audio.cGain.gain.setTargetAtTime(on ? .25 : 0, audio.ctx.currentTime, .6);
+    
     btn.setAttribute('aria-pressed', String(on));
-    btn.querySelector('span').textContent = on ? 'Rain is on' : 'Turn on the rain';
+    btn.querySelector('span').textContent = on ? 'Rain & Lofi is ON' : 'Turn on rain & lofi';
     document.body.classList.toggle('raining', on);
   });
 })();
 
-// Die Live-Demo: zwei Sessions, eine Freigabe, eine fertige Vorschau – in Schleife
+// Live Demo Terminal Animation Loop
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var demo = $('demo');
@@ -632,7 +807,7 @@ function chime() {
       type($('tb'), B, function () {
         status('b', 'waiting', 'waiting for you');
         $('ask').classList.add('on');
-        allowWait = setTimeout(allow, 6000); // wer nicht klickt, sieht es trotzdem weiterlaufen
+        allowWait = setTimeout(allow, 6000);
       });
     });
   }
@@ -650,7 +825,7 @@ function chime() {
     status('b', 'idle', 'stopped');
     later(3000, run);
   });
-  // erst loslegen, wenn die Demo im Bild ist
+  
   var started = false;
   new IntersectionObserver(function (e) { if (e[0].isIntersecting && !started) { started = true; run(); } }, { threshold: .3 }).observe(demo);
 })();
