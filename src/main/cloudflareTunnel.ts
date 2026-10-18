@@ -7,6 +7,7 @@ import { Resolver } from 'dns/promises'
 import fs from 'fs'
 import { join } from 'path'
 import type { TunnelState } from '../shared/companion'
+import type { RelayTransport } from './relayTransport'
 
 /** Öffentlicher Link aus der Ausgabe von `cloudflared tunnel --url …` */
 export function tunnelUrl(out: string): string | null {
@@ -76,7 +77,7 @@ const realDeps = (onChange: () => void): TunnelDeps => ({
  * Hält einen Quick Tunnel zum lokalen Port offen. Stürzt cloudflared ab oder reißt das Netz ab,
  * startet er neu – der Link ändert sich dann (Quick Tunnels haben keinen festen Namen).
  */
-export class QuickTunnel {
+export class QuickTunnel implements RelayTransport {
   state: TunnelState = 'off'
   url: string | null = null
   error: string | null = null

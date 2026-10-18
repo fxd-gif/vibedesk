@@ -5,7 +5,7 @@ import { randomBytes } from 'crypto'
 import fs from 'fs'
 import os from 'os'
 import QRCode from 'qrcode'
-import { QuickTunnel } from './cloudflareTunnel'
+import { createRelay } from './relayTransport'
 import { companionUrl, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../shared/companion'
 import { isDecision } from '../shared/permissions'
 import { defaultRunner } from './gitService'
@@ -81,7 +81,7 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
 
   // Internet-Link: Ändert sich der Tunnel, bekommt das Fenster den neuen Stand (samt QR-Code)
   let pushing: ReturnType<typeof setTimeout> | null = null
-  const tunnel = new QuickTunnel(() => {
+  const tunnel = createRelay(() => {
     if (pushing) return
     pushing = setTimeout(() => {
       pushing = null
