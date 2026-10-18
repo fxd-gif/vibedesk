@@ -72,6 +72,12 @@ export class BrainService {
     return id === ME_ID ? this.me() : this.d.project(id)
   }
 
+  /** Wie viel Claude seit ts über den User gelernt hat (angelegte oder aktualisierte persönliche Notizen) – für Vibe Wrapped */
+  learnedSince(ts: number): number {
+    const me = this.me()
+    return me ? this.store(me).list().filter((n) => n.updated >= ts).length : 0
+  }
+
   private personal(): string {
     const me = this.me()
     return me ? personalOverview(this.store(me).list()) : ''

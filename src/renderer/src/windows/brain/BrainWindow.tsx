@@ -20,6 +20,9 @@ export const buildPrompt = (): string =>
 export const tendPrompt = (): string =>
   t('Pflege das VibeDesk-Gehirn: Prüfe mit brain_overview die Notizen „zu prüfen“ gegen den aktuellen Code und aktualisiere oder archiviere sie. Halte danach mit brain_write fest, was du in dieser Session gelernt oder entschieden hast.')
 
+export const meetPrompt = (): string =>
+  t('Lerne mich kennen, damit du in allen Projekten besser zu mir passt: Lies ~/.claude/CLAUDE.md (falls vorhanden) und das Gehirn dieses Projekts (brain_overview, vor allem Konventionen). Halte mit brain_write und scope "me" fest, was über dieses Projekt hinaus für mich gilt: wie ich arbeite, wie ich angesprochen werden will, Sprache, Stil, Werkzeuge, was ich nicht mag. Eine Notiz pro Thema, kurz (3–8 Zeilen). Was wörtlich schon in CLAUDE.md steht, nicht doppeln. Projektspezifisches gehört nicht hinein.')
+
 const filters = (): { kind: GraphNodeKind; label: string }[] => [...NOTE_TYPES.map((k) => ({ kind: k as GraphNodeKind, label: noteTypeLabel(k) })), { kind: 'file', label: t('Dateien') }]
 
 export function BrainWindow(): React.JSX.Element {
@@ -85,13 +88,13 @@ export function BrainWindow(): React.JSX.Element {
     return view.graph.nodes.filter((n) => n.label.toLowerCase().includes(q))
   }, [query, view])
 
-  const ask = async (prompt: string): Promise<void> => {
-    if (!projectId) return
+  const ask = async (prompt: string, target = projectId): Promise<void> => {
+    if (!target || target === ME_ID) return
     if (!brainOn) {
       await alert(t('Gehirn ist ausgeschaltet'), t('Schalte oben „Claude nutzt das Gehirn“ ein – neue Sessions bekommen es dann automatisch.'))
       return
     }
-    await promptProject(projectId, prompt)
+    await promptProject(target, prompt)
   }
 
   const toggleKind = (k: GraphNodeKind): void => {
@@ -105,6 +108,8 @@ export function BrainWindow(): React.JSX.Element {
   const empty = view && view.notes === 0
   // persönliches Gehirn: kein Projekt dahinter, also keine Session zum Pflegen
   const isMe = projectId === ME_ID
+  // „Lerne mich kennen“ läuft in einer Session des zuletzt genutzten Projekts
+  const meetIn = isMe ? activeProjectId(projects) : null
 
   return (
     <div className="brain" data-testid="brain-window">
@@ -178,6 +183,9 @@ export function BrainWindow(): React.JSX.Element {
                 {t('Hier sammelt sich, was Claude über dich lernt – in allen Projekten: wie du arbeitest, was du magst und was nicht. Jede neue Session startet mit diesem Wissen. Die Notizen bleiben auf deinem PC und landen nie im Projekt.')}
               </p>
               <div className="row">
+                <button className="btn primary" disabled={!meetIn} title={meetIn ? undefined : t('Lege zuerst ein Projekt an')} onClick={() => void ask(meetPrompt(), meetIn)} data-testid="brain-meet">
+                  <Icon name="spark" size={14} /> {t('Claude lernt mich kennen')}
+                </button>
                 <button className="btn ghost" onClick={() => setDraft(emptyDraft())}>
                   {t('Selbst eine Notiz schreiben')}
                 </button>

@@ -200,7 +200,10 @@ app.whenReady().then(async () => {
     const info = sessionInfo(sid)
     return info ? projects.get(info.projectId)?.name : undefined
   }
-  ipcMain.handle('vibe:week', () => vibe.week())
+  ipcMain.handle('vibe:week', () => {
+    const w = vibe.week()
+    return { ...w, learned: brain.learnedSince(new Date(w.from + 'T00:00:00').getTime()) }
+  })
   ipcMain.on('vibe:focusDone', () => vibe.focusDone())
   ipcMain.handle('vibe:capture', (_e, r: unknown) => captureCard(mainWindow, r, process.env.VIBEDESK_PICTURES_DIR || app.getPath('pictures')))
   app.on('before-quit', () => {

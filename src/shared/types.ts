@@ -165,6 +165,8 @@ export interface VibeWeek {
   streak: number
   days: { date: string; minutes: number; prompts: number }[]
   persona: string
+  /** Notizen im persönlichen Gehirn, die in dieser Woche entstanden oder aktualisiert wurden */
+  learned?: number
 }
 
 export interface ClaudeSessionMeta {

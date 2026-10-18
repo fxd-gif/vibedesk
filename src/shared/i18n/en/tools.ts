@@ -62,6 +62,13 @@ const dict: Record<string, string> = {
   'Gehirn aufbauen lassen': 'Let Claude build the brain',
   'Selbst eine Notiz schreiben': 'Write a note yourself',
   'Über dich (alle Projekte)': 'About you (all projects)',
+  'Über dich gelernt': 'Learned about you',
+  'Claude lernt mich kennen': 'Let Claude get to know me',
+  'Lege zuerst ein Projekt an': 'Create a project first',
+  'Lerne mich kennen, damit du in allen Projekten besser zu mir passt: Lies ~/.claude/CLAUDE.md (falls vorhanden) und das Gehirn dieses Projekts (brain_overview, vor allem Konventionen). Halte mit brain_write und scope "me" fest, was über dieses Projekt hinaus für mich gilt: wie ich arbeite, wie ich angesprochen werden will, Sprache, Stil, Werkzeuge, was ich nicht mag. Eine Notiz pro Thema, kurz (3–8 Zeilen). Was wörtlich schon in CLAUDE.md steht, nicht doppeln. Projektspezifisches gehört nicht hinein.':
+    'Get to know me so you fit me better in every project: Read ~/.claude/CLAUDE.md (if it exists) and this project’s brain (brain_overview, especially conventions). Use brain_write with scope "me" to record what applies to me beyond this project: how I work, how I want to be addressed, language, style, tools, what I dislike. One note per topic, short (3–8 lines). Don’t duplicate what CLAUDE.md already says word for word. Nothing project-specific.',
+  '{n} Sache': '{n} thing',
+  '{n} Sachen': '{n} things',
   'Claude hat sich etwas über dich gemerkt': 'Claude remembered something about you',
   'Claude kennt dich noch nicht': 'Claude doesn’t know you yet',
   'Hier sammelt sich, was Claude über dich lernt – in allen Projekten: wie du arbeitest, was du magst und was nicht. Jede neue Session startet mit diesem Wissen. Die Notizen bleiben auf deinem PC und landen nie im Projekt.': 'This is where everything Claude learns about you collects – across all projects: how you work, what you like and what you don’t. Every new session starts with this knowledge. The notes stay on your PC and never end up in a project.',

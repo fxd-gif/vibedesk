@@ -74,7 +74,9 @@ export function VibeWrapped(): React.JSX.Element | null {
     ...(w.peakHour !== null ? [[t('Beste Zeit'), t('{from} bis {to} Uhr', { from: w.peakHour, to: (w.peakHour + 1) % 24 })] as [string, string]] : []),
     [t('Serie'), tn(w.streak, '{n} Tag', '{n} Tage in Folge')],
     ...(w.agents > 0 ? [[t('Agenten'), String(w.agents)] as [string, string]] : []),
-    ...(w.focus > 0 ? [[t('Fokus-Runden'), String(w.focus)] as [string, string]] : [])
+    ...(w.focus > 0 ? [[t('Fokus-Runden'), String(w.focus)] as [string, string]] : []),
+    // das persönliche Gehirn sichtbar machen: VibeDesk wird mit jeder Woche besser
+    ...(w.learned ? [[t('Über dich gelernt'), tn(w.learned, '{n} Sache', '{n} Sachen')] as [string, string]] : [])
   ]
   // im Stream keine Projektnamen zeigen
   const projName = (name: string, i: number): string => (streaming ? t('Projekt {n}', { n: i + 1 }) : name)
