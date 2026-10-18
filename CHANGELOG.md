@@ -14,6 +14,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Verbessert
 
+- Discord: Der Knopf „VibeDesk holen“ steht jetzt immer an erster Stelle, eigene Knöpfe bekommen den zweiten Platz. Abschalten lässt er sich weiterhin im Discord-Fenster
 - Die Anhänge-Leiste im Terminal ragt nicht mehr über die Statuszeile
 
 ## 1.0.0

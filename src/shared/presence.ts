@@ -27,7 +27,7 @@ export interface PresenceConfig {
   statusIcons: boolean
   /** Lounge-Größe als Party anzeigen („3 von 16“) */
   showParty: boolean
-  /** Knopf „VibeDesk holen“ – belegt nur einen freien Platz; fehlt das Feld (alte Settings), gilt an */
+  /** Knopf „VibeDesk holen“ – steht vorn, eigene Knöpfe bekommen den zweiten Platz; fehlt das Feld (alte Settings), gilt an */
   promoButton?: boolean
 }
 
@@ -246,11 +246,11 @@ export function renderPresence(cfg: PresenceConfig, vars: PresenceVars): Activit
   if (st) assets.small_text = st
   if (Object.keys(assets).length) a.assets = assets
 
-  const buttons = cfg.buttons
+  const own = cfg.buttons
     .filter((b) => b.label.trim() && /^https?:\/\/\S+$/.test(b.url.trim()))
-    .slice(0, 2)
     .map((b) => ({ label: b.label.trim().slice(0, 32), url: b.url.trim() }))
-  if (cfg.promoButton !== false && buttons.length < 2 && !buttons.some((b) => b.url === PROMO_BUTTON.url)) buttons.push({ ...PROMO_BUTTON })
+  // Werbeknopf steht vorn, eigene Knöpfe füllen den zweiten Platz (ein eigener mit derselben Adresse fällt weg)
+  const buttons = (cfg.promoButton !== false ? [{ ...PROMO_BUTTON }, ...own.filter((b) => b.url !== PROMO_BUTTON.url)] : own).slice(0, 2)
   if (buttons.length) a.buttons = buttons
 
   // Party-Größe hängt Discord hinter Zeile 2 an – ohne Zeile 2 zeigt es nichts

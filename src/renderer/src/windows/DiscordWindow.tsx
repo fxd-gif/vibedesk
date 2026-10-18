@@ -319,7 +319,7 @@ export function DiscordWindow(): React.JSX.Element | null {
 
         <section>
           <h4>{t('Buttons (max. 2)')}</h4>
-          <Toggle label={t('„VibeDesk holen“ zeigen, solange ein Platz frei ist')} on={cfg.promoButton !== false} onChange={(v) => set({ promoButton: v })} testid="dc-promo" />
+          <Toggle label={t('Knopf „VibeDesk holen“ zeigen (an erster Stelle)')} on={cfg.promoButton !== false} onChange={(v) => set({ promoButton: v })} testid="dc-promo" />
           {buttons.map((b, i) => (
             <div key={i} className="row">
               <input

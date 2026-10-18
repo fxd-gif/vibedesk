@@ -103,7 +103,7 @@ const dict: Record<string, string> = {
   '{name} – Klick: groß, Rechtsklick: klein': '{name} – click: large, right-click: small',
   'Diese App hat noch keine hochgeladenen Bilder – nutze eine Bild-URL oder lade sie im Developer Portal unter „Rich Presence → Art Assets“ hoch.': 'This app has no uploaded images yet – use an image URL or upload them in the Developer Portal under “Rich Presence → Art Assets”.',
   'Buttons (max. 2)': 'Buttons (max. 2)',
-  '„VibeDesk holen“ zeigen, solange ein Platz frei ist': 'Show “Get VibeDesk” while a slot is free',
+  'Knopf „VibeDesk holen“ zeigen (an erster Stelle)': 'Show the “Get VibeDesk” button (first slot)',
   'Beschriftung': 'Label',
   'Hinweis: Eigene Buttons sieht man bei dir selbst nicht, nur andere sehen sie.': "Note: you won't see your own buttons – only others can see them.",
   'Zeit': 'Time',
