@@ -7,6 +7,14 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **VibeDesk auf Englisch**: Die ganze Oberfläche gibt es jetzt auch auf Englisch: Fenster, Mitteilungen, Dialoge, Handy- und Overlay-Seite. VibeDesk richtet sich nach der Sprache von Windows. Umstellen lässt es sich im Mehr-Menü unter „Sprache · Language“
+
+### Verbessert
+
+- Die Anhänge-Leiste im Terminal ragt nicht mehr über die Statuszeile
+
 ## 1.0.0
 
 ### Neu

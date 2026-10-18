@@ -328,7 +328,14 @@ const dict: Record<string, string> = {
   'Vorschau ansehen': 'View preview',
   'Befehle': 'Commands',
   'Fenster, Projekt oder Aktion …': 'Window, project or action …',
-  'Nichts gefunden.': 'Nothing found.'
+  'Nichts gefunden.': 'Nothing found.',
+  'nie geöffnet': 'never opened',
+  'gerade eben': 'just now',
+  'vor {n} Min.': '{n} min ago',
+  'vor {n} Std.': '{n} h ago',
+  'gestern': 'yesterday',
+  'vor {n} Tag': '{n} day ago',
+  'vor {n} Tagen': '{n} days ago'
 }
 
 export default dict

@@ -555,7 +555,7 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
 .queue-chip { margin-left: 6px; padding: 2px 8px; border-radius: 999px; border: 1px dashed rgba(159, 184, 255, .35); background: transparent; color: var(--dim, #9aa3b8); font-size: 11px; cursor: pointer; }
 .queue-chip:hover, .queue-chip.open { border-style: solid; color: var(--text); background: rgba(159, 184, 255, .1); }
 .queue-chip.on { border-style: solid; border-color: rgba(159, 184, 255, .55); color: #c7d4ff; background: rgba(159, 184, 255, .14); }
-.term-queue { position: absolute; left: 10px; right: 10px; bottom: 8px; max-height: 108px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 10px; background: rgba(10, 12, 18, .82); border: 1px solid var(--glass-border); font-size: 12px; }
+.term-queue { position: absolute; left: 10px; right: 10px; bottom: 26px; max-height: 108px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 10px; background: rgba(10, 12, 18, .82); border: 1px solid var(--glass-border); font-size: 12px; }
 .tq-item { display: flex; align-items: center; gap: 8px; padding: 2px 4px; border-radius: 6px; }
 .tq-item:hover { background: rgba(255, 255, 255, .05); }
 .tq-n { flex: none; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; background: rgba(159, 184, 255, .18); font-size: 10.5px; }
@@ -614,6 +614,8 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
 .attach-count { font-size: 10px; font-weight: 600; color: #c7d4ff; }
 .attach-count.pending { color: #fde68a; }
 .term-attach { max-height: 150px; }
+/* in der scrollenden Spalte nicht stauchen – sonst ragt „Dateien wählen“ über die Statuszeile */
+.term-queue > * { flex-shrink: 0; }
 .ta-empty { color: var(--text-dim); padding: 2px 4px 4px; }
 .ta-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; }
 .ta-dot.sent { background: #7c9cff; }

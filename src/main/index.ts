@@ -104,7 +104,10 @@ function createWindow(): BrowserWindow {
     return { action: 'deny' }
   })
   // Das Hauptfenster navigiert nie weg – sonst bekäme eine hineingezogene Seite oder ein Link das Preload samt window.api
+  const page = (u: string): string => u.replace(/[?#].*$/, '')
   const stay = (ev: Electron.Event, url: string): void => {
+    // Neuladen der eigenen Seite (Sprachwechsel, Strg+R) ist erlaubt
+    if (page(url) === page(win.webContents.getURL())) return
     ev.preventDefault()
     if (/^https?:/.test(url)) shell.openExternal(url)
   }

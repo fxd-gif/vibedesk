@@ -1,13 +1,15 @@
+import { t, tn } from '../../shared/i18n'
+
 export function relTime(ts: number | null, now = Date.now()): string {
-  if (!ts) return 'nie geöffnet'
+  if (!ts) return t('nie geöffnet')
   const s = Math.round((now - ts) / 1000)
-  if (s < 45) return 'gerade eben'
+  if (s < 45) return t('gerade eben')
   const m = Math.round(s / 60)
-  if (m < 60) return `vor ${m} Min.`
+  if (m < 60) return t('vor {n} Min.', { n: m })
   const h = Math.round(m / 60)
-  if (h < 24) return `vor ${h} Std.`
+  if (h < 24) return t('vor {n} Std.', { n: h })
   const d = Math.round(h / 24)
-  return d === 1 ? 'gestern' : `vor ${d} Tagen`
+  return d === 1 ? t('gestern') : tn(d, 'vor {n} Tag', 'vor {n} Tagen')
 }
 
 export function clock(ts: number): string {
