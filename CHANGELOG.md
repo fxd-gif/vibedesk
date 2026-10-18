@@ -9,6 +9,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Neu
 
+- **Claude lernt dich kennen**: Neben dem Gehirn jedes Projekts gibt es jetzt ein persönliches Gehirn „Über dich“. Darin hält Claude fest, wie du arbeitest, was du magst und was nicht, und jede neue Session startet in jedem Projekt mit diesem Wissen. Je länger du VibeDesk nutzt, desto besser passt Claude zu dir. Die Notizen liegen nur auf deinem PC, nie im Projekt. Ansehen und bearbeiten im Gehirn-Fenster unter „Über dich (alle Projekte)“
 - **VibeDesk auf Englisch**: Die ganze Oberfläche gibt es jetzt auch auf Englisch: Fenster, Mitteilungen, Dialoge, Handy- und Overlay-Seite. VibeDesk richtet sich nach der Sprache von Windows. Umstellen lässt es sich im Mehr-Menü unter „Sprache · Language“
 
 ### Verbessert

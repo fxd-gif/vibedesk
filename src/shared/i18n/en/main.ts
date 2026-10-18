@@ -38,6 +38,11 @@ const dict: Record<string, string> = {
   'Wird oft zusammen geändert mit:': 'Often changed together with:',
   'Bisher {reads}× gelesen, {edits}× geändert.': 'Read {reads}×, changed {edits}× so far.',
   'Angelegt: {note}': 'Created: {note}',
+  'Angelegt (über dich): {note}': 'Created (about you): {note}',
+  'Aktualisiert (über dich): {note}': 'Updated (about you): {note}',
+  '{type}, über dich': '{type}, about you',
+  'über dich': 'about you',
+  'Über dich': 'About you',
   'Aktualisiert: {note}': 'Updated: {note}',
   'Noch ohne Notiz: {list}': 'No note yet: {list}',
   '{note} archiviert.': '{note} archived.',
@@ -48,8 +53,8 @@ const dict: Record<string, string> = {
     'The brain is full ({max} notes) – merge notes or delete old ones.',
   'Notiz nicht gefunden': 'Note not found',
   'Eine Notiz mit diesem Titel gibt es schon': 'A note with this title already exists',
-  'VibeDesk-Gehirn: Bevor du fertig bist – halte mit brain_write kurz fest, was du in dieser Runde gelernt oder entschieden hast (neue Bereiche, Entscheidungen samt Grund, Stolperfallen) und aktualisiere Notizen, die dadurch veraltet sind. Gibt es nichts Neues, antworte nur „Gehirn ist aktuell.“ Wiederhole deine vorige Antwort nicht und fasse dich kurz.':
-    'VibeDesk brain: Before you finish, briefly record with brain_write what you learned or decided in this turn (new areas, decisions and why, pitfalls) and update notes that are now outdated. If there’s nothing new, just reply “Brain is up to date.” Don’t repeat your previous answer and keep it short.',
+  'VibeDesk-Gehirn: Bevor du fertig bist – halte mit brain_write kurz fest, was du in dieser Runde gelernt oder entschieden hast (neue Bereiche, Entscheidungen samt Grund, Stolperfallen) und aktualisiere Notizen, die dadurch veraltet sind. Hast du etwas über den User selbst gelernt (Vorlieben, Arbeitsweise), gehört das mit scope "me" ins persönliche Gehirn. Gibt es nichts Neues, antworte nur „Gehirn ist aktuell.“ Wiederhole deine vorige Antwort nicht und fasse dich kurz.':
+    'VibeDesk brain: Before you finish, briefly record with brain_write what you learned or decided in this turn (new areas, decisions and why, pitfalls) and update notes that are now outdated. If you learned something about the user themselves (preferences, way of working), it belongs in the personal brain with scope "me". If there’s nothing new, just reply “Brain is up to date.” Don’t repeat your previous answer and keep it short.',
 
   // Verlauf
   'Ohne Titel': 'Untitled',

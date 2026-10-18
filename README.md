@@ -67,6 +67,7 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 
 **The brain (project memory)**
 - Notes in `.vibedesk/brain` inside your project: plain Markdown with `[[links]]`, readable in Obsidian and versionable with Git
+- **About you:** a personal brain that applies to all projects. Claude remembers how you work and what you like – the longer you use VibeDesk, the better Claude fits you. Stays on your PC only
 - Each session starts with an overview of this knowledge and can search, read and extend it through its own tools
 - A live graph of notes and files; nodes light up while Claude reads, edits or learns something
 

@@ -12,7 +12,7 @@ export interface TurnActivity {
 /** Bitte an Claude (in der Sprache der Oberfläche) – erst beim Aufruf übersetzt */
 export const tendReason = (): string =>
   t(
-    'VibeDesk-Gehirn: Bevor du fertig bist – halte mit brain_write kurz fest, was du in dieser Runde gelernt oder entschieden hast (neue Bereiche, Entscheidungen samt Grund, Stolperfallen) und aktualisiere Notizen, die dadurch veraltet sind. Gibt es nichts Neues, antworte nur „Gehirn ist aktuell.“ Wiederhole deine vorige Antwort nicht und fasse dich kurz.'
+    'VibeDesk-Gehirn: Bevor du fertig bist – halte mit brain_write kurz fest, was du in dieser Runde gelernt oder entschieden hast (neue Bereiche, Entscheidungen samt Grund, Stolperfallen) und aktualisiere Notizen, die dadurch veraltet sind. Hast du etwas über den User selbst gelernt (Vorlieben, Arbeitsweise), gehört das mit scope "me" ins persönliche Gehirn. Gibt es nichts Neues, antworte nur „Gehirn ist aktuell.“ Wiederhole deine vorige Antwort nicht und fasse dich kurz.'
   )
 
 /** `stop_hook_active` heißt: Claude läuft schon wegen eines Stop-Hooks weiter – dann nie erneut anhalten. */

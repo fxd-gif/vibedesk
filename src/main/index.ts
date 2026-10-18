@@ -216,6 +216,7 @@ app.whenReady().then(async () => {
   })
   const brain = new BrainService({
     activityDir: join(userData, 'brain'),
+    meDir: join(userData, 'me'),
     project: (id) => projects.get(id),
     projectOfSession: (sid) => {
       const info = sessionInfo(sid)

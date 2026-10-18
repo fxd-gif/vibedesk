@@ -22,6 +22,11 @@ let endpoint = envPort && envToken ? { port: Number(envPort), token: envToken } 
 const PROTOCOL = '2025-06-18'
 
 const TYPES = ['module', 'decision', 'pitfall', 'convention', 'task', 'fact']
+const SCOPE = {
+  type: 'string',
+  enum: ['project', 'me'],
+  description: 'project (Standard) = dieses Projekt; me = persönliches Gehirn über den User, gilt in allen Projekten'
+}
 const TOOLS = [
   {
     name: 'brain_overview',
@@ -31,13 +36,13 @@ const TOOLS = [
   },
   {
     name: 'brain_search',
-    description: 'Durchsucht das Projektgedächtnis nach Stichworten (Titel, Inhalt, Tags, Dateien). Nutze es, bevor du einen Bereich des Projekts neu erkundest.',
+    description: 'Durchsucht das Projektgedächtnis und das persönliche Gehirn nach Stichworten (Titel, Inhalt, Tags, Dateien). Nutze es, bevor du einen Bereich des Projekts neu erkundest.',
     inputSchema: { type: 'object', properties: { query: { type: 'string', description: 'Stichworte, z. B. „auth token refresh“' } }, required: ['query'] }
   },
   {
     name: 'brain_read',
-    description: 'Liest eine Notiz aus dem Projektgedächtnis inklusive verknüpfter Dateien und Rückverweise.',
-    inputSchema: { type: 'object', properties: { title: { type: 'string' } }, required: ['title'] }
+    description: 'Liest eine Notiz aus dem Projektgedächtnis inklusive verknüpfter Dateien und Rückverweise. Ohne scope wird erst im Projekt, dann im persönlichen Gehirn gesucht.',
+    inputSchema: { type: 'object', properties: { title: { type: 'string' }, scope: SCOPE }, required: ['title'] }
   },
   {
     name: 'brain_related',
@@ -47,7 +52,7 @@ const TOOLS = [
   {
     name: 'brain_write',
     description:
-      'Legt eine Notiz im Projektgedächtnis an oder ersetzt sie (gleicher Titel = gleiche Notiz). Halte fest, was künftigen Sessions Zeit spart: Überblick über einen Bereich, Entscheidungen samt Grund, Stolperfallen, Projekt-Konventionen. Kurz und sachlich, Markdown, verlinke verwandte Notizen mit [[Titel]].',
+      'Legt eine Notiz im Projektgedächtnis an oder ersetzt sie (gleicher Titel = gleiche Notiz). Halte fest, was künftigen Sessions Zeit spart: Überblick über einen Bereich, Entscheidungen samt Grund, Stolperfallen, Projekt-Konventionen. Kurz und sachlich, Markdown, verlinke verwandte Notizen mit [[Titel]]. Was du über den User selbst lernst (Vorlieben, Arbeitsweise, Stack, was er nicht mag), gehört mit scope "me" ins persönliche Gehirn – das gilt dann in allen Projekten.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -55,7 +60,8 @@ const TOOLS = [
         type: { type: 'string', enum: TYPES, description: 'module = Bereich, decision = Entscheidung, pitfall = Stolperfalle, convention = Regel, task = Aufgabe, fact = Wissen' },
         body: { type: 'string', description: 'Inhalt in Markdown, mit [[Links]] zu verwandten Notizen' },
         files: { type: 'array', items: { type: 'string' }, description: 'betroffene Projektdateien' },
-        tags: { type: 'array', items: { type: 'string' } }
+        tags: { type: 'array', items: { type: 'string' } },
+        scope: SCOPE
       },
       required: ['title', 'type', 'body']
     }
@@ -63,7 +69,7 @@ const TOOLS = [
   {
     name: 'brain_forget',
     description: 'Archiviert eine veraltete oder falsche Notiz.',
-    inputSchema: { type: 'object', properties: { title: { type: 'string' } }, required: ['title'] }
+    inputSchema: { type: 'object', properties: { title: { type: 'string' }, scope: SCOPE }, required: ['title'] }
   }
 ]
 

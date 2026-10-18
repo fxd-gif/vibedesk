@@ -65,6 +65,7 @@ In den Terminals läuft das echte Claude Code. VibeDesk legt den Blick darum: wa
 **Das Gehirn (Projektgedächtnis)**
 - Notizen in `.vibedesk/brain` im Projekt: Markdown mit `[[Links]]`, direkt in Obsidian zu öffnen und mit Git zu versionieren
 - Jede Session startet mit einem Überblick über dieses Wissen und kann es über eigene Werkzeuge durchsuchen, lesen und erweitern
+- **Über dich:** ein persönliches Gehirn, das in allen Projekten gilt. Claude merkt sich, wie du arbeitest und was du magst – je länger du VibeDesk nutzt, desto besser passt Claude zu dir. Liegt nur auf deinem PC
 - Lebendiger Graph aus Notizen und Dateien – Knoten leuchten auf, während Claude liest, ändert oder lernt
 
 **Werkzeuge**

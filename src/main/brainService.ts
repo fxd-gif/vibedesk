@@ -6,6 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import {
   BRAIN_DIR,
+  ME_ID,
   NOTE_TYPE_LABEL,
   backlinks,
   buildGraph,
@@ -15,6 +16,7 @@ import {
   noteId,
   normalizeActivity,
   overview,
+  personalOverview,
   recordTouch,
   relPath,
   searchNotes,
@@ -35,6 +37,8 @@ const SAVE_DELAY_MS = 2000
 
 export interface BrainDeps {
   activityDir: string
+  /** Ordner des persönlichen Gehirns (gilt in allen Projekten); ohne ihn gibt es nur Projekt-Gehirne */
+  meDir?: string
   project: (id: string) => Project | undefined
   /** Projekt einer laufenden VibeDesk-Session */
   projectOfSession: (sessionId: string) => Project | undefined
@@ -57,6 +61,20 @@ export class BrainService {
 
   store(p: Project): BrainStore {
     return new BrainStore(p.path)
+  }
+
+  /** Das persönliche Gehirn als Pseudo-Projekt – so funktionieren Fenster, Watcher und Pulse ohne Sonderwege */
+  private me(): Project | undefined {
+    return this.d.meDir ? ({ id: ME_ID, name: t('Über dich'), path: this.d.meDir, createdAt: 0, lastOpenedAt: null } as Project) : undefined
+  }
+
+  private proj(id: string): Project | undefined {
+    return id === ME_ID ? this.me() : this.d.project(id)
+  }
+
+  private personal(): string {
+    const me = this.me()
+    return me ? personalOverview(this.store(me).list()) : ''
   }
 
   // ---------- Aktivität ----------
@@ -141,7 +159,7 @@ export class BrainService {
     if (!this.d.enabled()) return undefined
     const p = this.d.projectOfSession(sessionId)
     if (!p) return undefined
-    const text = overview(p.name, this.store(p).list(), this.activity(p.id))
+    const text = overview(p.name, this.store(p).list(), this.activity(p.id)) + this.personal()
     return JSON.stringify({ hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: text } })
   }
 
@@ -168,28 +186,40 @@ export class BrainService {
     const store = this.store(p)
     const act = this.activity(p.id)
     const s = (k: string): string => (typeof args[k] === 'string' ? (args[k] as string) : '')
-    const pulse = (title: string, kind: BrainPulse['kind']): void =>
-      this.d.emit('brain:pulse', { projectId: p.id, id: noteId(title), kind, ...(kind === 'write' ? { title } : {}) } satisfies BrainPulse)
+    const me = this.me()
+    const meStore = me && this.store(me)
+    // scope "me": Wissen über den User selbst, gilt in allen Projekten
+    const mine = s('scope') === 'me' && !!me
+    const pulse = (title: string, kind: BrainPulse['kind'], projectId = p.id): void =>
+      this.d.emit('brain:pulse', { projectId, id: noteId(title), kind, ...(kind === 'write' ? { title } : {}) } satisfies BrainPulse)
     try {
       switch (name) {
         case 'brain_overview':
-          return { text: overview(p.name, store.list(), act, 12_000) }
+          return { text: overview(p.name, store.list(), act, 12_000) + this.personal() }
         case 'brain_search': {
-          const notes = store.list()
-          const hits = searchNotes(notes, s('query'))
+          const hits = searchNotes(store.list(), s('query'))
+          const meHits = meStore ? searchNotes(meStore.list(), s('query'), 5) : []
           hits.forEach((h) => pulse(h.title, 'read'))
-          if (!hits.length) return { text: t('Keine Notizen zu „{query}“. Wenn du dir das gerade erschließt, halte es danach mit brain_write fest.', { query: s('query') }) }
-          return { text: hits.map((h) => `- [[${h.title}]] (${NOTE_TYPE_LABEL[h.type]}) – ${h.snippet}`).join('\n') }
+          meHits.forEach((h) => pulse(h.title, 'read', ME_ID))
+          const lines = [
+            ...hits.map((h) => `- [[${h.title}]] (${NOTE_TYPE_LABEL[h.type]}) – ${h.snippet}`),
+            ...meHits.map((h) => `- [[${h.title}]] (${t('{type}, über dich', { type: NOTE_TYPE_LABEL[h.type] })}) – ${h.snippet}`)
+          ]
+          if (!lines.length) return { text: t('Keine Notizen zu „{query}“. Wenn du dir das gerade erschließt, halte es danach mit brain_write fest.', { query: s('query') }) }
+          return { text: lines.join('\n') }
         }
         case 'brain_read': {
-          const n = store.get(s('title'))
+          // ohne scope: erst das Projekt, dann das persönliche Gehirn
+          const fromMe = mine || (!store.get(s('title')) && !!meStore?.get(s('title')))
+          const src = fromMe && meStore ? meStore : store
+          const n = src.get(s('title'))
           if (!n) {
-            const alt = searchNotes(store.list(), s('title'), 5)
+            const alt = searchNotes(src.list(), s('title'), 5)
             return { text: t('Keine Notiz „{title}“.', { title: s('title') }) + (alt.length ? ' ' + t('Meintest du: {list}?', { list: alt.map((h) => `[[${h.title}]]`).join(', ') }) : ''), isError: true }
           }
-          pulse(n.title, 'read')
-          const back = backlinks(store.list(), n.title)
-          const head = [`# ${n.title}`, t('Typ: {type} · aktualisiert {date}', { type: NOTE_TYPE_LABEL[n.type], date: new Date(n.updated).toISOString().slice(0, 10) }) + (isStale(n, act) ? ' · ' + t('ZU PRÜFEN: verknüpfte Dateien wurden seitdem geändert') : '')]
+          pulse(n.title, 'read', fromMe ? ME_ID : p.id)
+          const back = backlinks(src.list(), n.title)
+          const head = [`# ${n.title}${fromMe ? ' · ' + t('über dich') : ''}`, t('Typ: {type} · aktualisiert {date}', { type: NOTE_TYPE_LABEL[n.type], date: new Date(n.updated).toISOString().slice(0, 10) }) + (isStale(n, act) ? ' · ' + t('ZU PRÜFEN: verknüpfte Dateien wurden seitdem geändert') : '')]
           if (n.files.length) head.push(t('Dateien: {list}', { list: n.files.join(', ') }))
           if (n.tags.length) head.push(`Tags: ${n.tags.join(', ')}`)
           return { text: [...head, '', n.body, ...(back.length ? ['', t('Verlinkt von: {list}', { list: back.map((b) => `[[${b}]]`).join(', ') })] : [])].join('\n') }
@@ -208,25 +238,36 @@ export class BrainService {
           return { text: lines.join('\n') }
         }
         case 'brain_write': {
-          const { note, created } = store.write(
+          const target = mine ? me! : p
+          const tStore = mine ? meStore! : store
+          const { note, created } = tStore.write(
             {
               title: s('title'),
               type: s('type'),
               body: s('body'),
-              files: Array.isArray(args.files) ? (args.files as unknown[]).map((f) => relPath(String(f), p.path)).filter((f): f is string => !!f) : undefined,
+              files: !mine && Array.isArray(args.files) ? (args.files as unknown[]).map((f) => relPath(String(f), p.path)).filter((f): f is string => !!f) : undefined,
               tags: Array.isArray(args.tags) ? (args.tags as unknown[]).map(String) : undefined
             } satisfies NoteInput
           )
-          pulse(note.title, 'write')
+          pulse(note.title, 'write', target.id)
           this.markTended(sessionId)
-          this.watch(p)
-          this.changed(p.id)
-          const missing = note.links.filter((l) => !store.get(l))
-          return { text: (created ? t('Angelegt: {note}', { note: `[[${note.title}]]` }) : t('Aktualisiert: {note}', { note: `[[${note.title}]]` })) + (missing.length ? '\n' + t('Noch ohne Notiz: {list}', { list: missing.map((m) => `[[${m}]]`).join(', ') }) : '') }
+          this.watch(target)
+          this.changed(target.id)
+          const missing = note.links.filter((l) => !tStore.get(l))
+          const label = `[[${note.title}]]`
+          const head = mine
+            ? created
+              ? t('Angelegt (über dich): {note}', { note: label })
+              : t('Aktualisiert (über dich): {note}', { note: label })
+            : created
+              ? t('Angelegt: {note}', { note: label })
+              : t('Aktualisiert: {note}', { note: label })
+          return { text: head + (missing.length ? '\n' + t('Noch ohne Notiz: {list}', { list: missing.map((m) => `[[${m}]]`).join(', ') }) : '') }
         }
         case 'brain_forget': {
-          const ok = store.remove(s('title'))
-          if (ok) this.changed(p.id)
+          const target = mine ? me! : p
+          const ok = this.store(target).remove(s('title'))
+          if (ok) this.changed(target.id)
           return ok ? { text: t('{note} archiviert.', { note: `[[${s('title')}]]` }) } : { text: t('Keine Notiz „{title}“.', { title: s('title') }), isError: true }
         }
         default:
@@ -240,7 +281,7 @@ export class BrainService {
   // ---------- Graph-Fenster ----------
 
   view(projectId: string): BrainView | null {
-    const p = this.d.project(projectId)
+    const p = this.proj(projectId)
     if (!p || p.missing) return null
     this.watch(p)
     const notes = this.store(p).list()
@@ -256,7 +297,7 @@ export class BrainService {
   }
 
   note(projectId: string, title: string): NoteDetail | null {
-    const p = this.d.project(projectId)
+    const p = this.proj(projectId)
     if (!p) return null
     const store = this.store(p)
     const n = store.get(title)
@@ -266,7 +307,7 @@ export class BrainService {
   }
 
   fileInfo(projectId: string, file: string): { file: string; abs: string; reads: number; edits: number; notes: string[]; co: { file: string; count: number }[] } | null {
-    const p = this.d.project(projectId)
+    const p = this.proj(projectId)
     if (!p) return null
     const act = this.activity(p.id)
     const f = act.files[file]
@@ -278,7 +319,7 @@ export class BrainService {
   }
 
   write(projectId: string, input: NoteInput, previousTitle?: string): NoteDetail {
-    const p = this.d.project(projectId)
+    const p = this.proj(projectId)
     if (!p) throw new Error(t('Projekt nicht gefunden'))
     const store = this.store(p)
     if (previousTitle && titleKey(previousTitle) !== titleKey(input.title)) store.rename(previousTitle, input.title)
@@ -289,7 +330,7 @@ export class BrainService {
   }
 
   remove(projectId: string, title: string): boolean {
-    const p = this.d.project(projectId)
+    const p = this.proj(projectId)
     if (!p) return false
     const ok = this.store(p).remove(title)
     if (ok) this.changed(p.id)

@@ -61,6 +61,10 @@ const dict: Record<string, string> = {
     'This is where everything Claude learns about your project collects: areas, decisions, pitfalls and conventions – as linked notes. Every new session starts with this knowledge instead of exploring everything again.',
   'Gehirn aufbauen lassen': 'Let Claude build the brain',
   'Selbst eine Notiz schreiben': 'Write a note yourself',
+  'Über dich (alle Projekte)': 'About you (all projects)',
+  'Claude hat sich etwas über dich gemerkt': 'Claude remembered something about you',
+  'Claude kennt dich noch nicht': 'Claude doesn’t know you yet',
+  'Hier sammelt sich, was Claude über dich lernt – in allen Projekten: wie du arbeitest, was du magst und was nicht. Jede neue Session startet mit diesem Wissen. Die Notizen bleiben auf deinem PC und landen nie im Projekt.': 'This is where everything Claude learns about you collects – across all projects: how you work, what you like and what you don’t. Every new session starts with this knowledge. The notes stay on your PC and never end up in a project.',
   'Die Punkte im Hintergrund sind Dateien, an denen Claude schon gearbeitet hat.':
     'The dots in the background are files Claude has already worked on.',
   liest: 'reading',

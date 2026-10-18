@@ -1,7 +1,7 @@
 // Das VibeDesk-Gehirn: was Claude über ein Projekt weiß – als lebendiger Graph.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../../api'
-import { NOTE_TYPES, noteId, type BrainView, type GraphNodeKind } from '../../../../shared/brain'
+import { ME_ID, NOTE_TYPES, noteId, type BrainView, type GraphNodeKind } from '../../../../shared/brain'
 import { t, tn } from '../../../../shared/i18n'
 import type { Project } from '../../../../shared/types'
 import { Icon } from '../../desktop/icons'
@@ -103,6 +103,8 @@ export function BrainWindow(): React.JSX.Element {
 
   const project = projects.find((p) => p.id === projectId)
   const empty = view && view.notes === 0
+  // persönliches Gehirn: kein Projekt dahinter, also keine Session zum Pflegen
+  const isMe = projectId === ME_ID
 
   return (
     <div className="brain" data-testid="brain-window">
@@ -116,6 +118,7 @@ export function BrainWindow(): React.JSX.Element {
                 {p.name}
               </option>
             ))}
+          <option value={ME_ID}>{t('Über dich (alle Projekte)')}</option>
         </select>
         <div className="brain-search">
           <Icon name="search" size={14} />
@@ -144,7 +147,7 @@ export function BrainWindow(): React.JSX.Element {
         <button className="btn small" disabled={!projectId} onClick={() => (select(null), setDraft(emptyDraft()))} data-testid="brain-new">
           <Icon name="plus" size={13} /> {t('Notiz')}
         </button>
-        <button className="btn small primary" disabled={!projectId || empty === true} onClick={() => void ask(tendPrompt())} title={sessionCount ? t('Schickt den Auftrag an die laufende Session') : t('Startet eine Session und schickt den Auftrag')}>
+        <button className="btn small primary" disabled={!projectId || isMe || empty === true} onClick={() => void ask(tendPrompt())} title={sessionCount ? t('Schickt den Auftrag an die laufende Session') : t('Startet eine Session und schickt den Auftrag')}>
           <Icon name="spark" size={13} /> {t('Gehirn pflegen')}
         </button>
         <button className="btn small ghost" disabled={!view?.notes} title={t('Ordner öffnen (auch in Obsidian nutzbar)')} onClick={() => projectId && void api.brain.reveal(projectId)}>
@@ -167,7 +170,21 @@ export function BrainWindow(): React.JSX.Element {
         <div className="brain-stage">
           {view && <BrainGraph ref={graph} graph={view.graph} hidden={hidden} query={query} selected={selected} onSelect={select} />}
           {!projectId && <div className="brain-empty">{t('Lege zuerst ein Projekt an – dann wächst hier sein Gehirn.')}</div>}
-          {empty && (
+          {empty && isMe && (
+            <div className="brain-empty card" data-testid="brain-empty-me">
+              <Icon name="brain" size={34} />
+              <h3>{t('Claude kennt dich noch nicht')}</h3>
+              <p>
+                {t('Hier sammelt sich, was Claude über dich lernt – in allen Projekten: wie du arbeitest, was du magst und was nicht. Jede neue Session startet mit diesem Wissen. Die Notizen bleiben auf deinem PC und landen nie im Projekt.')}
+              </p>
+              <div className="row">
+                <button className="btn ghost" onClick={() => setDraft(emptyDraft())}>
+                  {t('Selbst eine Notiz schreiben')}
+                </button>
+              </div>
+            </div>
+          )}
+          {empty && !isMe && (
             <div className="brain-empty card" data-testid="brain-empty">
               <Icon name="brain" size={34} />
               <h3>{project ? t('Das Gehirn von {name} ist noch leer', { name: project.name }) : t('Das Gehirn dieses Projekts ist noch leer')}</h3>

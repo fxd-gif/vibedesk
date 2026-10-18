@@ -29,6 +29,8 @@ export const NOTE_TYPE_LABEL: Record<NoteType, string> = {
 }
 
 export const BRAIN_DIR = '.vibedesk/brain'
+/** Persönliches Gehirn: gilt in allen Projekten, liegt in userData statt im Projekt */
+export const ME_ID = 'me'
 
 export const LIMITS = {
   titleLen: 80,
@@ -279,6 +281,25 @@ export function overview(projectName: string, notes: NoteMeta[], act: Activity, 
     t('- Typen: module (Überblick über einen Bereich), decision (warum so), pitfall (Falle, die Zeit gekostet hat), convention (Regel im Projekt), task, fact.'),
     t('- „Zu prüfen“-Notizen nach dem Lesen der Dateien aktualisieren oder mit brain_forget löschen.')
   )
+  let out = lines.join('\n')
+  if (out.length > max) out = out.slice(0, max - 2).replace(/\n[^\n]*$/, '') + '\n…'
+  return out
+}
+
+/** Abschnitt „Über dich“ für den Session-Start – was Claude projektübergreifend über den User weiß */
+export function personalOverview(notes: NoteMeta[], max = 1500): string {
+  const lines = ['', t('## Über dich (gilt in allen Projekten)')]
+  if (!notes.length) {
+    lines.push(t('Noch nichts. Lernst du etwas über den User selbst – Vorlieben, Arbeitsweise, Stack, was er nicht mag –, halte es mit brain_write und scope "me" fest. Das gilt dann in jedem Projekt.'))
+  } else {
+    const sorted = [...notes].sort((a, b) => TYPE_ORDER.indexOf(a.type) - TYPE_ORDER.indexOf(b.type) || b.updated - a.updated)
+    for (const n of sorted.slice(0, 15)) {
+      const d = firstLine(n.body)
+      lines.push(`- [[${n.title}]]${d ? ' – ' + d : ''}`)
+    }
+    if (notes.length > 15) lines.push(t('- … und {n} weitere (brain_search)', { n: notes.length - 15 }))
+    lines.push(t('Richte dich danach. Neues über den User mit brain_write und scope "me" festhalten.'))
+  }
   let out = lines.join('\n')
   if (out.length > max) out = out.slice(0, max - 2).replace(/\n[^\n]*$/, '') + '\n…'
   return out
