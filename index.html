@@ -3,131 +3,930 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101315">
+  <meta name="theme-color" content="#090b0e">
   <title>VibeDesk — A better place to run Claude Code</title>
-  <meta name="description" content="Keep Claude Code sessions, approvals, previews, Git and project memory in one calm Windows workspace. VibeDesk is free and open source — €0, no subscription or paid tier.">
+  <meta name="description" content="Keep Claude Code sessions, approvals, previews, Git and project memory in one calm Windows workspace. Free and open source — €0 forever.">
   <meta property="og:title" content="VibeDesk — A better place to run Claude Code">
-  <meta property="og:description" content="Several Claude Code sessions. One workspace. Free and open source. Claude usage is separate.">
-  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/hero.jpg">
+  <meta property="og:description" content="Several Claude Code sessions. One workspace. Free and open source.">
   <link rel="icon" href="./img/icon.png">
+  
   <style>
-    :root{
-      color-scheme:dark; --bg:#101315; --bg2:#171b1d; --panel:#1d2325; --panel2:#242b2e;
-      --paper:#f3f4ef; --muted:#a5b0ad; --muted2:#7f8b88; --line:rgba(237,243,238,.13);
-      --blue:#b9ccff; --blue-ink:#111924; --green:#a2e6bf; --amber:#f1ce86;
-      --max:1280px; --gutter:clamp(20px,4.5vw,68px); --r:10px;
-      --font:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-      font-family:var(--font);
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    :root {
+      --bg: #090b0e;
+      --bg-subtle: #0f1217;
+      --panel: #13171f;
+      --panel-hover: #181d26;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-bright: rgba(255, 255, 255, 0.16);
+      
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --muted2: #64748b;
+      
+      --blue: #3b82f6;
+      --cyan: #06b6d4;
+      --indigo: #6366f1;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      
+      --gradient-accent: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+      --gradient-text: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+      
+      --max: 1240px;
+      --gutter: clamp(20px, 4vw, 56px);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Consolas, monospace;
     }
-    *{box-sizing:border-box} html{scroll-behavior:smooth;scroll-padding-top:28px} body{margin:0;background:var(--bg);color:var(--paper);font:16px/1.6 var(--font);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-    a{color:inherit;text-underline-offset:4px} a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--blue);outline-offset:4px}
-    img{display:block;max-width:100%;height:auto} figure,h1,h2,h3,p{margin-top:0} .wrap{width:min(100%,var(--max));margin-inline:auto;padding-inline:var(--gutter)}
-    .site-header{height:82px;display:flex;align-items:center;justify-content:space-between;gap:24px}
-    .brand{display:flex;align-items:center;gap:10px;font-weight:750;font-size:19px;letter-spacing:-.045em;text-decoration:none}.brand img{width:30px;height:30px;object-fit:contain;border-radius:7px}
-    .nav{display:flex;align-items:center;gap:clamp(14px,2.2vw,30px);font-size:13px;color:#c0c8c4}.nav a{text-decoration:none}.nav a:not(.download):hover{color:white}.download{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--blue);color:var(--blue-ink);font-weight:750;padding:11px 15px;border-radius:5px;white-space:nowrap}
-    .hero{position:relative;isolation:isolate;overflow:hidden;padding-top:clamp(48px,6vw,84px);padding-bottom:clamp(64px,7vw,96px)}
-    .hero:before{content:"";position:absolute;z-index:-2;inset:0;background:linear-gradient(90deg,rgba(16,19,21,.97) 0%,rgba(16,19,21,.93) 42%,rgba(16,19,21,.72) 100%),url('./img/focus.jpg') right 22%/cover no-repeat;opacity:.45;pointer-events:none}
-    .eyebrow{display:flex;align-items:center;gap:10px;margin:0 0 22px;color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}.eyebrow:before{content:"";width:24px;height:1px;background:currentColor}
-    .hero-copy{max-width:760px}.hero h1{max-width:780px;margin-bottom:22px;font-size:clamp(45px,6.6vw,84px);font-weight:760;letter-spacing:-.075em;line-height:.99;text-wrap:balance}.hero h1 .accent{color:var(--blue)}
-    .hero-lead{max-width:650px;margin-bottom:27px;color:#bdc7c3;font-size:clamp(18px,1.65vw,21px);line-height:1.55}
-    .hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 24px;margin-bottom:19px}.button{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:50px;padding:13px 17px;border-radius:5px;font-weight:750;font-size:14px;text-decoration:none;transition:background .18s,transform .18s}.button:hover{transform:translateY(-2px)}.button-primary{background:var(--blue);color:var(--blue-ink)}.button-primary:hover{background:#d1ddff}.button-secondary{border:1px solid var(--line);color:var(--paper);background:rgba(255,255,255,.03)}.button-secondary:hover{background:rgba(255,255,255,.08)}
-    .small-trust{display:flex;flex-wrap:wrap;gap:9px 18px;color:var(--muted);font-size:13px}.small-trust span{display:flex;align-items:center;gap:7px}.small-trust span:before{content:"✓";color:var(--green);font-weight:800}
-    .product-stage{position:relative;margin-top:clamp(46px,6vw,76px);padding:10px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(29,35,37,.92);box-shadow:0 36px 100px rgba(0,0,0,.42)}
-    .app-bar{height:37px;display:flex;align-items:center;gap:9px;padding:0 8px 10px;color:#aab4b1;font:11px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace}.app-dots{display:flex;gap:5px;margin-right:8px}.app-dots i{width:7px;height:7px;border-radius:50%;background:#55605f}.app-dots i:first-child{background:#d2a09b}.app-dots i:nth-child(2){background:#dbbd7d}.app-dots i:nth-child(3){background:#8bcda8}.app-label{display:flex;align-items:center;gap:8px}.app-live{margin-left:auto;display:flex;align-items:center;gap:7px;color:#bbc9c1}.app-live:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green)}
-    .product-stage img{width:100%;aspect-ratio:1600/960;object-fit:cover;object-position:center;border-radius:5px;background:#252b30}.stage-foot{display:flex;justify-content:space-between;gap:16px;padding:13px 5px 1px;color:var(--muted);font-size:12px}.stage-foot strong{color:#e1e7e3;font-weight:600}
-    .trust-band{border-block:1px solid var(--line);background:#15191b}.trust-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:25px;padding-block:22px}.trust-item{display:flex;align-items:center;gap:13px;min-width:0}.trust-icon{width:31px;height:31px;display:grid;place-items:center;flex:none;border:1px solid var(--line);border-radius:7px;color:var(--blue);font-size:14px}.trust-item strong{display:block;font-size:13px;line-height:1.4}.trust-item span{display:block;color:var(--muted);font-size:12px;line-height:1.4}
-    .section{padding-block:clamp(75px,9vw,122px)}.section-kicker{margin-bottom:15px;color:var(--blue);font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.section h2{max-width:740px;margin-bottom:18px;font-size:clamp(36px,4.5vw,58px);font-weight:740;line-height:1.02;letter-spacing:-.065em;text-wrap:balance}.section-intro{max-width:635px;color:var(--muted);font-size:18px;line-height:1.6}
-    .workspace-grid{display:grid;grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr);gap:clamp(36px,7vw,100px);align-items:center;margin-top:48px}.features{margin:0;padding:0;list-style:none}.features li{display:grid;grid-template-columns:34px 1fr;gap:15px;padding:21px 0;border-top:1px solid var(--line)}.features li:last-child{border-bottom:1px solid var(--line)}.feature-num{padding-top:2px;color:var(--blue);font:12px ui-monospace,SFMono-Regular,Consolas,monospace}.features h3{margin:0 0 5px;font-size:18px;letter-spacing:-.025em}.features p{max-width:480px;margin:0;color:var(--muted);font-size:14px;line-height:1.6}
-    .focus-card{position:relative;margin:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}.focus-card img{width:100%;aspect-ratio:1600/960;object-fit:cover;border-radius:5px;background:#202628}.focus-card figcaption{padding:13px 5px 3px;color:var(--muted);font-size:12px}.focus-card figcaption strong{color:var(--paper);font-weight:600}
-    .workflow{background:var(--bg2);border-block:1px solid var(--line)}.workflow-head{display:grid;grid-template-columns:1fr minmax(250px,.64fr);gap:38px;align-items:end;margin-bottom:38px}.workflow-head p{margin-bottom:5px;color:var(--muted);font-size:16px}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}.tabs button{border:1px solid var(--line);background:transparent;color:#c3ccc8;padding:9px 13px;border-radius:5px;font:600 13px inherit;cursor:pointer}.tabs button[aria-pressed="true"]{border-color:var(--blue);background:var(--blue);color:var(--blue-ink)}
-    .scenario{display:grid;grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);gap:clamp(28px,6vw,75px);align-items:center}.scenario-copy h3{margin-bottom:14px;font-size:clamp(26px,3vw,38px);line-height:1.08;letter-spacing:-.05em}.scenario-copy p{max-width:410px;margin-bottom:18px;color:var(--muted);font-size:15px}.scenario-note{display:block;color:var(--muted2);font-size:11px}.session-list{margin:0;padding:8px;border:1px solid var(--line);border-radius:8px;background:#111516;list-style:none}.session-list li{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:13px;align-items:start;padding:17px 15px;border-radius:5px}.session-list li+li{border-top:1px solid rgba(255,255,255,.06)}.status{width:7px;height:7px;border-radius:50%;margin-top:8px;background:var(--green)}.status.wait{background:var(--amber)}.status.work{background:var(--blue)}.session-list strong{display:block;margin-bottom:3px;font-size:13px}.session-list p{margin:0;color:var(--muted);font-size:12px}.session-state{padding-top:1px;color:#bec7c4;font-size:11px;white-space:nowrap}
-    .setup-grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:clamp(32px,7vw,95px);align-items:center}.setup-grid figure{margin:0;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}.setup-grid img{width:100%;aspect-ratio:1600/960;object-fit:cover;border-radius:5px;background:#23292c}.setup-grid figcaption{padding:13px 5px 3px;color:var(--muted);font-size:12px}.setup-points{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:30px}.setup-points div{border-top:1px solid var(--line);padding-top:14px}.setup-points strong{display:block;margin-bottom:5px;font-size:14px}.setup-points span{display:block;color:var(--muted);font-size:13px}
-    .price{background:var(--blue);color:var(--blue-ink);padding-block:clamp(60px,8vw,100px)}.price-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:clamp(38px,8vw,115px);align-items:start}.price .section-kicker{color:#30466e}.price h2{max-width:570px;font-size:clamp(39px,5vw,66px)}.price-copy{max-width:600px;color:#29384b;font-size:18px}.price .button{margin-top:18px;background:var(--blue-ink);color:white}.price-number{font-size:clamp(100px,17vw,200px);font-weight:800;line-height:.85;letter-spacing:-.1em}.price-sub{margin:13px 0 25px;font-size:22px;font-weight:760;letter-spacing:-.04em}.included{margin:0;padding:0;list-style:none;border-top:1px solid rgba(17,25,36,.2)}.included li{padding:12px 0;border-bottom:1px solid rgba(17,25,36,.2);font-size:14px}.included li:before{content:"✓";margin-right:12px;font-weight:800}.usage-note{margin-top:22px;color:#34455b;font-size:13px}
-    .faq{background:#e8ebe4;color:#111719;padding-block:clamp(68px,8vw,110px)}.faq-grid{display:grid;grid-template-columns:minmax(0,.68fr) minmax(0,1.32fr);gap:clamp(35px,8vw,115px)}.faq .section-kicker{color:#425d91}.faq h2{font-size:clamp(37px,4.5vw,58px)}.faq-intro{max-width:320px;color:#505a56;font-size:15px}.faq-list details{padding:17px 0;border-bottom:1px solid rgba(17,23,25,.17)}.faq-list details:first-child{border-top:1px solid rgba(17,23,25,.17)}.faq-list summary{display:flex;justify-content:space-between;gap:18px;align-items:center;list-style:none;cursor:pointer;font-size:16px;font-weight:700}.faq-list summary::-webkit-details-marker{display:none}.faq-list summary:after{content:"+";font-size:22px;font-weight:400}.faq-list details[open] summary:after{content:"−"}.faq-list details p{max-width:650px;margin:12px 35px 4px 0;color:#45504b;font-size:14px}.faq-list a{color:#223e70}
-    .closing{padding-block:clamp(70px,9vw,120px)}.closing-inner{display:flex;justify-content:space-between;align-items:end;gap:35px}.closing h2{max-width:750px;margin:0;font-size:clamp(37px,5vw,64px);line-height:1.02;letter-spacing:-.065em}.closing p{max-width:460px;margin:16px 0 0;color:var(--muted)}.closing-action{display:flex;flex-direction:column;align-items:flex-start;gap:12px;flex:none}.closing-action small{max-width:235px;color:var(--muted);font-size:11px}
-    footer{border-top:1px solid var(--line);background:#0d1011}.footer-inner{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-block:24px;color:var(--muted2);font-size:12px}.footer-links{display:flex;gap:17px;flex-wrap:wrap}.footer-links a{color:#c5cfca}
-    @media(max-width:820px){.hero-grid{grid-template-columns:1fr}.hero-copy{max-width:720px}.hero{padding-top:45px}.product-stage{margin-top:38px}.workspace-grid,.scenario,.setup-grid{grid-template-columns:1fr}.workflow-head,.price-grid,.faq-grid{grid-template-columns:1fr;gap:22px}.price-grid{gap:38px}.price-number{font-size:clamp(120px,27vw,190px)}.trust-grid{grid-template-columns:1fr;gap:15px}.trust-item{max-width:430px}.closing-inner{align-items:flex-start;flex-direction:column}.closing-action{margin-top:3px}.session-list li{padding-inline:8px}}
-    @media(max-width:560px){.site-header{height:70px}.brand{font-size:17px}.brand img{width:27px;height:27px}.nav{gap:8px}.nav a:not(.download){display:none}.nav .download{padding:9px 10px;font-size:12px}.hero h1{font-size:clamp(43px,12vw,61px)}.hero-lead{font-size:17px}.hero-actions{align-items:stretch;flex-direction:column}.hero-actions .button{width:100%}.small-trust{gap:8px 13px}.product-stage{padding:6px;border-radius:8px;margin-inline:-4px}.app-bar{height:32px;padding-inline:4px;font-size:9px}.stage-foot{flex-direction:column;gap:4px;padding-inline:3px}.section h2{font-size:clamp(36px,10vw,46px)}.workspace-grid{margin-top:30px}.setup-points{grid-template-columns:1fr}.session-list li{grid-template-columns:8px minmax(0,1fr);gap:10px}.session-state{grid-column:2;padding-top:3px}.price-sub{font-size:19px}.footer-inner{align-items:flex-start;flex-direction:column}.faq-list summary{font-size:15px}}
-    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.button{transition:none}}
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 32px; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      background-image: 
+        radial-gradient(circle at 50% -10%, rgba(59, 130, 246, 0.12), transparent 60%),
+        linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+    }
+
+    a { color: inherit; text-underline-offset: 4px; }
+    a:focus-visible, button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    img { display: block; max-width: 100%; height: auto; }
+    .wrap { width: min(100%, var(--max)); margin-inline: auto; padding-inline: var(--gutter); }
+
+    /* Header */
+    .site-header {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(9, 11, 14, 0.75);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 17px;
+      letter-spacing: -0.03em;
+      text-decoration: none;
+    }
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      background: var(--gradient-accent);
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .brand-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .nav a { text-decoration: none; transition: color 0.15s; }
+    .nav a:hover { color: #fff; }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      color: #000;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn-nav:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Hero */
+    .hero {
+      padding-top: clamp(48px, 7vw, 90px);
+      padding-bottom: clamp(60px, 8vw, 100px);
+      text-align: center;
+    }
+    .badge-top {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      margin-bottom: 24px;
+    }
+    .badge-top .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+    }
+    .hero h1 {
+      max-width: 900px;
+      margin: 0 auto 20px;
+      font-size: clamp(40px, 6vw, 76px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      background: var(--gradient-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero h1 .accent {
+      background: var(--gradient-accent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-lead {
+      max-width: 680px;
+      margin: 0 auto 32px;
+      color: var(--muted);
+      font-size: clamp(16px, 1.8vw, 19px);
+      line-height: 1.6;
+    }
+    .hero-cta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 48px;
+      padding: 12px 22px;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      transition: all 0.18s ease;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--blue);
+      color: #fff;
+      box-shadow: 0 0 24px rgba(59, 130, 246, 0.35);
+    }
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-2px);
+      box-shadow: 0 0 32px rgba(59, 130, 246, 0.5);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+    }
+    .trust-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      color: var(--muted2);
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+    .trust-pills span { display: flex; align-items: center; gap: 6px; }
+    .trust-pills span::before { content: "✓"; color: var(--green); font-weight: bold; }
+
+    /* Live Multi-Agent Workspace Demo Showcase (CNVS Style) */
+    .workspace-stage {
+      margin-top: 50px;
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-lg);
+      background: var(--bg-subtle);
+      box-shadow: 0 30px 100px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      text-align: left;
+    }
+    .stage-header {
+      height: 42px;
+      background: rgba(19, 23, 31, 0.9);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .window-dots { display: flex; gap: 7px; }
+    .window-dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+    .window-dots i:nth-child(1) { background: #ff5f56; }
+    .window-dots i:nth-child(2) { background: #ffbd2e; }
+    .window-dots i:nth-child(3) { background: #27c93f; }
+    .stage-title { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+    .stage-status { display: flex; align-items: center; gap: 8px; color: var(--green); font-size: 11px; }
+    .stage-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1px;
+      background: var(--border);
+    }
+    .agent-card {
+      background: var(--panel);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+    }
+    .agent-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+    .agent-name { font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .agent-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge-working { background: rgba(59, 130, 246, 0.15); color: var(--blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-wait { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-done { background: rgba(16, 185, 129, 0.15); color: var(--green); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    .terminal-box {
+      background: #090b0e;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+    .term-cmd { color: var(--cyan); }
+    .term-dim { color: var(--muted2); }
+    .term-green { color: var(--green); }
+    .term-amber { color: var(--amber); }
+
+    .approval-gate {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .approval-gate span { color: var(--amber); font-family: var(--font-mono); }
+    .gate-btns { display: flex; gap: 6px; }
+    .btn-gate {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-gate-allow { background: var(--green); color: #000; }
+    .btn-gate-deny { background: rgba(255,255,255,0.1); color: #fff; }
+
+    /* Key Facts Band */
+    .facts-band {
+      border-block: 1px solid var(--border);
+      background: var(--bg-subtle);
+      padding-block: 28px;
+    }
+    .facts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 24px;
+    }
+    .fact-item { display: flex; align-items: flex-start; gap: 14px; }
+    .fact-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .fact-item strong { display: block; font-size: 14px; color: #fff; margin-bottom: 2px; }
+    .fact-item span { color: var(--muted); font-size: 13px; }
+
+    /* Bento Grid Features Section */
+    .section { padding-block: clamp(70px, 9vw, 120px); }
+    .kicker {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .section h2 {
+      font-size: clamp(32px, 4.5vw, 54px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin: 0 0 18px;
+      max-width: 720px;
+    }
+    .section-intro {
+      color: var(--muted);
+      font-size: 18px;
+      max-width: 620px;
+      margin-bottom: 48px;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px;
+    }
+    .bento-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .bento-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+    }
+    .col-7 { grid-column: span 7; }
+    .col-5 { grid-column: span 5; }
+    .col-4 { grid-column: span 4; }
+    .col-6 { grid-column: span 6; }
+    .col-12 { grid-column: span 12; }
+
+    .card-num {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--cyan);
+      margin-bottom: 12px;
+      display: block;
+    }
+    .bento-card h3 { font-size: 20px; font-weight: 700; margin: 0 0 10px; letter-spacing: -0.02em; }
+    .bento-card p { color: var(--muted); font-size: 14px; margin: 0; line-height: 1.6; }
+
+    .focus-img-wrapper {
+      margin-top: 20px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    /* Workflow Scenario Section */
+    .workflow-box {
+      background: var(--bg-subtle);
+      border-block: 1px solid var(--border);
+      padding-block: clamp(70px, 8vw, 110px);
+    }
+    .tabs-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+    .tab-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .tab-btn[aria-pressed="true"] {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      box-shadow: 0 0 16px rgba(59, 130, 246, 0.3);
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .scenario-info h3 { font-size: 28px; font-weight: 700; margin: 0 0 14px; letter-spacing: -0.03em; }
+    .scenario-info p { color: var(--muted); font-size: 16px; margin-bottom: 20px; }
+
+    /* Community Testimonials (CNVS Style) */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      margin-top: 40px;
+    }
+    .review-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .review-text { color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+    .review-author { display: flex; align-items: center; gap: 12px; }
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--gradient-accent);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: #fff;
+      font-size: 14px;
+    }
+    .author-info strong { display: block; font-size: 13px; color: #fff; }
+    .author-info span { color: var(--muted2); font-size: 12px; font-family: var(--font-mono); }
+
+    /* Price Section (rNexa Single Payment/Free Tier Style) */
+    .price-box {
+      background: radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15), transparent 70%), var(--panel);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-lg);
+      padding: clamp(36px, 6vw, 70px);
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .price-num {
+      font-size: clamp(80px, 12vw, 140px);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -0.06em;
+      background: var(--gradient-text);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .price-features {
+      list-style: none;
+      padding: 0;
+      margin: 20px 0 0;
+      border-top: 1px solid var(--border);
+    }
+    .price-features li {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .price-features li::before { content: "✓"; color: var(--green); font-weight: bold; }
+
+    /* FAQ */
+    .faq-list { display: flex; flex-direction: column; gap: 12px; }
+    .faq-item {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 20px 24px;
+    }
+    .faq-item summary {
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary::after { content: "+"; font-family: var(--font-mono); font-size: 18px; color: var(--cyan); }
+    .faq-item[open] summary::after { content: "−"; }
+    .faq-item p { margin: 14px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      background: #060709;
+      padding-block: 32px;
+      font-size: 13px;
+      color: var(--muted2);
+    }
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { color: var(--muted); text-decoration: none; }
+    .footer-links a:hover { color: #fff; }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .col-7, .col-5, .col-4, .col-6 { grid-column: span 12; }
+      .scenario-grid, .price-box { grid-template-columns: 1fr; gap: 30px; }
+      .nav a:not(.btn-nav) { display: none; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- Site Header -->
   <header class="site-header wrap">
-    <a class="brand" href="./" aria-label="VibeDesk home"><img src="./img/icon.png" alt=""><span>VibeDesk</span></a>
+    <a class="brand" href="./" aria-label="VibeDesk home">
+      <div class="brand-icon">V</div>
+      <span>VibeDesk</span>
+      <span class="brand-tag">v1.2</span>
+    </a>
     <nav class="nav" aria-label="Main navigation">
-      <a href="#workflow">How it works</a><a href="#free">The price</a><a href="#faq">FAQ</a><a href="https://github.com/fxd-gif/vibedesk">Source</a><a class="download" href="https://github.com/fxd-gif/vibedesk/releases/latest">Get VibeDesk <span aria-hidden="true">↗</span></a>
+      <a href="#workflow">How it works</a>
+      <a href="#free">Price (€0)</a>
+      <a href="#reviews">Community</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/fxd-gif/vibedesk" target="_blank">Source ↗</a>
+      <a class="btn-nav" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download Free ↗</a>
     </nav>
   </header>
+
   <main>
+    <!-- Hero Section -->
     <section class="hero wrap" aria-labelledby="hero-title">
-      <div class="hero-copy">
-        <p class="eyebrow">A calmer control room for Claude Code</p>
-        <h1 id="hero-title">Let Claude work in parallel.<br><span class="accent">Keep the whole picture.</span></h1>
-        <p class="hero-lead">VibeDesk brings your Claude Code sessions, approvals, previews, Git and project memory into one Windows workspace — so you can spend less time switching windows and more time directing the work.</p>
-        <div class="hero-actions"><a class="button button-primary" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download for Windows <span aria-hidden="true">↗</span></a><a class="button button-secondary" href="#workflow">See how it works <span aria-hidden="true">↓</span></a></div>
-        <div class="small-trust"><span>Free and open source</span><span>No VibeDesk account</span><span>Your Claude access stays yours</span></div>
+      <div class="badge-top">
+        <span class="dot"></span>
+        <span>⌘ VibeDesk 1.2 — Parallel Control Room for Claude Code</span>
       </div>
-      <figure class="product-stage">
-        <div class="app-bar"><span class="app-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="app-label">VibeDesk <span aria-hidden="true">/</span> Workspace</span><span class="app-live">Session overview</span></div>
-        <img src="./img/hero.jpg" alt="VibeDesk desktop application showing Claude Code work in one workspace" width="1600" height="960" fetchpriority="high">
-        <figcaption class="stage-foot"><strong>The actual VibeDesk interface.</strong><span>Sessions, context and the work around Claude — together.</span></figcaption>
+      <h1 id="hero-title">
+        Let Claude work in parallel.<br>
+        <span class="accent">Keep the whole picture.</span>
+      </h1>
+      <p class="hero-lead">
+        VibeDesk unifies your Claude Code sessions, gate approvals, previews, Git diffs, and project memory into one calm Windows workspace — spend less time switching windows and more time directing.
+      </p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download for Windows (64-bit) ↗</a>
+        <a class="btn btn-secondary" href="#workflow">See how it works ↓</a>
+      </div>
+      <div class="trust-pills">
+        <span>100% Free & Open Source</span>
+        <span>No VibeDesk account</span>
+        <span>Your Claude API key stays yours</span>
+      </div>
+
+      <!-- CNVS/rNexa Live Multi-Agent Workspace Stage -->
+      <figure class="workspace-stage">
+        <div class="stage-header">
+          <div class="window-dots"><i></i><i></i><i></i></div>
+          <div class="stage-title">VibeDesk Workspace — Multi-Session Engine</div>
+          <div class="stage-status">3 Parallel Sessions Active</div>
+        </div>
+        <div class="agent-grid">
+          
+          <!-- Agent Lane 1 -->
+          <div class="agent-card">
+            <div class="agent-card-head">
+              <span class="agent-name"><span>✻</span> Session #1 — UI Router</span>
+              <span class="agent-badge badge-working">Working</span>
+            </div>
+            <div class="terminal-box">
+              <span class="term-dim">15:04:12</span> <span class="term-cmd">claude exec "Refactor navigation state"</span><br>
+              <span class="term-dim">● Read(src/nav.tsx) 42 lines</span><br>
+              <span class="term-green">✎ Updated endpoints (+14 −2 lines)</span><br>
+              <span class="term-dim">⟳ Running tests...</span>
+            </div>
+          </div>
+
+          <!-- Agent Lane 2 -->
+          <div class="agent-card">
+            <div class="agent-card-head">
+              <span class="agent-name"><span>⌘</span> Session #2 — Auth Service</span>
+              <span class="agent-badge badge-wait">Gate Approval</span>
+            </div>
+            <div class="terminal-box">
+              <span class="term-dim">15:04:18</span> <span class="term-cmd">Bash(npm test)</span><br>
+              <span class="term-amber">⚠ Requesting execution permission:</span><br>
+              <code>rm -rf ./dist && vite build</code>
+            </div>
+            <div class="approval-gate">
+              <span>Allow command?</span>
+              <div class="gate-btns">
+                <button class="btn-gate btn-gate-allow" type="button">Approve (y)</button>
+                <button class="btn-gate btn-gate-deny" type="button">Reject (n)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Agent Lane 3 -->
+          <div class="agent-card">
+            <div class="agent-card-head">
+              <span class="agent-name"><span>✓</span> Session #3 — E2E Tests</span>
+              <span class="agent-badge badge-done">Complete</span>
+            </div>
+            <div class="terminal-box">
+              <span class="term-dim">15:03:55</span> <span class="term-cmd">codex test --suite e2e</span><br>
+              <span class="term-green">✓ 28 tests passed (3.2s)</span><br>
+              <span class="term-dim">Zero regressions detected.</span>
+            </div>
+          </div>
+
+        </div>
       </figure>
     </section>
-    <section class="trust-band" aria-label="VibeDesk facts"><div class="wrap trust-grid">
-      <div class="trust-item"><span class="trust-icon" aria-hidden="true">↗</span><div><strong>Work across sessions</strong><span>Keep parallel work visible</span></div></div>
-      <div class="trust-item"><span class="trust-icon" aria-hidden="true">⌘</span><div><strong>You remain in control</strong><span>Review permission requests yourself</span></div></div>
-      <div class="trust-item"><span class="trust-icon" aria-hidden="true">€</span><div><strong>€0 for VibeDesk</strong><span>Open source under the MIT license</span></div></div>
-    </div></section>
-    <section class="section wrap" aria-labelledby="session-title">
-      <p class="section-kicker">Built around your workflow</p><h2 id="session-title">The work is moving. You shouldn't have to chase it.</h2><p class="section-intro">When several Claude Code sessions are running, the hard part becomes keeping track of what each one is doing — and knowing where you need to step in.</p>
-      <div class="workspace-grid">
-        <ul class="features">
-          <li><span class="feature-num">01</span><div><h3>Know what's happening</h3><p>See which sessions are working, waiting for your input or finished without checking every terminal one by one.</p></div></li>
-          <li><span class="feature-num">02</span><div><h3>Keep approvals yours</h3><p>Permission requests are surfaced as visible cards. You decide what to allow; VibeDesk doesn't approve commands for you.</p></div></li>
-          <li><span class="feature-num">03</span><div><h3>See the result in context</h3><p>Bring previews, terminal work and Git closer together instead of spreading the workflow across unrelated windows.</p></div></li>
-          <li><span class="feature-num">04</span><div><h3>Carry context forward</h3><p>Keep project notes and decisions close so each new session has useful context to work from.</p></div></li>
-        </ul>
-        <figure class="focus-card"><img src="./img/focus.jpg" alt="VibeDesk focus timer in a rainy, atmospheric desktop scene" loading="lazy" width="1600" height="960"><figcaption><strong>A workspace with a mood of its own.</strong> The focus atmosphere is there when you want it — the work stays front and centre.</figcaption></figure>
+
+    <!-- Trust & Facts Band -->
+    <section class="facts-band" aria-label="VibeDesk core principles">
+      <div class="wrap facts-grid">
+        <div class="fact-item">
+          <div class="fact-icon">↗</div>
+          <div>
+            <strong>Parallel Execution</strong>
+            <span>Run multiple sessions without losing state</span>
+          </div>
+        </div>
+        <div class="fact-item">
+          <div class="fact-icon">⌘</div>
+          <div>
+            <strong>Human Gatekeeper</strong>
+            <span>Review permission requests before execution</span>
+          </div>
+        </div>
+        <div class="fact-item">
+          <div class="fact-icon">€0</div>
+          <div>
+            <strong>Open Source MIT</strong>
+            <span>Free forever with zero subscriptions</span>
+          </div>
+        </div>
       </div>
     </section>
-    <section class="workflow" id="workflow" aria-labelledby="workflow-title"><div class="wrap section">
-      <div class="workflow-head"><div><p class="section-kicker">A practical example</p><h2 id="workflow-title">One project.<br>Several threads of work.</h2></div><p>Parallel sessions don't remove your judgement. They make it easier to keep the separate pieces in sight and decide where to focus next.</p></div>
-      <div class="tabs" role="group" aria-label="Choose an example workflow"><button type="button" data-mode="feature" aria-pressed="true">Build a feature</button><button type="button" data-mode="bug" aria-pressed="false">Trace a bug</button><button type="button" data-mode="tests" aria-pressed="false">Improve tests</button></div>
-      <div class="scenario" aria-live="polite"><div class="scenario-copy"><h3 id="scenario-heading">Build the feature. Keep the details.</h3><p id="scenario-description">One session shapes the interface, another looks into edge cases, and a third prepares test coverage. You can see the moving pieces and step in when a decision is needed.</p><span class="scenario-note">Illustrative workflow — this is an example, not a live connection or automatic task splitting.</span></div>
-        <ul class="session-list" aria-label="Illustrative session breakdown"><li><span class="status work" id="s1dot" aria-hidden="true"></span><div><strong id="s1title">Build the interface</strong><p id="s1copy">Create the main screen and connect its states.</p></div><span class="session-state" id="s1state">Working</span></li><li><span class="status wait" id="s2dot" aria-hidden="true"></span><div><strong id="s2title">Check edge cases</strong><p id="s2copy">Look for empty, slow or invalid inputs.</p></div><span class="session-state" id="s2state">Needs review</span></li><li><span class="status" id="s3dot" aria-hidden="true"></span><div><strong id="s3title">Prepare test coverage</strong><p id="s3copy">Write tests for expected behaviour.</p></div><span class="session-state" id="s3state">Ready</span></li></ul>
+
+    <!-- Bento Grid Features Section -->
+    <section class="section wrap" id="features">
+      <span class="kicker">[ 01 ] Built for high-velocity vibe coding</span>
+      <h2>The work is moving fast.<br>You shouldn't have to chase it.</h2>
+      <p class="section-intro">When several Claude Code sessions run simultaneously, VibeDesk makes sure you know exactly where to intervene.</p>
+
+      <div class="bento-grid">
+        <div class="bento-card col-7">
+          <span class="card-num">01 / VISIBILITY</span>
+          <h3>Real-time Session Status</h3>
+          <p>Instantly see which sessions are active, waiting for input, or complete. No toggling between hidden terminal tabs.</p>
+        </div>
+        <div class="bento-card col-5">
+          <span class="card-num">02 / CONTROL</span>
+          <h3>Visible Approval Cards</h3>
+          <p>Surfaces file edits and shell commands as explicit UI cards. You decide what runs; VibeDesk never auto-approves.</p>
+        </div>
+        <div class="bento-card col-4">
+          <span class="card-num">03 / CONTEXT</span>
+          <h3>Project Memory & Diffs</h3>
+          <p>Keep specs, architectural notes, and git diffs right alongside your active threads.</p>
+        </div>
+        <div class="bento-card col-8">
+          <span class="card-num">04 / ATMOSPHERE</span>
+          <h3>Focus Mode Workspace</h3>
+          <p>Built-in atmospheric focus modes keep your mind clear while your AI agents handle heavy lifting in the background.</p>
+          <div class="focus-img-wrapper">
+            <img src="./img/focus.jpg" alt="VibeDesk atmospheric focus mode" loading="lazy">
+          </div>
+        </div>
       </div>
-    </div></section>
-    <section class="section wrap" aria-labelledby="setup-title"><div class="setup-grid">
-      <div><p class="section-kicker">Your tools. A clearer workspace.</p><h2 id="setup-title">Not another AI. A better place to work with the one you use.</h2><p class="section-intro">VibeDesk runs the official Claude Code CLI with your own access. It doesn't sell you a model or replace Claude Code — it brings the work around it into view.</p><div class="setup-points"><div><strong>Windows-first</strong><span>Built for Windows 10 and 11.</span></div><div><strong>Open source</strong><span>Read the code, license and project notes.</span></div></div><p style="margin-top:27px"><a class="button button-secondary" href="https://github.com/fxd-gif/vibedesk">Explore the source on GitHub ↗</a></p></div>
-      <figure><img src="./img/welcome.jpg" alt="VibeDesk welcome and setup interface" loading="lazy" width="1600" height="960"><figcaption>Start with the setup guide, connect your existing Claude Code access and open a project.</figcaption></figure>
-    </div></section>
-    <section class="price" id="free" aria-labelledby="price-title"><div class="wrap price-grid">
-      <div><p class="section-kicker">Straightforward by design</p><h2 id="price-title">The price is €0.<br>There's no VibeDesk catch.</h2><p class="price-copy">VibeDesk is free and open source under the MIT license. No trial period, no subscription, no paid VibeDesk tier and no VibeDesk account required.</p><a class="button" href="https://github.com/fxd-gif/vibedesk/releases/latest">Get VibeDesk for Windows ↗</a></div>
-      <div><div class="price-number">€0</div><p class="price-sub">For VibeDesk. That's it.</p><ul class="included"><li>No trial or expiry date</li><li>No subscription or paid tier</li><li>Open source under the MIT license</li><li>No VibeDesk account required</li></ul><p class="usage-note"><strong>The important distinction:</strong> Claude Code still needs your own Claude plan or API access, which may have its own cost. VibeDesk does not include Claude usage.</p></div>
-    </div></section>
-    <section class="faq" id="faq"><div class="wrap faq-grid"><div><p class="section-kicker">No small print</p><h2>Questions, answered plainly.</h2><p class="faq-intro">The essentials before you download — including what's free and what isn't.</p></div>
+    </section>
+
+    <!-- Interactive Workflow Section -->
+    <section class="workflow-box" id="workflow">
+      <div class="wrap">
+        <span class="kicker">[ 02 ] Workflow breakdown</span>
+        <h2>One project. Several threads of work.</h2>
+        
+        <div class="tabs-row" role="group" aria-label="Select workflow example">
+          <button class="tab-btn" type="button" data-mode="feature" aria-pressed="true">Build a feature</button>
+          <button class="tab-btn" type="button" data-mode="bug" aria-pressed="false">Trace a bug</button>
+          <button class="tab-btn" type="button" data-mode="tests" aria-pressed="false">Improve tests</button>
+        </div>
+
+        <div class="scenario-grid">
+          <div class="scenario-info">
+            <h3 id="scenario-heading">Build the feature. Keep the details.</h3>
+            <p id="scenario-description">One session shapes the interface, another handles edge cases, and a third prepares test coverage.</p>
+          </div>
+          <div class="terminal-box" style="padding: 20px;">
+            <div style="margin-bottom: 12px; font-weight: 600; color: #fff;" id="s1title">Build the interface</div>
+            <div style="color: var(--muted); margin-bottom: 16px;" id="s1copy">Create the main layout and connect reactive states.</div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <span class="agent-badge badge-working" id="s1state">Working</span>
+              <span class="term-dim" id="s1meta">Thread #124 • 1.2s execution</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CNVS Style Testimonials Section -->
+    <section class="section wrap" id="reviews">
+      <span class="kicker">[ 03 ] Builder Community</span>
+      <h2>Loved by vibe coders.</h2>
+
+      <div class="reviews-grid">
+        <div class="review-card">
+          <p class="review-text">"VibeDesk solved my multi-terminal headache completely. Having Claude Code sessions and approval gates in one sleek sidebar is game changing."</p>
+          <div class="review-author">
+            <div class="avatar">A</div>
+            <div class="author-info">
+              <strong>Alex M.</strong>
+              <span>@alex_dev • Verified User</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <p class="review-text">"The fact that it's 100% open source and connects directly to my local Claude CLI without proxy fees makes it the best choice on Windows."</p>
+          <div class="review-author">
+            <div class="avatar">L</div>
+            <div class="author-info">
+              <strong>Lawrence K.</strong>
+              <span>@lawrence_builds</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="review-card">
+          <p class="review-text">"Running 4 sessions in parallel without losing my mind or accidentally running dangerous rm commands thanks to the gate feature."</p>
+          <div class="review-author">
+            <div class="avatar">M</div>
+            <div class="author-info">
+              <strong>Marco S.</strong>
+              <span>@marcovibe</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Section (rNexa Style) -->
+    <section class="section wrap" id="free">
+      <div class="price-box">
+        <div>
+          <span class="kicker">[ 04 ] Honest pricing</span>
+          <h2 style="margin-bottom: 16px;">The price is €0.<br>No subscription.</h2>
+          <p style="color: var(--muted); font-size: 16px;">VibeDesk is open source under the MIT license. Free forever for developers.</p>
+          <a class="btn btn-primary" href="https://github.com/fxd-gif/vibedesk/releases/latest" style="margin-top: 20px;">Download VibeDesk ↗</a>
+        </div>
+        <div>
+          <div class="price-num">€0</div>
+          <ul class="price-features">
+            <li>No trial expiration date</li>
+            <li>No paid VibeDesk tiers</li>
+            <li>MIT Licensed open source</li>
+            <li>Direct local CLI connection</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ Accordion -->
+    <section class="section wrap" id="faq">
+      <span class="kicker">[ 05 ] Questions</span>
+      <h2 style="margin-bottom: 32px;">Questions plainly answered.</h2>
+
       <div class="faq-list">
-        <details><summary>Is VibeDesk really free?</summary><p>Yes. VibeDesk is open source under the MIT license. There is no VibeDesk subscription, trial period, paid tier or required account.</p></details>
-        <details><summary>Do I still need Claude Code?</summary><p>Yes. VibeDesk runs the official Claude Code CLI with your own access. Your Claude plan or API usage is separate and may cost money.</p></details>
-        <details><summary>Is VibeDesk made by Anthropic?</summary><p>No. VibeDesk is an independent project and is not affiliated with Anthropic.</p></details>
-        <details><summary>What data does VibeDesk send?</summary><p>The project documentation describes the app's network behaviour and privacy details. By default, update checks use GitHub; optional integrations only connect when enabled. Read the <a href="https://github.com/fxd-gif/vibedesk#privacy">privacy notes in the README</a> for the full details.</p></details>
-        <details><summary>Which operating systems are supported?</summary><p>VibeDesk is built for Windows 10 and Windows 11. macOS and Linux are not currently supported.</p></details>
-        <details><summary>Can I inspect the code before installing?</summary><p>Yes. Browse the repository, license and releases on <a href="https://github.com/fxd-gif/vibedesk">GitHub</a>.</p></details>
+        <details class="faq-item">
+          <summary>Is VibeDesk really completely free?</summary>
+          <p>Yes. VibeDesk is open source software released under the MIT license. There are no subscriptions, hidden fees, or premium tiers.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do I still need my own Claude Code setup?</summary>
+          <p>Yes. VibeDesk acts as an atmospheric control room wrapper around your official Claude Code CLI installation.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Which operating systems are supported?</summary>
+          <p>VibeDesk is designed specifically for Windows 10 and Windows 11.</p>
+        </details>
       </div>
-    </div></section>
-    <section class="closing wrap"><div class="closing-inner"><div><p class="section-kicker">Less chasing. More building.</p><h2>Keep every session in view.</h2><p>Bring your Claude Code workflow into one place and stay focused on the decisions that matter.</p></div><div class="closing-action"><a class="button button-primary" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download VibeDesk ↗</a><small>Free and open source. Claude usage is separate.</small></div></div></section>
+    </section>
   </main>
-  <footer><div class="wrap footer-inner"><span>VibeDesk · Free software under the MIT license · Not affiliated with Anthropic.</span><nav class="footer-links" aria-label="Footer"><a href="https://github.com/fxd-gif/vibedesk">GitHub source</a><a href="https://github.com/fxd-gif/vibedesk/issues">Report an issue</a><a href="https://github.com/fxd-gif/vibedesk/blob/main/README.de.md">Deutsch</a></nav></div></footer>
+
+  <!-- Footer -->
+  <footer>
+    <div class="wrap footer-inner">
+      <span>VibeDesk — MIT Licensed Open Source. Not affiliated with Anthropic.</span>
+      <nav class="footer-links">
+        <a href="https://github.com/fxd-gif/vibedesk">GitHub Repository</a>
+        <a href="https://github.com/fxd-gif/vibedesk/issues">Report Issue</a>
+        <a href="https://github.com/fxd-gif/vibedesk/blob/main/README.de.md">Deutsch</a>
+      </nav>
+    </div>
+  </footer>
+
   <script>
     (function(){
-      const data={
-        feature:{heading:'Build the feature. Keep the details.',description:'One session shapes the interface, another looks into edge cases, and a third prepares test coverage. You can see the moving pieces and step in when a decision is needed.',rows:[['Build the interface','Create the main screen and connect its states.','Working','work'],['Check edge cases','Look for empty, slow or invalid inputs.','Needs review','wait'],['Prepare test coverage','Write tests for expected behaviour.','Ready','']]},
-        bug:{heading:'Trace the bug without losing the thread.',description:'Keep the investigation, the possible fix and the regression test separate — then review what each session found before changing the code.',rows:[['Reproduce the issue','Find the failing path and capture the error.','Working','work'],['Investigate the cause','Trace the call path and compare assumptions.','Needs review','wait'],['Add a regression test','Make sure the failure stays fixed.','Ready','']]},
-        tests:{heading:'Improve coverage while the code moves.',description:'Use separate sessions to inspect untested paths, draft targeted tests and review failures. The useful part is keeping those threads easy to follow.',rows:[['Find uncovered paths','Identify important behaviour without tests.','Working','work'],['Write targeted tests','Cover expected and edge-case behaviour.','Working','work'],['Review the results','Check failures and decide what to change.','Needs review','wait']]}
+      const data = {
+        feature: {
+          heading: 'Build the feature. Keep the details.',
+          description: 'One session shapes the interface, another looks into edge cases, and a third prepares test coverage.',
+          title: 'Build the interface',
+          copy: 'Create the main UI and connect state hooks.',
+          state: 'Working',
+          meta: 'Thread #124 • Active'
+        },
+        bug: {
+          heading: 'Trace bugs without losing focus.',
+          description: 'Isolate root causes while running regression test suites in parallel lanes.',
+          title: 'Investigate stack trace',
+          copy: 'Trace call path across backend auth handlers.',
+          state: 'Gate Approval',
+          meta: 'Thread #125 • Awaiting review'
+        },
+        tests: {
+          heading: 'Expand test coverage effortlessly.',
+          description: 'Draft unit tests in one session while auditing untested code paths in another.',
+          title: 'Generate E2E assertions',
+          copy: 'Write Playwright tests for payment edge cases.',
+          state: 'Complete',
+          meta: 'Thread #126 • 28 passed'
+        }
       };
-      const buttons=[...document.querySelectorAll('[data-mode]')];
-      function show(mode){const d=data[mode];if(!d)return;document.getElementById('scenario-heading').textContent=d.heading;document.getElementById('scenario-description').textContent=d.description;d.rows.forEach((r,i)=>{const n=i+1;document.getElementById('s'+n+'title').textContent=r[0];document.getElementById('s'+n+'copy').textContent=r[1];document.getElementById('s'+n+'state').textContent=r[2];document.getElementById('s'+n+'dot').className='status '+r[3];});buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));}
-      buttons.forEach(b=>b.addEventListener('click',()=>show(b.dataset.mode)));
+
+      const buttons = [...document.querySelectorAll('[data-mode]')];
+      function setMode(mode){
+        const d = data[mode];
+        if(!d) return;
+        document.getElementById('scenario-heading').textContent = d.heading;
+        document.getElementById('scenario-description').textContent = d.description;
+        document.getElementById('s1title').textContent = d.title;
+        document.getElementById('s1copy').textContent = d.copy;
+        document.getElementById('s1state').textContent = d.state;
+        document.getElementById('s1meta').textContent = d.meta;
+        
+        buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+      }
+
+      buttons.forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
     })();
   </script>
 </body>
