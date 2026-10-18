@@ -1,4 +1,5 @@
 // Eigene Shell-Terminals (PowerShell/cmd): als eigenes Fenster oder geteilt im Claude-Fenster einer Session.
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api, errorText } from '../api'
 import type { ShellInfo } from '../../../shared/types'
@@ -31,7 +32,7 @@ export const useShells = create<ShellStore>((set, get) => ({
       }
       return info
     } catch (err) {
-      await alert('Shell konnte nicht gestartet werden', errorText(err))
+      await alert(t('Shell konnte nicht gestartet werden'), errorText(err))
       return null
     }
   },

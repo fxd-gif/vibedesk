@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api'
+import { t } from '../../../shared/i18n'
 
 interface Props {
   value: string
@@ -42,7 +43,7 @@ export function PathInput({ value, onChange, onSubmit, placeholder, autoFocus }:
         className="field mono"
         value={value}
         autoFocus={autoFocus}
-        placeholder={placeholder ?? 'C:\\Users\\…  (oder Ordner hierher ziehen)'}
+        placeholder={placeholder ?? t('C:\\Users\\…  (oder Ordner hierher ziehen)')}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'ArrowDown') {

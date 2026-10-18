@@ -1,4 +1,5 @@
 // Schnell-Prompt (Strg+Alt+Leertaste): Sessions zur Auswahl melden und eingehende Aufträge zustellen.
+import { t } from '../../../shared/i18n'
 import { api } from '../api'
 import { activeProjectId } from './activeProject'
 import { inform } from './notifyStore'
@@ -18,16 +19,16 @@ async function deliver(text: string, sessionId: string | null): Promise<void> {
     const st = statusOf(s.id)
     if (st === 'working' || st === 'waiting') {
       enqueue(s.id, text)
-      inform(`${s.name}: vorgemerkt`, 'Claude arbeitet noch – der Auftrag geht danach los.')
+      inform(t('{name}: vorgemerkt', { name: s.name }), t('Claude arbeitet noch – der Auftrag geht danach los.'))
     } else {
       sendToSession(s.id, text, false)
-      inform(`An ${s.name} geschickt`, text.length > 90 ? text.slice(0, 90) + ' …' : text)
+      inform(t('An {name} geschickt', { name: s.name }), text.length > 90 ? text.slice(0, 90) + ' …' : text)
     }
     return
   }
   // keine Session offen → im zuletzt genutzten Projekt starten
   const pid = activeProjectId(await api.projects.list())
-  if (!pid || !(await promptProject(pid, text))) inform('Schnell-Prompt: kein Projekt gefunden', 'Leg zuerst ein Projekt an.')
+  if (!pid || !(await promptProject(pid, text))) inform(t('Schnell-Prompt: kein Projekt gefunden'), t('Leg zuerst ein Projekt an.'))
 }
 
 let wired = false
@@ -53,7 +54,7 @@ export function wireQuick(): void {
     if (on === undefined || on === enabled) return
     enabled = on
     void api.quick.configure(on).then((ok) => {
-      if (on && !ok) inform('Strg+Alt+Leertaste ist schon belegt', 'Eine andere App nutzt das Kürzel – der Schnell-Prompt ist darum aus.')
+      if (on && !ok) inform(t('Strg+Alt+Leertaste ist schon belegt'), t('Eine andere App nutzt das Kürzel – der Schnell-Prompt ist darum aus.'))
     })
   }
   useSettings.subscribe(sync)

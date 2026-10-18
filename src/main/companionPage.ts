@@ -1,6 +1,10 @@
 // Handy-Begleiter: die Seite fürs Handy. Daten nur per textContent einsetzen – nie als HTML.
 // Gekoppelt wird mit dem Einmal-Code vom PC; der Geräte-Schlüssel liegt danach im localStorage des Handys.
+// Texte werden beim Ausliefern in der gewählten Sprache eingesetzt.
+import { getLang, t } from '../shared/i18n'
 
+/** Text sicher als JS-Literal ins Skript einsetzen */
+const js = (s: string): string => JSON.stringify(s).replace(/</g, '\\u003c')
 export function companionIcon(): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#0c0f16"/><path d="M14 40c4-12 10-20 18-20s14 8 18 20" fill="none" stroke="#9fb8ff" stroke-width="5" stroke-linecap="round"/><circle cx="32" cy="44" r="5" fill="#c4b5fd"/></svg>`
 }
@@ -19,7 +23,7 @@ export function companionManifest(): string {
 
 export function companionPage(nonce: string): string {
   return `<!doctype html>
-<html lang="de"><head><meta charset="utf-8">
+<html lang="${getLang()}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#07090d">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -102,32 +106,32 @@ export function companionPage(nonce: string): string {
 </style></head>
 <body>
 <main>
-  <header><h1>VibeDesk</h1><span class="conn"><span class="dot" id="conn-dot"></span><span id="conn-text">verbinde …</span></span></header>
+  <header><h1>VibeDesk</h1><span class="conn"><span class="dot" id="conn-dot"></span><span id="conn-text">${t('verbinde …')}</span></span></header>
   <div class="card pair" id="pair" hidden>
-    <b>Mit VibeDesk koppeln</b>
-    <span class="muted">Tippe am PC im Fenster „Handy-Begleiter“ auf „Handy koppeln“ und gib den Code hier ein.</span>
-    <input class="code" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" aria-label="Code vom PC">
-    <button class="primary" id="pair-btn">Koppeln</button>
+    <b>${t('Mit VibeDesk koppeln')}</b>
+    <span class="muted">${t('Tippe am PC im Fenster „Handy-Begleiter“ auf „Handy koppeln“ und gib den Code hier ein.')}</span>
+    <input class="code" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" aria-label="${t('Code vom PC')}">
+    <button class="primary" id="pair-btn">${t('Koppeln')}</button>
     <span class="err" id="pair-err"></span>
   </div>
   <div id="asks"></div>
   <div class="tabs" id="tabs"></div>
   <div id="session"></div>
-  <div class="card" id="empty" hidden><b>Gerade läuft keine Session.</b><div class="muted" style="margin-top:6px">Schreib unten, was du bauen willst – VibeDesk startet Claude im gewählten Projekt.</div></div>
-  <div class="label" id="notes-label" hidden>Mitteilungen</div>
+  <div class="card" id="empty" hidden><b>${t('Gerade läuft keine Session.')}</b><div class="muted" style="margin-top:6px">${t('Schreib unten, was du bauen willst – VibeDesk startet Claude im gewählten Projekt.')}</div></div>
+  <div class="label" id="notes-label" hidden>${t('Mitteilungen')}</div>
   <div class="card notes" id="notes" hidden></div>
   <div class="label" id="pc-label" hidden>PC</div>
   <div class="card pc" id="pc" hidden>
-    <div class="muted" id="pc-text">Bleibt wach, solange der Begleiter läuft.</div>
-    <div class="btns" id="pc-btns"><button id="pc-sleep">Standby</button><button class="no" id="pc-off">Ausschalten</button></div>
-    <div class="btns" id="pc-cancel-row" hidden><button class="okb" id="pc-cancel">Ausschalten abbrechen</button></div>
+    <div class="muted" id="pc-text">${t('Bleibt wach, solange der Begleiter läuft.')}</div>
+    <div class="btns" id="pc-btns"><button id="pc-sleep">${t('Standby')}</button><button class="no" id="pc-off">${t('Ausschalten')}</button></div>
+    <div class="btns" id="pc-cancel-row" hidden><button class="okb" id="pc-cancel">${t('Ausschalten abbrechen')}</button></div>
   </div>
-  <div class="row" id="unpair-row" hidden style="justify-content:center"><button class="link" id="unpair">Dieses Handy abmelden</button></div>
+  <div class="row" id="unpair-row" hidden style="justify-content:center"><button class="link" id="unpair">${t('Dieses Handy abmelden')}</button></div>
 </main>
 <div class="composer" id="composer" hidden><div class="inner">
-  <div class="to"><span id="to-label">an</span><select id="target"></select></div>
-  <textarea id="text" rows="2" placeholder="Was soll Claude als Nächstes tun?"></textarea>
-  <div class="row"><label class="switch"><input type="checkbox" id="polish" checked>✨ ausformulieren</label><span style="flex:1"></span><button class="primary send" id="send">Senden</button></div>
+  <div class="to"><span id="to-label">${t('an')}</span><select id="target"></select></div>
+  <textarea id="text" rows="2" placeholder="${t('Was soll Claude als Nächstes tun?')}"></textarea>
+  <div class="row"><label class="switch"><input type="checkbox" id="polish" checked>✨ ${t('ausformulieren')}</label><span style="flex:1"></span><button class="primary send" id="send">${t('Senden')}</button></div>
 </div></div>
 <div class="toast" id="toast" hidden></div>
 <script nonce="${nonce}">
@@ -139,7 +143,9 @@ export function companionPage(nonce: string): string {
   try { $('polish').checked = localStorage.getItem('vibedesk.polish') !== '0'; } catch (_) {}
 
   var state = null, selected = '', pick = '', seenAsks = {}, autoAsked = {}, sending = false, expanded = {};
-  var STATUS = { idle: 'bereit', working: 'arbeitet', waiting: 'wartet auf dich', done: 'fertig', error: 'abgestürzt' };
+  var STATUS = { idle: ${js(t('bereit'))}, working: ${js(t('arbeitet'))}, waiting: ${js(t('wartet auf dich'))}, done: ${js(t('fertig'))}, error: ${js(t('abgestürzt'))} };
+  var FAILED = ${js(t('Hat nicht geklappt.'))};
+  function fmt(s, v) { return s.replace(/\\{(\\w+)\\}/g, function (m, k) { return k in v ? String(v[k]) : m; }); }
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
   function clear(e) { while (e.firstChild) e.removeChild(e.firstChild); }
@@ -148,7 +154,7 @@ export function companionPage(nonce: string): string {
     var t = $('toast'); t.textContent = text; t.className = 'toast' + (bad ? ' bad' : ''); t.hidden = false;
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, bad ? 5000 : 3500);
   }
-  function ago(ts) { var s = Math.max(0, Math.round((Date.now() - ts) / 1000)); if (s < 60) return 'gerade'; if (s < 3600) return Math.round(s / 60) + ' min'; return Math.round(s / 3600) + ' h'; }
+  function ago(ts) { var s = Math.max(0, Math.round((Date.now() - ts) / 1000)); if (s < 60) return ${js(t('gerade'))}; if (s < 3600) return Math.round(s / 60) + ' min'; return Math.round(s / 3600) + ' h'; }
 
   function api(path, body) {
     return fetch(path, { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + key }, body: JSON.stringify(body) })
@@ -162,25 +168,25 @@ export function companionPage(nonce: string): string {
     key = ''; state = null;
     if (ctrl) ctrl.abort();
     HIDE.forEach(function (id) { $(id).hidden = true; });
-    $('pair').hidden = false; setConn('off', 'nicht gekoppelt');
+    $('pair').hidden = false; setConn('off', ${js(t('nicht gekoppelt'))});
   }
 
   // ---------- Koppeln ----------
 
   function pair() {
     var code = $('code').value.replace(/\\D/g, '');
-    if (code.length !== 6) { $('pair-err').textContent = 'Der Code hat 6 Ziffern.'; return; }
+    if (code.length !== 6) { $('pair-err').textContent = ${js(t('Der Code hat 6 Ziffern.'))}; return; }
     $('pair-btn').disabled = true; $('pair-err').textContent = '';
     fetch('/api/pair', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ code: code }) })
       .then(function (r) { return r.json(); })
       .then(function (r) {
         $('pair-btn').disabled = false;
-        if (!r.ok) { $('pair-err').textContent = r.error || 'Hat nicht geklappt.'; $('code').value = ''; return; }
+        if (!r.ok) { $('pair-err').textContent = r.error || FAILED; $('code').value = ''; return; }
         key = r.token;
         try { localStorage.setItem(KEY, key); } catch (_) {}
         $('pair').hidden = true; $('code').value = '';
         ['session', 'tabs', 'asks'].forEach(function (id) { $(id).hidden = false; });
-        toast('Gekoppelt als „' + r.name + '“');
+        toast(fmt(${js(t('Gekoppelt als „{name}“'))}, { name: r.name }));
         connect();
       })
       .catch(function () { $('pair-btn').disabled = false; $('pair-err').textContent = 'Keine Verbindung zu VibeDesk.'; });
@@ -201,14 +207,14 @@ export function companionPage(nonce: string): string {
     list.forEach(function (a) {
       if (!seenAsks[a.id]) { seenAsks[a.id] = 1; fresh = true; }
       var c = el('div', 'card ask');
-      c.appendChild(el('div', 'proj', 'Freigabe · ' + (projectName(a.sessionId) || 'Claude')));
+      c.appendChild(el('div', 'proj', fmt(${js(t('Freigabe · {name}'))}, { name: projectName(a.sessionId) || 'Claude' })));
       c.appendChild(el('div', 'what', a.summary));
       if (a.detail) c.appendChild(el('pre', '', a.detail));
       var b = el('div', 'btns');
-      var yes = el('button', 'okb', 'Erlauben'); yes.onclick = function () { decide(a.id, 'allow', yes); };
+      var yes = el('button', 'okb', ${js(t('Erlauben'))}); yes.onclick = function () { decide(a.id, 'allow', yes); };
       b.appendChild(yes);
-      if (a.canAlways) { var always = el('button', '', 'Immer'); always.onclick = function () { decide(a.id, 'always', always); }; b.appendChild(always); }
-      var no = el('button', 'no', 'Ablehnen'); no.onclick = function () { decide(a.id, 'deny', no); };
+      if (a.canAlways) { var always = el('button', '', ${js(t('Immer'))}); always.onclick = function () { decide(a.id, 'always', always); }; b.appendChild(always); }
+      var no = el('button', 'no', ${js(t('Ablehnen'))}); no.onclick = function () { decide(a.id, 'deny', no); };
       b.appendChild(no);
       c.appendChild(b);
       box.appendChild(c);
@@ -220,8 +226,8 @@ export function companionPage(nonce: string): string {
   function decide(id, decision, btn) {
     btn.disabled = true;
     api('/api/permission', { id: id, decision: decision }).then(function (r) {
-      if (!r.ok) toast(r.error || 'Hat nicht geklappt.', true);
-      else toast(decision === 'deny' ? 'Abgelehnt' : decision === 'always' ? 'Erlaubt – ab jetzt immer' : 'Erlaubt');
+      if (!r.ok) toast(r.error || FAILED, true);
+      else toast(decision === 'deny' ? ${js(t('Abgelehnt'))} : decision === 'always' ? ${js(t('Erlaubt – ab jetzt immer'))} : ${js(t('Erlaubt'))});
     });
   }
 
@@ -256,7 +262,7 @@ export function companionPage(nonce: string): string {
     if (s.status === 'working' && s.current) c.appendChild(el('div', 'cur', s.current));
     if (s.todos && s.todos.total) {
       var bar = el('div', 'bar'); var fill = el('i'); fill.style.width = (s.todos.done / s.todos.total * 100) + '%'; bar.appendChild(fill); c.appendChild(bar);
-      c.appendChild(el('div', 'step', s.todos.done + ' von ' + s.todos.total + (s.todos.active ? ' · ' + s.todos.active : '')));
+      c.appendChild(el('div', 'step', fmt(${js(t('{done} von {total}'))}, { done: s.todos.done, total: s.todos.total }) + (s.todos.active ? ' · ' + s.todos.active : '')));
     }
     if (s.said) {
       var said = el('div', 'said' + (expanded[s.id] ? ' open' : ''));
@@ -267,8 +273,8 @@ export function companionPage(nonce: string): string {
     }
     var busy = state.busy && state.busy[s.id];
     var sug = el('div', 'sugg');
-    if (busy === 'suggest') sug.appendChild(el('span', 'think', 'Claude überlegt, wie es weitergeht …'));
-    else if (busy === 'polish') sug.appendChild(el('span', 'think', 'Claude formuliert deinen Prompt …'));
+    if (busy === 'suggest') sug.appendChild(el('span', 'think', ${js(t('Claude überlegt, wie es weitergeht …'))}));
+    else if (busy === 'polish') sug.appendChild(el('span', 'think', ${js(t('Claude formuliert deinen Prompt …'))}));
     else if (s.suggestions && s.suggestions.length) {
       s.suggestions.forEach(function (g) {
         var b = el('button');
@@ -278,7 +284,7 @@ export function companionPage(nonce: string): string {
         sug.appendChild(b);
       });
     } else if (s.status !== 'working') {
-      var more = el('button', '', '💡 Wie geht es weiter?');
+      var more = el('button', '', '💡 ' + ${js(t('Wie geht es weiter?'))});
       more.onclick = function () { suggest(s.id); };
       sug.appendChild(more);
     }
@@ -293,7 +299,7 @@ export function companionPage(nonce: string): string {
   function hasAsk(sid) { return (state.permissions || []).some(function (a) { return a.sessionId === sid; }); }
 
   function suggest(sid, quiet) {
-    api('/api/suggest', { sessionId: sid }).then(function (r) { if (!r.ok && !quiet) toast(r.error || 'Keine Vorschläge.', true); });
+    api('/api/suggest', { sessionId: sid }).then(function (r) { if (!r.ok && !quiet) toast(r.error || ${js(t('Keine Vorschläge.'))}, true); });
   }
 
   function renderNotes() {
@@ -315,7 +321,7 @@ export function companionPage(nonce: string): string {
     clear(sel);
     state.sessions.forEach(function (s) { var o = el('option', '', s.name); o.value = 's:' + s.id; sel.appendChild(o); });
     var running = {}; state.sessions.forEach(function (s) { running[s.projectId] = 1; });
-    state.projects.filter(function (p) { return !running[p.id]; }).forEach(function (p) { var o = el('option', '', p.name + ' (neue Session)'); o.value = 'p:' + p.id; sel.appendChild(o); });
+    state.projects.filter(function (p) { return !running[p.id]; }).forEach(function (p) { var o = el('option', '', fmt(${js(t('{name} (neue Session)'))}, { name: p.name })); o.value = 'p:' + p.id; sel.appendChild(o); });
     var want = pick || (selected ? 's:' + selected : prev);
     if ([].some.call(sel.options, function (o) { return o.value === want; })) sel.value = want;
     $('composer').hidden = !sel.options.length;
@@ -329,13 +335,13 @@ export function companionPage(nonce: string): string {
     var at = state.shutdownAt;
     $('pc-btns').hidden = !!at; $('pc-cancel-row').hidden = !at;
     $('pc-text').className = at ? 'down' : 'muted';
-    $('pc-text').textContent = at ? 'Fährt in ' + Math.max(0, Math.ceil((at - Date.now()) / 1000)) + ' s herunter …' : 'Bleibt wach, solange der Begleiter läuft.';
+    $('pc-text').textContent = at ? fmt(${js(t('Fährt in {s} s herunter …'))}, { s: Math.max(0, Math.ceil((at - Date.now()) / 1000)) }) : ${js(t('Bleibt wach, solange der Begleiter läuft.'))};
   }
   function power(action) {
     api('/api/power', { action: action }).then(function (r) {
-      if (!r.ok) return toast(r.error || 'Hat nicht geklappt.', true);
-      if (action === 'sleep') toast('PC geht in den Standby – gute Nacht.');
-      if (action === 'cancel') toast('Ausschalten abgebrochen');
+      if (!r.ok) return toast(r.error || FAILED, true);
+      if (action === 'sleep') toast(${js(t('PC geht in den Standby – gute Nacht.'))});
+      if (action === 'cancel') toast(${js(t('Ausschalten abgebrochen'))});
     });
   }
   // zweimal tippen: erst scharf machen, dann ausführen
@@ -345,10 +351,10 @@ export function companionPage(nonce: string): string {
     armedBtn = btn; btn._label = label; btn.textContent = ask;
     btn._t = setTimeout(function () { armedBtn = null; btn.textContent = label; }, 4000);
   }
-  $('pc-off').onclick = function () { twice($('pc-off'), 'Ausschalten', 'Wirklich? Sessions enden', function () { power('shutdown'); }); };
-  $('pc-sleep').onclick = function () { twice($('pc-sleep'), 'Standby', 'Wirklich Standby?', function () { power('sleep'); }); };
+  $('pc-off').onclick = function () { twice($('pc-off'), ${js(t('Ausschalten'))}, ${js(t('Wirklich? Sessions enden'))}, function () { power('shutdown'); }); };
+  $('pc-sleep').onclick = function () { twice($('pc-sleep'), ${js(t('Standby'))}, ${js(t('Wirklich Standby?'))}, function () { power('sleep'); }); };
   $('pc-cancel').onclick = function () { power('cancel'); };
-  $('unpair').onclick = function () { twice($('unpair'), 'Dieses Handy abmelden', 'Nochmal tippen zum Abmelden', function () { api('/api/unpair', {}).then(unpaired); }); };
+  $('unpair').onclick = function () { twice($('unpair'), ${js(t('Dieses Handy abmelden'))}, ${js(t('Nochmal tippen zum Abmelden'))}, function () { api('/api/unpair', {}).then(unpaired); }); };
 
   function render() {
     if (!state) return;
@@ -364,13 +370,13 @@ export function companionPage(nonce: string): string {
     var body = { text: text, polish: polish };
     if (v.indexOf('s:') === 0) body.sessionId = v.slice(2); else body.projectId = v.slice(2);
     sending = true; $('send').disabled = true;
-    if (polish) toast('Claude formuliert deinen Prompt …');
+    if (polish) toast(${js(t('Claude formuliert deinen Prompt …'))});
     api('/api/prompt', body).then(function (r) {
       sending = false; $('send').disabled = false;
-      if (!r.ok) return toast(r.error || 'Hat nicht geklappt.', true);
+      if (!r.ok) return toast(r.error || FAILED, true);
       if (text === $('text').value) { $('text').value = ''; grow(); }
       pick = '';
-      toast('Gesendet: ' + r.text);
+      toast(fmt(${js(t('Gesendet: {text}'))}, { text: r.text }));
     });
   }
   $('send').onclick = function () { send($('text').value, $('polish').checked); };
@@ -391,7 +397,7 @@ export function companionPage(nonce: string): string {
       if (!r.ok) throw new Error('http ' + r.status);
       return r.json().then(function (j) {
         if (my !== ctrl) return;
-        setConn('on', 'verbunden');
+        setConn('on', ${js(t('verbunden'))});
         if (j.state && j.state.sessions) { state = j.state; render(); }
         return poll(my, j.v);
       });
@@ -402,16 +408,16 @@ export function companionPage(nonce: string): string {
     if (ctrl) ctrl.abort();
     clearTimeout(retry);
     var my = ctrl = new AbortController();
-    setConn('', 'verbinde …');
+    setConn('', ${js(t('verbinde …'))});
     if (polling) return poll(my, -1).catch(function () {
       if (my !== ctrl || !key) return;
-      setConn('off', 'getrennt – versuche erneut …');
+      setConn('off', ${js(t('getrennt – versuche erneut …'))});
       retry = setTimeout(connect, 2500);
     });
     fetch('/api/events', { headers: { authorization: 'Bearer ' + key }, cache: 'no-store', signal: my.signal }).then(function (r) {
       if (r.status === 401) return unpaired();
       if (!r.ok || !r.body) throw new Error('http ' + r.status);
-      setConn('on', 'verbunden');
+      setConn('on', ${js(t('verbunden'))});
       var rd = r.body.getReader(), dec = new TextDecoder(), buf = '';
       function pump() {
         return rd.read().then(function (x) {
@@ -429,7 +435,7 @@ export function companionPage(nonce: string): string {
       return pump();
     }).catch(function () {
       if (my !== ctrl || !key) return;
-      setConn('off', 'getrennt – versuche erneut …');
+      setConn('off', ${js(t('getrennt – versuche erneut …'))});
       retry = setTimeout(connect, 2500);
     });
   }

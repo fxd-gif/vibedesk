@@ -2,8 +2,9 @@ import { fmtClock, useFocus } from '../store/focusStore'
 import { phaseTotal, remaining } from '../store/focusTimer'
 import { useSettings } from '../store/settingsStore'
 import type { FocusSettings } from '../../../shared/types'
+import { t } from '../../../shared/i18n'
 
-const LABEL = { idle: 'Bereit', work: 'Fokus', short: 'Kurze Pause', long: 'Lange Pause' } as const
+const LABEL = (): Record<'idle' | 'work' | 'short' | 'long', string> => ({ idle: t('Bereit'), work: t('Fokus'), short: t('Kurze Pause'), long: t('Lange Pause') })
 
 export function Ring({ progress, size, stroke, children, tone }: { progress: number; size: number; stroke: number; children?: React.ReactNode; tone: string }): React.JSX.Element {
   const r = (size - stroke) / 2
@@ -62,7 +63,7 @@ export function FocusPanel(): React.JSX.Element {
     <div className="panel focus">
       <Ring progress={total ? 1 - left / total : 0} size={180} stroke={8} tone={toneOf(state.phase)}>
         <div className="focus-time">{fmtClock(state.phase === 'idle' ? cfg.work * 60000 : left)}</div>
-        <div className="dim small">{paused ? 'pausiert' : LABEL[state.phase]}</div>
+        <div className="dim small">{paused ? t('pausiert') : LABEL()[state.phase]}</div>
       </Ring>
       <div className="rounds">
         {Array.from({ length: cfg.rounds }, (_, i) => (
@@ -72,30 +73,30 @@ export function FocusPanel(): React.JSX.Element {
       <div className="row" style={{ justifyContent: 'center' }}>
         {state.phase === 'idle' ? (
           <button className="btn primary" onClick={() => act('start')} data-testid="focus-start">
-            Fokus starten
+            {t('Fokus starten')}
           </button>
         ) : (
           <>
             <button className="btn" onClick={() => act(paused ? 'resume' : 'pause')}>
-              {paused ? 'Weiter' : 'Pause'}
+              {paused ? t('Weiter') : t('Pause')}
             </button>
             <button className="btn" onClick={() => act('skip')}>
-              Überspringen
+              {t('Überspringen')}
             </button>
             <button className="btn ghost" onClick={() => act('reset')}>
-              Stopp
+              {t('Stopp')}
             </button>
           </>
         )}
       </div>
       <div className="steppers">
-        <Stepper label="Fokus" value={cfg.work} min={5} max={120} onChange={(v) => upd({ work: v })} />
-        <Stepper label="Pause" value={cfg.short} min={1} max={30} onChange={(v) => upd({ short: v })} />
-        <Stepper label="Lang" value={cfg.long} min={5} max={60} onChange={(v) => upd({ long: v })} />
-        <Stepper label="Runden" value={cfg.rounds} min={2} max={8} onChange={(v) => upd({ rounds: v })} />
+        <Stepper label={t('Fokus')} value={cfg.work} min={5} max={120} onChange={(v) => upd({ work: v })} />
+        <Stepper label={t('Pause')} value={cfg.short} min={1} max={30} onChange={(v) => upd({ short: v })} />
+        <Stepper label={t('Lang')} value={cfg.long} min={5} max={60} onChange={(v) => upd({ long: v })} />
+        <Stepper label={t('Runden')} value={cfg.rounds} min={2} max={8} onChange={(v) => upd({ rounds: v })} />
       </div>
       <div className="dim tiny" style={{ textAlign: 'center' }}>
-        In Pausen wird die Musik leiser und das Regengeräusch gedämpft.
+        {t('In Pausen wird die Musik leiser und das Regengeräusch gedämpft.')}
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 // Discord-Webhooks: Benachrichtigungen in einen eigenen Kanal – kein Bot, nur eine Webhook-URL.
 // Rein und in Main + Renderer nutzbar. Main prüft URL und Nutzlast noch einmal, bevor etwas rausgeht.
+import { locale, t } from './i18n'
 import type { DayStats } from './types'
 
 export interface WebhookSettings {
@@ -62,10 +63,12 @@ export function payload(embed: Embed): WebhookPayload {
   return { username: 'VibeDesk', avatar_url: AVATAR, embeds: [embed], allowed_mentions: { parse: [] } }
 }
 
+const dec = (): string => (locale() === 'de-DE' ? ',' : '.')
 export const fmtTokens = (n: number): string =>
-  n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace('.', ',') + ' M' : n >= 1e3 ? (n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace('.', ',') + ' k' : String(n)
+  n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace('.', dec()) + ' M' : n >= 1e3 ? (n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace('.', dec()) + ' k' : String(n)
 
-export const fmtUsd = (n: number): string => (n < 0.01 && n > 0 ? '< 0,01 $' : n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $')
+export const fmtUsd = (n: number): string =>
+  n < 0.01 && n > 0 ? t('< 0,01 $') : t('{amount} $', { amount: n.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
 
 export interface WaitingInfo {
   /** leer = verborgen (Privat- oder Streamer-Modus) */
@@ -79,13 +82,13 @@ export interface WaitingInfo {
 
 export function waitingEmbed(w: WaitingInfo, now = Date.now()): WebhookPayload {
   const fields: Embed['fields'] = []
-  if (w.model) fields.push({ name: 'Modell', value: mdSafe(w.model, 60), inline: true })
+  if (w.model) fields.push({ name: t('Modell'), value: mdSafe(w.model, 60), inline: true })
   if (w.context) fields.push({ name: 'Context', value: mdSafe(w.context, 20), inline: true })
-  if (w.waitingSessions > 1) fields.push({ name: 'Warten gerade', value: `${w.waitingSessions} Sessions`, inline: true })
-  if (w.lastAction) fields.push({ name: 'Zuletzt', value: mdSafe(w.lastAction, 200) })
+  if (w.waitingSessions > 1) fields.push({ name: t('Warten gerade'), value: t('{n} Sessions', { n: w.waitingSessions }), inline: true })
+  if (w.lastAction) fields.push({ name: t('Zuletzt'), value: mdSafe(w.lastAction, 200) })
   return payload({
-    title: w.project ? `⏳ ${mdSafe(w.project, 80)} wartet auf dich` : '⏳ Eine Session wartet auf dich',
-    description: 'Claude braucht deine Antwort, um weiterzumachen.',
+    title: w.project ? t('⏳ {project} wartet auf dich', { project: mdSafe(w.project, 80) }) : t('⏳ Eine Session wartet auf dich'),
+    description: t('Claude braucht deine Antwort, um weiterzumachen.'),
     color: COLOR.waiting,
     fields,
     timestamp: new Date(now).toISOString()
@@ -106,7 +109,7 @@ export interface RecapInfo {
 const pct = (a: number, b: number): string => {
   if (!b) return ''
   const d = Math.round(((a - b) / b) * 100)
-  return d === 0 ? ' (wie gestern)' : ` (${d > 0 ? '+' : ''}${d} % ggü. gestern)`
+  return d === 0 ? ' ' + t('(wie gestern)') : ' ' + t('({d} % ggü. gestern)', { d: (d > 0 ? '+' : '') + d })
 }
 
 /** Mini-Balken für die Woche – ▁▂▃▄▅▆▇█ */
@@ -121,31 +124,31 @@ export function recapEmbed(r: RecapInfo, now = Date.now()): WebhookPayload {
   const { today, yesterday } = r
   const fields: Embed['fields'] = [
     { name: 'Tokens', value: fmtTokens(today.tokens) + (yesterday ? pct(today.tokens, yesterday.tokens) : ''), inline: true },
-    { name: '≈ Kosten', value: fmtUsd(today.costUsd), inline: true },
-    { name: 'Aus dem Cache', value: fmtTokens(today.cacheRead), inline: true }
+    { name: t('≈ Kosten'), value: fmtUsd(today.costUsd), inline: true },
+    { name: t('Aus dem Cache'), value: fmtTokens(today.cacheRead), inline: true }
   ]
-  if (r.sessionsDone) fields.push({ name: 'Fertige Sessions', value: String(r.sessionsDone), inline: true })
-  if (r.focusRounds) fields.push({ name: 'Fokus-Runden', value: String(r.focusRounds), inline: true })
-  if (r.projects.length) fields.push({ name: 'Projekte', value: r.projects.slice(0, 10).map((p) => `• ${mdSafe(p, 60)}`).join('\n') })
+  if (r.sessionsDone) fields.push({ name: t('Fertige Sessions'), value: String(r.sessionsDone), inline: true })
+  if (r.focusRounds) fields.push({ name: t('Fokus-Runden'), value: String(r.focusRounds), inline: true })
+  if (r.projects.length) fields.push({ name: t('Projekte'), value: r.projects.slice(0, 10).map((p) => `• ${mdSafe(p, 60)}`).join('\n') })
   const week = r.week.slice(-7)
   const spark = sparkline(week.map((d) => d.tokens))
   if (spark) {
     const total = week.reduce((s, d) => s + d.tokens, 0)
     const cost = week.reduce((s, d) => s + d.costUsd, 0)
-    fields.push({ name: 'Letzte 7 Tage', value: `\`${spark}\`  ${fmtTokens(total)} Tokens · ≈ ${fmtUsd(cost)}` })
+    fields.push({ name: t('Letzte 7 Tage'), value: `\`${spark}\`  ` + t('{tokens} Tokens · ≈ {cost}', { tokens: fmtTokens(total), cost: fmtUsd(cost) }) })
   }
   const [y, m, d] = today.date.split('-')
   return payload({
-    title: `🌧️ Dein Vibecoding-Tag · ${d}.${m}.${y}`,
+    title: t('🌧️ Dein Vibecoding-Tag · {d}.{m}.{y}', { d, m, y }),
     color: COLOR.recap,
     fields,
-    footer: { text: 'Tagesrückblick aus VibeDesk' },
+    footer: { text: t('Tagesrückblick aus VibeDesk') },
     timestamp: new Date(now).toISOString()
   })
 }
 
 export function testEmbed(): WebhookPayload {
-  return payload({ title: '✓ Verbindung steht', description: 'Ab jetzt meldet sich VibeDesk hier.', color: COLOR.test })
+  return payload({ title: t('✓ Verbindung steht'), description: t('Ab jetzt meldet sich VibeDesk hier.'), color: COLOR.test })
 }
 
 /** Strenge Prüfung in Main – der Renderer darf nur Embeds in diesem Rahmen schicken. */

@@ -3,6 +3,7 @@ import changelogMd from '../../../../CHANGELOG.md?raw'
 import { api } from '../api'
 import { useSettings } from '../store/settingsStore'
 import { entriesSince, parseChangelog, shouldShowChangelog, UNRELEASED, type ChangelogEntry } from './changelog'
+import { t } from '../../../shared/i18n'
 
 const ALL = parseChangelog(changelogMd)
 
@@ -41,16 +42,16 @@ export function WhatsNew(): React.JSX.Element | null {
   const top = entries[0]
   return (
     <div className="wn-backdrop" onPointerDown={(e) => e.target === e.currentTarget && close()} onKeyDown={(e) => e.key === 'Escape' && close()}>
-      <div className="wn" role="dialog" aria-label="Was ist neu" data-testid="whats-new">
+      <div className="wn" role="dialog" aria-label={t('Was ist neu')} data-testid="whats-new">
         <header className="wn-head">
-          <span className="wn-kicker">{afterUpdate ? 'Update installiert' : 'Changelog'}</span>
-          <h2>{top ? (top.version === UNRELEASED ? 'Demnächst in VibeDesk' : `Was ist neu in ${top.version}`) : 'Was ist neu'}</h2>
+          <span className="wn-kicker">{afterUpdate ? t('Update installiert') : t('Changelog')}</span>
+          <h2>{top ? (top.version === UNRELEASED ? t('Demnächst in VibeDesk') : t('Was ist neu in {version}', { version: top.version })) : t('Was ist neu')}</h2>
         </header>
         <div className="wn-body">
-          {!entries.length && <p className="dim">Noch keine Einträge.</p>}
+          {!entries.length && <p className="dim">{t('Noch keine Einträge.')}</p>}
           {entries.map((e, i) => (
             <section key={e.version} className="wn-version">
-              {i > 0 && <h3>{e.version === UNRELEASED ? 'Demnächst' : `Version ${e.version}`}</h3>}
+              {i > 0 && <h3>{e.version === UNRELEASED ? t('Demnächst') : t('Version {version}', { version: e.version })}</h3>}
               {e.sections.map((sec) => (
                 <div key={sec.title} className={`wn-sec ${TONE[sec.title] ?? ''}`}>
                   <h4>{sec.title}</h4>
@@ -66,7 +67,7 @@ export function WhatsNew(): React.JSX.Element | null {
         </div>
         <footer className="wn-foot">
           <button className="btn primary" autoFocus onClick={close} data-testid="whats-new-ok">
-            {afterUpdate ? 'Los geht’s' : 'Schließen'}
+            {afterUpdate ? t('Los geht’s') : t('Schließen')}
           </button>
         </footer>
       </div>

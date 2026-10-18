@@ -1,6 +1,7 @@
 // Schnell-Prompt von überall: Strg+Alt+Leertaste öffnet über jeder App ein Eingabefeld, der Text geht an eine Claude-Session.
 // Das Fenster hat keine Preload-Brücke – es meldet sich nur über seinen Titel (vd-send:/vd-close), mehr kann es nicht.
 import { BrowserWindow, globalShortcut, screen } from 'electron'
+import { getLang, t } from '../shared/i18n'
 
 export const QUICK_SHORTCUT = 'Control+Alt+Space'
 export const QUICK_MAX = 4000
@@ -11,7 +12,11 @@ export interface QuickTarget {
   status: string
 }
 
-const HTML = `<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
+/** Text sicher als JS-Literal ins Skript einsetzen */
+const js = (s: string): string => JSON.stringify(s).replace(/</g, '\\u003c')
+
+/** Erst beim Öffnen gebaut – dann steht die Sprache fest */
+const html = (): string => `<!doctype html><html lang="${getLang()}"><head><meta charset="utf-8"><style>
 html,body{margin:0;height:100%;background:transparent;font:14px/1.4 'Segoe UI',system-ui,sans-serif;color:#e8ecf3;overflow:hidden}
 .box{position:absolute;inset:6px;display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:16px;background:rgba(14,17,26,.96);border:1px solid rgba(159,184,255,.35);box-shadow:0 18px 50px rgba(0,0,0,.55)}
 .row{display:flex;align-items:center;gap:10px}
@@ -23,12 +28,12 @@ input::placeholder{color:rgba(232,236,243,.4)}
 .chip.working{background:rgba(74,222,128,.15);color:#bbf7d0}
 .chip.waiting{background:rgba(250,204,21,.15);color:#fde68a}
 kbd{font:10.5px ui-monospace,monospace;padding:0 4px;border-radius:4px;border:1px solid rgba(255,255,255,.18)}
-</style></head><body><div class="box"><div class="row"><div class="orb"></div><input id="q" maxlength="${QUICK_MAX}" placeholder="Was soll Claude tun?" autofocus></div>
-<div class="meta"><span>an</span><span id="t" class="chip">–</span><span style="flex:1"></span><span><kbd>Tab</kbd> Session · <kbd>Enter</kbd> senden · <kbd>Esc</kbd> zu</span></div></div>
+</style></head><body><div class="box"><div class="row"><div class="orb"></div><input id="q" maxlength="${QUICK_MAX}" placeholder="${t('Was soll Claude tun?')}" autofocus></div>
+<div class="meta"><span>${t('an')}</span><span id="t" class="chip">–</span><span style="flex:1"></span><span>${t('<kbd>Tab</kbd> Session · <kbd>Enter</kbd> senden · <kbd>Esc</kbd> zu')}</span></div></div>
 <script>
 let targets=[],i=0;const q=document.getElementById('q'),t=document.getElementById('t');
-const label={working:'arbeitet – wird vorgemerkt',waiting:'wartet – wird vorgemerkt',done:'fertig',idle:'bereit',error:'Fehler'};
-function draw(){const x=targets[i];t.textContent=x?x.name+' · '+(label[x.status]||x.status):'neue Session im letzten Projekt';t.className='chip '+(x?x.status:'')}
+const label={working:${js(t('arbeitet – wird vorgemerkt'))},waiting:${js(t('wartet – wird vorgemerkt'))},done:${js(t('fertig'))},idle:${js(t('bereit'))},error:${js(t('Fehler'))}};
+function draw(){const x=targets[i];t.textContent=x?x.name+' · '+(label[x.status]||x.status):${js(t('neue Session im letzten Projekt'))};t.className='chip '+(x?x.status:'')}
 window.setTargets=function(l){const cur=targets[i]&&targets[i].id;targets=l;i=Math.max(0,l.findIndex(x=>x.id===cur));draw()};
 window.reset=function(){q.value='';i=0;draw();q.focus()};
 q.addEventListener('keydown',e=>{
@@ -94,7 +99,7 @@ export class QuickPrompt {
       alwaysOnTop: true,
       skipTaskbar: true,
       show: false,
-      title: 'VibeDesk Schnell-Prompt',
+      title: t('VibeDesk Schnell-Prompt'),
       webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false, devTools: false }
     })
     w.setAlwaysOnTop(true, 'pop-up-menu')
@@ -111,7 +116,7 @@ export class QuickPrompt {
     w.webContents.on('will-navigate', (e) => e.preventDefault())
     w.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
     w.webContents.once('did-finish-load', () => this.push())
-    void w.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(HTML))
+    void w.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html()))
     return w
   }
 

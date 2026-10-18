@@ -1,3 +1,4 @@
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import type { EditorState } from '@codemirror/state'
 import { api } from '../api'
@@ -58,17 +59,17 @@ export async function settleDirty(what: string, only?: (t: import('./editorModel
   if (!dirty.length) return true
   const names = dirty.map((t) => t.name).join(', ')
   const r = await choose({
-    title: dirty.length === 1 ? `„${dirty[0].name}“ speichern?` : `${dirty.length} Dateien speichern?`,
-    message: `Ungespeicherte Änderungen in ${names}. ${what}`,
-    confirmLabel: 'Speichern',
-    altLabel: 'Verwerfen'
+    title: dirty.length === 1 ? t('„{name}“ speichern?', { name: dirty[0].name }) : t('{n} Dateien speichern?', { n: dirty.length }),
+    message: t('Ungespeicherte Änderungen in {names}.', { names }) + ' ' + what,
+    confirmLabel: t('Speichern'),
+    altLabel: t('Verwerfen')
   })
   if (r === 'cancel') return false
   if (r === 'alt') return true
-  for (const t of dirty) {
-    const text = docText(t.path)
-    if (text === undefined || !(await useEditor.getState().save(t.path, text))) {
-      await alert(`„${t.name}“ konnte nicht gespeichert werden`, useEditor.getState().tabs.find((x) => x.path === t.path)?.error ?? 'Die Datei wurde inzwischen geändert.')
+  for (const tab of dirty) {
+    const text = docText(tab.path)
+    if (text === undefined || !(await useEditor.getState().save(tab.path, text))) {
+      await alert(t('„{name}“ konnte nicht gespeichert werden', { name: tab.name }), useEditor.getState().tabs.find((x) => x.path === tab.path)?.error ?? t('Die Datei wurde inzwischen geändert.'))
       return false
     }
   }
@@ -85,7 +86,7 @@ function persistTabs(): void {
 
 async function switchProject(id: string): Promise<boolean> {
   if (useEditorUi.getState().projectId === id) return true
-  if (!(await settleDirty('Beim Projektwechsel werden die Tabs geschlossen.'))) return false
+  if (!(await settleDirty(t('Beim Projektwechsel werden die Tabs geschlossen.')))) return false
   useEditor.getState().closeAll()
   editorDocs.clear()
   useEditorUi.setState({ projectId: id })
@@ -143,7 +144,7 @@ export async function toggleEditor(): Promise<void> {
 }
 
 export async function closeEditor(): Promise<void> {
-  if (!(await settleDirty('Der Editor wird geschlossen.'))) return
+  if (!(await settleDirty(t('Der Editor wird geschlossen.')))) return
   useUi.getState().closeWin(EDITOR_ID)
 }
 
@@ -152,13 +153,13 @@ export async function openInEditor(path: string, find?: string, line?: number): 
   const projects = await loadProjects()
   const p = projectOf(projects, path)
   if (!p) {
-    await alert('Datei liegt außerhalb des Projekts', path)
+    await alert(t('Datei liegt außerhalb des Projekts'), path)
     return
   }
   if (!(await switchProject(p.id))) return
   const r = await useEditor.getState().open(path, { find, line })
   if (!r.ok) {
-    await alert(r.code === 'not_found' ? 'Datei existiert nicht mehr' : 'Datei konnte nicht geöffnet werden', r.message === r.code ? path : `${r.message}\n${path}`)
+    await alert(r.code === 'not_found' ? t('Datei existiert nicht mehr') : t('Datei konnte nicht geöffnet werden'), r.message === r.code ? path : `${r.message}\n${path}`)
     return
   }
   useEditorUi.setState({ treeOpen: false })
@@ -186,7 +187,7 @@ export function wireEditor(): void {
     e.preventDefault()
     e.returnValue = false
     useUi.getState().focus(EDITOR_ID)
-    settleDirty('VibeDesk wird beendet.').then((ok) => {
+    settleDirty(t('VibeDesk wird beendet.')).then((ok) => {
       if (!ok) return
       allowQuit = true
       api.app.quit()

@@ -9,6 +9,7 @@ import {
   isUnder,
   renameEntry,
 } from "../../store/fileOps";
+import { t } from "../../../../shared/i18n";
 
 type Node = FileEntry[] | "loading" | { error: string };
 
@@ -167,7 +168,7 @@ export function FileTree({ root, active, onOpen }: Props): React.JSX.Element {
     if (!n.length)
       return (
         <div className="ftree-msg" style={{ paddingLeft: 14 + depth * 12 }}>
-          leer
+          {t("leer")}
         </div>
       );
     return n.map((e) => {
@@ -222,11 +223,11 @@ export function FileTree({ root, active, onOpen }: Props): React.JSX.Element {
   return (
     <div className="ftree" onKeyDown={onKey}>
       <div className="ftree-head">
-        <span>Dateien</span>
+        <span>{t("Dateien")}</span>
         <span className="ftree-tools">
           <button
             className="ftree-refresh"
-            title="Neue Datei"
+            title={t("Neue Datei")}
             onClick={() => create("file")}
             data-testid="ftree-new-file"
           >
@@ -234,7 +235,7 @@ export function FileTree({ root, active, onOpen }: Props): React.JSX.Element {
           </button>
           <button
             className="ftree-refresh"
-            title="Neuer Ordner"
+            title={t("Neuer Ordner")}
             onClick={() => create("dir")}
             data-testid="ftree-new-dir"
           >
@@ -249,7 +250,7 @@ export function FileTree({ root, active, onOpen }: Props): React.JSX.Element {
               <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 10v6M9 13h6" />
             </svg>
           </button>
-          <button className="ftree-refresh" title="Neu laden" onClick={refresh}>
+          <button className="ftree-refresh" title={t("Neu laden")} onClick={refresh}>
             ↻
           </button>
         </span>
@@ -272,29 +273,29 @@ export function FileTree({ root, active, onOpen }: Props): React.JSX.Element {
             onPointerDown={(ev) => ev.stopPropagation()}
             data-testid="ftree-menu"
           >
-            {item("Neue Datei …", () => create("file", m.entry), {
+            {item(t("Neue Datei …"), () => create("file", m.entry), {
               testid: "ctx-new-file",
             })}
-            {item("Neuer Ordner …", () => create("dir", m.entry), {
+            {item(t("Neuer Ordner …"), () => create("dir", m.entry), {
               testid: "ctx-new-dir",
             })}
             {m.entry && (
               <>
                 <div className="ctx-sep" />
-                {item("Umbenennen …", () => rename(m.entry!), {
+                {item(t("Umbenennen …"), () => rename(m.entry!), {
                   hint: "F2",
                   testid: "ctx-rename",
                 })}
-                {item("Im Explorer zeigen", () =>
+                {item(t("Im Explorer zeigen"), () =>
                   api.files.reveal(m.entry!.path),
                 )}
-                {item("Pfad kopieren", () =>
+                {item(t("Pfad kopieren"), () =>
                   api.clipboard.write(m.entry!.path),
                 )}
                 <div className="ctx-sep" />
-                {item("Löschen", () => remove(m.entry!), {
+                {item(t("Löschen"), () => remove(m.entry!), {
                   danger: true,
-                  hint: "Entf",
+                  hint: t("Entf"),
                   testid: "ctx-delete",
                 })}
               </>

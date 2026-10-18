@@ -1,6 +1,7 @@
 // Handy-Begleiter: Koppeln per Einmal-Code und Geräte-Schlüssel.
 // Der Code erscheint nur auf Knopfdruck am PC (wer koppeln will, muss davorsitzen), gilt einmal, kurz und mit
 // wenigen Versuchen. Danach hat jedes Handy einen eigenen Schlüssel; gespeichert wird nur dessen Hash.
+import { t, tn } from '../shared/i18n'
 import { createHash, randomBytes, randomInt, timingSafeEqual } from 'crypto'
 import { readJson, writeJsonAtomic } from './jsonFile'
 import type { CompanionDevice } from '../shared/companion'
@@ -55,16 +56,16 @@ export class CompanionAuth {
 
   pair(code: unknown, name: unknown): PairResult {
     const c = this.code
-    if (!c || c.expiresAt <= this.now()) return { ok: false, error: 'Kein gültiger Code – tippe am PC auf „Handy koppeln“.' }
+    if (!c || c.expiresAt <= this.now()) return { ok: false, error: t('Kein gültiger Code – tippe am PC auf „Handy koppeln“.') }
     const given = typeof code === 'string' ? code.replace(/\s+/g, '') : ''
     const ok = given.length === c.value.length && timingSafeEqual(Buffer.from(given), Buffer.from(c.value))
     if (!ok) {
       c.tries++
       if (c.tries >= CODE_TRIES) {
         this.code = null
-        return { ok: false, error: 'Zu viele falsche Versuche – lass dir am PC einen neuen Code zeigen.' }
+        return { ok: false, error: t('Zu viele falsche Versuche – lass dir am PC einen neuen Code zeigen.') }
       }
-      return { ok: false, error: `Falscher Code – noch ${CODE_TRIES - c.tries} Versuche.` }
+      return { ok: false, error: tn(CODE_TRIES - c.tries, 'Falscher Code – noch {n} Versuch.', 'Falscher Code – noch {n} Versuche.') }
     }
     this.code = null
     const token = randomBytes(32).toString('hex')

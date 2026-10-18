@@ -1,4 +1,5 @@
 // Eigene Shell-Terminals (PowerShell/cmd) neben Claude – ohne Hooks, ohne Gehirn, nicht in Statistik oder Handy.
+import { t } from '../shared/i18n'
 import { randomUUID } from 'crypto'
 import type { Project, ShellInfo, ShellKind } from '../shared/types'
 import type { PtyLike, SpawnFn } from './sessionManager'
@@ -30,7 +31,7 @@ export class ShellManager {
   constructor(private o: { spawn: SpawnFn; kind: () => ShellKind; env?: NodeJS.ProcessEnv }) {}
 
   start(project: Project, attachedTo?: string): ShellInfo {
-    if (this.shells.size >= MAX_SHELLS) throw new Error(`Maximal ${MAX_SHELLS} Shells gleichzeitig – schließe zuerst eine.`)
+    if (this.shells.size >= MAX_SHELLS) throw new Error(t('Maximal {max} Shells gleichzeitig – schließe zuerst eine.', { max: MAX_SHELLS }))
     const kind = this.o.kind()
     const { file, args } = shellCommand(kind)
     const id = randomUUID()

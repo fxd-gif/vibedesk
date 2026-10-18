@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 import { BrowserWindow, dialog, ipcMain } from 'electron'
 import fs from 'fs'
 import { LIMITS, type AddonPackage } from '../shared/addonFormat'
@@ -27,16 +28,16 @@ export function registerAddonIpc(store: AddonStore, win: () => BrowserWindow | n
   ipcMain.handle('addons:setState', (_e, id: string, data) => store.setState(id, data))
   ipcMain.handle('addons:pickFile', async () => {
     const w = win()
-    const opts = { title: 'Addon importieren', filters: FILTERS, properties: ['openFile' as const] }
+    const opts = { title: t('Addon importieren'), filters: FILTERS, properties: ['openFile' as const] }
     const r = w ? await dialog.showOpenDialog(w, opts) : await dialog.showOpenDialog(opts)
     return r.canceled ? null : (r.filePaths[0] ?? null)
   })
   ipcMain.handle('addons:exportTo', async (_e, id: string) => {
     const a = store.list().find((x) => x.manifest.id === id)
-    if (!a) throw new Error('Addon nicht gefunden')
+    if (!a) throw new Error(t('Addon nicht gefunden'))
     const safe = a.manifest.name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '').trim() || 'addon'
     const w = win()
-    const opts = { title: 'Addon exportieren', defaultPath: `${safe}.vibeaddon`, filters: FILTERS }
+    const opts = { title: t('Addon exportieren'), defaultPath: `${safe}.vibeaddon`, filters: FILTERS }
     const r = w ? await dialog.showSaveDialog(w, opts) : await dialog.showSaveDialog(opts)
     if (r.canceled || !r.filePath) return null
     fs.writeFileSync(r.filePath, store.exportBytes(id))

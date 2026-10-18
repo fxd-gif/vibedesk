@@ -1,3 +1,4 @@
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api, errorText } from '../api'
 import { decodeShare, encodeShare, findShareCode, type ShareEnvelope } from '../../../shared/shareCode'
@@ -29,15 +30,15 @@ export function showCode(title: string, code: string): void {
   useShare.setState({ exported: { title, code } })
 }
 
-export function sharePrompts(prompts: Prompt[], title = prompts.length === 1 ? `Prompt „${prompts[0].title}“` : `${prompts.length} Prompts`): void {
+export function sharePrompts(prompts: Prompt[], title = prompts.length === 1 ? t('Prompt „{title}“', { title: prompts[0].title }) : t('{n} Prompts', { n: prompts.length })): void {
   showCode(title, encodeShare({ kind: 'prompts', prompts: prompts.map((p) => ({ title: p.title, text: p.text })), from: author() }))
 }
 
 export async function shareSkill(dir: string, name: string): Promise<void> {
   try {
-    showCode(`Skill „${name}“`, await api.skills.exportCode(dir, author()))
+    showCode(t('Skill „{name}“', { name }), await api.skills.exportCode(dir, author()))
   } catch (err) {
-    await alert('Teilen nicht möglich', errorText(err))
+    await alert(t('Teilen nicht möglich'), errorText(err))
   }
 }
 
@@ -45,11 +46,11 @@ export async function shareAmbience(): Promise<void> {
   const s = useSettings.getState().s
   if (!s) return
   if (!SCENES.some((x) => x.id === s.scene)) {
-    await alert('Eigene Bilder lassen sich nicht teilen', 'Wähle einen der eingebauten Ausblicke – Regen, Musik und Stream werden mitgeteilt.')
+    await alert(t('Eigene Bilder lassen sich nicht teilen'), t('Wähle einen der eingebauten Ausblicke – Regen, Musik und Stream werden mitgeteilt.'))
     return
   }
   showCode(
-    'Deine Atmosphäre',
+    t('Deine Atmosphäre'),
     encodeShare({
       kind: 'ambience',
       from: author(),
@@ -74,11 +75,11 @@ export async function startImport(text: string): Promise<boolean> {
     const env = decodeShare(code)
     let skill: SkillCandidateSummary[] | undefined
     if (env.kind === 'skill') skill = await api.skills.importCode(code)
-    if (env.kind === 'ambience' && !SCENES.some((x) => x.id === env.ambience.scene)) throw new Error('Dieser Ausblick ist in deiner VibeDesk-Version nicht enthalten.')
+    if (env.kind === 'ambience' && !SCENES.some((x) => x.id === env.ambience.scene)) throw new Error(t('Dieser Ausblick ist in deiner VibeDesk-Version nicht enthalten.'))
     useShare.setState({ pending: { env, code, skill }, pasteOpen: false })
     return true
   } catch (err) {
-    await alert('Code lässt sich nicht öffnen', errorText(err))
+    await alert(t('Code lässt sich nicht öffnen'), errorText(err))
     return false
   }
 }

@@ -1,5 +1,6 @@
 // „Vibe Wrapped“: sammelt pro Tag, was mit Claude passiert ist (Prompts, Werkzeuge, Dateien, aktive Minuten, Projekte)
 // und fasst die Woche zusammen. Nur Zähler und Projektnamen – keine Inhalte.
+import { t } from '../shared/i18n'
 import { localDate } from './statsService'
 import fs from 'fs'
 import path from 'path'
@@ -172,15 +173,15 @@ export class VibeLog {
 
 /** Ein Augenzwinkern zum Schluss – abhängig davon, wie die Woche lief */
 export function persona(w: { minutes: number; prompts: number; toolCalls: number; fails: number; agents: number; peak: number | null; tools: Record<string, number> }): string {
-  if (!w.minutes) return 'Die Ruhe vor dem Sturm'
-  if (w.peak !== null && (w.peak >= 23 || w.peak < 5)) return 'Nachteule des Codes'
-  if (w.peak !== null && w.peak >= 5 && w.peak < 9) return 'Frühaufsteher-Vibes'
-  if (w.agents >= 10) return 'Dirigent der Agenten'
+  if (!w.minutes) return t('Die Ruhe vor dem Sturm')
+  if (w.peak !== null && (w.peak >= 23 || w.peak < 5)) return t('Nachteule des Codes')
+  if (w.peak !== null && w.peak >= 5 && w.peak < 9) return t('Frühaufsteher-Vibes')
+  if (w.agents >= 10) return t('Dirigent der Agenten')
   const edits = (w.tools.Edit ?? 0) + (w.tools.Write ?? 0) + (w.tools.MultiEdit ?? 0)
-  if (w.toolCalls && edits / w.toolCalls > 0.4) return 'Code-Bildhauer'
-  if (w.toolCalls && (w.tools.Bash ?? 0) / w.toolCalls > 0.4) return 'Terminal-Magier'
-  if (w.toolCalls && ((w.tools.Read ?? 0) + (w.tools.Grep ?? 0) + (w.tools.Glob ?? 0)) / w.toolCalls > 0.5) return 'Code-Archäologe'
-  if (w.fails >= 25) return 'Unbeirrbarer Debugger'
-  if (w.prompts >= 150) return 'Prompt-Maschine'
-  return 'Entspannter Viber'
+  if (w.toolCalls && edits / w.toolCalls > 0.4) return t('Code-Bildhauer')
+  if (w.toolCalls && (w.tools.Bash ?? 0) / w.toolCalls > 0.4) return t('Terminal-Magier')
+  if (w.toolCalls && ((w.tools.Read ?? 0) + (w.tools.Grep ?? 0) + (w.tools.Glob ?? 0)) / w.toolCalls > 0.5) return t('Code-Archäologe')
+  if (w.fails >= 25) return t('Unbeirrbarer Debugger')
+  if (w.prompts >= 150) return t('Prompt-Maschine')
+  return t('Entspannter Viber')
 }

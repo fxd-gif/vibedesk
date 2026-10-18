@@ -1,5 +1,6 @@
 // Zentrale des Handy-Begleiters: führt Session-Stand, Freigaben und Claudes letzte Antworten zusammen
 // und erledigt die Aufträge vom Handy (Prompt ausformulieren + abschicken, Vorschläge).
+import { t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import { RateLimiter } from '../shared/lounge'
@@ -100,7 +101,7 @@ export class CompanionHub {
   }
 
   answer(id: unknown, decision: PermissionDecision): Result {
-    if (typeof id !== 'string' || !this.d.broker.answer(id, decision)) return { ok: false, error: 'Diese Freigabe ist schon erledigt.' }
+    if (typeof id !== 'string' || !this.d.broker.answer(id, decision)) return { ok: false, error: t('Diese Freigabe ist schon erledigt.') }
     return { ok: true }
   }
 
@@ -108,13 +109,13 @@ export class CompanionHub {
   async prompt(body: { sessionId?: unknown; projectId?: unknown; text?: unknown; polish?: unknown }): Promise<Result<{ text: string }>> {
     const raw = typeof body.text === 'string' ? body.text.trim() : ''
     const polish = body.polish === true
-    if (!raw) return { ok: false, error: 'Schreib erst, was Claude tun soll.' }
-    if (raw.length > (polish ? IDEA_MAX : PROMPT_MAX)) return { ok: false, error: 'Das ist zu lang fürs Handy.' }
+    if (!raw) return { ok: false, error: t('Schreib erst, was Claude tun soll.') }
+    if (raw.length > (polish ? IDEA_MAX : PROMPT_MAX)) return { ok: false, error: t('Das ist zu lang fürs Handy.') }
     const session = typeof body.sessionId === 'string' ? this.snap.sessions.find((s) => s.id === body.sessionId) : undefined
     const project = !session && typeof body.projectId === 'string' ? this.snap.projects.find((p) => p.id === body.projectId) : undefined
-    if (!session && !project) return { ok: false, error: 'Diese Session gibt es nicht mehr.' }
-    if (session && this.d.broker.list().some((p) => p.sessionId === session.id)) return { ok: false, error: 'Claude wartet noch auf eine Freigabe – beantworte sie zuerst.' }
-    if (!this.promptFast.allow('p') || !this.promptHour.allow('p')) return { ok: false, error: 'Langsam – kurz warten und nochmal.' }
+    if (!session && !project) return { ok: false, error: t('Diese Session gibt es nicht mehr.') }
+    if (session && this.d.broker.list().some((p) => p.sessionId === session.id)) return { ok: false, error: t('Claude wartet noch auf eine Freigabe – beantworte sie zuerst.') }
+    if (!this.promptFast.allow('p') || !this.promptHour.allow('p')) return { ok: false, error: t('Langsam – kurz warten und nochmal.') }
 
     let text = raw
     if (polish) {
@@ -125,7 +126,7 @@ export class CompanionHub {
     }
     text = oneLine(text).slice(0, PROMPT_MAX)
     const sent = await this.d.sendPrompt(session ? { sessionId: session.id } : { projectId: project!.id }, text)
-    if (!sent) return { ok: false, error: 'VibeDesk konnte den Prompt nicht abschicken.' }
+    if (!sent) return { ok: false, error: t('VibeDesk konnte den Prompt nicht abschicken.') }
     if (session) {
       const x = this.ensure(session.id)
       x.suggestions = undefined
@@ -137,7 +138,7 @@ export class CompanionHub {
   /** „Wie geht es weiter?“ – drei Vorschläge für die Session */
   async suggest(sessionId: unknown): Promise<Result<{ suggestions: Suggestion[] }>> {
     const s = typeof sessionId === 'string' ? this.snap.sessions.find((x) => x.id === sessionId) : undefined
-    if (!s) return { ok: false, error: 'Diese Session gibt es nicht mehr.' }
+    if (!s) return { ok: false, error: t('Diese Session gibt es nicht mehr.') }
     const x = this.ensure(s.id)
     await this.refresh(s.id)
     const key = this.suggestKey(x.digest, s.status)
@@ -145,7 +146,7 @@ export class CompanionHub {
     const r = await this.runAi(s.id, 'suggest', suggestInput(this.context(s.id)))
     if (!r.ok) return r
     const list = parseSuggestions(r.out)
-    if (!list.length) return { ok: false, error: 'Claude hatte gerade keine Idee – versuch es gleich nochmal.' }
+    if (!list.length) return { ok: false, error: t('Claude hatte gerade keine Idee – versuch es gleich nochmal.') }
     x.suggestions = { key, list }
     this.changed()
     return { ok: true, suggestions: list }
@@ -154,8 +155,8 @@ export class CompanionHub {
   /** Je Session und Art höchstens ein Auftrag – Vorschläge (laufen auch automatisch) blockieren das Ausformulieren nicht */
   private async runAi(key: string, kind: 'polish' | 'suggest', input: string): Promise<{ ok: true; out: string } | { ok: false; error: string }> {
     const job = `${key}|${kind}`
-    if (this.running.has(job)) return { ok: false, error: kind === 'polish' ? 'Claude formuliert gerade schon einen Prompt.' : 'Claude überlegt schon.' }
-    if (!this.aiHour.allow('ai')) return { ok: false, error: 'Für diese Stunde sind genug KI-Aufträge gelaufen.' }
+    if (this.running.has(job)) return { ok: false, error: kind === 'polish' ? t('Claude formuliert gerade schon einen Prompt.') : t('Claude überlegt schon.') }
+    if (!this.aiHour.allow('ai')) return { ok: false, error: t('Für diese Stunde sind genug KI-Aufträge gelaufen.') }
     this.running.add(job)
     this.syncBusy()
     try {

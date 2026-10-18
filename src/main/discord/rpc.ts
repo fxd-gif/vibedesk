@@ -1,4 +1,5 @@
 // Schlanker Discord-RPC-Client über die lokale Named Pipe – ohne Fremdbibliothek.
+import { t } from '../../shared/i18n'
 import net from 'net'
 import { randomUUID } from 'crypto'
 import type { Activity } from '../../shared/presence'
@@ -31,7 +32,7 @@ export class DiscordRpc {
     this.clientId = clientId
     if (!enabled || !/^\d{15,22}$/.test(clientId)) {
       this.disconnect()
-      this.onStatus(enabled ? { state: 'unavailable', reason: 'Ungültige App-ID' } : { state: 'off' })
+      this.onStatus(enabled ? { state: 'unavailable', reason: t('Ungültige App-ID') } : { state: 'off' })
       return
     }
     if (changed) this.disconnect()
@@ -66,7 +67,7 @@ export class DiscordRpc {
     if (!this.enabled) return
     const pipes = pipeNames()
     if (i >= pipes.length) {
-      this.onStatus({ state: 'unavailable', reason: 'Discord läuft nicht' })
+      this.onStatus({ state: 'unavailable', reason: t('Discord läuft nicht') })
       this.retry = setTimeout(() => {
         this.retry = null
         this.connect(0)
@@ -108,7 +109,7 @@ export class DiscordRpc {
     for (const f of frames) {
       if (f.op === OP.PING) this.send(OP.PONG, f.data)
       else if (f.op === OP.CLOSE) {
-        this.onStatus({ state: 'unavailable', reason: f.data?.message ?? 'Verbindung abgelehnt' })
+        this.onStatus({ state: 'unavailable', reason: f.data?.message ?? t('Verbindung abgelehnt') })
         this.enabled = false
         this.disconnect()
       } else if (f.data?.evt === 'READY') {

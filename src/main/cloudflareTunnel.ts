@@ -1,6 +1,7 @@
 // Handy von überall ohne App: Ein Cloudflare-Quick-Tunnel gibt dem Handy-Begleiter einen HTTPS-Link im Internet.
 // cloudflared baut nur ausgehende Verbindungen auf – kein Router, keine Firewall-Freigabe, kein Konto.
 // Wer den Link kennt, sieht nur die Koppel-Seite; ohne Code vom PC-Bildschirm kommt niemand weiter.
+import { t } from '../shared/i18n'
 import { execFile, spawn, type ChildProcess } from 'child_process'
 import { Resolver } from 'dns/promises'
 import fs from 'fs'
@@ -111,7 +112,7 @@ export class QuickTunnel {
       await this.d.install()
       if (this.port !== port) return
       exe = this.d.find()
-      if (!exe) return this.set('error', null, 'cloudflared ließ sich nicht installieren.')
+      if (!exe) return this.set('error', null, t('cloudflared ließ sich nicht installieren.'))
     }
     this.launch(exe, port)
   }
@@ -141,7 +142,7 @@ export class QuickTunnel {
       this.proc = null
       if (this.port !== port) return
       const n = this.fails++
-      this.set('starting', null, 'Tunnel getrennt – verbinde neu …')
+      this.set('starting', null, t('Tunnel getrennt – verbinde neu …'))
       this.timer = setTimeout(() => {
         this.timer = null
         if (this.port === port) this.launch(exe, port)

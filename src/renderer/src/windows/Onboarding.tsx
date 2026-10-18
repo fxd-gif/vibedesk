@@ -7,6 +7,7 @@ import { centeredRect, useUi } from '../store/uiStore'
 import { PathInput } from './PathInput'
 import { MissingHint, missingTools, ToolSetupPanel, useSetup } from './ToolSetup'
 import iconUrl from '../assets/icon.png'
+import { t } from '../../../shared/i18n'
 
 const STEPS = ['welcome', 'claude', 'folder', 'mood', 'discord', 'done'] as const
 type Step = (typeof STEPS)[number]
@@ -53,42 +54,42 @@ export function Onboarding(): React.JSX.Element | null {
         {step === 'welcome' && (
           <>
             <img className="onb-logo" src={iconUrl} alt="" />
-            <h1>Willkommen bei VibeDesk</h1>
-            <p>Dein ruhiger Ort zum Vibecoden – Regen an der Scheibe, Lofi im Ohr und alle Claude-Sessions im Blick.</p>
+            <h1>{t('Willkommen bei VibeDesk')}</h1>
+            <p>{t('Dein ruhiger Ort zum Vibecoden – Regen an der Scheibe, Lofi im Ohr und alle Claude-Sessions im Blick.')}</p>
             <button className="btn primary big" onClick={next} data-testid="onb-next">
-              Einrichten
+              {t('Einrichten')}
             </button>
           </>
         )}
 
         {step === 'claude' && (
           <>
-            <h2>Werkzeuge</h2>
-            <p>VibeDesk braucht Node.js und Claude Code – fehlt etwas, installierst du es hier mit einem Klick. Danach meldest du dich einmal bei Claude an.</p>
+            <h2>{t('Werkzeuge')}</h2>
+            <p>{t('VibeDesk braucht Node.js und Claude Code – fehlt etwas, installierst du es hier mit einem Klick. Danach meldest du dich einmal bei Claude an.')}</p>
             <ToolSetupPanel />
             {!installing && <MissingHint />}
             <button className="btn primary big" onClick={next} disabled={!!installing} data-testid="onb-next">
-              Weiter
+              {t('Weiter')}
             </button>
           </>
         )}
 
         {step === 'folder' && (
           <>
-            <h2>Wo liegen deine Projekte?</h2>
-            <p>Neue Projekte legt VibeDesk hier an. Bestehende Ordner kannst du jederzeit hinzufügen.</p>
+            <h2>{t('Wo liegen deine Projekte?')}</h2>
+            <p>{t('Neue Projekte legt VibeDesk hier an. Bestehende Ordner kannst du jederzeit hinzufügen.')}</p>
             <div style={{ width: '100%', textAlign: 'left' }}>
               <PathInput value={dir} onChange={setDir} onSubmit={next} />
             </div>
             <button className="btn primary big" onClick={next} data-testid="onb-next">
-              Weiter
+              {t('Weiter')}
             </button>
           </>
         )}
 
         {step === 'mood' && (
           <>
-            <h2>Deine Atmosphäre</h2>
+            <h2>{t('Deine Atmosphäre')}</h2>
             <div className="row chips" style={{ justifyContent: 'center' }}>
               {SCENES.map((sc) => (
                 <button key={sc.id} className={`chip${s.scene === sc.id ? ' on' : ''}`} onClick={() => set({ scene: sc.id })}>
@@ -105,19 +106,19 @@ export function Onboarding(): React.JSX.Element | null {
               </div>
               <div className="row between">
                 <span>
-                  <Icon name="rain" size={15} /> Regengeräusch
+                  <Icon name="rain" size={15} /> {t('Regengeräusch')}
                 </span>
                 <Toggle on={s.rainSoundOn} onClick={() => set(toggleRainSound(s))} />
               </div>
               <div className="row between">
                 <span>
-                  <Icon name="spark" size={15} /> Ton, wenn Claude auf dich wartet
+                  <Icon name="spark" size={15} /> {t('Ton, wenn Claude auf dich wartet')}
                 </span>
                 <Toggle on={s.chimeOn} onClick={() => set({ chimeOn: !s.chimeOn })} />
               </div>
             </div>
             <button className="btn primary big" onClick={next} data-testid="onb-next">
-              Weiter
+              {t('Weiter')}
             </button>
           </>
         )}
@@ -125,49 +126,49 @@ export function Onboarding(): React.JSX.Element | null {
         {step === 'discord' && (
           <>
             <h2>Discord</h2>
-            <p>Zeig deinen Freunden, woran du gerade baust – mit eigenem Text, Bild und Timer. Alles anpassbar im Discord-Fenster.</p>
+            <p>{t('Zeig deinen Freunden, woran du gerade baust – mit eigenem Text, Bild und Timer. Alles anpassbar im Discord-Fenster.')}</p>
             <div className="onb-list">
               <div className="row between">
                 <span>
-                  <Icon name="discord" size={15} /> Rich Presence anzeigen
+                  <Icon name="discord" size={15} /> {t('Rich Presence anzeigen')}
                 </span>
                 <Toggle on={s.discord.enabled} onClick={() => set({ discord: { ...s.discord, enabled: !s.discord.enabled } })} />
               </div>
             </div>
             <button className="btn primary big" onClick={next} data-testid="onb-next">
-              Weiter
+              {t('Weiter')}
             </button>
           </>
         )}
 
         {step === 'done' && (
           <>
-            <h2>{missing ? 'Fast geschafft' : 'Alles bereit'}</h2>
+            <h2>{missing ? t('Fast geschafft') : t('Alles bereit')}</h2>
             {missing && (
               <p className="setup-hint" data-testid="onb-missing">
-                Node.js oder Claude Code fehlen noch. Sobald du eine Session startest, hilft dir VibeDesk beim Einrichten.
+                {t('Node.js oder Claude Code fehlen noch. Sobald du eine Session startest, hilft dir VibeDesk beim Einrichten.')}
               </p>
             )}
             <div className="onb-tips">
               <div>
                 <kbd>Win</kbd> + <kbd>R</kbd> → <code>vibe</code>
-                <span>startet VibeDesk jederzeit</span>
+                <span>{t('startet VibeDesk jederzeit')}</span>
               </div>
               <div>
-                <kbd>Esc</kbd> halten · <kbd>F11</kbd>
-                <span>Vollbild verlassen</span>
+                <kbd>Esc</kbd> {t('halten')} · <kbd>F11</kbd>
+                <span>{t('Vollbild verlassen')}</span>
               </div>
               <div>
-                <kbd>Strg</kbd> + <kbd>K</kbd>
-                <span>Befehls-Palette: alle Fenster & Aktionen</span>
+                <kbd>{t('Strg')}</kbd> + <kbd>K</kbd>
+                <span>{t('Befehls-Palette: alle Fenster & Aktionen')}</span>
               </div>
             </div>
             <div className="row" style={{ justifyContent: 'center', gap: 8 }}>
               <button className="btn ghost big" onClick={() => finish(false)}>
-                Zum Desktop
+                {t('Zum Desktop')}
               </button>
               <button className="btn primary big" onClick={() => finish(true)} data-testid="onb-finish">
-                Erstes Projekt anlegen
+                {t('Erstes Projekt anlegen')}
               </button>
             </div>
           </>
@@ -180,7 +181,7 @@ export function Onboarding(): React.JSX.Element | null {
       </div>
       {step !== 'welcome' && step !== 'done' && (
         <button className="onb-skip" onClick={() => finish(false)}>
-          Überspringen
+          {t('Überspringen')}
         </button>
       )}
     </div>

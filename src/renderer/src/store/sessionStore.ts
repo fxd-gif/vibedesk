@@ -1,8 +1,9 @@
+import { t } from '../../../shared/i18n'
 import { useMemo } from 'react'
 import { create } from 'zustand'
 import { api, errorText } from '../api'
 import type { SessionInfo } from '../../../shared/types'
-import { CLAUDE_MISSING_MESSAGE } from '../../../shared/setupHints'
+import { claudeMissingMessage } from '../../../shared/setupHints'
 import { openSetup } from '../windows/ToolSetup'
 import { alert, confirm } from './dialogStore'
 import { useUi } from './uiStore'
@@ -39,10 +40,10 @@ export const useSessions = create<SessionStore>((set, get) => ({
       return info
     } catch (err) {
       const msg = errorText(err)
-      if (msg.includes(CLAUDE_MISSING_MESSAGE)) {
+      if (msg.includes(claudeMissingMessage())) {
         // Statt einer Sackgasse: gleich die Einrichtung anbieten
-        if (await confirm({ title: 'Claude Code fehlt noch', message: msg, confirmLabel: 'Jetzt einrichten' })) openSetup()
-      } else await alert('Session konnte nicht gestartet werden', msg)
+        if (await confirm({ title: t('Claude Code fehlt noch'), message: msg, confirmLabel: t('Jetzt einrichten') })) openSetup()
+      } else await alert(t('Session konnte nicht gestartet werden'), msg)
       return null
     }
   },

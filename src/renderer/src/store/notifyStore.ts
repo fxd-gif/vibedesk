@@ -1,4 +1,5 @@
 // Benachrichtigungszentrale: Verlauf, Karten unten rechts und Windows-Benachrichtigungen an einem Ort.
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import type { NoticeKind, SessionStatus } from '../../../shared/types'
@@ -73,7 +74,7 @@ export function notify(input: NoticeInput & { kind: NoticeKind }, visible = fals
   }))
   if (r.toast) showToast(n)
   // im Stream wäre eine Windows-Benachrichtigung mit Projektnamen sichtbar
-  if (r.os) api.app.notify(n.id, s.streamer.enabled ? 'VibeDesk' : n.title, s.streamer.enabled ? 'Neue Mitteilung' : n.body ?? '')
+  if (r.os) api.app.notify(n.id, s.streamer.enabled ? 'VibeDesk' : n.title, s.streamer.enabled ? t('Neue Mitteilung') : n.body ?? '')
 }
 
 /** Karte ohne Verlauf – für Hinweise von VibeDesk selbst */
@@ -123,14 +124,14 @@ function onStatus(id: string, before: SessionStatus | undefined, now: SessionSta
   if (before === 'waiting') retract(`waiting:${id}`)
   const name = sessionName(id)
   if (!name) return
-  const open: NoticeAction = { label: 'Öffnen', primary: true, run: () => showSession(id) }
+  const open: NoticeAction = { label: t('Öffnen'), primary: true, run: () => showSession(id) }
   if (now === 'waiting') {
     notify(
-      { kind: 'waiting', key: `waiting:${id}`, title: `${name} wartet auf dich`, body: 'Claude braucht eine Antwort oder Freigabe.', actions: [open], onOpen: () => showSession(id) },
+      { kind: 'waiting', key: `waiting:${id}`, title: t('{name} wartet auf dich', { name }), body: t('Claude braucht eine Antwort oder Freigabe.'), actions: [open], onOpen: () => showSession(id) },
       sessionOnTop(id)
     )
   } else if (now === 'done' && before === 'working') {
-    notify({ kind: 'done', key: `done:${id}`, title: `${name} ist fertig`, body: 'Claude hat die Aufgabe abgeschlossen.', actions: [open], onOpen: () => showSession(id) }, sessionOnTop(id))
+    notify({ kind: 'done', key: `done:${id}`, title: t('{name} ist fertig', { name }), body: t('Claude hat die Aufgabe abgeschlossen.'), actions: [open], onOpen: () => showSession(id) }, sessionOnTop(id))
   } else if (now === 'error') {
     // beim bewussten Schließen verschwindet die Session gleich – dann nichts melden
     setTimeout(() => {
@@ -138,9 +139,9 @@ function onStatus(id: string, before: SessionStatus | undefined, now: SessionSta
       notify({
         kind: 'error',
         key: `error:${id}`,
-        title: `${name} wurde unerwartet beendet`,
-        body: 'Der Claude-Prozess hat sich mit einem Fehler verabschiedet.',
-        actions: [{ label: 'Neu starten', primary: true, run: () => void useSessions.getState().restart(id) }, open],
+        title: t('{name} wurde unerwartet beendet', { name }),
+        body: t('Der Claude-Prozess hat sich mit einem Fehler verabschiedet.'),
+        actions: [{ label: t('Neu starten'), primary: true, run: () => void useSessions.getState().restart(id) }, open],
         onOpen: () => showSession(id)
       })
     }, 400)
@@ -171,7 +172,7 @@ export function wireNotify(): void {
     const { held } = useNotify.getState()
     if (!held) return
     useNotify.setState({ held: 0 })
-    inform(heldSummary(held), undefined, [{ label: 'Ansehen', primary: true, run: () => setPanel(true) }])
+    inform(heldSummary(held), undefined, [{ label: t('Ansehen'), primary: true, run: () => setPanel(true) }])
   })
 
   api.on.notifyClick((id) => {

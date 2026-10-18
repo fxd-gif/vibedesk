@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 
@@ -6,7 +7,7 @@ export class NotesStore {
   constructor(private dir: string) {}
 
   private file(projectId: string): string {
-    if (!/^[A-Za-z0-9-]{1,64}$/.test(projectId)) throw new Error('Ungültige Projekt-ID')
+    if (!/^[A-Za-z0-9-]{1,64}$/.test(projectId)) throw new Error(t('Ungültige Projekt-ID'))
     return path.join(this.dir, projectId + '.md')
   }
 

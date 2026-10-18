@@ -4,6 +4,7 @@ import { api } from '../api'
 import { Icon } from '../desktop/icons'
 import { installFailReason, SETUP_LINKS } from '../../../shared/setupHints'
 import type { ToolId, ToolStatus } from '../../../shared/types'
+import { t } from '../../../shared/i18n'
 
 interface SetupState {
   status: ToolStatus | null
@@ -63,10 +64,10 @@ export function openSetup(): void {
 /** Fehlt etwas, ohne das keine Session läuft? */
 export const missingTools = (st: ToolStatus | null): boolean => !!st && (!st.node || !st.claude)
 
-const LABEL: Record<ToolId, { name: string; why: string }> = {
-  node: { name: 'Node.js', why: 'für Live-Status, Feed und Stats' },
-  claude: { name: 'Claude Code', why: 'die KI, mit der du baust' }
-}
+const LABEL = (): Record<ToolId, { name: string; why: string }> => ({
+  node: { name: 'Node.js', why: t('für Live-Status, Feed und Stats') },
+  claude: { name: 'Claude Code', why: t('die KI, mit der du baust') }
+})
 
 function Row({ tool }: { tool: ToolId }): React.JSX.Element {
   const { status, installing, failed, install } = useSetup()
@@ -77,19 +78,19 @@ function Row({ tool }: { tool: ToolId }): React.JSX.Element {
     <div className={`setup-row${version ? ' ok' : ''}`} data-testid={`setup-${tool}`}>
       <span className="setup-mark">{version ? <Icon name="check" size={15} /> : busy ? <span className="spin" /> : <i />}</span>
       <div className="setup-text">
-        <b>{LABEL[tool].name}</b>
-        <span>{version ? `Version ${version}` : busy ? 'wird installiert …' : failed === tool ? 'Installation hat nicht geklappt' : LABEL[tool].why}</span>
+        <b>{LABEL()[tool].name}</b>
+        <span>{version ? t('Version {version}', { version }) : busy ? t('wird installiert …') : failed === tool ? t('Installation hat nicht geklappt') : LABEL()[tool].why}</span>
       </div>
       {!version && !busy && (
         <div className="setup-actions">
           {canAuto && (
             <button className="btn small primary" disabled={!!installing} onClick={() => install(tool)} data-testid={`setup-install-${tool}`}>
-              {failed === tool ? 'Nochmal versuchen' : 'Installieren'}
+              {failed === tool ? t('Nochmal versuchen') : t('Installieren')}
             </button>
           )}
           {(!canAuto || failed === tool) && (
             <button className="btn small" onClick={() => api.setup.openDownload(tool)}>
-              {tool === 'node' ? 'Download-Seite' : 'Anleitung'}
+              {tool === 'node' ? t('Download-Seite') : t('Anleitung')}
             </button>
           )}
         </div>
@@ -103,21 +104,21 @@ function LoginRow(): React.JSX.Element {
   const status = useSetup((s) => s.status)
   const ok = !!status?.login
   const text = ok
-    ? 'Angemeldet'
+    ? t('Angemeldet')
     : status?.claude
-      ? 'Beim ersten Start fragt Claude im Terminal nach deiner Anmeldung – du brauchst ein Claude-Pro/Max-Abo oder einen API-Schlüssel.'
-      : 'Kommt nach der Installation: Beim ersten Start fragt Claude im Terminal nach deiner Anmeldung – du brauchst ein Claude-Pro/Max-Abo oder einen API-Schlüssel.'
+      ? t('Beim ersten Start fragt Claude im Terminal nach deiner Anmeldung – du brauchst ein Claude-Pro/Max-Abo oder einen API-Schlüssel.')
+      : t('Kommt nach der Installation: Beim ersten Start fragt Claude im Terminal nach deiner Anmeldung – du brauchst ein Claude-Pro/Max-Abo oder einen API-Schlüssel.')
   return (
     <div className={`setup-row${ok ? ' ok' : ''}`} data-testid="setup-login">
       <span className="setup-mark">{ok ? <Icon name="check" size={15} /> : <i />}</span>
       <div className="setup-text">
-        <b>Bei Claude anmelden</b>
+        <b>{t('Bei Claude anmelden')}</b>
         <span>{text}</span>
       </div>
       {!ok && (
         <div className="setup-actions">
           <button className="btn small" onClick={() => api.openExternal(SETUP_LINKS.login)}>
-            Mehr dazu
+            {t('Mehr dazu')}
           </button>
         </div>
       )}
@@ -131,13 +132,13 @@ function FailInfo(): React.JSX.Element | null {
   const installing = useSetup((s) => s.installing)
   const log = useSetup((s) => s.log)
   if (!failed || installing) return null
-  const reason = installFailReason(log) ?? `Die Installation von ${LABEL[failed].name} hat nicht geklappt. Versuch es nochmal oder folge der Anleitung.`
+  const reason = installFailReason(log) ?? t('Die Installation von {name} hat nicht geklappt. Versuch es nochmal oder folge der Anleitung.', { name: LABEL()[failed].name })
   return (
     <div data-testid="setup-fail">
       <p className="setup-hint">{reason}</p>
       {log.length > 0 && (
         <details style={{ fontSize: 12 }}>
-          <summary style={{ cursor: 'pointer', color: 'var(--text-dim)' }}>Was genau ist passiert?</summary>
+          <summary style={{ cursor: 'pointer', color: 'var(--text-dim)' }}>{t('Was genau ist passiert?')}</summary>
           <pre className="setup-log" style={{ marginTop: 6 }}>
             {log.slice(-12).join('\n')}
           </pre>
@@ -155,7 +156,7 @@ export function ToolSetupPanel(): React.JSX.Element {
   if (!status)
     return (
       <p className="row" style={{ justifyContent: 'center' }}>
-        <span className="spin" /> Suche Node.js und Claude Code …
+        <span className="spin" /> {t('Suche Node.js und Claude Code …')}
       </p>
     )
   return (
@@ -163,7 +164,7 @@ export function ToolSetupPanel(): React.JSX.Element {
       <Row tool="node" />
       <Row tool="claude" />
       <LoginRow />
-      {installing === 'node' && <p className="setup-hint">Windows fragt eventuell nach Administrator-Rechten – bitte bestätigen.</p>}
+      {installing === 'node' && <p className="setup-hint">{t('Windows fragt eventuell nach Administrator-Rechten – bitte bestätigen.')}</p>}
       {installing && log.length > 0 && (
         <pre className="setup-log" data-testid="setup-log">
           {log.slice(-6).join('\n')}
@@ -172,7 +173,7 @@ export function ToolSetupPanel(): React.JSX.Element {
       <FailInfo />
       {!installing && (!status.node || !status.claude || !status.login) && (
         <button className="btn small ghost setup-recheck" onClick={() => check()} disabled={checking}>
-          {checking ? 'Prüfe …' : 'Erneut prüfen'}
+          {checking ? t('Prüfe …') : t('Erneut prüfen')}
         </button>
       )}
     </div>
@@ -185,7 +186,7 @@ export function MissingHint(): React.JSX.Element | null {
   if (!missingTools(status)) return null
   return (
     <p className="setup-hint" data-testid="setup-missing-hint">
-      Ohne Node.js und Claude Code kann VibeDesk noch keine Claude-Sessions starten. Du kannst trotzdem weitergehen – beim Start einer Session bietet VibeDesk dir die Einrichtung wieder an.
+      {t('Ohne Node.js und Claude Code kann VibeDesk noch keine Claude-Sessions starten. Du kannst trotzdem weitergehen – beim Start einer Session bietet VibeDesk dir die Einrichtung wieder an.')}
     </p>
   )
 }
@@ -201,14 +202,18 @@ export function SetupPrompt(): React.JSX.Element | null {
   return (
     <div className="dlg-backdrop" onPointerDown={(e) => e.target === e.currentTarget && !installing && close()}>
       <div className="dlg setup-dlg" role="dialog" data-testid="setup-prompt">
-        <h3>{!status ? 'Einrichtung' : done ? 'Alles bereit' : 'Da fehlt noch etwas'}</h3>
+        <h3>{!status ? t('Einrichtung') : done ? t('Alles bereit') : t('Da fehlt noch etwas')}</h3>
         <p className="dlg-msg">
-          {!status ? 'Einen Moment, ich schaue nach …' : done ? 'Node.js und Claude Code sind installiert.' : 'VibeDesk braucht Node.js und Claude Code. Mit einem Klick installiert:'}
+          {!status
+            ? t('Einen Moment, ich schaue nach …')
+            : done
+              ? t('Node.js und Claude Code sind installiert.')
+              : t('VibeDesk braucht Node.js und Claude Code. Mit einem Klick installiert:')}
         </p>
         <ToolSetupPanel />
         <div className="dlg-actions">
           <button className={`btn ${done ? 'primary' : 'ghost'}`} disabled={!!installing} onClick={close}>
-            {done ? 'Los geht’s' : 'Später'}
+            {done ? t('Los geht’s') : t('Später')}
           </button>
         </div>
       </div>

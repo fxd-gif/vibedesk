@@ -1,3 +1,4 @@
+import { locale, t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import type { DayStats, SessionStats } from '../../../shared/types'
@@ -30,18 +31,19 @@ export function wireStats(): void {
 }
 
 export function fmtTokens(n: number): string {
-  if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace('.', ',') + ' M'
-  if (n >= 1e3) return (n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace('.', ',') + ' k'
+  const dec = locale() === 'de-DE' ? ',' : '.'
+  if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 1 : 2).replace('.', dec) + ' M'
+  if (n >= 1e3) return (n / 1e3).toFixed(n >= 1e4 ? 0 : 1).replace('.', dec) + ' k'
   return String(n)
 }
 
 export function fmtUsd(n: number): string {
-  return n < 0.01 && n > 0 ? '< 0,01 $' : n.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' $'
+  return n < 0.01 && n > 0 ? t('< 0,01 $') : t('{amount} $', { amount: n.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
 }
 
 export function fmtDuration(ms: number): string {
   const m = Math.max(0, Math.floor(ms / 60000))
-  return m < 60 ? `${m} Min.` : `${Math.floor(m / 60)} Std. ${m % 60} Min.`
+  return m < 60 ? t('{m} Min.', { m }) : t('{h} Std. {m} Min.', { h: Math.floor(m / 60), m: m % 60 })
 }
 
 export function modelLabel(model: string | null): string {

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useDialog, type DialogSpec } from '../store/dialogStore'
+import { t } from '../../../shared/i18n'
 
 export function DialogHost(): React.JSX.Element | null {
   const d = useDialog((s) => s.current)
@@ -41,7 +42,7 @@ function DialogBox({ d }: { d: DialogSpec }): React.JSX.Element {
         <div className="dlg-actions">
           {d.kind !== 'alert' && (
             <button className="btn ghost" onClick={cancel}>
-              Abbrechen
+              {t('Abbrechen')}
             </button>
           )}
           {d.altLabel && (
@@ -57,7 +58,7 @@ function DialogBox({ d }: { d: DialogSpec }): React.JSX.Element {
             onClick={ok}
             data-testid="dialog-ok"
           >
-            {d.confirmLabel ?? (d.kind === 'alert' ? 'OK' : 'Bestätigen')}
+            {d.confirmLabel ?? (d.kind === 'alert' ? t('OK') : t('Bestätigen'))}
           </button>
         </div>
       </div>

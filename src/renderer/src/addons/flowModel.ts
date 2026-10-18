@@ -1,6 +1,7 @@
 // Flowchart-Modell des Addon-Makers: Knoten + Verbindungen ↔ BlocklyProgram (das Format, das Prüfung und Interpreter kennen).
 // Rein und ohne UI-Abhängigkeiten, damit testbar.
 import { BLOCKS, type BlocklyBlock, type BlocklyProgram } from '../../../shared/addonBlocks'
+import { t } from '../../../shared/i18n'
 
 /** Ausgänge: next (weiter), yes/no (Wenn, Frage), body (Schleife), a/b (Gleichzeitig), caseN/default (Je nach Wert) */
 export type Handle = string
@@ -74,116 +75,133 @@ const num = (v: number): Val => ({ k: 'num', v })
 const txt = (v: string): Val => ({ k: 'text', v })
 const hourCond = (): Cond => ({ join: 'AND', items: [{ a: { k: 'app', what: 'hour' }, op: 'GTE', b: num(22) }] })
 
-const trig = (label: string, desc: string, icon: string, fields?: Record<string, string | number>, category: Category = 'trigger'): KindDef => ({
-  label,
-  desc,
+// Beschriftungen als Funktionen (Getter), damit die Sprache beim Anzeigen gilt – nicht beim Import.
+// Standardwerte mit sichtbarem Text dürfen ebenfalls eine Funktion sein (für neue Knoten in der gewählten Sprache).
+type Defaults = KindDef['defaults'] | (() => KindDef['defaults'])
+const lazy = (d: Defaults): KindDef['defaults'] => (typeof d === 'function' ? d() : d)
+
+const trig = (label: () => string, desc: () => string, icon: string, fields?: Record<string, string | number> | (() => Record<string, string | number>), category: Category = 'trigger'): KindDef => ({
+  get label() {
+    return label()
+  },
+  get desc() {
+    return desc()
+  },
   category,
   icon,
   outputs: ['next'],
   values: [],
-  defaults: { fields }
+  get defaults() {
+    return { fields: typeof fields === 'function' ? fields() : fields }
+  }
 })
-const act = (label: string, desc: string, icon: string, category: Category, values: ValueSetting[] = [], defaults: KindDef['defaults'] = {}, outputs: Handle[] = ['next']): KindDef => ({
-  label,
-  desc,
+const act = (label: () => string, desc: () => string, icon: string, category: Category, values: ValueSetting[] = [], defaults: Defaults = {}, outputs: Handle[] = ['next']): KindDef => ({
+  get label() {
+    return label()
+  },
+  get desc() {
+    return desc()
+  },
   category,
   icon,
   outputs,
   values,
-  defaults
+  get defaults() {
+    return lazy(defaults)
+  }
 })
 
 export const KINDS: Record<string, KindDef> = {
-  vd_on_start: trig('VibeDesk startet', 'Läuft einmal, sobald VibeDesk (oder das Addon) startet.', 'power'),
-  vd_on_session_waiting: trig('Session wartet', 'Eine Claude-Session wartet auf deine Antwort.', 'hourglass'),
-  vd_on_session_done: trig('Session fertig', 'Eine Claude-Session ist mit ihrer Aufgabe fertig.', 'check'),
-  vd_on_focus: trig('Fokus-Timer', 'Reagiert auf Fokus-Beginn, Pause oder Ende.', 'timer', { PHASE: 'work' }),
-  vd_on_time: trig('Uhrzeit', 'Jeden Tag zu einer festen Uhrzeit.', 'clock', { HOUR: 22, MINUTE: 0 }),
-  vd_on_hotkey: trig('Tastenkürzel', 'Wenn du Strg + Alt + Taste drückst.', 'keyboard', { KEY: 'T' }),
-  vd_on_interval: trig('Intervall', 'Wiederholt sich alle paar Minuten.', 'repeat', { MINUTES: 30 }),
-  vd_on_command: trig('Makro-Befehl', 'Startet über die Befehls-Palette (Strg+K) als „Makro: Name“.', 'zap', { NAME: 'Mein Makro' }),
+  vd_on_start: trig(() => t('VibeDesk startet'), () => t('Läuft einmal, sobald VibeDesk (oder das Addon) startet.'), 'power'),
+  vd_on_session_waiting: trig(() => t('Session wartet'), () => t('Eine Claude-Session wartet auf deine Antwort.'), 'hourglass'),
+  vd_on_session_done: trig(() => t('Session fertig'), () => t('Eine Claude-Session ist mit ihrer Aufgabe fertig.'), 'check'),
+  vd_on_focus: trig(() => t('Fokus-Timer'), () => t('Reagiert auf Fokus-Beginn, Pause oder Ende.'), 'timer', { PHASE: 'work' }),
+  vd_on_time: trig(() => t('Uhrzeit'), () => t('Jeden Tag zu einer festen Uhrzeit.'), 'clock', { HOUR: 22, MINUTE: 0 }),
+  vd_on_hotkey: trig(() => t('Tastenkürzel'), () => t('Wenn du Strg + Alt + Taste drückst.'), 'keyboard', { KEY: 'T' }),
+  vd_on_interval: trig(() => t('Intervall'), () => t('Wiederholt sich alle paar Minuten.'), 'repeat', { MINUTES: 30 }),
+  vd_on_command: trig(() => t('Makro-Befehl'), () => t('Startet über die Befehls-Palette (Strg+K) als „Makro: Name“.'), 'zap', () => ({ NAME: t('Mein Makro') })),
 
-  vd_claude_start: act('Session öffnen', 'Öffnet eine Claude-Session im Projekt – oder nimmt die, die schon läuft.', 'play', 'claude', [], { fields: { PROJECT: '' } }),
-  vd_claude_send: act('Prompt an Claude', 'Schickt einen Prompt an die Session – auf Wunsch geht es erst weiter, wenn Claude fertig ist.', 'send', 'claude', [{ key: 'TEXT', label: 'Prompt', type: 'text' }], {
+  vd_claude_start: act(() => t('Session öffnen'), () => t('Öffnet eine Claude-Session im Projekt – oder nimmt die, die schon läuft.'), 'play', 'claude', [], { fields: { PROJECT: '' } }),
+  vd_claude_send: act(() => t('Prompt an Claude'), () => t('Schickt einen Prompt an die Session – auf Wunsch geht es erst weiter, wenn Claude fertig ist.'), 'send', 'claude', [{ key: 'TEXT', get label() { return t('Prompt') }, type: 'text' }], () => ({
     fields: { AWAIT: 'TRUE' },
-    values: { TEXT: txt('Schreib Tests für die zuletzt geänderten Dateien.') }
-  }),
-  vd_claude_wait: act('Warten bis Claude fertig', 'Wartet, bis die Session nicht mehr arbeitet – höchstens bis zum Zeitlimit.', 'hourglass', 'claude', [{ key: 'TIMEOUT', label: 'Höchstens', type: 'num', unit: 'min' }], {
+    values: { TEXT: txt(t('Schreib Tests für die zuletzt geänderten Dateien.')) }
+  })),
+  vd_claude_wait: act(() => t('Warten bis Claude fertig'), () => t('Wartet, bis die Session nicht mehr arbeitet – höchstens bis zum Zeitlimit.'), 'hourglass', 'claude', [{ key: 'TIMEOUT', get label() { return t('Höchstens') }, type: 'num', unit: 'min' }], {
     values: { TIMEOUT: num(30) }
   }),
 
-  vd_set_scene: act('Szene wechseln', 'Wechselt das Bild hinter der Scheibe.', 'image', 'action', [], { fields: { SCENE: 'city' } }),
-  vd_set_rain: act('Regen setzen', 'Stellt die Regenstärke ein.', 'rain', 'action', [{ key: 'VALUE', label: 'Stärke', type: 'num', unit: '%' }], { values: { VALUE: num(60) } }),
-  vd_change_rain: act('Regen ändern', 'Macht den Regen stärker oder schwächer.', 'rain', 'action', [{ key: 'DELTA', label: 'Änderung', type: 'num', unit: '%' }], { values: { DELTA: num(10) } }),
+  vd_set_scene: act(() => t('Szene wechseln'), () => t('Wechselt das Bild hinter der Scheibe.'), 'image', 'action', [], { fields: { SCENE: 'city' } }),
+  vd_set_rain: act(() => t('Regen setzen'), () => t('Stellt die Regenstärke ein.'), 'rain', 'action', [{ key: 'VALUE', get label() { return t('Stärke') }, type: 'num', unit: '%' }], { values: { VALUE: num(60) } }),
+  vd_change_rain: act(() => t('Regen ändern'), () => t('Macht den Regen stärker oder schwächer.'), 'rain', 'action', [{ key: 'DELTA', get label() { return t('Änderung') }, type: 'num', unit: '%' }], { values: { DELTA: num(10) } }),
   vd_fade: act(
-    'Überblenden',
-    'Fährt Regen oder Lautstärke sanft auf einen Zielwert.',
+    () => t('Überblenden'),
+    () => t('Fährt Regen oder Lautstärke sanft auf einen Zielwert.'),
     'fade',
     'action',
     [
-      { key: 'VALUE', label: 'Ziel', type: 'num', unit: '%' },
-      { key: 'SECONDS', label: 'Dauer', type: 'num', unit: 's' }
+      { key: 'VALUE', get label() { return t('Ziel') }, type: 'num', unit: '%' },
+      { key: 'SECONDS', get label() { return t('Dauer') }, type: 'num', unit: 's' }
     ],
     { fields: { CHANNEL: 'rain' }, values: { VALUE: num(80), SECONDS: num(10) } }
   ),
-  vd_set_volume: act('Lautstärke', 'Stellt die Lautstärke von Musik oder Regen ein.', 'volume', 'action', [{ key: 'VALUE', label: 'Lautstärke', type: 'num', unit: '%' }], {
+  vd_set_volume: act(() => t('Lautstärke'), () => t('Stellt die Lautstärke von Musik oder Regen ein.'), 'volume', 'action', [{ key: 'VALUE', get label() { return t('Lautstärke') }, type: 'num', unit: '%' }], {
     fields: { CHANNEL: 'music' },
     values: { VALUE: num(50) }
   }),
-  vd_music_onoff: act('Musik an/aus', 'Schaltet das Lofi-Radio ein oder aus.', 'music', 'action', [], { fields: { ON: 'TRUE' } }),
-  vd_play_sound: act('Ton abspielen', 'Spielt den Gong oder einen eigenen Ton.', 'bell', 'action', [], { fields: { SOUND: 'chime' } }),
-  vd_focus: act('Fokus-Timer', 'Startet oder stoppt den Fokus-Timer.', 'timer', 'action', [], { fields: { CMD: 'start' } }),
+  vd_music_onoff: act(() => t('Musik an/aus'), () => t('Schaltet das Lofi-Radio ein oder aus.'), 'music', 'action', [], { fields: { ON: 'TRUE' } }),
+  vd_play_sound: act(() => t('Ton abspielen'), () => t('Spielt den Gong oder einen eigenen Ton.'), 'bell', 'action', [], { fields: { SOUND: 'chime' } }),
+  vd_focus: act(() => t('Fokus-Timer'), () => t('Startet oder stoppt den Fokus-Timer.'), 'timer', 'action', [], { fields: { CMD: 'start' } }),
 
-  controls_if: act('Wenn / Sonst', 'Verzweigt je nachdem, ob die Bedingung stimmt.', 'branch', 'logic', [], { cond: hourCond() }, ['yes', 'no']),
-  vd_switch: act('Je nach Wert', 'Ein Ausgang pro Fall – ideal für Wochentage, Stunden oder Zähler.', 'switch', 'logic', [{ key: 'VALUE', label: 'Wert', type: 'any' }], {
+  controls_if: act(() => t('Wenn / Sonst'), () => t('Verzweigt je nachdem, ob die Bedingung stimmt.'), 'branch', 'logic', [], { cond: hourCond() }, ['yes', 'no']),
+  vd_switch: act(() => t('Je nach Wert'), () => t('Ein Ausgang pro Fall – ideal für Wochentage, Stunden oder Zähler.'), 'switch', 'logic', [{ key: 'VALUE', get label() { return t('Wert') }, type: 'any' }], {
     values: { VALUE: { k: 'app', what: 'weekday' } },
     cases: ['1', '6', '7']
   }),
-  controls_repeat_ext: act('Wiederholen', 'Führt den Schleifen-Zweig mehrmals aus, danach geht es weiter.', 'repeat', 'logic', [{ key: 'TIMES', label: 'Wie oft', type: 'num', unit: '×' }], { values: { TIMES: num(3) } }, [
+  controls_repeat_ext: act(() => t('Wiederholen'), () => t('Führt den Schleifen-Zweig mehrmals aus, danach geht es weiter.'), 'repeat', 'logic', [{ key: 'TIMES', get label() { return t('Wie oft') }, type: 'num', unit: '×' }], { values: { TIMES: num(3) } }, [
     'body',
     'next'
   ]),
-  vd_forever: act('Endlos', 'Wiederholt den Schleifen-Zweig immer wieder (mind. 0,1 s pro Runde).', 'infinity', 'logic', [], {}, ['body']),
-  vd_wait: act('Warten', 'Pausiert, bevor es weitergeht.', 'clock', 'logic', [{ key: 'SECONDS', label: 'Dauer', type: 'num', unit: 's' }], { values: { SECONDS: num(1) } }),
-  variables_set: act('Variable setzen', 'Merkt sich einen Wert unter einem Namen.', 'variable', 'logic', [{ key: 'VALUE', label: 'Wert', type: 'any' }], { varName: 'zähler', values: { VALUE: num(0) } }),
-  math_change: act('Variable ändern', 'Zählt eine Variable hoch oder runter.', 'variable', 'logic', [{ key: 'DELTA', label: 'Um', type: 'num' }], { varName: 'zähler', values: { DELTA: num(1) } }),
-  vd_store_set: act('Dauerhaft merken', 'Speichert einen Wert, der auch einen Neustart überlebt.', 'save', 'logic', [{ key: 'VALUE', label: 'Wert', type: 'any' }], {
+  vd_forever: act(() => t('Endlos'), () => t('Wiederholt den Schleifen-Zweig immer wieder (mind. 0,1 s pro Runde).'), 'infinity', 'logic', [], {}, ['body']),
+  vd_wait: act(() => t('Warten'), () => t('Pausiert, bevor es weitergeht.'), 'clock', 'logic', [{ key: 'SECONDS', get label() { return t('Dauer') }, type: 'num', unit: 's' }], { values: { SECONDS: num(1) } }),
+  variables_set: act(() => t('Variable setzen'), () => t('Merkt sich einen Wert unter einem Namen.'), 'variable', 'logic', [{ key: 'VALUE', get label() { return t('Wert') }, type: 'any' }], { varName: 'zähler', values: { VALUE: num(0) } }),
+  math_change: act(() => t('Variable ändern'), () => t('Zählt eine Variable hoch oder runter.'), 'variable', 'logic', [{ key: 'DELTA', get label() { return t('Um') }, type: 'num' }], { varName: 'zähler', values: { DELTA: num(1) } }),
+  vd_store_set: act(() => t('Dauerhaft merken'), () => t('Speichert einen Wert, der auch einen Neustart überlebt.'), 'save', 'logic', [{ key: 'VALUE', get label() { return t('Wert') }, type: 'any' }], {
     fields: { KEY: 'zähler' },
     values: { VALUE: num(0) }
   }),
 
-  vd_show_notice: act('Hinweis', 'Zeigt einen kurzen Hinweis oben im Bild.', 'message', 'tool', [{ key: 'TEXT', label: 'Text', type: 'text' }], { values: { TEXT: txt('Zeit für eine Pause!') } }),
+  vd_show_notice: act(() => t('Hinweis'), () => t('Zeigt einen kurzen Hinweis oben im Bild.'), 'message', 'tool', [{ key: 'TEXT', get label() { return t('Text') }, type: 'text' }], () => ({ values: { TEXT: txt(t('Zeit für eine Pause!')) } })),
   vd_ask: act(
-    'Frage',
-    'Fragt dich mit zwei Knöpfen – je nach Antwort geht es anders weiter.',
+    () => t('Frage'),
+    () => t('Fragt dich mit zwei Knöpfen – je nach Antwort geht es anders weiter.'),
     'ask',
     'tool',
-    [{ key: 'TEXT', label: 'Frage', type: 'text' }],
-    { fields: { YES_LABEL: 'Ja', NO_LABEL: 'Später' }, values: { TEXT: txt('Kurze Pause machen?') } },
+    [{ key: 'TEXT', get label() { return t('Frage') }, type: 'text' }],
+    () => ({ fields: { YES_LABEL: t('Ja'), NO_LABEL: t('Später') }, values: { TEXT: txt(t('Kurze Pause machen?')) } }),
     ['yes', 'no']
   ),
-  vd_copy_text: act('Zwischenablage', 'Kopiert Text, z. B. eine Prompt-Vorlage.', 'clipboard', 'tool', [{ key: 'TEXT', label: 'Text', type: 'text' }], { values: { TEXT: txt('') } }),
+  vd_copy_text: act(() => t('Zwischenablage'), () => t('Kopiert Text, z. B. eine Prompt-Vorlage.'), 'clipboard', 'tool', [{ key: 'TEXT', get label() { return t('Text') }, type: 'text' }], { values: { TEXT: txt('') } }),
 
-  vd_on_signal: trig('Signal empfangen', 'Startet, wenn irgendwo im Addon dieses Signal gesendet wird.', 'radio', { NAME: 'mein-signal' }, 'advanced'),
-  vd_emit: act('Signal senden', 'Löst alle „Signal empfangen“ mit diesem Namen aus – optional wartend wie ein Unterprogramm.', 'send', 'advanced', [], {
+  vd_on_signal: trig(() => t('Signal empfangen'), () => t('Startet, wenn irgendwo im Addon dieses Signal gesendet wird.'), 'radio', { NAME: 'mein-signal' }, 'advanced'),
+  vd_emit: act(() => t('Signal senden'), () => t('Löst alle „Signal empfangen“ mit diesem Namen aus – optional wartend wie ein Unterprogramm.'), 'send', 'advanced', [], {
     fields: { NAME: 'mein-signal', WAIT: 'FALSE' }
   }),
-  vd_parallel: act('Gleichzeitig', 'Startet zwei Zweige parallel; „Danach“ läuft, wenn beide fertig sind.', 'parallel', 'advanced', [], {}, ['a', 'b', 'next']),
-  vd_wait_until: act('Warten bis', 'Wartet, bis die Bedingung stimmt – höchstens bis zum Zeitlimit.', 'hourglass', 'advanced', [{ key: 'TIMEOUT', label: 'Höchstens', type: 'num', unit: 's' }], {
+  vd_parallel: act(() => t('Gleichzeitig'), () => t('Startet zwei Zweige parallel; „Danach“ läuft, wenn beide fertig sind.'), 'parallel', 'advanced', [], {}, ['a', 'b', 'next']),
+  vd_wait_until: act(() => t('Warten bis'), () => t('Wartet, bis die Bedingung stimmt – höchstens bis zum Zeitlimit.'), 'hourglass', 'advanced', [{ key: 'TIMEOUT', get label() { return t('Höchstens') }, type: 'num', unit: 's' }], {
     cond: { join: 'AND', items: [{ a: { k: 'app', what: 'waiting_sessions' }, op: 'EQ', b: num(0) }] },
     values: { TIMEOUT: num(300) }
   }),
-  vd_gate: act('Drossel', 'Lässt den Ablauf nur alle X Sekunden durch – sonst endet er hier.', 'gate', 'advanced', [{ key: 'SECONDS', label: 'Höchstens alle', type: 'num', unit: 's' }], {
+  vd_gate: act(() => t('Drossel'), () => t('Lässt den Ablauf nur alle X Sekunden durch – sonst endet er hier.'), 'gate', 'advanced', [{ key: 'SECONDS', get label() { return t('Höchstens alle') }, type: 'num', unit: 's' }], {
     values: { SECONDS: num(60) }
   }),
-  vd_list_add: act('Zur Liste hinzufügen', 'Hängt einen Wert an eine Liste an (max. 500 Einträge).', 'list', 'advanced', [{ key: 'VALUE', label: 'Wert', type: 'any' }], {
+  vd_list_add: act(() => t('Zur Liste hinzufügen'), () => t('Hängt einen Wert an eine Liste an (max. 500 Einträge).'), 'list', 'advanced', [{ key: 'VALUE', get label() { return t('Wert') }, type: 'any' }], {
     varName: 'liste',
     values: { VALUE: txt('') }
   }),
-  vd_list_clear: act('Liste leeren', 'Entfernt alle Einträge einer Liste.', 'list', 'advanced', [], { varName: 'liste' })
+  vd_list_clear: act(() => t('Liste leeren'), () => t('Entfernt alle Einträge einer Liste.'), 'list', 'advanced', [], { varName: 'liste' })
 }
 
-export const CATEGORY_LABELS: Record<Category, string> = { trigger: 'Auslöser', claude: 'Claude', action: 'Aktionen', logic: 'Logik', tool: 'Werkzeuge', advanced: 'Erweitert' }
+export const CATEGORY_LABELS = (): Record<Category, string> => ({ trigger: t('Auslöser'), claude: 'Claude', action: t('Aktionen'), logic: t('Logik'), tool: t('Werkzeuge'), advanced: t('Erweitert') })
 
 export const isTrigger = (type: string): boolean => BLOCKS[type]?.category === 'event'
 

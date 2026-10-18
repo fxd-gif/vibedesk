@@ -1,4 +1,5 @@
 // Notizen des Gehirns als Markdown-Dateien im Projekt (.vibedesk/brain) – Obsidian kann den Ordner direkt öffnen.
+import { t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import { BRAIN_DIR, LIMITS, NOTE_TYPES, cleanTitle, noteFileName, parseNote, serializeNote, titleKey, type NoteMeta, type NoteType } from '../shared/brain'
@@ -94,12 +95,12 @@ export class BrainStore {
   write(input: NoteInput, now = Date.now()): { note: NoteMeta; created: boolean } {
     const title = cleanTitle(input.title)
     const file = noteFileName(title)
-    if (!file) throw new Error('Ungültiger Titel')
+    if (!file) throw new Error(t('Ungültiger Titel'))
     const body = String(input.body ?? '').slice(0, LIMITS.bodyLen)
-    if (!body.trim()) throw new Error('Die Notiz ist leer')
+    if (!body.trim()) throw new Error(t('Die Notiz ist leer'))
     const existing = this.find(title)
     const old = existing ? this.get(title) : null
-    if (!old && this.list().length >= LIMITS.notes) throw new Error(`Das Gehirn ist voll (${LIMITS.notes} Notizen) – fasse Notizen zusammen oder lösche alte.`)
+    if (!old && this.list().length >= LIMITS.notes) throw new Error(t('Das Gehirn ist voll ({max} Notizen) – fasse Notizen zusammen oder lösche alte.', { max: LIMITS.notes }))
     const type: NoteType = NOTE_TYPES.includes(input.type as NoteType) ? (input.type as NoteType) : (old?.type ?? 'fact')
     const list = (v: string[] | undefined, fallback: string[], max: number): string[] =>
       Array.isArray(v) ? [...new Set(v.map((x) => String(x).trim().replace(/\\/g, '/')).filter(Boolean))].slice(0, max) : fallback
@@ -133,10 +134,10 @@ export class BrainStore {
 
   rename(from: string, to: string): NoteMeta {
     const f = this.find(from)
-    if (!f) throw new Error('Notiz nicht gefunden')
+    if (!f) throw new Error(t('Notiz nicht gefunden'))
     const file = noteFileName(to)
-    if (!file) throw new Error('Ungültiger Titel')
-    if (titleKey(from) !== titleKey(to) && this.find(to)) throw new Error('Eine Notiz mit diesem Titel gibt es schon')
+    if (!file) throw new Error(t('Ungültiger Titel'))
+    if (titleKey(from) !== titleKey(to) && this.find(to)) throw new Error(t('Eine Notiz mit diesem Titel gibt es schon'))
     const target = path.join(path.dirname(f), file)
     fs.renameSync(f, target)
     // Links in anderen Notizen mitziehen, damit der Graph zusammenhält

@@ -1,5 +1,6 @@
 // Vibe-Lounge: P2P-Co-Working über WebRTC (trystero). Signalisierung über öffentliche Nostr-Relays,
 // verschlüsselt mit dem Raumcode – Daten fließen danach direkt zwischen den Teilnehmern.
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import type { Room } from 'trystero'
 import {
@@ -13,7 +14,7 @@ import {
   newRoomCode,
   normalizeRoomCode,
   RateLimiter,
-  STATUS_LABEL,
+  statusLabel,
   type LoungePresence,
   type LoungeStatus
 } from '../../../shared/lounge'
@@ -135,7 +136,7 @@ function sendPresence(force = false, target?: string): void {
 
 export async function joinLounge(input: string): Promise<string | null> {
   const code = normalizeRoomCode(input)
-  if (!code) return 'Ungültiger Raumcode – er hat 12 Zeichen, z. B. abcd-efgh-jkmn.'
+  if (!code) return t('Ungültiger Raumcode – er hat 12 Zeichen, z. B. abcd-efgh-jkmn.')
   await leaveLounge()
   useLounge.setState({ room: code, state: 'joining', peers: {}, chat: [], unread: 0, invite: null })
   const { joinRoom } = await import('trystero')
@@ -168,7 +169,7 @@ export async function joinLounge(input: string): Promise<string | null> {
       const { [id]: _gone, ...rest } = st.peers
       return { peers: rest }
     })
-    pushMsg({ kind: 'system', name: p.p.name, emoji: p.p.emoji, text: 'hat die Lounge verlassen' })
+    pushMsg({ kind: 'system', name: p.p.name, emoji: p.p.emoji, text: t('hat die Lounge verlassen') })
   }
   presence.onMessage = (data, { peerId }) => {
     if (!limits.allow(peerId + ':p')) return
@@ -178,10 +179,10 @@ export async function joinLounge(input: string): Promise<string | null> {
     if (!prev && Object.keys(useLounge.getState().peers).length >= MAX_PEERS) return
     useLounge.setState((st) => ({ state: 'joined', peers: { ...st.peers, [peerId]: { id: peerId, p, at: Date.now() } } }))
     if (!prev) {
-      pushMsg({ kind: 'system', name: p.name, emoji: p.emoji, text: 'ist da 👋' })
+      pushMsg({ kind: 'system', name: p.name, emoji: p.emoji, text: t('ist da 👋') })
       sendPresence(true, peerId)
     } else if (prev.p.status !== p.status && (p.status === 'done' || p.status === 'error') && prev.p.status === 'working') {
-      pushMsg({ kind: 'system', name: p.name, emoji: p.emoji, text: p.status === 'done' ? '✓ Claude ist fertig' : STATUS_LABEL.error })
+      pushMsg({ kind: 'system', name: p.name, emoji: p.emoji, text: p.status === 'done' ? t('✓ Claude ist fertig') : statusLabel('error') })
     }
   }
   chat.onMessage = (data, { peerId }) => {
@@ -201,7 +202,7 @@ export async function joinLounge(input: string): Promise<string | null> {
     if (!inv) return
     const p = peer(peerId)!
     useLounge.setState({ invite: { name: p.p.name, minutes: inv.minutes, ts: Date.now() } })
-    pushMsg({ kind: 'system', name: p.p.name, emoji: p.p.emoji, text: `startet eine Fokus-Runde (${inv.minutes} Min.)` })
+    pushMsg({ kind: 'system', name: p.p.name, emoji: p.p.emoji, text: t('startet eine Fokus-Runde ({minutes} Min.)', { minutes: inv.minutes }) })
   }
 
   useLounge.setState({ state: 'joined' })
@@ -239,7 +240,7 @@ export function inviteFocus(): void {
   const f = useFocus.getState()
   if (f.state.phase === 'idle') f.act('start')
   const s = useSettings.getState().s
-  pushMsg({ kind: 'system', name: myName(), emoji: s?.lounge.emoji || AVATARS[0], text: `startet eine Fokus-Runde (${minutes} Min.) für alle`, self: true })
+  pushMsg({ kind: 'system', name: myName(), emoji: s?.lounge.emoji || AVATARS[0], text: t('startet eine Fokus-Runde ({minutes} Min.) für alle', { minutes }), self: true })
 }
 
 export function acceptInvite(): void {

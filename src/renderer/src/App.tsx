@@ -59,6 +59,7 @@ import { useAddons } from './store/addonStore'
 import { wireBrainActivity } from './store/brainActivity'
 import { wirePermissions } from './store/permissionStore'
 import { wireCompanion } from './store/companionStore'
+import { t } from '../../shared/i18n'
 
 
 const initials = (n: string): string => {
@@ -222,7 +223,7 @@ export default function App(): React.JSX.Element {
     if (id === 'lounge')
       return {
         ...panelItem('lounge'),
-        label: loungeState === 'off' ? 'Vibe-Lounge' : `Vibe-Lounge · ${loungePeers + 1} online${loungeUnread ? ` · ${loungeUnread} neu` : ''}`,
+        label: loungeState === 'off' ? t('Vibe-Lounge') : loungeUnread ? t('Vibe-Lounge · {n} online · {unread} neu', { n: loungePeers + 1, unread: loungeUnread }) : t('Vibe-Lounge · {n} online', { n: loungePeers + 1 }),
         badge: loungeUnread ? <span className="dock-count">{loungeUnread > 9 ? '9+' : loungeUnread}</span> : loungeState !== 'off' ? <span className="dot done" /> : undefined
       }
     return panelItem(id)
@@ -261,15 +262,15 @@ export default function App(): React.JSX.Element {
       <Dock
         groups={[
           [
-            { id: 'palette', icon: 'command', label: 'Befehle (Strg+K)', hint: 'Alles per Suche: Fenster, Projekte, Aktionen', active: paletteOpen, onClick: () => usePalette.getState().show(!paletteOpen) },
+            { id: 'palette', icon: 'command', label: t('Befehle (Strg+K)'), hint: t('Alles per Suche: Fenster, Projekte, Aktionen'), active: paletteOpen, onClick: () => usePalette.getState().show(!paletteOpen) },
             panelItem('projects')
           ],
           [
             {
               id: 'ambience',
               icon: 'rain',
-              label: settings?.musicOn && audioState.musicOffline ? 'Atmosphäre · Lofi-Radio offline' : 'Atmosphäre & Musik',
-              hint: 'Szene, Regen und Lofi-Radio',
+              label: settings?.musicOn && audioState.musicOffline ? t('Atmosphäre · Lofi-Radio offline') : t('Atmosphäre & Musik'),
+              hint: t('Szene, Regen und Lofi-Radio'),
               active: menu,
               className: settings?.musicOn && audioState.musicOffline ? 'offline' : undefined,
               badge: settings?.musicOn && !isMuted(settings.musicVolume) && !audioState.musicOffline ? <span className="dock-eq" aria-hidden><i /><i /><i /></span> : undefined,
@@ -279,7 +280,7 @@ export default function App(): React.JSX.Element {
               const def = panelDef('focus')!
               return {
                 id: 'focus',
-                label: focusPhase === 'idle' ? 'Fokus-Timer' : `${focusPhase === 'work' ? 'Fokus' : 'Pause'} · noch ${focusMinutes} min`,
+                label: focusPhase === 'idle' ? t('Fokus-Timer') : focusPhase === 'work' ? t('Fokus · noch {n} min', { n: focusMinutes }) : t('Pause · noch {n} min', { n: focusMinutes }),
                 active: isOn('focus'),
                 onClick: () => ui.toggleWin('focus', centeredRect(def.w, def.h)),
                 content: <FocusRing />
@@ -309,19 +310,19 @@ export default function App(): React.JSX.Element {
           [
             ...plan.dock.map(toolItem),
             ...(showPreviewInDock(dockCtx, Object.keys(previews).length)
-              ? [{ id: 'preview', icon: 'globe', label: 'Browser-Vorschau', hint: 'Deine App live ansehen – Dev-Server werden erkannt', active: Object.keys(previews).length > 0, onClick: () => usePreview.getState().openPreview(Object.values(usePreview.getState().urls).flat()[0]) }]
+              ? [{ id: 'preview', icon: 'globe', label: t('Browser-Vorschau'), hint: t('Deine App live ansehen – Dev-Server werden erkannt'), active: Object.keys(previews).length > 0, onClick: () => usePreview.getState().openPreview(Object.values(usePreview.getState().urls).flat()[0]) }]
               : [])
           ],
           [
             {
               id: 'notify',
               icon: 'bell',
-              label: notifyUnread ? `Mitteilungen · ${notifyUnread} neu` : 'Mitteilungen',
+              label: notifyUnread ? t('Mitteilungen · {n} neu', { n: notifyUnread }) : t('Mitteilungen'),
               active: notifyOpen,
               badge: notifyUnread ? <span className="dock-count">{notifyUnread > 9 ? '9+' : notifyUnread}</span> : undefined,
               onClick: () => setNotifyPanel(!notifyOpen)
             },
-            { id: 'more', icon: 'more', label: 'Mehr', hint: 'Weitere Fenster und Werkzeuge', active: more, onClick: () => setMore((m) => !m) }
+            { id: 'more', icon: 'more', label: t('Mehr'), hint: t('Weitere Fenster und Werkzeuge'), active: more, onClick: () => setMore((m) => !m) }
           ]
         ]}
       />
@@ -350,7 +351,7 @@ export default function App(): React.JSX.Element {
       )}
       {holding && (
         <div className="esc-hint">
-          Esc gedrückt halten, um das Vollbild zu verlassen
+          {t('Esc gedrückt halten, um das Vollbild zu verlassen')}
           <i />
         </div>
       )}

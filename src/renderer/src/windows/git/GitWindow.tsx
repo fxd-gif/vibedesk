@@ -1,7 +1,7 @@
 // Git & GitHub: Änderungen ansehen, vormerken, committen (mit KI-Nachricht), Verlauf, Push/Pull, Anmeldung.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, errorText } from '../../api'
-import { STATUS_LABEL, isStaged, isUnstaged, letter, type GitCommit, type GitFile, type GitState, type GitStatus } from '../../../../shared/git'
+import { isStaged, isUnstaged, letter, type GitCommit, type GitFile, type GitState, type GitStatus } from '../../../../shared/git'
 import type { Project } from '../../../../shared/types'
 import { Icon } from '../../desktop/icons'
 import { activeProjectId } from '../../store/activeProject'
@@ -10,9 +10,32 @@ import { inform } from '../../store/notifyStore'
 import { relTime } from '../../util'
 import { DiffView } from './DiffView'
 import { cancelLogin, githubLogin, installTool, refreshTools, useGitAuth, withAuth } from './gitAuth'
+import { t } from '../../../../shared/i18n'
 import './git.css'
 
 const POLL_MS = 3000
+
+/** Anzeigename eines Status-Buchstabens (M, N, D …) */
+function statusLabel(l: string): string {
+  switch (l) {
+    case 'M':
+      return t('geändert')
+    case 'N':
+      return t('neu')
+    case 'D':
+      return t('gelöscht')
+    case 'R':
+      return t('umbenannt')
+    case 'C':
+      return t('kopiert')
+    case 'T':
+      return t('Typ geändert')
+    case 'U':
+      return t('Konflikt')
+    default:
+      return l
+  }
+}
 
 interface Sel {
   path: string
@@ -27,7 +50,7 @@ function InstallLog(): React.JSX.Element | null {
   if (!install) return null
   return (
     <div className="git-install">
-      <span className="spin" /> {install.tool === 'git' ? 'Git' : 'GitHub-CLI'} wird installiert …
+      <span className="spin" /> {t('{tool} wird installiert …', { tool: install.tool === 'git' ? 'Git' : 'GitHub CLI' })}
       {install.lines.length > 0 && <pre>{install.lines.join('\n')}</pre>}
     </div>
   )
@@ -39,15 +62,15 @@ function NoGit(): React.JSX.Element {
   return (
     <div className="git-gate" data-testid="git-missing">
       <Icon name="github" size={32} />
-      <h3>Git ist nicht installiert</h3>
-      <p>Git merkt sich jede Version deines Projekts – damit kannst du Änderungen ansehen, zurücknehmen und zu GitHub hochladen.</p>
+      <h3>{t('Git ist nicht installiert')}</h3>
+      <p>{t('Git merkt sich jede Version deines Projekts – damit kannst du Änderungen ansehen, zurücknehmen und zu GitHub hochladen.')}</p>
       {tools?.winget ? (
         <button className="btn primary" disabled={busy} onClick={() => void installTool('git')} data-testid="git-install">
-          <Icon name="plus" size={14} /> Git installieren
+          <Icon name="plus" size={14} /> {t('Git installieren')}
         </button>
       ) : (
         <button className="btn primary" onClick={() => api.git.openWeb('https://git-scm.com/download/win')}>
-          <Icon name="external" size={14} /> git-scm.com öffnen
+          <Icon name="external" size={14} /> {t('git-scm.com öffnen')}
         </button>
       )}
       <InstallLog />
@@ -63,13 +86,13 @@ function LoginOverlay(): React.JSX.Element | null {
     <div className="git-login" data-testid="git-login">
       <div className="git-login-card">
         <Icon name="github" size={28} />
-        <h3>Bei GitHub anmelden</h3>
+        <h3>{t('Bei GitHub anmelden')}</h3>
         {login.code ? (
           <>
-            <p>Dein Browser hat sich geöffnet. Gib dort diesen Code ein und bestätige:</p>
+            <p>{t('Dein Browser hat sich geöffnet. Gib dort diesen Code ein und bestätige:')}</p>
             <button
               className="git-code mono"
-              title="Kopieren"
+              title={t('Kopieren')}
               onClick={() => {
                 void navigator.clipboard.writeText(login.code!)
                 setCopied(true)
@@ -79,22 +102,22 @@ function LoginOverlay(): React.JSX.Element | null {
               <Icon name={copied ? 'check' : 'copy'} size={16} />
             </button>
             <p className="dim small">
-              Kein Browser?{' '}
+              {t('Kein Browser?')}{' '}
               <button className="linkish" onClick={() => api.git.openWeb(login.url)}>
                 {login.url.replace('https://', '')}
               </button>
             </p>
             <p className="dim small">
-              <span className="spin" /> Warte auf deine Bestätigung …
+              <span className="spin" /> {t('Warte auf deine Bestätigung …')}
             </p>
           </>
         ) : (
           <p className="dim">
-            <span className="spin" /> GitHub wird vorbereitet …
+            <span className="spin" /> {t('GitHub wird vorbereitet …')}
           </p>
         )}
         <button className="btn small ghost" onClick={cancelLogin}>
-          Abbrechen
+          {t('Abbrechen')}
         </button>
       </div>
     </div>
@@ -107,21 +130,21 @@ function Account({ needed }: { needed: boolean }): React.JSX.Element | null {
   if (!tools) return null
   if (tools.gh === 'loggedIn')
     return (
-      <button className="git-account" title="Bei GitHub angemeldet" onClick={() => api.git.openWeb(`https://github.com/${tools.ghUser ?? ''}`)} data-testid="git-account">
+      <button className="git-account" title={t('Bei GitHub angemeldet')} onClick={() => api.git.openWeb(`https://github.com/${tools.ghUser ?? ''}`)} data-testid="git-account">
         <i className="dot done" /> {tools.ghUser ?? 'GitHub'}
       </button>
     )
   if (tools.gh === 'loggedOut')
     return (
       <button className={`btn small${needed ? ' primary' : ''}`} disabled={busy} onClick={() => void githubLogin()} data-testid="git-login-btn">
-        <Icon name="github" size={13} /> Bei GitHub anmelden
+        <Icon name="github" size={13} /> {t('Bei GitHub anmelden')}
       </button>
     )
   // gh fehlt: nur anbieten, wenn GitHub gerade gebraucht wird
   if (!needed || !tools.winget) return null
   return (
-    <button className="btn small" disabled={busy} onClick={() => void installTool('gh').then((ok) => ok && githubLogin())} title="Die GitHub-CLI übernimmt die Anmeldung für Push und Pull">
-      <Icon name="github" size={13} /> GitHub verbinden
+    <button className="btn small" disabled={busy} onClick={() => void installTool('gh').then((ok) => ok && githubLogin())} title={t('Die GitHub-CLI übernimmt die Anmeldung für Push und Pull')}>
+      <Icon name="github" size={13} /> {t('GitHub verbinden')}
     </button>
   )
 }
@@ -133,7 +156,7 @@ function FileRow({ f, staged, active, onSelect, onToggle, onDiscard }: { f: GitF
   const slash = f.path.lastIndexOf('/')
   return (
     <li className={`git-file${active ? ' on' : ''}`} onClick={onSelect} data-testid={`git-file-${f.path}`}>
-      <span className={`git-letter l-${l}`} title={STATUS_LABEL[l] ?? l}>
+      <span className={`git-letter l-${l}`} title={statusLabel(l)}>
         {l}
       </span>
       <span className="git-name" title={f.orig ? `${f.orig} → ${f.path}` : f.path}>
@@ -142,11 +165,11 @@ function FileRow({ f, staged, active, onSelect, onToggle, onDiscard }: { f: GitF
       </span>
       <span className="git-row-actions">
         {onDiscard && (
-          <button title="Änderungen verwerfen" onClick={(e) => (e.stopPropagation(), onDiscard())}>
+          <button title={t('Änderungen verwerfen')} onClick={(e) => (e.stopPropagation(), onDiscard())}>
             <Icon name="restart" size={13} />
           </button>
         )}
-        <button title={staged ? 'Zurücknehmen' : 'Vormerken'} onClick={(e) => (e.stopPropagation(), onToggle())} data-testid={`git-toggle-${f.path}`}>
+        <button title={staged ? t('Zurücknehmen') : t('Vormerken')} onClick={(e) => (e.stopPropagation(), onToggle())} data-testid={`git-toggle-${f.path}`}>
           <Icon name={staged ? 'back' : 'plus'} size={13} />
         </button>
       </span>
@@ -199,12 +222,12 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
   const discard = async (files: GitFile[]): Promise<void> => {
     const one = files.length === 1 ? files[0] : null
     const ok = await confirm({
-      title: one ? `Änderungen an „${one.path}“ verwerfen?` : `${files.length} Änderungen verwerfen?`,
-      message: one?.untracked ? 'Die neue Datei wandert in den Papierkorb.' : 'Die Datei wird auf den letzten Commit zurückgesetzt. Neue Dateien wandern in den Papierkorb.',
-      confirmLabel: 'Verwerfen',
+      title: one ? t('Änderungen an „{path}“ verwerfen?', { path: one.path }) : t('{n} Änderungen verwerfen?', { n: files.length }),
+      message: one?.untracked ? t('Die neue Datei wandert in den Papierkorb.') : t('Die Datei wird auf den letzten Commit zurückgesetzt. Neue Dateien wandern in den Papierkorb.'),
+      confirmLabel: t('Verwerfen'),
       danger: true
     })
-    if (ok) await act('Verwerfen fehlgeschlagen', () => api.git.discard(projectId, files.map((f) => ({ path: f.path, untracked: f.untracked }))))
+    if (ok) await act(t('Verwerfen fehlgeschlagen'), () => api.git.discard(projectId, files.map((f) => ({ path: f.path, untracked: f.untracked }))))
   }
 
   const all = staged.length === 0
@@ -215,9 +238,9 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
     try {
       const hash = await api.git.commit(projectId, msg, all)
       setMsg('')
-      inform(`Commit ${hash}`, msg.split('\n')[0], st.remoteUrl ? [{ label: 'Pushen', primary: true, run: () => void withAuth('Push fehlgeschlagen', () => api.git.push(projectId, !!st.upstream)).then(reload) }] : undefined)
+      inform(t('Commit {hash}', { hash }), msg.split('\n')[0], st.remoteUrl ? [{ label: t('Pushen'), primary: true, run: () => void withAuth(t('Push fehlgeschlagen'), () => api.git.push(projectId, !!st.upstream)).then(reload) }] : undefined)
     } catch (err) {
-      await alert('Commit fehlgeschlagen', errorText(err))
+      await alert(t('Commit fehlgeschlagen'), errorText(err))
     } finally {
       setBusy(false)
       await reload()
@@ -229,7 +252,7 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
     try {
       setMsg(await api.git.aiMessage(projectId))
     } catch (err) {
-      await alert('Keine KI-Nachricht', errorText(err))
+      await alert(t('Keine KI-Nachricht'), errorText(err))
     } finally {
       setAi(false)
     }
@@ -244,7 +267,7 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
           staged={isSt}
           active={sel?.path === f.path && sel.staged === isSt}
           onSelect={() => setSel({ path: f.path, staged: isSt, untracked: f.untracked })}
-          onToggle={() => void act(isSt ? 'Zurücknehmen fehlgeschlagen' : 'Vormerken fehlgeschlagen', () => (isSt ? api.git.unstage(projectId, [f.path], st.unborn) : api.git.stage(projectId, [f.path])))}
+          onToggle={() => void act(isSt ? t('Zurücknehmen fehlgeschlagen') : t('Vormerken fehlgeschlagen'), () => (isSt ? api.git.unstage(projectId, [f.path], st.unborn) : api.git.stage(projectId, [f.path])))}
           onDiscard={isSt ? undefined : () => void discard([f])}
         />
       ))}
@@ -257,17 +280,17 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
         <div className="git-lists">
           {!st.files.length && (
             <div className="panel-empty">
-              Alles committet.
+              {t('Alles committet.')}
               <br />
-              Sobald du oder Claude etwas änderst, erscheint es hier.
+              {t('Sobald du oder Claude etwas änderst, erscheint es hier.')}
             </div>
           )}
           {staged.length > 0 && (
             <>
               <div className="git-group">
-                <span>Vorgemerkt · {staged.length}</span>
-                <button className="linkish" disabled={busy} onClick={() => void act('Zurücknehmen fehlgeschlagen', () => api.git.unstage(projectId, staged.map((f) => f.path), st.unborn))}>
-                  alle zurücknehmen
+                <span>{t('Vorgemerkt · {n}', { n: staged.length })}</span>
+                <button className="linkish" disabled={busy} onClick={() => void act(t('Zurücknehmen fehlgeschlagen'), () => api.git.unstage(projectId, staged.map((f) => f.path), st.unborn))}>
+                  {t('alle zurücknehmen')}
                 </button>
               </div>
               {list(staged, true)}
@@ -276,13 +299,13 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
           {unstaged.length > 0 && (
             <>
               <div className="git-group">
-                <span>Änderungen · {unstaged.length}</span>
+                <span>{t('Änderungen · {n}', { n: unstaged.length })}</span>
                 <span>
                   <button className="linkish" disabled={busy} onClick={() => void discard(unstaged)}>
-                    verwerfen
+                    {t('verwerfen')}
                   </button>
-                  <button className="linkish" disabled={busy} onClick={() => void act('Vormerken fehlgeschlagen', () => api.git.stageAll(projectId))} data-testid="git-stage-all">
-                    alle vormerken
+                  <button className="linkish" disabled={busy} onClick={() => void act(t('Vormerken fehlgeschlagen'), () => api.git.stageAll(projectId))} data-testid="git-stage-all">
+                    {t('alle vormerken')}
                   </button>
                 </span>
               </div>
@@ -293,7 +316,7 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
         <div className="git-commit">
           <textarea
             className="field"
-            placeholder={count ? 'Was hast du geändert?' : 'Nichts zu committen'}
+            placeholder={count ? t('Was hast du geändert?') : t('Nichts zu committen')}
             value={msg}
             disabled={ai}
             onChange={(e) => setMsg(e.target.value)}
@@ -306,11 +329,11 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
             data-testid="git-message"
           />
           <div className="row between">
-            <button className="btn small" disabled={ai || !st.files.length} onClick={() => void writeAi()} title="Claude schreibt die Nachricht aus deinen Änderungen" data-testid="git-ai">
-              {ai ? <span className="spin" /> : <Icon name="spark" size={13} />} {ai ? 'Claude schreibt …' : 'KI-Nachricht'}
+            <button className="btn small" disabled={ai || !st.files.length} onClick={() => void writeAi()} title={t('Claude schreibt die Nachricht aus deinen Änderungen')} data-testid="git-ai">
+              {ai ? <span className="spin" /> : <Icon name="spark" size={13} />} {ai ? t('Claude schreibt …') : t('KI-Nachricht')}
             </button>
-            <button className="btn small primary" disabled={busy || ai || !msg.trim() || !count} onClick={() => void commit()} title="Strg+Enter" data-testid="git-commit">
-              <Icon name="check" size={13} /> {all ? `Alles committen (${count})` : `Committen (${count})`}
+            <button className="btn small primary" disabled={busy || ai || !msg.trim() || !count} onClick={() => void commit()} title={t('Strg+Enter')} data-testid="git-commit">
+              <Icon name="check" size={13} /> {all ? t('Alles committen ({n})', { n: count }) : t('Committen ({n})', { n: count })}
             </button>
           </div>
         </div>
@@ -319,10 +342,10 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
         {sel && (
           <div className="git-main-head mono">
             {sel.path}
-            <span className="dim">{sel.staged ? ' · vorgemerkt' : sel.untracked ? ' · neu' : ''}</span>
+            <span className="dim">{sel.staged ? t(' · vorgemerkt') : sel.untracked ? t(' · neu') : ''}</span>
           </div>
         )}
-        <DiffView text={diff} empty={sel ? 'Keine Textänderungen.' : 'Wähle links eine Datei.'} />
+        <DiffView text={diff} empty={sel ? t('Keine Textänderungen.') : t('Wähle links eine Datei.')} />
       </div>
     </div>
   )
@@ -356,7 +379,7 @@ function HistoryView({ projectId, headKey }: { projectId: string; headKey: strin
     return i < 0 ? ['', show] : [show.slice(0, i).trim(), show.slice(i + 1)]
   }, [show])
   if (!log) return <div className="panel-empty"><span className="spin" /></div>
-  if (!log.length) return <div className="panel-empty">Noch keine Commits.</div>
+  if (!log.length) return <div className="panel-empty">{t('Noch keine Commits.')}</div>
   return (
     <div className="git-split">
       <ul className="git-side git-log">
@@ -410,8 +433,8 @@ export function GitWindow(): React.JSX.Element {
   useEffect(() => {
     setSt(null)
     void reload()
-    const t = setInterval(() => !busyRef.current && document.visibilityState === 'visible' && void reload(), POLL_MS)
-    return () => clearInterval(t)
+    const timer = setInterval(() => !busyRef.current && document.visibilityState === 'visible' && void reload(), POLL_MS)
+    return () => clearInterval(timer)
   }, [reload])
 
   const run = async (kind: NonNullable<typeof sync>, title: string, fn: () => Promise<unknown>): Promise<void> => {
@@ -430,23 +453,23 @@ export function GitWindow(): React.JSX.Element {
     const name = projects.find((p) => p.id === projectId)?.name ?? ''
     const r = await useDialog.getState().ask({
       kind: 'prompt',
-      title: 'Auf GitHub veröffentlichen',
-      message: 'Legt ein neues Repository in deinem GitHub-Konto an und lädt alle Commits hoch.',
+      title: t('Auf GitHub veröffentlichen'),
+      message: t('Legt ein neues Repository in deinem GitHub-Konto an und lädt alle Commits hoch.'),
       defaultValue: name.replace(/\s+/g, '-'),
-      placeholder: 'Repo-Name',
-      checkbox: 'Öffentlich sichtbar (sonst privat)',
-      confirmLabel: 'Veröffentlichen'
+      placeholder: t('Repo-Name'),
+      checkbox: t('Öffentlich sichtbar (sonst privat)'),
+      confirmLabel: t('Veröffentlichen')
     })
     if (!r.ok || !projectId) return
-    if (s.unborn) return void alert('Noch kein Commit', 'Committe zuerst deine Dateien – dann kann VibeDesk sie hochladen.')
-    await run('publish', 'Veröffentlichen fehlgeschlagen', async () => {
-      const t = useGitAuth.getState().tools ?? (await refreshTools())
-      if (t.gh !== 'loggedIn') {
-        if (t.gh === 'missing' && !(await installTool('gh'))) return
+    if (s.unborn) return void alert(t('Noch kein Commit'), t('Committe zuerst deine Dateien – dann kann VibeDesk sie hochladen.'))
+    await run('publish', t('Veröffentlichen fehlgeschlagen'), async () => {
+      const tl = useGitAuth.getState().tools ?? (await refreshTools())
+      if (tl.gh !== 'loggedIn') {
+        if (tl.gh === 'missing' && !(await installTool('gh'))) return
         if (!(await githubLogin())) return
       }
       const url = await api.git.publish(projectId, r.value, !r.checked)
-      inform('Auf GitHub veröffentlicht', url, url ? [{ label: 'Öffnen', primary: true, run: () => api.git.openWeb(url) }] : undefined)
+      inform(t('Auf GitHub veröffentlicht'), url, url ? [{ label: t('Öffnen'), primary: true, run: () => api.git.openWeb(url) }] : undefined)
     })
   }
 
@@ -456,17 +479,17 @@ export function GitWindow(): React.JSX.Element {
 
   let body: React.JSX.Element
   if (tools && !tools.git) body = <NoGit />
-  else if (!projectId) body = <div className="panel-empty">Lege zuerst ein Projekt an.</div>
+  else if (!projectId) body = <div className="panel-empty">{t('Lege zuerst ein Projekt an.')}</div>
   else if (error) body = <div className="panel-empty">{error}</div>
   else if (!st) body = <div className="panel-empty"><span className="spin" /></div>
   else if (!st.repo)
     body = (
       <div className="git-gate" data-testid="git-norepo">
         <Icon name="github" size={32} />
-        <h3>{project?.name ?? 'Dieses Projekt'} ist noch kein Git-Repository</h3>
-        <p>Mit Git siehst du genau, was Claude geändert hat, kannst jederzeit zurück und dein Projekt auf GitHub sichern.</p>
-        <button className="btn primary" onClick={() => void api.git.init(projectId).then(reload).catch((e) => alert('Git einrichten fehlgeschlagen', errorText(e)))} data-testid="git-init">
-          <Icon name="plus" size={14} /> Git einrichten
+        <h3>{project ? t('{name} ist noch kein Git-Repository', { name: project.name }) : t('Dieses Projekt ist noch kein Git-Repository')}</h3>
+        <p>{t('Mit Git siehst du genau, was Claude geändert hat, kannst jederzeit zurück und dein Projekt auf GitHub sichern.')}</p>
+        <button className="btn primary" onClick={() => void api.git.init(projectId).then(reload).catch((e) => alert(t('Git einrichten fehlgeschlagen'), errorText(e)))} data-testid="git-init">
+          <Icon name="plus" size={14} /> {t('Git einrichten')}
         </button>
       </div>
     )
@@ -476,7 +499,7 @@ export function GitWindow(): React.JSX.Element {
     <div className="git" data-testid="git-window">
       <div className="git-bar">
         <select className="field small git-project" value={projectId ?? ''} onChange={(e) => setProjectId(e.target.value)}>
-          {!projectId && <option value="">Projekt wählen</option>}
+          {!projectId && <option value="">{t('Projekt wählen')}</option>}
           {projects
             .filter((p) => !p.missing)
             .map((p) => (
@@ -487,15 +510,15 @@ export function GitWindow(): React.JSX.Element {
         </select>
         {repo && (
           <>
-            <span className="git-branch mono" title={repo.upstream ? `verfolgt ${repo.upstream}` : 'ohne Gegenstück auf dem Server'}>
+            <span className="git-branch mono" title={repo.upstream ? t('verfolgt {upstream}', { upstream: repo.upstream }) : t('ohne Gegenstück auf dem Server')}>
               <Icon name="agents" size={13} /> {repo.branch || 'main'}
             </span>
             <div className="row tabs git-tabs">
               <button className={`tab${tab === 'changes' ? ' on' : ''}`} onClick={() => setTab('changes')}>
-                Änderungen{repo.files.length > 0 && <span className="tab-count">{repo.files.length}</span>}
+                {t('Änderungen')}{repo.files.length > 0 && <span className="tab-count">{repo.files.length}</span>}
               </button>
               <button className={`tab${tab === 'history' ? ' on' : ''}`} onClick={() => setTab('history')} data-testid="git-tab-history">
-                Verlauf
+                {t('Verlauf')}
               </button>
             </div>
           </>
@@ -503,17 +526,17 @@ export function GitWindow(): React.JSX.Element {
         <span className="git-spacer" />
         {repo && repo.remoteUrl && (
           <>
-            <button className="btn small ghost" disabled={!!sync} title="Neues vom Server holen" onClick={() => void run('fetch', 'Aktualisieren fehlgeschlagen', () => api.git.fetch(projectId!))}>
+            <button className="btn small ghost" disabled={!!sync} title={t('Neues vom Server holen')} onClick={() => void run('fetch', t('Aktualisieren fehlgeschlagen'), () => api.git.fetch(projectId!))}>
               {sync === 'fetch' ? <span className="spin" /> : <Icon name="restart" size={13} />}
             </button>
-            <button className="btn small" disabled={!!sync || !repo.upstream} onClick={() => void run('pull', 'Pull fehlgeschlagen', () => api.git.pull(projectId!))} title="Änderungen vom Server holen">
+            <button className="btn small" disabled={!!sync || !repo.upstream} onClick={() => void run('pull', t('Pull fehlgeschlagen'), () => api.git.pull(projectId!))} title={t('Änderungen vom Server holen')}>
               {sync === 'pull' ? <span className="spin" /> : '↓'} Pull{repo.behind ? ` ${repo.behind}` : ''}
             </button>
             <button
               className={`btn small${repo.ahead || !repo.upstream ? ' primary' : ''}`}
               disabled={!!sync || repo.unborn}
-              onClick={() => void run('push', 'Push fehlgeschlagen', () => api.git.push(projectId!, !!repo.upstream))}
-              title="Deine Commits hochladen"
+              onClick={() => void run('push', t('Push fehlgeschlagen'), () => api.git.push(projectId!, !!repo.upstream))}
+              title={t('Deine Commits hochladen')}
               data-testid="git-push"
             >
               {sync === 'push' ? <span className="spin" /> : '↑'} Push{repo.ahead ? ` ${repo.ahead}` : ''}
@@ -527,7 +550,7 @@ export function GitWindow(): React.JSX.Element {
         )}
         {repo && !repo.remoteUrl && (
           <button className="btn small primary" disabled={!!sync} onClick={() => void publish(repo)} data-testid="git-publish">
-            {sync === 'publish' ? <span className="spin" /> : <Icon name="github" size={13} />} Auf GitHub veröffentlichen
+            {sync === 'publish' ? <span className="spin" /> : <Icon name="github" size={13} />} {t('Auf GitHub veröffentlichen')}
           </button>
         )}
         <Account needed={githubNeeded} />

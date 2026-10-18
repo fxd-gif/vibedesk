@@ -1,6 +1,7 @@
 // Erkennt in Claudes Ausgabe, dass das Nutzungslimit erreicht ist, und wann es zurückgesetzt wird.
 // Beispiele: „You've hit your session limit · resets 10:30pm (Europe/Berlin)“,
 // „5-hour limit reached ∙ resets 3pm“, „Claude usage limit reached. Your limit will reset at 3pm (Europe/Berlin).“
+import { t } from './i18n'
 
 // Farbcodes stecken auch mitten in Wörtern → ersatzlos weg; Cursor-Sprünge (ConPTY statt Leerzeichen) → Leerzeichen
 // eslint-disable-next-line no-control-regex
@@ -78,4 +79,4 @@ export function scanLimit(chunk: string, carry: string, now: number, zone?: stri
 /** Wie lange nach dem Reset gewartet wird, bevor es weitergeht – die Server brauchen manchmal einen Moment */
 export const RESUME_GRACE_MS = 90_000
 
-export const RESUME_PROMPT = 'Das Nutzungslimit ist wieder frei. Mach bitte genau dort weiter, wo du aufgehört hast.'
+export const resumePrompt = (): string => t('Das Nutzungslimit ist wieder frei. Mach bitte genau dort weiter, wo du aufgehört hast.')

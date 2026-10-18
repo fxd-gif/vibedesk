@@ -18,14 +18,44 @@ import { TermStatus } from '../terminal/TermStatus'
 import { QueueChip, TermQueue } from './TermQueue'
 import { AttachButton, TermAttach } from './TermAttach'
 import { cancelResume, fmtTime, useResume } from '../store/resumeStore'
+import { t } from '../../../shared/i18n'
 
-export const STATUS_TEXT = {
-  idle: 'bereit',
-  working: 'arbeitet',
-  waiting: 'wartet auf dich',
-  done: 'fertig',
-  error: 'Fehler'
-} as const
+type WfStatus = 'idle' | 'working' | 'waiting' | 'done' | 'error'
+
+/** Statustext in der gewählten Sprache */
+export function statusText(s: WfStatus): string {
+  switch (s) {
+    case 'idle':
+      return t('bereit')
+    case 'working':
+      return t('arbeitet')
+    case 'waiting':
+      return t('wartet auf dich')
+    case 'done':
+      return t('fertig')
+    case 'error':
+      return t('Fehler')
+  }
+}
+
+/** Für bestehende Aufrufer: STATUS_TEXT[s] übersetzt erst beim Zugriff (Getter), nicht schon beim Import */
+export const STATUS_TEXT: Record<WfStatus, string> = {
+  get idle() {
+    return statusText('idle')
+  },
+  get working() {
+    return statusText('working')
+  },
+  get waiting() {
+    return statusText('waiting')
+  },
+  get done() {
+    return statusText('done')
+  },
+  get error() {
+    return statusText('error')
+  }
+}
 
 export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX.Element {
   const id = termWin(session.id)
@@ -49,7 +79,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
 
   const close = async (): Promise<void> => {
     const running = exitCode === undefined
-    if (running && !(await confirm({ title: `Session „${session.name}“ beenden?`, message: 'Claude Code wird in diesem Fenster gestoppt.', confirmLabel: 'Beenden', danger: true })))
+    if (running && !(await confirm({ title: t('Session „{name}“ beenden?', { name: session.name }), message: t('Claude Code wird in diesem Fenster gestoppt.'), confirmLabel: t('Beenden'), danger: true })))
       return
     if (shell) await useShells.getState().close(shell.id)
     useSessions.getState().close(session.id)
@@ -78,25 +108,25 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
           <span className={`dot ${status}`} />
           <span>{session.name}</span>
           <span className="dim" style={{ fontWeight: 400 }}>
-            · {tending ? 'pflegt Gehirn …' : STATUS_TEXT[status]}
+            · {tending ? t('pflegt Gehirn …') : statusText(status)}
           </span>
           {urls?.slice(0, 2).map((u) => (
-            <button key={u} className="url-chip" title={'Vorschau: ' + u} onClick={() => usePreview.getState().openPreview(u)} data-testid="url-chip">
+            <button key={u} className="url-chip" title={t('Vorschau: {url}', { url: u })} onClick={() => usePreview.getState().openPreview(u)} data-testid="url-chip">
               ▸ {shortUrl(u)}
             </button>
           ))}
           <QueueChip sessionId={session.id} open={queueOpen} onToggle={() => togglePanel('queue')} />
           {resumeAt && (
-            <button className="resume-chip" title="Claude hat das Nutzungslimit erreicht. Danach geht es von selbst weiter – klicken zum Abbrechen." onClick={() => cancelResume(session.id)} data-testid="resume-chip">
-              ⏰ weiter um {fmtTime(resumeAt)} ✕
+            <button className="resume-chip" title={t('Claude hat das Nutzungslimit erreicht. Danach geht es von selbst weiter – klicken zum Abbrechen.')} onClick={() => cancelResume(session.id)} data-testid="resume-chip">
+              ⏰ {t('weiter um {time}', { time: fmtTime(resumeAt) })} ✕
             </button>
           )}
           <span className="term-tools" onPointerDown={(e) => e.stopPropagation()}>
             <AttachButton sessionId={session.id} open={panel === 'attach'} onToggle={() => togglePanel('attach')} />
-            <button className={`term-tool${shell ? ' on' : ''}`} title={shell ? 'Shell schließen' : 'Shell daneben öffnen (PowerShell im Projektordner)'} onClick={() => void toggleShell()} data-testid="term-split">
+            <button className={`term-tool${shell ? ' on' : ''}`} title={shell ? t('Shell schließen') : t('Shell daneben öffnen (PowerShell im Projektordner)')} onClick={() => void toggleShell()} data-testid="term-split">
               <Icon name="terminal" size={13} />
             </button>
-            <button className={`term-tool${settingsOpen ? ' on' : ''}`} title="Terminal-Einstellungen" onClick={() => setSettingsOpen((v) => !v)} data-testid="term-settings-btn">
+            <button className={`term-tool${settingsOpen ? ' on' : ''}`} title={t('Terminal-Einstellungen')} onClick={() => setSettingsOpen((v) => !v)} data-testid="term-settings-btn">
               <Icon name="gear" size={13} />
             </button>
           </span>
@@ -109,7 +139,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
         </div>
         {shell && (
           <div className="term-slot" onPointerDown={() => setActive('shell')}>
-            <TermPane id={shell.id} testId={`shell-${session.name}`} focused={isTop && active === 'shell'} label={shellExit !== undefined ? 'Shell (beendet)' : 'Shell'} />
+            <TermPane id={shell.id} testId={`shell-${session.name}`} focused={isTop && active === 'shell'} label={shellExit !== undefined ? t('Shell (beendet)') : 'Shell'} />
           </div>
         )}
       </div>
@@ -124,11 +154,11 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
           </span>
           {exitCode !== 0 && (
             <button className="btn" onClick={openSetup}>
-              Einrichtung
+              {t('Einrichtung')}
             </button>
           )}
           <button className="btn primary" onClick={() => useSessions.getState().restart(session.id)}>
-            <Icon name="restart" size={15} /> Neu starten
+            <Icon name="restart" size={15} /> {t('Neu starten')}
           </button>
         </div>
       )}

@@ -1,4 +1,5 @@
 // Streamer-Modus: schwärzt Secrets und Pfade, speist das OBS-Overlay und liest Twitch-Chat-Vorschläge.
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import { createStreamRedactor, redact } from '../../../shared/redact'
@@ -107,7 +108,7 @@ export function buildOverlay(): OverlayState {
   const { shoutout, queue } = useStreamer.getState()
   return {
     status: active ? (w?.status ?? 'idle') : 'none',
-    statusText: active ? `Claude ${w?.status === 'working' ? 'arbeitet' : STATUS_TEXT[w?.status ?? 'idle']}` : 'Gleich geht’s los',
+    statusText: active ? (w?.status === 'working' ? t('Claude arbeitet') : t('Claude {status}', { status: STATUS_TEXT[w?.status ?? 'idle'] })) : t('Gleich geht’s los'),
     project: active ? redactText(active.name) : '',
     current: pending ? `${pending.tool}${target(pending.tool, pending.target) ? ' · ' + target(pending.tool, pending.target) : ''}` : '',
     feed: feed.map((f) => ({ tool: f.tool, target: target(f.tool, f.target), result: f.result })),
@@ -181,7 +182,7 @@ function connectTwitch(channel: string): void {
   }
   sock.onclose = () => {
     if (ws !== sock || wsChannel !== channel) return
-    useStreamer.setState({ twitch: { state: 'error', message: 'Verbindung getrennt – neuer Versuch …' } })
+    useStreamer.setState({ twitch: { state: 'error', message: t('Verbindung getrennt – neuer Versuch …') } })
     retry = setTimeout(() => wsChannel === channel && connectTwitch(channel), backoff)
     backoff = Math.min(backoff * 2, 60_000)
   }

@@ -1,5 +1,6 @@
 // Farbschemata fürs Terminal. Hintergrund bleibt durchsichtig – das Glasfenster dahinter gibt den Ton an.
 import type { ITheme } from '@xterm/xterm'
+import { t } from '../../../shared/i18n'
 
 const glass = {
   background: 'rgba(0,0,0,0)',
@@ -24,7 +25,9 @@ export const TERMINAL_THEMES: { id: string; label: string; theme: ITheme }[] = [
   },
   {
     id: 'wald',
-    label: 'Wald',
+    get label() {
+      return t('Wald')
+    },
     theme: {
       ...glass,
       foreground: '#dfe8d8',
@@ -37,7 +40,9 @@ export const TERMINAL_THEMES: { id: string; label: string; theme: ITheme }[] = [
   },
   {
     id: 'neon',
-    label: 'Neon (Tokyo)',
+    get label() {
+      return t('Neon (Tokyo)')
+    },
     theme: {
       ...glass,
       foreground: '#e6e1f5',
@@ -50,7 +55,9 @@ export const TERMINAL_THEMES: { id: string; label: string; theme: ITheme }[] = [
   },
   {
     id: 'kontrast',
-    label: 'Hoher Kontrast',
+    get label() {
+      return t('Hoher Kontrast')
+    },
     theme: {
       ...glass,
       foreground: '#ffffff',
@@ -63,7 +70,9 @@ export const TERMINAL_THEMES: { id: string; label: string; theme: ITheme }[] = [
   },
   {
     id: 'mono',
-    label: 'Ruhig (Graustufen)',
+    get label() {
+      return t('Ruhig (Graustufen)')
+    },
     theme: {
       ...glass,
       foreground: '#d6d6d6',

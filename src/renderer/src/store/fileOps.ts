@@ -1,4 +1,5 @@
 // Dateien im Editor anlegen, umbenennen und löschen – offene Tabs ziehen mit.
+import { t } from '../../../shared/i18n'
 import { api } from '../api'
 import { alert, confirm, prompt } from './dialogStore'
 import { baseName, samePath } from './editorModel'
@@ -12,15 +13,15 @@ const affectedTabs = (path: string) => useEditor.getState().tabs.filter((t) => i
 
 export async function createEntry(parent: string, kind: 'file' | 'dir'): Promise<string | null> {
   const name = await prompt({
-    title: kind === 'file' ? 'Neue Datei' : 'Neuer Ordner',
-    message: 'Unterordner gehen mit „/“, z. B. src/utils/format.ts',
-    placeholder: kind === 'file' ? 'name.ts' : 'ordner',
-    confirmLabel: 'Anlegen'
+    title: kind === 'file' ? t('Neue Datei') : t('Neuer Ordner'),
+    message: t('Unterordner gehen mit „/“, z. B. src/utils/format.ts'),
+    placeholder: kind === 'file' ? 'name.ts' : t('ordner'),
+    confirmLabel: t('Anlegen')
   })
   if (!name) return null
   const r = await api.files.create(parent, name, kind)
   if (!r.ok) {
-    await alert('Anlegen fehlgeschlagen', r.message)
+    await alert(t('Anlegen fehlgeschlagen'), r.message)
     return null
   }
   if (kind === 'file') await useEditor.getState().open(r.path)
@@ -28,13 +29,13 @@ export async function createEntry(parent: string, kind: 'file' | 'dir'): Promise
 }
 
 export async function renameEntry(path: string): Promise<string | null> {
-  if (!(await settleDirty('Vor dem Umbenennen.', (t) => isUnder(t.path, path)))) return null
+  if (!(await settleDirty(t('Vor dem Umbenennen.'), (tab) => isUnder(tab.path, path)))) return null
   const old = baseName(path)
-  const name = await prompt({ title: `„${old}“ umbenennen`, defaultValue: old, confirmLabel: 'Umbenennen' })
+  const name = await prompt({ title: t('„{name}“ umbenennen', { name: old }), defaultValue: old, confirmLabel: t('Umbenennen') })
   if (!name || name === old) return null
   const r = await api.files.rename(path, name)
   if (!r.ok) {
-    await alert('Umbenennen fehlgeschlagen', r.message)
+    await alert(t('Umbenennen fehlgeschlagen'), r.message)
     return null
   }
   // offene Tabs unter dem neuen Pfad wieder öffnen
@@ -57,15 +58,17 @@ export async function deleteEntry(path: string, isDir: boolean): Promise<boolean
   const name = baseName(path)
   const dirty = affectedTabs(path).filter((t) => t.dirty)
   const ok = await confirm({
-    title: `„${name}“ löschen?`,
-    message: `${isDir ? 'Der Ordner wird mit seinem ganzen Inhalt' : 'Die Datei wird'} in den Papierkorb verschoben.${dirty.length ? ` Ungespeicherte Änderungen in ${dirty.map((t) => t.name).join(', ')} gehen verloren.` : ''}`,
-    confirmLabel: 'In den Papierkorb',
+    title: t('„{name}“ löschen?', { name }),
+    message:
+      (isDir ? t('Der Ordner wird mit seinem ganzen Inhalt in den Papierkorb verschoben.') : t('Die Datei wird in den Papierkorb verschoben.')) +
+      (dirty.length ? ' ' + t('Ungespeicherte Änderungen in {names} gehen verloren.', { names: dirty.map((tab) => tab.name).join(', ') }) : ''),
+    confirmLabel: t('In den Papierkorb'),
     danger: true
   })
   if (!ok) return false
   const r = await api.files.trash(path)
   if (!r.ok) {
-    await alert('Löschen fehlgeschlagen', r.message)
+    await alert(t('Löschen fehlgeschlagen'), r.message)
     return false
   }
   for (const t of affectedTabs(path)) {

@@ -1,4 +1,5 @@
 // Handy-Begleiter: Datenmodell, Transkript-Auszug, KI-Aufträge (Prompt ausformulieren, Vorschläge) und WLAN-Adressen.
+import { t } from './i18n'
 import type { PermissionAsk } from './permissions'
 import type { SessionStatus } from './types'
 
@@ -277,7 +278,7 @@ export function deviceName(ua: string): string {
   const android = /Android[^;]*;\s*([^;)]+?)(?:\s+Build|\))/.exec(ua)
   if (android) return `Android · ${android[1].trim()}`.slice(0, 40)
   if (/Android/.test(ua)) return 'Android'
-  if (/Windows/.test(ua)) return 'Windows-Browser'
+  if (/Windows/.test(ua)) return t('Windows-Browser')
   if (/Mac OS X/.test(ua)) return 'Mac'
-  return 'Handy'
+  return t('Handy')
 }

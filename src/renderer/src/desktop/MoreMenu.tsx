@@ -54,14 +54,14 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
         )
       })}
       <div className="more-foot">
-        <span>Alle Symbole im Dock zeigen</span>
-        <Toggle on={dockAll} onChange={(v) => useSettings.getState().set({ dockAll: v })} label="Alle Symbole im Dock zeigen" />
+        <span>{t('Alle Symbole im Dock zeigen')}</span>
+        <Toggle on={dockAll} onChange={(v) => useSettings.getState().set({ dockAll: v })} label={t('Alle Symbole im Dock zeigen')} />
       </div>
       <div className="more-foot">
-        <span title="Öffnet über jeder App ein Eingabefeld – der Text geht an Claude">
-          Schnell-Prompt <kbd className="mono">Strg+Alt+Leertaste</kbd>
+        <span title={t('Öffnet über jeder App ein Eingabefeld – der Text geht an Claude')}>
+          {t('Schnell-Prompt')} <kbd className="mono">{t('Strg+Alt+Leertaste')}</kbd>
         </span>
-        <Toggle on={quick} onChange={(v) => useSettings.getState().set({ quickPrompt: v })} label="Schnell-Prompt von überall" />
+        <Toggle on={quick} onChange={(v) => useSettings.getState().set({ quickPrompt: v })} label={t('Schnell-Prompt von überall')} />
       </div>
       <div className="more-foot">
         {/* bewusst zweisprachig – man muss den Umschalter auch finden, wenn man die andere Sprache nicht liest */}
@@ -86,7 +86,7 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
           }}
           data-testid="more-about"
         >
-          Über VibeDesk · Fehler melden
+          {t('Über VibeDesk · Fehler melden')}
         </button>
       </div>
     </div>

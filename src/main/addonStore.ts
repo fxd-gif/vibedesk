@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import { CAPABILITY_LABELS } from '../shared/addonBlocks'
@@ -113,7 +114,7 @@ export class AddonStore {
   }
 
   private statePath(id: string): string {
-    if (!ID_RE.test(id)) throw new Error('Ungültige Addon-ID')
+    if (!ID_RE.test(id)) throw new Error(t('Ungültige Addon-ID'))
     return path.join(this.dir, 'state', `${id}.json`)
   }
 
@@ -125,21 +126,21 @@ export class AddonStore {
   setState(id: string, data: Record<string, StoredValue>): void {
     const file = this.statePath(id)
     const scalar = (v: unknown): boolean => typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean'
-    if (typeof data !== 'object' || data === null || Array.isArray(data)) throw new Error('Gespeicherte Werte sind ungültig')
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) throw new Error(t('Gespeicherte Werte sind ungültig'))
     const keys = Object.keys(data)
-    if (keys.length > 100) throw new Error('Zu viele gespeicherte Werte (max. 100)')
+    if (keys.length > 100) throw new Error(t('Zu viele gespeicherte Werte (max. 100)'))
     for (const k of keys) {
       const v = data[k]
-      if (k.length > 40 || !(scalar(v) || (Array.isArray(v) && v.length <= 100 && v.every(scalar)))) throw new Error('Gespeicherte Werte sind ungültig')
+      if (k.length > 40 || !(scalar(v) || (Array.isArray(v) && v.length <= 100 && v.every(scalar)))) throw new Error(t('Gespeicherte Werte sind ungültig'))
     }
     const json = JSON.stringify(data)
-    if (json.length > 64 * 1024) throw new Error('Gespeicherte Werte sind zu groß (max. 64 KB)')
+    if (json.length > 64 * 1024) throw new Error(t('Gespeicherte Werte sind zu groß (max. 64 KB)'))
     writeJsonAtomic(file, data)
   }
 
   exportBytes(id: string): Uint8Array {
     const a = this.read(id)
-    if (!a) throw new Error('Addon nicht gefunden')
+    if (!a) throw new Error(t('Addon nicht gefunden'))
     const assets: Record<string, Uint8Array> = {}
     for (const name of a.assetNames) assets[name] = new Uint8Array(fs.readFileSync(path.join(this.dir, id, 'assets', name)))
     return encodeAddon({ manifest: a.manifest, program: a.program, assets })

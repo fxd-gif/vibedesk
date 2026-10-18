@@ -1,4 +1,5 @@
 // Zeigt, was Claude gerade im Gehirn festhält: geschriebene Notizen kurz als Karte (mehrere in Folge zusammengefasst).
+import { t, tn } from '../../../shared/i18n'
 import { api } from '../api'
 import { inform } from './notifyStore'
 import { useSettings } from './settingsStore'
@@ -16,8 +17,8 @@ export function wireBrainActivity(): void {
     const list = titles
     titles = []
     if (!list.length || !useSettings.getState().s?.brainOn) return
-    const title = list.length === 1 ? 'Gehirn aktualisiert' : `Gehirn: ${list.length} Notizen aktualisiert`
-    inform(title, list.join(' · '), [{ label: 'Ansehen', run: () => useUi.getState().openWin('brain') }], 'brain-write')
+    const title = tn(list.length, 'Gehirn aktualisiert', 'Gehirn: {n} Notizen aktualisiert')
+    inform(title, list.join(' · '), [{ label: t('Ansehen'), run: () => useUi.getState().openWin('brain') }], 'brain-write')
   }
   api.on.brainPulse((p) => {
     if (p.kind !== 'write' || !p.title) return

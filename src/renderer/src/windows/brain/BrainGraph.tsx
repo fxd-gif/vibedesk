@@ -2,7 +2,8 @@
 // Knoten ziehen, Nachbarn beim Überfahren hervorheben, Knoten leuchten auf, wenn Claude sie anfasst.
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type Simulation, type SimulationLinkDatum, type SimulationNodeDatum } from 'd3-force'
-import type { BrainGraph as Graph, GraphEdge, GraphNode, GraphNodeKind } from '../../../../shared/brain'
+import type { BrainGraph as Graph, GraphEdge, GraphNode, GraphNodeKind, NoteType } from '../../../../shared/brain'
+import { t } from '../../../../shared/i18n'
 
 export const KIND_COLOR: Record<GraphNodeKind, string> = {
   module: '#9fb8ff',
@@ -13,6 +14,24 @@ export const KIND_COLOR: Record<GraphNodeKind, string> = {
   fact: '#67e8f9',
   file: 'rgba(223, 229, 239, 0.45)',
   missing: 'rgba(223, 229, 239, 0.35)'
+}
+
+/** Anzeigename eines Notiztyps (gespeicherte Typ-Werte bleiben unverändert) */
+export function noteTypeLabel(type: NoteType): string {
+  switch (type) {
+    case 'module':
+      return t('Bereich')
+    case 'decision':
+      return t('Entscheidung')
+    case 'pitfall':
+      return t('Stolperfalle')
+    case 'convention':
+      return t('Konvention')
+    case 'task':
+      return t('Aufgabe')
+    case 'fact':
+      return t('Wissen')
+  }
 }
 
 const PULSE_COLOR = { read: '#67e8f9', edit: '#4ade80', write: '#c4a7ff' } as const

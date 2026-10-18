@@ -1,5 +1,6 @@
 // Binärformat .vibeaddon: "VIBEADDON" + Version + Flags, danach deflate(zip ohne Kompression).
 // Das doppelte Packen versteckt auch die Dateinamen – Verschleierung, keine Verschlüsselung.
+import { t } from './i18n'
 import { deflateSync, Inflate, strFromU8, strToU8, unzipSync, zipSync, type Zippable } from 'fflate'
 import type { BlocklyProgram, Capability } from './addonBlocks'
 
@@ -32,11 +33,20 @@ export class AddonFormatError extends Error {
   }
 }
 
+/** Getter: übersetzt beim Lesen, nicht beim Import */
 export const FORMAT_MESSAGES: Record<AddonFormatCode, string> = {
-  'not-addon': 'Diese Datei ist kein gültiges VibeDesk-Addon.',
-  'too-new': 'Dieses Addon braucht eine neuere VibeDesk-Version.',
-  corrupt: 'Diese Datei ist kein gültiges VibeDesk-Addon.',
-  'too-large': 'Dieses Addon ist zu groß.'
+  get 'not-addon'() {
+    return t('Diese Datei ist kein gültiges VibeDesk-Addon.')
+  },
+  get 'too-new'() {
+    return t('Dieses Addon braucht eine neuere VibeDesk-Version.')
+  },
+  get corrupt() {
+    return t('Diese Datei ist kein gültiges VibeDesk-Addon.')
+  },
+  get 'too-large'() {
+    return t('Dieses Addon ist zu groß.')
+  }
 }
 
 export const MAGIC = 'VIBEADDON'

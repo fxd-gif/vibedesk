@@ -2,6 +2,7 @@
 // erreichen. Darum: standardmäßig aus, Koppeln nur mit einem Einmal-Code, den der PC auf Knopfdruck zeigt; danach
 // braucht jeder API-Aufruf den Geräte-Schlüssel (Authorization-Header, nie in der URL). Keine CORS-Freigaben,
 // kleine Bodies, Bremse für Fehlversuche.
+import { t } from '../shared/i18n'
 import http from 'http'
 import type { AddressInfo } from 'net'
 import { randomBytes } from 'crypto'
@@ -69,7 +70,7 @@ export class CompanionServer {
       })
     } catch (err) {
       const code = (err as NodeJS.ErrnoException).code
-      return { ok: false, error: code === 'EADDRINUSE' ? `Port ${port} ist schon belegt – wähle einen anderen.` : String((err as Error).message) }
+      return { ok: false, error: code === 'EADDRINUSE' ? t('Port {port} ist schon belegt – wähle einen anderen.', { port }) : String((err as Error).message) }
     }
     this.server = server
     this.port = (server.address() as AddressInfo).port
@@ -153,24 +154,24 @@ export class CompanionServer {
 
     // Koppeln: ohne Schlüssel, aber nur mit dem Code vom PC-Bildschirm
     if (url.pathname === '/api/pair') {
-      if (req.method !== 'POST') return json(405, { ok: false, error: 'Methode nicht erlaubt' })
-      if (!this.pairTries.allow(ip) || !this.pairTries.allow('*')) return json(429, { ok: false, error: 'Zu viele Versuche – warte ein paar Minuten.' })
+      if (req.method !== 'POST') return json(405, { ok: false, error: t('Methode nicht erlaubt') })
+      if (!this.pairTries.allow(ip) || !this.pairTries.allow('*')) return json(429, { ok: false, error: t('Zu viele Versuche – warte ein paar Minuten.') })
       return this.body(req, (b) => {
         const r = this.auth.pair(b?.code, typeof b?.name === 'string' && b.name.trim() ? b.name : deviceName(String(req.headers['user-agent'] ?? '')))
         if (!r.ok) return json(200, r)
         this.onPaired(r.device)
         json(200, { ok: true, token: r.token, name: r.device.name })
-      }, () => json(413, { ok: false, error: 'Zu groß' }))
+      }, () => json(413, { ok: false, error: t('Zu groß') }))
     }
 
     const dev = this.device(req)
     if (!dev) {
-      if (!this.fails.allow(ip)) return json(429, { ok: false, error: 'Zu viele Fehlversuche – warte ein paar Minuten.' })
-      return json(401, { ok: false, error: 'Nicht gekoppelt' })
+      if (!this.fails.allow(ip)) return json(429, { ok: false, error: t('Zu viele Fehlversuche – warte ein paar Minuten.') })
+      return json(401, { ok: false, error: t('Nicht gekoppelt') })
     }
 
     if (req.method === 'GET' && url.pathname === '/api/events') {
-      if (this.clients.size >= MAX_CLIENTS) return json(503, { ok: false, error: 'Zu viele Geräte verbunden.' })
+      if (this.clients.size >= MAX_CLIENTS) return json(503, { ok: false, error: t('Zu viele Geräte verbunden.') })
       res.writeHead(200, { ...common, 'content-type': 'text/event-stream; charset=utf-8', connection: 'keep-alive' })
       res.write(`retry: 2000\ndata: ${this.state}\n\n`)
       this.clients.set(res, dev.id)
@@ -186,36 +187,36 @@ export class CompanionServer {
       const finish = (): void => {
         if (done) return
         done = true
-        clearTimeout(t)
+        clearTimeout(hold)
         this.waiters.delete(finish)
         // abgemeldet, während gewartet wurde?
-        if (!this.server || !this.auth.verify(this.token(req))) return json(401, { ok: false, error: 'Nicht gekoppelt' })
+        if (!this.server || !this.auth.verify(this.token(req))) return json(401, { ok: false, error: t('Nicht gekoppelt') })
         reply()
       }
-      const t = setTimeout(finish, POLL_HOLD_MS)
+      const hold = setTimeout(finish, POLL_HOLD_MS)
       this.waiters.add(finish)
       req.on('close', () => {
         done = true
-        clearTimeout(t)
+        clearTimeout(hold)
         this.waiters.delete(finish)
       })
       return
     }
-    if (req.method !== 'POST') return json(405, { ok: false, error: 'Methode nicht erlaubt' })
+    if (req.method !== 'POST') return json(405, { ok: false, error: t('Methode nicht erlaubt') })
 
     this.body(req, (body) => {
-      if (!body) return json(400, { ok: false, error: 'Ungültige Anfrage' })
+      if (!body) return json(400, { ok: false, error: t('Ungültige Anfrage') })
       const fail = (e: unknown): void => json(500, { ok: false, error: String(e) })
       switch (url.pathname) {
         case '/api/permission':
-          if (!isDecision(body.decision) || body.decision === 'terminal') return json(400, { ok: false, error: 'Ungültige Entscheidung' })
+          if (!isDecision(body.decision) || body.decision === 'terminal') return json(400, { ok: false, error: t('Ungültige Entscheidung') })
           return json(200, this.hub.answer(body.id, body.decision))
         case '/api/prompt':
           return void this.hub.prompt(body).then((r) => json(200, r), fail)
         case '/api/suggest':
           return void this.hub.suggest(body.sessionId).then((r) => json(200, r), fail)
         case '/api/power':
-          if (!this.powerLimit.allow('p')) return json(429, { ok: false, error: 'Langsam – kurz warten.' })
+          if (!this.powerLimit.allow('p')) return json(429, { ok: false, error: t('Langsam – kurz warten.') })
           return void this.power.act(body.action).then((r) => {
             json(200, r)
             this.hub.touch()
@@ -227,7 +228,7 @@ export class CompanionServer {
         default:
           return json(404, { ok: false, error: 'Unbekannt' })
       }
-    }, () => json(413, { ok: false, error: 'Zu groß' }))
+    }, () => json(413, { ok: false, error: t('Zu groß') }))
   }
 
   private body(req: http.IncomingMessage, done: (b: Record<string, unknown> | null) => void, tooBig: () => void): void {

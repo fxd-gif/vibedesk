@@ -14,6 +14,7 @@ import { StreamerWindow } from './StreamerWindow'
 import { BrainWindow } from './brain/BrainWindow'
 import { GitWindow } from './git/GitWindow'
 import { CompanionWindow } from './CompanionWindow'
+import { t } from '../../../shared/i18n'
 
 export interface PanelDef {
   id: PanelId
@@ -28,20 +29,34 @@ export interface PanelDef {
   onClose?: () => void
 }
 
+/** title/hint werden erst beim Lesen übersetzt (Getter) – die Tabelle selbst entsteht beim Import */
+type PanelInit = Omit<PanelDef, 'title' | 'hint'> & { title: () => string; hint: () => string }
+function panel({ title, hint, ...rest }: PanelInit): PanelDef {
+  return {
+    ...rest,
+    get title() {
+      return title()
+    },
+    get hint() {
+      return hint()
+    }
+  }
+}
+
 export const PANELS: PanelDef[] = [
-  { id: 'projects', title: 'Projekte', hint: 'Projekte öffnen, anlegen und frühere Sessions fortsetzen', icon: 'folder', w: 520, h: 480, render: () => <ProjectsWindow /> },
-  { id: 'skills', title: 'Skills', hint: 'Fähigkeiten für Claude installieren – per Drag & Drop oder GitHub-Link', icon: 'spark', w: 600, h: 540, render: () => <SkillsWindow /> },
-  { id: 'prompts', title: 'Prompts & Notizen', hint: 'Fertige Prompts und Notizen pro Projekt', icon: 'pen', w: 520, h: 560, render: () => <PromptsWindow /> },
-  { id: 'focus', title: 'Fokus-Timer', hint: 'Pomodoro-Timer – in Pausen wird es leiser', icon: 'timer', w: 340, h: 470, render: () => <FocusPanel /> },
-  { id: 'discord', title: 'Discord Rich Presence', hint: 'Zeig in Discord, woran du gerade baust', icon: 'discord', w: 900, h: 660, render: () => <DiscordWindow /> },
-  { id: 'inspector', title: 'Session-Inspector', hint: 'Live sehen, was Claude tut: Aktionen, Todos, Agents, Kosten', icon: 'inspect', w: 560, h: 520, render: () => <InspectorWindow /> },
-  { id: 'lounge', title: 'Vibe-Lounge', hint: 'Mit Freunden im selben Raum vibecoden', icon: 'users', w: 520, h: 620, render: () => <LoungeWindow /> },
-  { id: 'companion', title: 'Handy-Begleiter', hint: 'Claude vom Handy aus Freigaben geben, Vorschläge holen und Aufträge schicken', icon: 'phone', w: 560, h: 660, render: () => <CompanionWindow /> },
-  { id: 'streamer', title: 'Streamer-Modus', hint: 'Geheimnisse schwärzen, OBS-Overlay und Twitch-Chat', icon: 'broadcast', w: 580, h: 680, render: () => <StreamerWindow /> },
-  { id: 'editor', title: 'Editor', hint: 'Dateien ansehen und schnell selbst anpassen', icon: 'code', ...EDITOR_SIZE, render: () => <EditorWindow />, onClose: () => void closeEditor() },
-  { id: 'git', title: 'Git & GitHub', hint: 'Änderungen ansehen, committen und mit GitHub synchronisieren', icon: 'github', w: 1080, h: 680, render: () => <GitWindow /> },
-  { id: 'brain', title: 'Gehirn', hint: 'Was Claude über dein Projekt weiß – als lebendiger Graph', icon: 'brain', w: 1160, h: 720, render: () => <BrainWindow /> },
-  { id: 'addons', title: 'Addons', hint: 'Eigene Abläufe bauen – ganz ohne Code', icon: 'puzzle', w: 1240, h: 780, render: () => <AddonWindow /> }
+  panel({ id: 'projects', title: () => t('Projekte'), hint: () => t('Projekte öffnen, anlegen und frühere Sessions fortsetzen'), icon: 'folder', w: 520, h: 480, render: () => <ProjectsWindow /> }),
+  panel({ id: 'skills', title: () => t('Skills'), hint: () => t('Fähigkeiten für Claude installieren – per Drag & Drop oder GitHub-Link'), icon: 'spark', w: 600, h: 540, render: () => <SkillsWindow /> }),
+  panel({ id: 'prompts', title: () => t('Prompts & Notizen'), hint: () => t('Fertige Prompts und Notizen pro Projekt'), icon: 'pen', w: 520, h: 560, render: () => <PromptsWindow /> }),
+  panel({ id: 'focus', title: () => t('Fokus-Timer'), hint: () => t('Pomodoro-Timer – in Pausen wird es leiser'), icon: 'timer', w: 340, h: 470, render: () => <FocusPanel /> }),
+  panel({ id: 'discord', title: () => t('Discord Rich Presence'), hint: () => t('Zeig in Discord, woran du gerade baust'), icon: 'discord', w: 900, h: 660, render: () => <DiscordWindow /> }),
+  panel({ id: 'inspector', title: () => t('Session-Inspector'), hint: () => t('Live sehen, was Claude tut: Aktionen, Todos, Agents, Kosten'), icon: 'inspect', w: 560, h: 520, render: () => <InspectorWindow /> }),
+  panel({ id: 'lounge', title: () => t('Vibe-Lounge'), hint: () => t('Mit Freunden im selben Raum vibecoden'), icon: 'users', w: 520, h: 620, render: () => <LoungeWindow /> }),
+  panel({ id: 'companion', title: () => t('Handy-Begleiter'), hint: () => t('Claude vom Handy aus Freigaben geben, Vorschläge holen und Aufträge schicken'), icon: 'phone', w: 560, h: 660, render: () => <CompanionWindow /> }),
+  panel({ id: 'streamer', title: () => t('Streamer-Modus'), hint: () => t('Geheimnisse schwärzen, OBS-Overlay und Twitch-Chat'), icon: 'broadcast', w: 580, h: 680, render: () => <StreamerWindow /> }),
+  panel({ id: 'editor', title: () => t('Editor'), hint: () => t('Dateien ansehen und schnell selbst anpassen'), icon: 'code', ...EDITOR_SIZE, render: () => <EditorWindow />, onClose: () => void closeEditor() }),
+  panel({ id: 'git', title: () => t('Git & GitHub'), hint: () => t('Änderungen ansehen, committen und mit GitHub synchronisieren'), icon: 'github', w: 1080, h: 680, render: () => <GitWindow /> }),
+  panel({ id: 'brain', title: () => t('Gehirn'), hint: () => t('Was Claude über dein Projekt weiß – als lebendiger Graph'), icon: 'brain', w: 1160, h: 720, render: () => <BrainWindow /> }),
+  panel({ id: 'addons', title: () => t('Addons'), hint: () => t('Eigene Abläufe bauen – ganz ohne Code'), icon: 'puzzle', w: 1240, h: 780, render: () => <AddonWindow /> })
 ]
 
 export const PANEL_IDS = PANELS.map((p) => p.id) as string[]

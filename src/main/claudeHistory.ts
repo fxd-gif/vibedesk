@@ -1,4 +1,5 @@
 // Liest frühere Claude-Code-Sessions eines Projekts aus ~/.claude/projects/<ordner>/<id>.jsonl
+import { t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import type { ClaudeSessionMeta } from '../shared/types'
@@ -66,9 +67,9 @@ function titleFrom(chunks: string[]): string {
         else if (text && !text.startsWith('<')) prompt = text
       }
     }
-  const t = (aiTitle || prompt).replace(/\s+/g, ' ').trim()
-  if (!t) return 'Ohne Titel'
-  return t.length > 80 ? t.slice(0, 79) + '…' : t
+  const title = (aiTitle || prompt).replace(/\s+/g, ' ').trim()
+  if (!title) return t('Ohne Titel')
+  return title.length > 80 ? title.slice(0, 79) + '…' : title
 }
 
 export function listClaudeSessions(cwd: string, projectsRoot: string, limit = 15): ClaudeSessionMeta[] {

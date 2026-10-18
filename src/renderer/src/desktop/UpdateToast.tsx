@@ -2,10 +2,11 @@ import { api } from '../api'
 import { updateLabel } from '../store/updateLabel'
 import { useUpdate } from '../store/updateStore'
 import { Icon } from './icons'
+import { t } from '../../../shared/i18n'
 
 export function UpdateToast(): React.JSX.Element | null {
   const { status, dismissed, dismiss, autoInstalling } = useUpdate()
-  const label = autoInstalling && status.state === 'ready' ? `Update ${status.version} wird installiert – VibeDesk startet gleich neu …` : updateLabel(status)
+  const label = autoInstalling && status.state === 'ready' ? t('Update {version} wird installiert – VibeDesk startet gleich neu …', { version: status.version }) : updateLabel(status)
   if (!label || dismissed) return null
   const ready = status.state === 'ready'
   return (
@@ -20,10 +21,10 @@ export function UpdateToast(): React.JSX.Element | null {
       {ready && !autoInstalling && (
         <>
           <button className="btn small primary" onClick={() => api.update.install()}>
-            Jetzt neu starten
+            {t('Jetzt neu starten')}
           </button>
-          <button className="btn small ghost" onClick={dismiss} title="Wird beim nächsten Beenden installiert">
-            Später
+          <button className="btn small ghost" onClick={dismiss} title={t('Wird beim nächsten Beenden installiert')}>
+            {t('Später')}
           </button>
         </>
       )}

@@ -1,4 +1,5 @@
 // Strom: PC wach halten, solange der Handy-Begleiter läuft – und vom Handy aus herunterfahren oder schlafen legen.
+import { t } from '../shared/i18n'
 import { SHUTDOWN_DELAY_S, type PowerAction } from '../shared/companion'
 import type { Runner } from './gitService'
 
@@ -41,8 +42,8 @@ export class PowerControl {
     const opts = { cwd: process.env.SystemRoot ?? 'C:\\Windows', timeout: 20_000 }
     if (action === 'shutdown') {
       if (this.at) return { ok: true, at: this.at }
-      const r = await this.d.run('shutdown.exe', ['/s', '/t', String(SHUTDOWN_DELAY_S), '/c', 'VibeDesk: vom Handy ausgeschaltet. Abbrechen mit „shutdown /a“ oder in VibeDesk.'], opts)
-      if (r.code !== 0) return { ok: false, error: 'Windows hat das Herunterfahren abgelehnt.' }
+      const r = await this.d.run('shutdown.exe', ['/s', '/t', String(SHUTDOWN_DELAY_S), '/c', t('VibeDesk: vom Handy ausgeschaltet. Abbrechen mit „shutdown /a“ oder in VibeDesk.')], opts)
+      if (r.code !== 0) return { ok: false, error: t('Windows hat das Herunterfahren abgelehnt.') }
       this.at = now + SHUTDOWN_DELAY_S * 1000
       if (this.clear) clearTimeout(this.clear)
       this.clear = setTimeout(() => (this.at = null), SHUTDOWN_DELAY_S * 1000 + 5000)
@@ -66,6 +67,6 @@ export class PowerControl {
       }, 1500)
       return { ok: true, at: null }
     }
-    return { ok: false, error: 'Unbekannte Aktion' }
+    return { ok: false, error: t('Unbekannte Aktion') }
   }
 }

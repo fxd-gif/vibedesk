@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 import { ipcMain, shell, type BrowserWindow } from 'electron'
 import type { ProjectStore } from './projectStore'
 import type { GitService } from './gitService'
@@ -5,7 +6,7 @@ import type { GitService } from './gitService'
 export function registerGitIpc(git: GitService, projects: ProjectStore, win: () => BrowserWindow | null): void {
   const cwd = (projectId: unknown): string => {
     const p = typeof projectId === 'string' ? projects.get(projectId) : undefined
-    if (!p || p.missing) throw new Error('Projekt nicht gefunden')
+    if (!p || p.missing) throw new Error(t('Projekt nicht gefunden'))
     return p.path
   }
   const list = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])

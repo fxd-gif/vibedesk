@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, Menu, net, protocol, session, shell } from 
 import { pathToFileURL } from 'url'
 import { errorLogFile, installErrorLog, logError, registerErrorIpc } from './errorLog'
 import '../shared/i18n/en'
-import { resolveLang, setLang } from '../shared/i18n'
+import { resolveLang, setLang, t } from '../shared/i18n'
 import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
 import { ADDON_SCHEME, addonPathFromArgv, AddonStore } from './addonStore'
 import { registerAddonIpc } from './addonIpc'
@@ -130,6 +130,10 @@ let gate: ReturnType<typeof createSplashGate> | null = null
 app.whenReady().then(async () => {
   if (!primary) return
   Menu.setApplicationMenu(null)
+  // Sprache vor dem ersten sichtbaren Fenster festlegen – auch das Update-Fensterchen spricht sie
+  const userData = app.getPath('userData')
+  const settings = new SettingsStore(join(userData, 'settings.json'), DEFAULT_SETTINGS(app.getPath('documents')))
+  setLang(resolveLang(settings.get().language, app.getLocale()))
   if (app.isPackaged || process.env.VIBEDESK_SPLASH) splash = new SplashWindow()
   if (app.isPackaged) registerRunAlias(process.execPath)
   ipcMain.handle('app:claudeInstalled', () => !!process.env.VIBEDESK_CLAUDE_CMD || claudeOnPath())
@@ -141,9 +145,6 @@ app.whenReady().then(async () => {
   ipcMain.on('setup:openDownload', (_e, tool: string) => shell.openExternal(tool === 'node' ? NODE_DOWNLOAD_URL : CLAUDE_DOCS_URL))
   ipcMain.handle('app:claudeVersion', () => claudeVersion())
   registerErrorIpc(claudeVersion)
-  const userData = app.getPath('userData')
-  const settings = new SettingsStore(join(userData, 'settings.json'), DEFAULT_SETTINGS(app.getPath('documents')))
-  setLang(resolveLang(settings.get().language, app.getLocale()))
   const projects = new ProjectStore(
     join(userData, 'projects.json'),
     () => process.env.VIBEDESK_PROJECTS_DIR || settings.get().projectsDir,
@@ -381,7 +382,7 @@ app.whenReady().then(async () => {
       beforeInstall: async (version) => {
         // Fensterchen zeigen, Brücke für die Installer-Pause starten, dann erst beenden
         if (!splash?.open) splash = new SplashWindow()
-        splash.set({ text: version ? `Installiere Update ${version} …` : 'Installiere Update …', percent: null })
+        splash.set({ text: version ? t('Installiere Update {version} …', { version }) : t('Installiere Update …'), percent: null })
         // erst beenden, wenn das Brücken-Fensterchen steht – sonst gibt es eine Lücke ohne Fenster
         await showInstallBridge(bridgeScript, version)
       }
@@ -409,7 +410,7 @@ app.whenReady().then(async () => {
 }).catch((e) => {
   // Startfehler nie als unsichtbar hängende App enden lassen
   logError('Start', e)
-  dialog.showErrorBox('VibeDesk konnte nicht starten', `${e instanceof Error ? e.message : String(e)}\n\nDetails stehen in ${errorLogFile()}`)
+  dialog.showErrorBox(t('VibeDesk konnte nicht starten'), `${e instanceof Error ? e.message : String(e)}\n\n${t('Details stehen in {file}', { file: errorLogFile() })}`)
   app.exit(1)
 })
 

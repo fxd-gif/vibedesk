@@ -1,4 +1,5 @@
 // Handy-Begleiter: Server an/aus, Live-Stand fürs Handy und Prompts vom Handy in die richtige Session.
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import { internetOn, type CompanionDevice, type CompanionPairing, type CompanionSettings, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../../../shared/companion'
@@ -81,7 +82,7 @@ async function runPrompt(reqId: string, target: PromptTarget, text: string): Pro
     ok = false
   }
   api.companion.promptDone(reqId, ok)
-  if (ok) inform('Vom Handy an Claude', text.length > 140 ? text.slice(0, 139) + '…' : text)
+  if (ok) inform(t('Vom Handy an Claude'), text.length > 140 ? text.slice(0, 139) + '…' : text)
 }
 
 let pairTimer: ReturnType<typeof setTimeout> | undefined
@@ -141,17 +142,17 @@ export function wireCompanion(): void {
     if (paired) {
       clearTimeout(pairTimer)
       useCompanion.setState({ pairing: null })
-      inform('Handy gekoppelt', `„${paired.name}“ kann jetzt Freigaben geben und Claude Aufträge schicken.`)
+      inform(t('Handy gekoppelt'), t('„{name}“ kann jetzt Freigaben geben und Claude Aufträge schicken.', { name: paired.name }))
     }
   })
   api.on.companionStatus((status) => on() && useCompanion.setState({ status }))
   api.on.companionPower((action, at) => {
     if (action === 'shutdown' && at) {
       const s = Math.max(1, Math.round((at - Date.now()) / 1000))
-      inform('PC fährt herunter', `Vom Handy ausgelöst – in ${s} Sekunden. Laufende Sessions werden beendet.`, [
-        { label: 'Abbrechen', primary: true, run: () => void api.companion.cancelShutdown() }
+      inform(t('PC fährt herunter'), t('Vom Handy ausgelöst – in {s} Sekunden. Laufende Sessions werden beendet.', { s }), [
+        { label: t('Abbrechen'), primary: true, run: () => void api.companion.cancelShutdown() }
       ])
-    } else if (action === 'cancel') inform('Ausschalten abgebrochen')
-    else if (action === 'sleep') inform('PC geht in den Standby', 'Vom Handy ausgelöst.')
+    } else if (action === 'cancel') inform(t('Ausschalten abgebrochen'))
+    else if (action === 'sleep') inform(t('PC geht in den Standby'), t('Vom Handy ausgelöst.'))
   })
 }

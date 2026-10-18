@@ -1,5 +1,6 @@
 // Vibe-Lounge: Protokoll für den P2P-Co-Working-Raum (WebRTC, kein eigener Server).
 // Alles, was von Peers kommt, ist fremd: hier wird es streng geprüft und begrenzt.
+import { t } from './i18n'
 import { cleanText } from './shareCode'
 
 export const LOUNGE_APP_ID = 'vibedesk-lounge-v1'
@@ -115,10 +116,17 @@ export function normalizeRoomCode(s: string): string | null {
   return `${c.slice(0, 4)}-${c.slice(4, 8)}-${c.slice(8)}`
 }
 
-export const STATUS_LABEL: Record<LoungeStatus, string> = {
-  idle: 'chillt',
-  working: 'Claude arbeitet',
-  waiting: 'wartet auf Claude-Freigabe',
-  done: 'fertig',
-  error: 'kämpft mit einem Fehler'
+export function statusLabel(s: LoungeStatus): string {
+  switch (s) {
+    case 'idle':
+      return t('chillt')
+    case 'working':
+      return t('Claude arbeitet')
+    case 'waiting':
+      return t('wartet auf Claude-Freigabe')
+    case 'done':
+      return t('fertig')
+    case 'error':
+      return t('kämpft mit einem Fehler')
+  }
 }

@@ -1,4 +1,5 @@
 // Prompt-Warteschlange: Aufträge vormerken, die automatisch losgehen, sobald Claude fertig ist.
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import type { SessionStatus } from '../../../shared/types'
 import { inform } from './notifyStore'
@@ -41,8 +42,8 @@ function release(sessionId: string): void {
   const [next, ...rest] = list
   useQueue.setState((s) => ({ items: { ...s.items, [sessionId]: rest } }))
   sendToSession(sessionId, next.text, false)
-  const name = useSessions.getState().sessions.find((s) => s.id === sessionId)?.name ?? 'Session'
-  inform(`${name}: nächster Auftrag läuft`, next.text.length > 90 ? next.text.slice(0, 90) + ' …' : next.text, undefined, `queue:${sessionId}`)
+  const name = useSessions.getState().sessions.find((s) => s.id === sessionId)?.name ?? t('Session')
+  inform(t('{name}: nächster Auftrag läuft', { name }), next.text.length > 90 ? next.text.slice(0, 90) + ' …' : next.text, undefined, `queue:${sessionId}`)
 }
 
 export function enqueue(sessionId: string, text: string): boolean {

@@ -1,4 +1,5 @@
 // Discord-Webhook: „Session wartet auf dich“ und Tagesrückblick. Main prüft URL, Drossel und „bist du weg?“.
+import { t } from '../../../shared/i18n'
 import { api } from '../api'
 import { redact } from '../../../shared/redact'
 import { isWebhookUrl, recapEmbed, waitingEmbed } from '../../../shared/webhook'
@@ -88,11 +89,11 @@ export async function sendRecap(force = false): Promise<{ ok: boolean; error?: s
   if (!s) return { ok: false }
   const days = await api.stats.history()
   const date = today()
-  const t = days[days.length - 1]
-  if (!t || t.date !== date) return { ok: false, error: 'Für heute gibt es noch keine Zahlen.' }
+  const last = days[days.length - 1]
+  if (!last || last.date !== date) return { ok: false, error: t('Für heute gibt es noch keine Zahlen.') }
   const day = loadDay()
   const body = recapEmbed({
-    today: t,
+    today: last,
     yesterday: days[days.length - 2],
     week: days.slice(-7),
     projects: hideProjects() ? [] : day.projects,
@@ -114,8 +115,8 @@ async function maybeRecap(): Promise<void> {
   if (hook.lastRecap === today() || now.getHours() < hook.recapHour) return
   if (Date.now() - recapFailedAt < RECAP_RETRY_MS) return
   // ein Tag ohne Tokens braucht keinen Rückblick
-  const t = useStats.getState().days.at(-1)
-  if (!t || t.date !== today() || !t.tokens) return
+  const last = useStats.getState().days.at(-1)
+  if (!last || last.date !== today() || !last.tokens) return
   recapBusy = true
   try {
     const r = await sendRecap()

@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
@@ -7,10 +8,10 @@ import { readJson, writeJsonAtomic } from './jsonFile'
 const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i
 
 export function validateProjectName(name: string): string | null {
-  if (!name.trim()) return 'Ungültiger Projektname: Name darf nicht leer sein'
-  if (/[<>:"/\\|?*\x00-\x1f]/.test(name)) return 'Ungültiger Projektname: Zeichen < > : " / \\ | ? * sind nicht erlaubt'
-  if (RESERVED.test(name)) return 'Ungültiger Projektname: von Windows reserviert'
-  if (/[. ]$/.test(name)) return 'Ungültiger Projektname: darf nicht auf Punkt oder Leerzeichen enden'
+  if (!name.trim()) return t('Ungültiger Projektname: Name darf nicht leer sein')
+  if (/[<>:"/\\|?*\x00-\x1f]/.test(name)) return t('Ungültiger Projektname: Zeichen < > : " / \\ | ? * sind nicht erlaubt')
+  if (RESERVED.test(name)) return t('Ungültiger Projektname: von Windows reserviert')
+  if (/[. ]$/.test(name)) return t('Ungültiger Projektname: darf nicht auf Punkt oder Leerzeichen enden')
   return null
 }
 
@@ -39,15 +40,15 @@ export class ProjectStore {
     const err = validateProjectName(name)
     if (err) throw new Error(err)
     const dir = path.join(this.getProjectsDir(), name)
-    if (fs.existsSync(dir)) throw new Error('Ordner existiert bereits')
+    if (fs.existsSync(dir)) throw new Error(t('Ordner existiert bereits'))
     fs.mkdirSync(dir, { recursive: true })
     return this.insert(name, dir)
   }
 
   add(dir: string): Project {
     const abs = path.resolve(dir)
-    if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) throw new Error('Ordner nicht gefunden')
-    if (this.projects.some((p) => p.path.toLowerCase() === abs.toLowerCase())) throw new Error('Projekt bereits vorhanden')
+    if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) throw new Error(t('Ordner nicht gefunden'))
+    if (this.projects.some((p) => p.path.toLowerCase() === abs.toLowerCase())) throw new Error(t('Projekt bereits vorhanden'))
     return this.insert(path.basename(abs), abs)
   }
 

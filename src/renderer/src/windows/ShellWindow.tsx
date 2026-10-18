@@ -8,8 +8,9 @@ import { useUi } from '../store/uiStore'
 import type { ShellInfo } from '../../../shared/types'
 import { TermPane } from '../terminal/TermPane'
 import { TermSettings } from '../terminal/TermSettings'
+import { t } from '../../../shared/i18n'
 
-const KIND_LABEL = { powershell: 'PowerShell', pwsh: 'PowerShell 7', cmd: 'Eingabeaufforderung' } as const
+const kindLabel = (k: ShellInfo['kind']): string => (k === 'cmd' ? t('Eingabeaufforderung') : k === 'pwsh' ? 'PowerShell 7' : 'PowerShell')
 
 export function ShellWindow({ shell }: { shell: ShellInfo }): React.JSX.Element {
   const id = shellWin(shell.id)
@@ -29,10 +30,10 @@ export function ShellWindow({ shell }: { shell: ShellInfo }): React.JSX.Element 
           <Icon name="terminal" size={14} />
           <span>{shell.name}</span>
           <span className="dim" style={{ fontWeight: 400 }}>
-            · {KIND_LABEL[shell.kind]}
+            · {kindLabel(shell.kind)}
           </span>
           <span className="term-tools" onPointerDown={(e) => e.stopPropagation()}>
-            <button className={`term-tool${settingsOpen ? ' on' : ''}`} title="Terminal-Einstellungen" onClick={() => setSettingsOpen((v) => !v)}>
+            <button className={`term-tool${settingsOpen ? ' on' : ''}`} title={t('Terminal-Einstellungen')} onClick={() => setSettingsOpen((v) => !v)}>
               <Icon name="gear" size={13} />
             </button>
           </span>
@@ -47,9 +48,9 @@ export function ShellWindow({ shell }: { shell: ShellInfo }): React.JSX.Element 
       {settingsOpen && <TermSettings onClose={() => setSettingsOpen(false)} />}
       {exitCode !== undefined && (
         <div className="term-overlay">
-          <span className="dim">Shell beendet{exitCode !== 0 ? ` (Code ${exitCode})` : ''}</span>
+          <span className="dim">{exitCode !== 0 ? t('Shell beendet (Code {code})', { code: exitCode }) : t('Shell beendet')}</span>
           <button className="btn primary" onClick={() => void useShells.getState().restart(shell.id)}>
-            <Icon name="restart" size={15} /> Neu starten
+            <Icon name="restart" size={15} /> {t('Neu starten')}
           </button>
         </div>
       )}

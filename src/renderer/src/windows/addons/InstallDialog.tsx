@@ -6,6 +6,7 @@ import { useAddons } from '../../store/addonStore'
 import { alert } from '../../store/dialogStore'
 import { openPanel } from '../palette/CommandPalette'
 import { useAddonUi } from './AddonWindow'
+import { t } from '../../../../shared/i18n'
 
 type Source = string | Uint8Array
 
@@ -17,7 +18,7 @@ export async function openInstallDialog(source: Source): Promise<void> {
     const preview = await api.addons.inspect(source)
     useInstall.setState({ preview, source, busy: false })
   } catch (err) {
-    await alert('Addon kann nicht installiert werden', errorText(err))
+    await alert(t('Addon kann nicht installiert werden'), errorText(err))
   }
 }
 
@@ -43,26 +44,26 @@ export function InstallDialog(): React.JSX.Element | null {
       openPanel('addons')
     } catch (err) {
       close()
-      await alert('Addon kann nicht installiert werden', errorText(err))
+      await alert(t('Addon kann nicht installiert werden'), errorText(err))
     }
   }
 
   return (
     <div className="dlg-backdrop" onPointerDown={(e) => e.target === e.currentTarget && !busy && close()}>
       <div className="dlg install-dlg" role="dialog" data-testid="install-dialog" onKeyDown={(e) => e.key === 'Escape' && !busy && close()}>
-        <h3>{old ? 'Addon aktualisieren?' : 'Addon installieren?'}</h3>
+        <h3>{old ? t('Addon aktualisieren?') : t('Addon installieren?')}</h3>
         <div>
           <strong>{m.name}</strong>
-          {m.author && <span className="dim"> · von {m.author}</span>}
+          {m.author && <span className="dim"> · {t('von {author}', { author: m.author })}</span>}
         </div>
         {m.description && <p className="dlg-msg">{m.description}</p>}
         {old && (
           <p className="dlg-msg">
-            Installiert: v{old.version} von {old.author || 'unbekannt'} → v{m.version} von {m.author || 'unbekannt'}
+            {t('Installiert: v{old} von {oldAuthor} → v{new} von {newAuthor}', { old: old.version, oldAuthor: old.author || t('unbekannt'), new: m.version, newAuthor: m.author || t('unbekannt') })}
           </p>
         )}
         <div>
-          <div className="dim small">Dieses Addon …</div>
+          <div className="dim small">{t('Dieses Addon …')}</div>
           {preview.capabilityLabels.length ? (
             <ul className="install-caps">
               {preview.capabilityLabels.map((c) => (
@@ -70,7 +71,7 @@ export function InstallDialog(): React.JSX.Element | null {
               ))}
             </ul>
           ) : (
-            <p className="dlg-msg">… tut nichts Sichtbares.</p>
+            <p className="dlg-msg">{t('… tut nichts Sichtbares.')}</p>
           )}
         </div>
         {preview.images.length > 0 && (
@@ -82,18 +83,18 @@ export function InstallDialog(): React.JSX.Element | null {
         )}
         {preview.capabilityLabels.includes(CAPABILITY_LABELS.claude) ? (
           <p className="install-warn" data-testid="install-claude-warn">
-            <b>Achtung: Dieses Addon steuert Claude.</b> Es kann Sessions öffnen und Prompts schicken – Claude kann daraufhin Dateien ändern und Befehle ausführen.
-            Installiere es nur, wenn du dem Absender vertraust, und schau dir die Prompts im Maker an.
+            <b>{t('Achtung: Dieses Addon steuert Claude.')}</b>{' '}
+            {t('Es kann Sessions öffnen und Prompts schicken – Claude kann daraufhin Dateien ändern und Befehle ausführen. Installiere es nur, wenn du dem Absender vertraust, und schau dir die Prompts im Maker an.')}
           </p>
         ) : (
-          <p className="dim small">Addons können keine Dateien lesen, keine Befehle ausführen und nicht ins Internet.</p>
+          <p className="dim small">{t('Addons können keine Dateien lesen, keine Befehle ausführen und nicht ins Internet.')}</p>
         )}
         <div className="dlg-actions">
           <button className="btn ghost" onClick={close} disabled={busy}>
-            Abbrechen
+            {t('Abbrechen')}
           </button>
           <button className="btn primary" autoFocus onClick={() => void install()} disabled={busy} data-testid="install-confirm">
-            {old ? 'Aktualisieren' : 'Installieren'}
+            {old ? t('Aktualisieren') : t('Installieren')}
           </button>
         </div>
       </div>

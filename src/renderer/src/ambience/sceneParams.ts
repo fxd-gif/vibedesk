@@ -1,4 +1,5 @@
 // Prozedurale Szenen hinter der Scheibe: reine Parameter, deterministisch per Seed.
+import { t } from '../../../shared/i18n'
 
 export interface SceneColor {
   hex: string
@@ -23,10 +24,26 @@ export interface SceneParams {
   fogColor: string
 }
 
-export const SCENES: { id: 'city' | 'forest' | 'tokyo'; label: string }[] = [
-  { id: 'city', label: 'Stadt bei Nacht' },
-  { id: 'forest', label: 'Wald in der Dämmerung' },
-  { id: 'tokyo', label: 'Tokio-Gasse' }
+/** label übersetzt sich beim Lesen (Getter) – die Liste selbst entsteht beim Import */
+export const SCENES: { id: 'city' | 'forest' | 'tokyo'; readonly label: string }[] = [
+  {
+    id: 'city',
+    get label() {
+      return t('Stadt bei Nacht')
+    }
+  },
+  {
+    id: 'forest',
+    get label() {
+      return t('Wald in der Dämmerung')
+    }
+  },
+  {
+    id: 'tokyo',
+    get label() {
+      return t('Tokio-Gasse')
+    }
+  }
 ]
 
 function rng(seed: number): () => number {

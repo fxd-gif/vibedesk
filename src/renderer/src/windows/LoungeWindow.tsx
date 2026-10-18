@@ -1,21 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 import { Icon } from '../desktop/icons'
-import { AVATARS, REACTIONS, STATUS_LABEL, type LoungePresence } from '../../../shared/lounge'
+import { AVATARS, REACTIONS, statusLabel, type LoungePresence } from '../../../shared/lounge'
 import { findShareCode } from '../../../shared/shareCode'
 import { fmtClock } from '../store/focusStore'
 import { acceptInvite, buildPresence, inviteFocus, joinLounge, leaveLounge, randomCode, sendChat, sendReaction, useLounge, type LoungeMsg } from '../store/loungeStore'
 import { useSettings } from '../store/settingsStore'
 import { startImport } from '../store/shareStore'
 import { Toggle } from './AmbienceMenu'
+import { locale, t } from '../../../shared/i18n'
 
-const PHASE = { work: 'Fokus', short: 'Pause', long: 'Lange Pause' } as const
+const PHASE = (p: 'work' | 'short' | 'long'): string => (p === 'work' ? t('Fokus') : p === 'short' ? t('Pause') : t('Lange Pause'))
 
 function useTick(ms = 1000): number {
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), ms)
-    return () => clearInterval(t)
+    const iv = setInterval(() => setNow(Date.now()), ms)
+    return () => clearInterval(iv)
   }, [ms])
   return now
 }
@@ -34,7 +35,7 @@ function Profile(): React.JSX.Element {
       <div className="row">
         <input
           className="field small"
-          placeholder="Dein Name in der Lounge"
+          placeholder={t('Dein Name in der Lounge')}
           maxLength={24}
           value={l.name}
           onChange={(e) => set({ lounge: { ...l, name: e.target.value } })}
@@ -49,8 +50,8 @@ function Profile(): React.JSX.Element {
         ))}
       </div>
       <div className="row between">
-        <span className="small">Projektnamen zeigen {s.streamer.enabled && <span className="dim">(im Streamer-Modus aus)</span>}</span>
-        <Toggle label="Projektnamen zeigen" on={l.showProject} onChange={(v) => set({ lounge: { ...l, showProject: v } })} />
+        <span className="small">{t('Projektnamen zeigen')} {s.streamer.enabled && <span className="dim">{t('(im Streamer-Modus aus)')}</span>}</span>
+        <Toggle label={t('Projektnamen zeigen')} on={l.showProject} onChange={(v) => set({ lounge: { ...l, showProject: v } })} />
       </div>
     </div>
   )
@@ -70,37 +71,39 @@ function Lobby(): React.JSX.Element {
   return (
     <>
       <p className="lounge-intro">
-        Vibecode mit Freunden im selben Raum: Ihr seht, wer gerade baut, startet Fokus-Runden zusammen, schickt Reaktionen und teilt Prompts &amp; Skills per Code.
+        {t('Vibecode mit Freunden im selben Raum: Ihr seht, wer gerade baut, startet Fokus-Runden zusammen, schickt Reaktionen und teilt Prompts & Skills per Code.')}
       </p>
       <Profile />
       <div className="lounge-actions">
         <button className="btn primary" disabled={!named} onClick={() => join(randomCode())} data-testid="lounge-create">
-          <Icon name="plus" size={14} /> Neuen Raum öffnen
+          <Icon name="plus" size={14} /> {t('Neuen Raum öffnen')}
         </button>
         <div className="row">
           <input
             className="field small mono"
-            placeholder="Raumcode, z. B. abcd-efgh-jkmn"
+            placeholder={t('Raumcode, z. B. abcd-efgh-jkmn')}
             value={code}
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && named && code.trim() && join(code)}
             data-testid="lounge-code"
           />
           <button className="btn" disabled={!named || !code.trim()} onClick={() => join(code)}>
-            Beitreten
+            {t('Beitreten')}
           </button>
         </div>
         {s.lounge.lastRoom && (
           <button className="linkish small" disabled={!named} onClick={() => join(s.lounge.lastRoom)}>
-            Zurück in den letzten Raum
+            {t('Zurück in den letzten Raum')}
           </button>
         )}
-        {!named && <div className="dim small">Gib dir zuerst einen Namen.</div>}
+        {!named && <div className="dim small">{t('Gib dir zuerst einen Namen.')}</div>}
         {err && <div className="warn small">{err}</div>}
       </div>
       <div className="lounge-privacy">
-        <b>Ohne Server, direkt zwischen euch.</b> Geteilt werden nur Name, Status, Fokus-Timer, Chat und Reaktionen – nie Code, Dateien oder Terminal-Inhalte. Die Verbindung ist
-        verschlüsselt, aber wer im Raum ist, kann deine IP-Adresse sehen. Gib den Raumcode deshalb nur Leuten, denen du vertraust.
+        <b>{t('Ohne Server, direkt zwischen euch.')}</b>{' '}
+        {t(
+          'Geteilt werden nur Name, Status, Fokus-Timer, Chat und Reaktionen – nie Code, Dateien oder Terminal-Inhalte. Die Verbindung ist verschlüsselt, aber wer im Raum ist, kann deine IP-Adresse sehen. Gib den Raumcode deshalb nur Leuten, denen du vertraust.'
+        )}
       </div>
     </>
   )
@@ -114,21 +117,21 @@ function PeerCard({ p, at, self, now }: { p: LoungePresence; at: number; self?: 
       <div className="peer-info">
         <div className="peer-name">
           {p.name}
-          {self && <span className="dim small"> (du)</span>}
+          {self && <span className="dim small"> {t('(du)')}</span>}
           {p.streaming && <span className="live-tag">LIVE</span>}
         </div>
         <div className="peer-status">
-          <span className={`dot ${p.status}`} /> {p.sessions ? STATUS_LABEL[p.status] : 'keine Session'}
+          <span className={`dot ${p.status}`} /> {p.sessions ? statusLabel(p.status) : t('keine Session')}
           {p.project && <span className="dim"> · {p.project}</span>}
         </div>
       </div>
       <div className="peer-extra">
         {p.focus && (
-          <span className={`peer-focus ${p.focus.phase}`} title={PHASE[p.focus.phase]}>
-            {PHASE[p.focus.phase]} {fmtClock(left)}
+          <span className={`peer-focus ${p.focus.phase}`} title={PHASE(p.focus.phase)}>
+            {PHASE(p.focus.phase)} {fmtClock(left)}
           </span>
         )}
-        {p.music && <span title="hört Lofi">🎵</span>}
+        {p.music && <span title={t('hört Lofi')}>🎵</span>}
       </div>
     </li>
   )
@@ -136,7 +139,7 @@ function PeerCard({ p, at, self, now }: { p: LoungePresence; at: number; self?: 
 
 function ChatLine({ m }: { m: LoungeMsg }): React.JSX.Element {
   const code = m.kind === 'chat' ? findShareCode(m.text) : null
-  const time = new Date(m.ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+  const time = new Date(m.ts).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
   if (m.kind === 'system')
     return (
       <li className="chat-sys">
@@ -149,7 +152,7 @@ function ChatLine({ m }: { m: LoungeMsg }): React.JSX.Element {
       <span className="chat-text">{code ? m.text.replace(code, code.slice(0, 18) + '…') : m.text}</span>
       {code && (
         <button className="btn small" onClick={() => startImport(code)}>
-          <Icon name="share" size={12} /> Code ansehen
+          <Icon name="share" size={12} /> {t('Code ansehen')}
         </button>
       )}
     </li>
@@ -184,42 +187,42 @@ function Room(): React.JSX.Element {
   return (
     <>
       <div className="row lounge-head">
-        <span className="dim small">Raum</span>
+        <span className="dim small">{t('Raum')}</span>
         <code className={`room-code${hidden ? ' masked' : ''}`} data-testid="lounge-room">
           {hidden ? '••••-••••-••••' : room}
         </code>
         {streaming && (
-          <button className="btn small ghost" onClick={() => setReveal(!reveal)} title="Im Streamer-Modus verborgen">
-            {reveal ? 'verbergen' : 'zeigen'}
+          <button className="btn small ghost" onClick={() => setReveal(!reveal)} title={t('Im Streamer-Modus verborgen')}>
+            {reveal ? t('verbergen') : t('zeigen')}
           </button>
         )}
         <button
           className="btn small ghost"
-          title="Raumcode kopieren"
+          title={t('Raumcode kopieren')}
           onClick={() => {
             api.clipboard.write(room)
             setCopied(true)
             setTimeout(() => setCopied(false), 1500)
           }}
         >
-          <Icon name="copy" size={13} /> {copied ? 'kopiert' : 'Code'}
+          <Icon name="copy" size={13} /> {copied ? t('kopiert') : t('Code')}
         </button>
         <span style={{ flex: 1 }} />
-        <span className="dim small">{list.length + 1} online</span>
+        <span className="dim small">{t('{n} online', { n: list.length + 1 })}</span>
         <button className="btn small ghost" onClick={() => void leaveLounge()} data-testid="lounge-leave">
-          Verlassen
+          {t('Verlassen')}
         </button>
       </div>
 
       {invite && Date.now() - invite.ts < 120_000 && (
         <div className="lounge-invite">
-          ⏱ <b>{invite.name}</b> startet eine Fokus-Runde ({invite.minutes} Min.)
+          ⏱ <b>{invite.name}</b> {t('startet eine Fokus-Runde ({n} Min.)', { n: invite.minutes })}
           <span style={{ flex: 1 }} />
           <button className="btn small primary" onClick={acceptInvite}>
-            Mitmachen
+            {t('Mitmachen')}
           </button>
           <button className="btn small ghost" onClick={() => useLounge.setState({ invite: null })}>
-            Nein
+            {t('Nein')}
           </button>
         </div>
       )}
@@ -229,18 +232,18 @@ function Room(): React.JSX.Element {
         {list.map((p) => (
           <PeerCard key={p.id} p={p.p} at={p.at} now={now} />
         ))}
-        {!list.length && <li className="dim small peer-wait">Warte auf Freunde … schick ihnen den Raumcode.</li>}
+        {!list.length && <li className="dim small peer-wait">{t('Warte auf Freunde … schick ihnen den Raumcode.')}</li>}
       </ul>
 
       <div className="row lounge-react">
         {REACTIONS.map((r) => (
-          <button key={r} className="btn small ghost react-btn" onClick={() => sendReaction(r)} title="An alle senden">
+          <button key={r} className="btn small ghost react-btn" onClick={() => sendReaction(r)} title={t('An alle senden')}>
             {r}
           </button>
         ))}
         <span style={{ flex: 1 }} />
-        <button className="btn small" onClick={inviteFocus} title="Startet deinen Fokus-Timer und lädt alle ein">
-          <Icon name="timer" size={13} /> Fokus für alle
+        <button className="btn small" onClick={inviteFocus} title={t('Startet deinen Fokus-Timer und lädt alle ein')}>
+          <Icon name="timer" size={13} /> {t('Fokus für alle')}
         </button>
       </div>
 
@@ -252,7 +255,7 @@ function Room(): React.JSX.Element {
       <div className="row">
         <input
           className="field small"
-          placeholder="Nachricht oder Share-Code …"
+          placeholder={t('Nachricht oder Share-Code …')}
           maxLength={500}
           value={text}
           onChange={(e) => setText(e.target.value)}

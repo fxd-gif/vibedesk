@@ -1,5 +1,6 @@
 // Wächter: erkennt, wenn eine Session hängt, in einer Fehlerschleife steckt oder der Kontext voll wird.
 // Reine Logik – die Verdrahtung mit Mitteilungen steckt in watcher.ts.
+import { t } from '../../../shared/i18n'
 import type { SessionStatus } from '../../../shared/types'
 import type { FeedEntry } from './workflowReducer'
 
@@ -40,8 +41,11 @@ export function stuckAlert(i: WatchInput): WatchAlert | null {
   const pending = [...i.feed].reverse().find((f) => f.result === 'pending')
   const limit = pending ? STUCK_TOOL_MS : STUCK_MS
   if (idle < limit) return null
-  const what = pending ? `${pending.tool}${pending.target ? ` (${pending.target})` : ''} läuft` : 'kein Lebenszeichen'
-  return { kind: 'stuck', ref: String(i.lastActivity), detail: `Seit ${minutes(idle)} Minuten ${what}.` }
+  const min = minutes(idle)
+  const detail = pending
+    ? t('Seit {min} Minuten läuft {tool}.', { min, tool: `${pending.tool}${pending.target ? ` (${pending.target})` : ''}` })
+    : t('Seit {min} Minuten kein Lebenszeichen.', { min })
+  return { kind: 'stuck', ref: String(i.lastActivity), detail }
 }
 
 export function loopAlert(i: WatchInput): WatchAlert | null {
@@ -53,7 +57,9 @@ export function loopAlert(i: WatchInput): WatchAlert | null {
   return {
     kind: 'loop',
     ref: String(tail[tail.length - 1].id),
-    detail: `${first.tool}${first.target ? ` „${first.target}“` : ''} ist ${LOOP_N}-mal hintereinander fehlgeschlagen.`
+    detail: first.target
+      ? t('{tool} „{target}“ ist {n}-mal hintereinander fehlgeschlagen.', { tool: first.tool, target: first.target, n: LOOP_N })
+      : t('{tool} ist {n}-mal hintereinander fehlgeschlagen.', { tool: first.tool, n: LOOP_N })
   }
 }
 
@@ -64,7 +70,7 @@ export function contextRatio(i: Pick<WatchInput, 'contextUsed' | 'contextWindow'
 export function contextAlert(i: WatchInput): WatchAlert | null {
   const r = contextRatio(i)
   if (r < CONTEXT_WARN) return null
-  return { kind: 'context', ref: 'ctx', detail: `Der Kontext ist zu ${Math.round(r * 100)} % voll – bald vergisst Claude den Anfang.` }
+  return { kind: 'context', ref: 'ctx', detail: t('Der Kontext ist zu {pct} % voll – bald vergisst Claude den Anfang.', { pct: Math.round(r * 100) }) }
 }
 
 export function watchAlerts(i: WatchInput): WatchAlert[] {

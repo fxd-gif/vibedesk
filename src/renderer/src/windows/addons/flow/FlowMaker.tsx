@@ -28,6 +28,7 @@ import { NodeInspector, type InspectorContext } from './Inspector'
 import { AddonMeta, type Meta } from './AddonMeta'
 import { FlowIcon } from './FlowIcon'
 import { TEMPLATES, templateGraph } from '../../../addons/templates'
+import { t } from '../../../../../shared/i18n'
 import './flow.css'
 
 type RFNode = Node<FlowNodeData, 'card'>
@@ -44,9 +45,9 @@ const toFlowEdges = (es: Edge[]): FlowEdge[] => es.map((e) => ({ id: e.id, sourc
 const edgeOf = (source: string, sourceHandle: string, target: string): Edge => ({ id: `${source}-${sourceHandle}-${target}`, source, sourceHandle, target })
 
 function starter(): { nodes: FlowNode[]; edges: FlowEdge[] } {
-  const t = newNode('vd_on_session_done', { x: 80, y: 60 })
+  const trig = newNode('vd_on_session_done', { x: 80, y: 60 })
   const a = newNode('vd_play_sound', { x: 80, y: 200 })
-  return { nodes: [t, a], edges: [{ id: `${t.id}-next-${a.id}`, source: t.id, sourceHandle: 'next', target: a.id }] }
+  return { nodes: [trig, a], edges: [{ id: `${trig.id}-next-${a.id}`, source: trig.id, sourceHandle: 'next', target: a.id }] }
 }
 
 function ZoomBar({ onUndo, onRedo, canUndo, canRedo }: { onUndo(): void; onRedo(): void; canUndo: boolean; canRedo: boolean }): React.JSX.Element {
@@ -54,22 +55,22 @@ function ZoomBar({ onUndo, onRedo, canUndo, canRedo }: { onUndo(): void; onRedo(
   const { zoom } = useViewport()
   return (
     <div className="fzoom">
-      <button onClick={() => void zoomOut({ duration: 150 })} title="Verkleinern">
+      <button onClick={() => void zoomOut({ duration: 150 })} title={t('Verkleinern')}>
         <FlowIcon name="minus" size={15} />
       </button>
       <span>{Math.round(zoom * 100)}%</span>
-      <button onClick={() => void zoomIn({ duration: 150 })} title="Vergrößern">
+      <button onClick={() => void zoomIn({ duration: 150 })} title={t('Vergrößern')}>
         <FlowIcon name="plus" size={15} />
       </button>
       <i />
-      <button onClick={() => void fitView({ padding: 0.25, duration: 200, maxZoom: 1.1 })} title="Alles zeigen">
+      <button onClick={() => void fitView({ padding: 0.25, duration: 200, maxZoom: 1.1 })} title={t('Alles zeigen')}>
         <FlowIcon name="fit" size={15} />
       </button>
       <i />
-      <button onClick={onUndo} disabled={!canUndo} title="Rückgängig (Strg+Z)">
+      <button onClick={onUndo} disabled={!canUndo} title={t('Rückgängig (Strg+Z)')}>
         <FlowIcon name="undo" size={15} />
       </button>
-      <button onClick={onRedo} disabled={!canRedo} title="Wiederholen (Strg+Y)">
+      <button onClick={onRedo} disabled={!canRedo} title={t('Wiederholen (Strg+Y)')}>
         <FlowIcon name="redo" size={15} />
       </button>
     </div>
@@ -83,7 +84,7 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
   const [meta, setMeta] = useState<Meta>({ name: '', author: '', description: '', version: 1, prompts: [], assets: {} })
   const [loaded, setLoaded] = useState(false)
   const [testing, setTesting] = useState(false)
-  const [status, setStatus] = useState<{ kind: 'saved' | 'dirty' | 'saving' | 'error'; text: string }>({ kind: 'saved', text: 'Gespeichert' })
+  const [status, setStatus] = useState<{ kind: 'saved' | 'dirty' | 'saving' | 'error'; text: string }>({ kind: 'saved', text: t('Gespeichert') })
   const [dirty, setDirty] = useState(0)
   const { screenToFlowPosition } = useReactFlow()
   const canvas = useRef<HTMLDivElement>(null)
@@ -135,13 +136,13 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
           assets[n] = new Uint8Array(await res.arrayBuffer())
         }
         if (cancelled) return
-        setMeta({ name: m.name, author: m.author, description: m.description, version: m.version, prompts: Object.entries(m.prompts ?? {}).map(([n, t], i) => ({ key: i, name: n, text: t })), assets })
+        setMeta({ name: m.name, author: m.author, description: m.description, version: m.version, prompts: Object.entries(m.prompts ?? {}).map(([n, text], i) => ({ key: i, name: n, text })), assets })
         graph = programToGraph(existing.program)
       } else if (templateId) {
-        const t = TEMPLATES.find((x) => x.id === templateId)
-        if (t) {
-          graph = templateGraph(t)
-          setMeta((m) => ({ ...m, name: t.name, description: t.description, prompts: Object.entries(t.prompts ?? {}).map(([n, text], i) => ({ key: i, name: n, text })) }))
+        const tpl = TEMPLATES.find((x) => x.id === templateId)
+        if (tpl) {
+          graph = templateGraph(tpl)
+          setMeta((m) => ({ ...m, name: tpl.name, description: tpl.description, prompts: Object.entries(tpl.prompts ?? {}).map(([n, text], i) => ({ key: i, name: n, text })) }))
         }
       }
       const ns = graph.nodes.map(toRF)
@@ -150,7 +151,7 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
       setEdges(es)
       hist.current = { past: [], future: [], base: { nodes: ns, edges: es } }
       setLoaded(true)
-      setStatus(existing ? { kind: 'saved', text: 'Gespeichert' } : { kind: 'dirty', text: 'Noch nicht gespeichert' })
+      setStatus(existing ? { kind: 'saved', text: t('Gespeichert') } : { kind: 'dirty', text: t('Noch nicht gespeichert') })
     })()
     return () => {
       cancelled = true
@@ -304,19 +305,19 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
     async (opts: { bumpVersion?: boolean; quiet?: boolean } = {}): Promise<boolean> => {
       const p = await build(opts.bumpVersion)
       if (!p) {
-        setStatus({ kind: 'error', text: 'Name fehlt' })
-        if (!opts.quiet) await alert('Bitte gib deinem Addon zuerst einen Namen.')
+        setStatus({ kind: 'error', text: t('Name fehlt') })
+        if (!opts.quiet) await alert(t('Bitte gib deinem Addon zuerst einen Namen.'))
         return false
       }
-      setStatus({ kind: 'saving', text: 'Speichert …' })
+      setStatus({ kind: 'saving', text: t('Speichert …') })
       try {
         await api.addons.saveDraft(p)
         await useAddons.getState().reload()
-        setStatus({ kind: 'saved', text: 'Gespeichert' })
+        setStatus({ kind: 'saved', text: t('Gespeichert') })
         return true
       } catch (err) {
-        setStatus({ kind: 'error', text: 'Nicht gespeichert' })
-        if (!opts.quiet) await alert('Speichern fehlgeschlagen', errorText(err))
+        setStatus({ kind: 'error', text: t('Nicht gespeichert') })
+        if (!opts.quiet) await alert(t('Speichern fehlgeschlagen'), errorText(err))
         return false
       }
     },
@@ -326,10 +327,10 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
   // automatisch speichern, 3 s nach der letzten Änderung – nur mit Namen
   useEffect(() => {
     if (!dirty) return
-    setStatus(meta.name.trim() ? { kind: 'dirty', text: 'Ungespeichert' } : { kind: 'error', text: 'Name fehlt' })
+    setStatus(meta.name.trim() ? { kind: 'dirty', text: t('Ungespeichert') } : { kind: 'error', text: t('Name fehlt') })
     if (!meta.name.trim() || testing) return
-    const t = setTimeout(() => void save({ quiet: true }), 3000)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => void save({ quiet: true }), 3000)
+    return () => clearTimeout(timer)
   }, [dirty, meta, testing, save])
 
   const setMetaDirty = (patch: Partial<Meta>): void => {
@@ -343,12 +344,12 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
       setTesting(false)
       return
     }
-    if (!latest.current.meta.name.trim()) return void (await alert('Bitte gib deinem Addon zuerst einen Namen.'))
+    if (!latest.current.meta.name.trim()) return void (await alert(t('Bitte gib deinem Addon zuerst einen Namen.')))
     pauseForTest(id)
     if (!(await save())) return void setTestRunner(null)
     const p = await build()
     if (!p) return void setTestRunner(null)
-    setTestRunner(new AddonRunner({ program: p.program, prompts: p.manifest.prompts, actions: createActions(id, p.manifest.name), clock: realClock, storage: addonStorage(id), onError: (m) => setStatus({ kind: 'error', text: 'Fehler: ' + m }) }), id)
+    setTestRunner(new AddonRunner({ program: p.program, prompts: p.manifest.prompts, actions: createActions(id, p.manifest.name), clock: realClock, storage: addonStorage(id), onError: (m) => setStatus({ kind: 'error', text: t('Fehler: {error}', { error: m }) }) }), id)
     setTesting(true)
   }
 
@@ -356,9 +357,9 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
     if (!(await save({ bumpVersion: true }))) return
     try {
       const path = await api.addons.exportTo(id)
-      if (path) setStatus({ kind: 'saved', text: 'Exportiert' })
+      if (path) setStatus({ kind: 'saved', text: t('Exportiert') })
     } catch (err) {
-      await alert('Export fehlgeschlagen', errorText(err))
+      await alert(t('Export fehlgeschlagen'), errorText(err))
     }
   }
 
@@ -390,33 +391,33 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
       }}
     >
       <header className="fbar">
-        <button className="fbar-back" onClick={onBack} title="Zurück zu Meine Addons">
+        <button className="fbar-back" onClick={onBack} title={t('Zurück zu Meine Addons')}>
           <FlowIcon name="chevron" size={16} />
         </button>
         <span className="fbar-logo">
           <FlowIcon name="puzzle" size={17} />
         </span>
         <span className="fbar-crumb" onClick={onBack}>
-          Addons
+          {t('Addons')}
         </span>
         <span className="fbar-sep">/</span>
-        <input className="fbar-name" placeholder="Name deines Addons" value={meta.name} maxLength={60} onChange={(e) => setMetaDirty({ name: e.target.value })} data-testid="maker-name" />
+        <input className="fbar-name" placeholder={t('Name deines Addons')} value={meta.name} maxLength={60} onChange={(e) => setMetaDirty({ name: e.target.value })} data-testid="maker-name" />
         <span className={`fbar-status ${status.kind}`} data-testid="maker-status">
           <i />
           {status.text}
         </span>
         <button className={`fbtn${testing ? ' danger' : ''}`} onClick={() => void toggleTest()} data-testid="maker-test">
-          <FlowIcon name={testing ? 'x' : 'play'} size={14} /> {testing ? 'Test stoppen' : 'Testen'}
+          <FlowIcon name={testing ? 'x' : 'play'} size={14} /> {testing ? t('Test stoppen') : t('Testen')}
         </button>
         <button className="fbtn" onClick={() => void save()} data-testid="maker-save">
-          Speichern
+          {t('Speichern')}
         </button>
         <button className="fbtn primary" onClick={() => void exportFile()} data-testid="maker-export">
-          Exportieren
+          {t('Exportieren')}
         </button>
       </header>
       <div className="fbody">
-        <Palette onAdd={(t) => addNode(t)} />
+        <Palette onAdd={(type) => addNode(type)} />
         <div
           className="fcanvas"
           ref={canvas}

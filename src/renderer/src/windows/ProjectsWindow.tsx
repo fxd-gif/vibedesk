@@ -8,17 +8,18 @@ import { PathInput } from './PathInput'
 import type { ClaudeSessionMeta, Project } from '../../../shared/types'
 import { Fragment } from 'react'
 import { useRedact } from '../store/streamerStore'
+import { t } from '../../../shared/i18n'
 
 /** Fragt nach dem Namen, legt das Projekt an und startet gleich eine Session darin. */
 export async function newProject(afterCreate?: () => Promise<unknown>): Promise<void> {
-  const name = await prompt({ title: 'Neues Projekt', message: 'Der Ordner wird in deinem Projekte-Verzeichnis angelegt.', placeholder: 'Projektname', confirmLabel: 'Anlegen' })
+  const name = await prompt({ title: t('Neues Projekt'), message: t('Der Ordner wird in deinem Projekte-Verzeichnis angelegt.'), placeholder: t('Projektname'), confirmLabel: t('Anlegen') })
   if (!name) return
   try {
     const p = await api.projects.create(name)
     await afterCreate?.()
     await useSessions.getState().start(p.id)
   } catch (err) {
-    await alert('Projekt konnte nicht angelegt werden', errorText(err))
+    await alert(t('Projekt konnte nicht angelegt werden'), errorText(err))
   }
 }
 
@@ -53,26 +54,26 @@ export function ProjectsWindow(): React.JSX.Element {
       setDir('')
       await reload()
     } catch (err) {
-      await alert('Ordner konnte nicht hinzugefügt werden', errorText(err))
+      await alert(t('Ordner konnte nicht hinzugefügt werden'), errorText(err))
     }
   }
 
   const remove = async (p: Project): Promise<void> => {
     const r = await useDialog.getState().ask({
       kind: 'confirm',
-      title: `„${p.name}“ entfernen?`,
-      message: 'Das Projekt verschwindet aus der Liste. Der Ordner bleibt erhalten, außer du wählst unten den Papierkorb.',
-      checkbox: 'Ordner auch in den Papierkorb verschieben',
-      confirmLabel: 'Entfernen',
+      title: t('„{name}“ entfernen?', { name: p.name }),
+      message: t('Das Projekt verschwindet aus der Liste. Der Ordner bleibt erhalten, außer du wählst unten den Papierkorb.'),
+      checkbox: t('Ordner auch in den Papierkorb verschieben'),
+      confirmLabel: t('Entfernen'),
       danger: true
     })
     if (!r.ok) return
     if (r.checked) {
       const sure = await useDialog.getState().ask({
         kind: 'confirm',
-        title: 'Wirklich in den Papierkorb?',
-        message: `${red(p.path)}\n\nDer komplette Ordner wird in den Windows-Papierkorb verschoben.`,
-        confirmLabel: 'In den Papierkorb',
+        title: t('Wirklich in den Papierkorb?'),
+        message: `${red(p.path)}\n\n${t('Der komplette Ordner wird in den Windows-Papierkorb verschoben.')}`,
+        confirmLabel: t('In den Papierkorb'),
         danger: true
       })
       if (!sure.ok) return
@@ -80,7 +81,7 @@ export function ProjectsWindow(): React.JSX.Element {
     try {
       await api.projects.remove(p.id, r.checked)
     } catch (err) {
-      await alert('Entfernen fehlgeschlagen', errorText(err))
+      await alert(t('Entfernen fehlgeschlagen'), errorText(err))
     }
     reload()
   }
@@ -91,18 +92,18 @@ export function ProjectsWindow(): React.JSX.Element {
     <div className="panel projects">
       <div className="row" style={{ marginBottom: 4 }}>
         <button className="btn primary small" onClick={create} data-testid="project-new">
-          <Icon name="plus" size={14} /> Neu
+          <Icon name="plus" size={14} /> {t('Neu')}
         </button>
         <button className="btn small" onClick={() => setAdding((a) => !a)}>
-          <Icon name="folder" size={14} /> Ordner hinzufügen
+          <Icon name="folder" size={14} /> {t('Ordner hinzufügen')}
         </button>
       </div>
       {adding && <PathInput value={dir} onChange={setDir} onSubmit={addExisting} autoFocus />}
       {projects.length === 0 && (
         <div className="panel-empty">
-          Noch keine Projekte.
+          {t('Noch keine Projekte.')}
           <br />
-          Leg mit <b>Neu</b> eins an oder füg einen bestehenden Ordner hinzu.
+          {t('Leg mit')} <b>{t('Neu')}</b> {t('eins an oder füg einen bestehenden Ordner hinzu.')}
         </div>
       )}
       <ul className="plist">
@@ -113,20 +114,20 @@ export function ProjectsWindow(): React.JSX.Element {
               <div className="pname">
                 {running.has(p.id) && <span className="dot working" />}
                 {p.name}
-                {p.missing && <span className="badge">fehlt</span>}
+                {p.missing && <span className="badge">{t('fehlt')}</span>}
               </div>
               <div className="ppath mono" title={red(p.path)}>
                 {shortenPath(red(p.path))} · {relTime(p.lastOpenedAt)}
               </div>
             </div>
             <div className="pactions">
-              <button className={`btn small ghost${histFor === p.id ? ' on' : ''}`} title="Frühere Sessions" disabled={p.missing} onClick={() => toggleHist(p.id)} data-testid={`hist-${p.name}`}>
+              <button className={`btn small ghost${histFor === p.id ? ' on' : ''}`} title={t('Frühere Sessions')} disabled={p.missing} onClick={() => toggleHist(p.id)} data-testid={`hist-${p.name}`}>
                 <Icon name="history" size={14} />
               </button>
               <button className="btn small primary" disabled={p.missing} onClick={() => useSessions.getState().start(p.id)} data-testid={`open-${p.name}`}>
-                <Icon name="play" size={13} /> Öffnen
+                <Icon name="play" size={13} /> {t('Öffnen')}
               </button>
-              <button className="btn small ghost" title="Entfernen" onClick={() => remove(p)} data-testid={`remove-${p.name}`}>
+              <button className="btn small ghost" title={t('Entfernen')} onClick={() => remove(p)} data-testid={`remove-${p.name}`}>
                 <Icon name="trash" size={14} />
               </button>
             </div>
@@ -134,13 +135,13 @@ export function ProjectsWindow(): React.JSX.Element {
           {histFor === p.id && (
             <li className="hist">
               {!hist && <span className="spin" />}
-              {hist && !hist.length && <span className="dim small">Noch keine Claude-Sessions in diesem Ordner.</span>}
+              {hist && !hist.length && <span className="dim small">{t('Noch keine Claude-Sessions in diesem Ordner.')}</span>}
               {hist?.map((h) => (
                 <div key={h.id} className="hist-row">
                   <span className="hist-title" title={h.title}>{h.title}</span>
                   <span className="dim small">{relTime(h.mtime)}</span>
                   <button className="btn small" onClick={() => useSessions.getState().start(p.id, h.id)}>
-                    Fortsetzen
+                    {t('Fortsetzen')}
                   </button>
                 </div>
               ))}

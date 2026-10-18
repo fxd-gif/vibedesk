@@ -1,4 +1,5 @@
 // Anhänge im Claude-Terminal: welche Dateien eingefügt, abgeschickt und von Claude gelesen wurden.
+import { locale } from './i18n'
 
 export type AttachStatus = 'pending' | 'sent' | 'read'
 
@@ -75,5 +76,5 @@ export function fmtSize(bytes?: number): string {
   if (bytes === undefined) return ''
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`
+  return `${(bytes / 1024 / 1024).toFixed(1).replace('.', locale() === 'de-DE' ? ',' : '.')} MB`
 }

@@ -9,6 +9,7 @@ import { samePath, type Tab } from '../../store/editorModel'
 import { currentProject, editorDocs, ensureProject, selectProject, useEditor, useEditorUi } from '../../store/editorStore'
 import { createState, revealLine, revealText } from './cmSetup'
 import { FileTree } from './FileTree'
+import { t } from '../../../../shared/i18n'
 
 function extrasFor(path: string) {
   return [
@@ -27,8 +28,8 @@ function extrasFor(path: string) {
     EditorView.updateListener.of((u) => {
       editorDocs.set(path, u.state)
       if (!u.docChanged) return
-      const t = useEditor.getState().tabs.find((x) => samePath(x.path, path))
-      if (t) useEditor.getState().setDirty(path, u.state.doc.length !== t.diskText.length || u.state.doc.toString() !== t.diskText)
+      const tab = useEditor.getState().tabs.find((x) => samePath(x.path, path))
+      if (tab) useEditor.getState().setDirty(path, u.state.doc.length !== tab.diskText.length || u.state.doc.toString() !== tab.diskText)
     })
   ]
 }
@@ -47,17 +48,17 @@ function replaceSpec(st: EditorState, next: string) {
 const relPath = (file: string, root?: string): string =>
   root && file.toLowerCase().startsWith(root.toLowerCase()) ? file.slice(root.length).replace(/^[\\/]+/, '') : file
 
-async function closeTab(t: Tab): Promise<void> {
-  if (t.dirty) {
-    const r = await choose({ title: `„${t.name}“ speichern?`, message: 'Die Datei hat ungespeicherte Änderungen.', confirmLabel: 'Speichern', altLabel: 'Verwerfen' })
+async function closeTab(tab: Tab): Promise<void> {
+  if (tab.dirty) {
+    const r = await choose({ title: t('„{name}“ speichern?', { name: tab.name }), message: t('Die Datei hat ungespeicherte Änderungen.'), confirmLabel: t('Speichern'), altLabel: t('Verwerfen') })
     if (r === 'cancel') return
     if (r === 'ok') {
-      const st = editorDocs.get(t.path)
-      if (!st || !(await useEditor.getState().save(t.path, st.doc.toString()))) return
+      const st = editorDocs.get(tab.path)
+      if (!st || !(await useEditor.getState().save(tab.path, st.doc.toString()))) return
     }
   }
-  editorDocs.delete(t.path)
-  useEditor.getState().close(t.path)
+  editorDocs.delete(tab.path)
+  useEditor.getState().close(tab.path)
 }
 
 function Banner({ tab }: { tab: Tab }): React.JSX.Element | null {
@@ -65,34 +66,34 @@ function Banner({ tab }: { tab: Tab }): React.JSX.Element | null {
   if (tab.conflict === 'changed')
     return (
       <div className="ed-banner warn" data-testid="editor-conflict">
-        <span>Claude hat diese Datei geändert, während du sie bearbeitet hast.</span>
+        <span>{t('Claude hat diese Datei geändert, während du sie bearbeitet hast.')}</span>
         <button className="btn small" onClick={() => ed.resolveConflict(tab.path, 'theirs')}>
-          Claudes Version laden
+          {t('Claudes Version laden')}
         </button>
         <button className="btn small primary" onClick={() => ed.resolveConflict(tab.path, 'mine')}>
-          Meine behalten
+          {t('Meine behalten')}
         </button>
       </div>
     )
   if (tab.conflict === 'deleted')
     return (
       <div className="ed-banner warn">
-        <span>Die Datei wurde gelöscht. Mit Strg+S legst du sie neu an.</span>
+        <span>{t('Die Datei wurde gelöscht. Mit Strg+S legst du sie neu an.')}</span>
         <button className="btn small" onClick={() => closeTab({ ...tab, dirty: false })}>
-          Tab schließen
+          {t('Tab schließen')}
         </button>
       </div>
     )
   if (tab.error)
     return (
       <div className="ed-banner err">
-        <span>Speichern fehlgeschlagen: {tab.error}</span>
+        <span>{t('Speichern fehlgeschlagen: {error}', { error: tab.error })}</span>
       </div>
     )
   if (tab.force)
     return (
       <div className="ed-banner info">
-        <span>Beim nächsten Speichern (Strg+S) wird Claudes Version überschrieben.</span>
+        <span>{t('Beim nächsten Speichern (Strg+S) wird Claudes Version überschrieben.')}</span>
       </div>
     )
   return null
@@ -177,38 +178,38 @@ export function EditorWindow(): React.JSX.Element {
   return (
     <div className="editor" data-testid="editor">
       <div className="ed-top">
-        <button className={`ed-icon${treeOpen ? ' on' : ''}`} title={treeOpen ? 'Dateibaum ausblenden' : 'Dateibaum einblenden'} onClick={() => useEditorUi.setState({ treeOpen: !treeOpen })}>
+        <button className={`ed-icon${treeOpen ? ' on' : ''}`} title={treeOpen ? t('Dateibaum ausblenden') : t('Dateibaum einblenden')} onClick={() => useEditorUi.setState({ treeOpen: !treeOpen })}>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
             <rect x="3" y="4" width="18" height="16" rx="2" />
             <path d="M9 4v16" />
           </svg>
         </button>
-        <select className="ed-project" value={projectId ?? ''} onChange={(e) => selectProject(e.target.value)} title="Projekt">
-          {!projectId && <option value="">Projekt wählen …</option>}
+        <select className="ed-project" value={projectId ?? ''} onChange={(e) => selectProject(e.target.value)} title={t('Projekt')}>
+          {!projectId && <option value="">{t('Projekt wählen …')}</option>}
           {projects.map((p) => (
             <option key={p.id} value={p.id} disabled={p.missing}>
               {p.name}
-              {p.missing ? ' (fehlt)' : ''}
+              {p.missing ? t(' (fehlt)') : ''}
             </option>
           ))}
         </select>
         <div className="ed-tabs">
-          {tabs.map((t) => (
+          {tabs.map((tab) => (
             <div
-              key={t.path}
-              className={`ed-tab${t.path === active ? ' on' : ''}${t.conflict ? ' conflict' : ''}`}
-              onClick={() => useEditor.getState().activate(t.path)}
-              onAuxClick={(e) => e.button === 1 && closeTab(t)}
-              title={t.path}
+              key={tab.path}
+              className={`ed-tab${tab.path === active ? ' on' : ''}${tab.conflict ? ' conflict' : ''}`}
+              onClick={() => useEditor.getState().activate(tab.path)}
+              onAuxClick={(e) => e.button === 1 && closeTab(tab)}
+              title={tab.path}
               data-testid="editor-tab"
             >
-              <span className="ed-tab-name">{t.name}</span>
+              <span className="ed-tab-name">{tab.name}</span>
               <button
-                className={`ed-tab-x${t.dirty ? ' dirty' : ''}`}
-                title={t.dirty ? 'Ungespeichert – schließen' : 'Schließen'}
+                className={`ed-tab-x${tab.dirty ? ' dirty' : ''}`}
+                title={tab.dirty ? t('Ungespeichert – schließen') : t('Schließen')}
                 onClick={(e) => {
                   e.stopPropagation()
-                  closeTab(t)
+                  closeTab(tab)
                 }}
               >
                 <span className="ed-dot" />
@@ -228,15 +229,15 @@ export function EditorWindow(): React.JSX.Element {
           {veiled && activeTab && (
             <div className="ed-veil" data-testid="editor-veil">
               <b>{activeTab.name}</b>
-              <span className="dim">kann Passwörter oder Schlüssel enthalten – im Streamer-Modus verborgen.</span>
+              <span className="dim">{t('kann Passwörter oder Schlüssel enthalten – im Streamer-Modus verborgen.')}</span>
               <button
                 className="btn small"
                 onClick={async () => {
-                  if (await confirm({ title: `„${activeTab.name}“ anzeigen?`, message: 'Der Inhalt ist dann im Stream zu sehen. Zieh am besten vorher den Vorhang zu (Strg+Umschalt+H).', confirmLabel: 'Anzeigen', danger: true }))
+                  if (await confirm({ title: t('„{name}“ anzeigen?', { name: activeTab.name }), message: t('Der Inhalt ist dann im Stream zu sehen. Zieh am besten vorher den Vorhang zu (Strg+Umschalt+H).'), confirmLabel: t('Anzeigen'), danger: true }))
                     setUnlocked(new Set([...unlocked, activeTab.path]))
                 }}
               >
-                Trotzdem anzeigen
+                {t('Trotzdem anzeigen')}
               </button>
             </div>
           )}
@@ -244,10 +245,10 @@ export function EditorWindow(): React.JSX.Element {
             <div className="panel-empty ed-notice">
               <b>{activeTab.name}</b>
               <br />
-              {activeTab.status === 'binary' ? 'Binärdatei – kann hier nicht bearbeitet werden.' : 'Größer als 2 MB – kann hier nicht bearbeitet werden.'}
+              {activeTab.status === 'binary' ? t('Binärdatei – kann hier nicht bearbeitet werden.') : t('Größer als 2 MB – kann hier nicht bearbeitet werden.')}
               <br />
               <button className="btn small" style={{ marginTop: 12 }} onClick={() => api.files.reveal(activeTab.path)}>
-                Im Explorer zeigen
+                {t('Im Explorer zeigen')}
               </button>
             </div>
           )}
@@ -255,11 +256,12 @@ export function EditorWindow(): React.JSX.Element {
             <div className="panel-empty ed-notice">
               {project ? (
                 <>
-                  Wähle links eine Datei –<br />
-                  oder klicke im Live-Feed auf eine Änderung von Claude.
+                  {t('Wähle links eine Datei –')}
+                  <br />
+                  {t('oder klicke im Live-Feed auf eine Änderung von Claude.')}
                 </>
               ) : (
-                'Lege zuerst ein Projekt an.'
+                t('Lege zuerst ein Projekt an.')
               )}
             </div>
           )}
@@ -267,7 +269,7 @@ export function EditorWindow(): React.JSX.Element {
             <div className="ed-status">
               <span className="mono">{relPath(activeTab.path, project?.path)}</span>
               <span>{activeTab.eol.toUpperCase()}</span>
-              <span>{activeTab.dirty ? 'Strg+S speichern' : 'gespeichert'}</span>
+              <span>{activeTab.dirty ? t('Strg+S speichern') : t('gespeichert')}</span>
             </div>
           )}
         </div>

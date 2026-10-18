@@ -2,6 +2,7 @@
 import { app, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import type { UpdateStatus } from '../shared/types'
+import { t } from '../shared/i18n'
 
 const FIRST_CHECK_MS = 3_000
 const INTERVAL_MS = 4 * 60 * 60 * 1000
@@ -36,7 +37,7 @@ export function setupUpdater(send: (s: UpdateStatus) => void, display: UpdaterDi
   autoUpdater.on('update-not-available', () => set({ state: 'none' }))
   autoUpdater.on('download-progress', (p) => set({ state: 'downloading', percent: Math.round(p.percent), version: status.state === 'available' || status.state === 'downloading' ? status.version : '' }))
   autoUpdater.on('update-downloaded', (i) => set({ state: 'ready', version: i.version }))
-  autoUpdater.on('error', (e) => set({ state: 'error', message: e?.message?.split('\n')[0] ?? 'Unbekannter Fehler' }))
+  autoUpdater.on('error', (e) => set({ state: 'error', message: e?.message?.split('\n')[0] ?? t('Unbekannter Fehler') }))
 
   const check = (): void => {
     autoUpdater.checkForUpdates().catch(() => {

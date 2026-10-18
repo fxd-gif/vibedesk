@@ -1,3 +1,4 @@
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import { SCENES } from '../ambience/sceneParams'
@@ -60,10 +61,10 @@ export function collectVars(now = Date.now()): PresenceVars {
     tokens: fmtTokens(today?.tokens ?? 0),
     cost: fmtUsd(today?.costUsd ?? 0),
     context: st ? `${Math.round((st.contextUsed / st.contextWindow) * 100)} %` : '',
-    focus: focus.phase === 'work' ? 'Fokus-Session' : focus.phase === 'idle' ? '' : 'Pause',
+    focus: focus.phase === 'work' ? t('Fokus-Session') : focus.phase === 'idle' ? '' : t('Pause'),
     focusLeft: focus.phase === 'idle' ? '' : fmtClock(remaining(focus, now)),
-    scene: scene.startsWith('custom:') ? 'eigener Ausblick' : (SCENES.find((s) => s.id === scene)?.label ?? ''),
-    music: settings?.musicOn ? 'Lofi an' : 'Ruhe',
+    scene: scene.startsWith('custom:') ? t('eigener Ausblick') : (SCENES.find((s) => s.id === scene)?.label ?? ''),
+    music: settings?.musicOn ? t('Lofi an') : t('Ruhe'),
     appStart: APP_START,
     sessionStart: st?.startedAt ?? null,
     focusEnd: focus.endsAt,

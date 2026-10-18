@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 import http from 'http'
 import { randomBytes, timingSafeEqual } from 'crypto'
 import { overlayPage } from './overlayPage'
@@ -31,7 +32,7 @@ export class OverlayServer {
       })
     } catch (err) {
       const code = (err as NodeJS.ErrnoException).code
-      return { running: false, error: code === 'EADDRINUSE' ? `Port ${port} ist schon belegt – wähle einen anderen.` : String((err as Error).message) }
+      return { running: false, error: code === 'EADDRINUSE' ? t('Port {port} ist schon belegt – wähle einen anderen.', { port }) : String((err as Error).message) }
     }
     this.server = server
     this.port = port

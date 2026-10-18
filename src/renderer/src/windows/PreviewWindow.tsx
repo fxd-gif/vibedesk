@@ -5,6 +5,7 @@ import { Icon } from '../desktop/icons'
 import { inform } from '../store/notifyStore'
 import { askClaudeFromPreview, previewWin, usePreview } from '../store/previewStore'
 import { CANCEL_PICK_SCRIPT, consoleError, errorsPrompt, PICK_SCRIPT, pickPrompt, pushError, type PickedElement, type PreviewError } from './previewTools'
+import { t } from '../../../shared/i18n'
 
 interface WebviewEl extends HTMLElement {
   reload(): void
@@ -16,11 +17,8 @@ interface WebviewEl extends HTMLElement {
   capturePage(rect?: { x: number; y: number; width: number; height: number }): Promise<{ toDataURL(): string; isEmpty(): boolean }>
 }
 
-const SENT: Record<'sent' | 'queued' | 'none', string> = {
-  sent: 'An Claude geschickt',
-  queued: 'Claude arbeitet noch – vorgemerkt, geht danach los',
-  none: 'Keine Claude-Session offen – starte zuerst eine'
-}
+const sentText = (r: 'sent' | 'queued' | 'none'): string =>
+  r === 'sent' ? t('An Claude geschickt') : r === 'queued' ? t('Claude arbeitet noch – vorgemerkt, geht danach los') : t('Keine Claude-Session offen – starte zuerst eine')
 
 /** Element ausgewählt → kurz sagen, was anders werden soll */
 function PickComposer({ pick, onSend, onCancel }: { pick: PickedElement; onSend(wish: string): void; onCancel(): void }): React.JSX.Element {
@@ -35,7 +33,7 @@ function PickComposer({ pick, onSend, onCancel }: { pick: PickedElement; onSend(
         className="field small"
         autoFocus
         rows={2}
-        placeholder="Was soll Claude daran ändern? z. B. „größer und in Grün“"
+        placeholder={t('Was soll Claude daran ändern? z. B. „größer und in Grün“')}
         value={wish}
         onChange={(e) => setWish(e.target.value)}
         onKeyDown={(e) => {
@@ -51,10 +49,10 @@ function PickComposer({ pick, onSend, onCancel }: { pick: PickedElement; onSend(
       <div className="row">
         <span style={{ flex: 1 }} />
         <button className="btn small ghost" onClick={onCancel}>
-          Abbrechen
+          {t('Abbrechen')}
         </button>
         <button className="btn small primary" disabled={!wish.trim()} onClick={() => onSend(wish)} data-testid="preview-send">
-          An Claude
+          {t('An Claude')}
         </button>
       </div>
     </div>
@@ -112,7 +110,7 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
         retry = setTimeout(() => wv.reload(), 1000)
         return
       }
-      setFailed(e.errorDescription || 'Seite nicht erreichbar')
+      setFailed(e.errorDescription || t('Seite nicht erreichbar'))
     }
     wv.addEventListener('did-navigate', nav)
     wv.addEventListener('did-navigate-in-page', nav)
@@ -172,14 +170,14 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
     } catch {
       /* ohne Bild geht es auch */
     }
-    inform(SENT[askClaudeFromPreview(current(), pickPrompt(current(), p, wish, shot))])
+    inform(sentText(askClaudeFromPreview(current(), pickPrompt(current(), p, wish, shot))))
   }
 
   const sendErrors = (): void => {
     setShowErrors(false)
     const r = askClaudeFromPreview(current(), errorsPrompt(current(), errors))
     if (r !== 'none') setErrors([])
-    inform(SENT[r])
+    inform(sentText(r))
   }
 
   const go = (): void => {
@@ -188,26 +186,26 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
   }
 
   return (
-    <GlassWindow id={previewWin(id)} solid minW={420} minH={300} onClose={() => closePreview(id)} title={<><Icon name="globe" size={14} /> Vorschau</>}>
+    <GlassWindow id={previewWin(id)} solid minW={420} minH={300} onClose={() => closePreview(id)} title={<><Icon name="globe" size={14} /> {t('Vorschau')}</>}>
       <div className="preview">
         <div className="preview-bar">
-          <button className="gbtn" title="Zurück" onClick={() => ref.current?.canGoBack() && ref.current.goBack()}>
+          <button className="gbtn" title={t('Zurück')} onClick={() => ref.current?.canGoBack() && ref.current.goBack()}>
             <Icon name="back" size={15} />
           </button>
-          <button className="gbtn" title="Neu laden" onClick={() => ref.current?.reload()}>
+          <button className="gbtn" title={t('Neu laden')} onClick={() => ref.current?.reload()}>
             <Icon name="restart" size={14} />
           </button>
           <input
             className="field small mono"
             value={input}
-            placeholder="localhost:5173 oder Port"
+            placeholder={t('localhost:5173 oder Port')}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && go()}
           />
           {loading && <span className="spin" />}
           <button
             className={`gbtn pv-pick${picking ? ' on' : ''}`}
-            title="Zeig drauf: Element anklicken und Claude sagen, was anders werden soll (Esc bricht ab)"
+            title={t('Zeig drauf: Element anklicken und Claude sagen, was anders werden soll (Esc bricht ab)')}
             disabled={!url}
             onClick={() => void startPick()}
             data-testid="preview-pick"
@@ -215,11 +213,11 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
             <Icon name="inspect" size={14} />
           </button>
           {errors.length > 0 && (
-            <button className="pv-errs" title="Fehler in der Browser-Konsole" onClick={() => setShowErrors((v) => !v)} data-testid="preview-errors">
+            <button className="pv-errs" title={t('Fehler in der Browser-Konsole')} onClick={() => setShowErrors((v) => !v)} data-testid="preview-errors">
               ⚠ {errors.reduce((n, e) => n + e.count, 0)}
             </button>
           )}
-          <button className="gbtn" title="Im Browser öffnen" disabled={!url} onClick={() => api.openExternal(ref.current?.getURL() || url)}>
+          <button className="gbtn" title={t('Im Browser öffnen')} disabled={!url} onClick={() => api.openExternal(ref.current?.getURL() || url)}>
             <Icon name="external" size={14} />
           </button>
         </div>
@@ -227,9 +225,9 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
           {url ? (
             <webview ref={ref} src={url} partition="persist:vibedesk-preview" className="preview-view" />
           ) : (
-            <div className="panel-empty">Gib eine Adresse oder einen Port ein – oder klick im Terminal auf einen erkannten Dev-Server.</div>
+            <div className="panel-empty">{t('Gib eine Adresse oder einen Port ein – oder klick im Terminal auf einen erkannten Dev-Server.')}</div>
           )}
-          {picking && <div className="pv-hint">Zeig auf ein Element und klick drauf · Esc bricht ab</div>}
+          {picking && <div className="pv-hint">{t('Zeig auf ein Element und klick drauf · Esc bricht ab')}</div>}
           {pick && <PickComposer pick={pick} onSend={(w) => void sendPick(w)} onCancel={() => setPick(null)} />}
           {showErrors && errors.length > 0 && (
             <div className="pv-errlist" data-testid="preview-errlist">
@@ -241,21 +239,21 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
               ))}
               <div className="row">
                 <button className="btn small ghost" onClick={() => setErrors([])}>
-                  Leeren
+                  {t('Leeren')}
                 </button>
                 <span style={{ flex: 1 }} />
                 <button className="btn small primary" onClick={sendErrors} data-testid="preview-errors-send">
-                  Claude soll das beheben
+                  {t('Claude soll das beheben')}
                 </button>
               </div>
             </div>
           )}
           {failed && (
             <div className="preview-fail">
-              <b>Nicht erreichbar</b>
+              <b>{t('Nicht erreichbar')}</b>
               <span className="dim">{failed}</span>
               <button className="btn small" onClick={() => ref.current?.reload()}>
-                Erneut versuchen
+                {t('Erneut versuchen')}
               </button>
             </div>
           )}

@@ -4,6 +4,7 @@ import { api, errorText } from '../../api'
 import { AUTH_MARK, type GitTools } from '../../../../shared/git'
 import { alert, confirm } from '../../store/dialogStore'
 import { inform } from '../../store/notifyStore'
+import { t } from '../../../../shared/i18n'
 
 interface AuthState {
   tools: GitTools | null
@@ -35,12 +36,12 @@ export async function githubLogin(): Promise<boolean> {
   useGitAuth.setState({ login: { code: null, url: 'https://github.com/login/device' } })
   try {
     await api.git.login()
-    const t = await refreshTools()
-    inform('Bei GitHub angemeldet', t.ghUser ? `als ${t.ghUser} – Push und Pull nutzen jetzt diese Anmeldung.` : undefined)
+    const tools = await refreshTools()
+    inform(t('Bei GitHub angemeldet'), tools.ghUser ? t('als {user} – Push und Pull nutzen jetzt diese Anmeldung.', { user: tools.ghUser }) : undefined)
     return true
   } catch (err) {
     const msg = errorText(err)
-    if (!/abgebrochen/i.test(msg)) await alert('Anmeldung fehlgeschlagen', msg)
+    if (!/abgebrochen|cancel/i.test(msg)) await alert(t('Anmeldung fehlgeschlagen'), msg)
     return false
   } finally {
     useGitAuth.setState({ login: null })
@@ -57,7 +58,7 @@ export async function installTool(tool: 'git' | 'gh'): Promise<boolean> {
   try {
     const ok = await api.git.install(tool)
     await refreshTools()
-    if (!ok) await alert(`${tool === 'git' ? 'Git' : 'GitHub-CLI'} konnte nicht installiert werden`, useGitAuth.getState().install?.lines.slice(-3).join('\n'))
+    if (!ok) await alert(t('{tool} konnte nicht installiert werden', { tool: tool === 'git' ? 'Git' : 'GitHub CLI' }), useGitAuth.getState().install?.lines.slice(-3).join('\n'))
     return ok
   } finally {
     useGitAuth.setState({ install: null })
@@ -77,13 +78,13 @@ export async function withAuth<T>(title: string, fn: () => Promise<T>): Promise<
       await alert(title, msg)
       return undefined
     }
-    let t = useGitAuth.getState().tools ?? (await refreshTools())
-    if (t.gh === 'missing') {
-      if (!t.winget || !(await confirm({ title: 'GitHub-Anmeldung nötig', message: 'Für Push und Pull zu GitHub braucht VibeDesk die GitHub-CLI (gh). Jetzt installieren?', confirmLabel: 'Installieren' }))) return undefined
+    const tools = useGitAuth.getState().tools ?? (await refreshTools())
+    if (tools.gh === 'missing') {
+      if (!tools.winget || !(await confirm({ title: t('GitHub-Anmeldung nötig'), message: t('Für Push und Pull zu GitHub braucht VibeDesk die GitHub-CLI (gh). Jetzt installieren?'), confirmLabel: t('Installieren') }))) return undefined
       if (!(await installTool('gh'))) return undefined
-      t = await refreshTools()
+      await refreshTools()
     }
-    if (!(await confirm({ title: 'Bei GitHub anmelden?', message: `${msg.slice(AUTH_MARK.length)}\n\nGitHub braucht eine Anmeldung. Dein Browser öffnet sich, du gibst einen Code ein – fertig.`, confirmLabel: 'Anmelden' })))
+    if (!(await confirm({ title: t('Bei GitHub anmelden?'), message: `${msg.slice(AUTH_MARK.length)}\n\n${t('GitHub braucht eine Anmeldung. Dein Browser öffnet sich, du gibst einen Code ein – fertig.')}`, confirmLabel: t('Anmelden') })))
       return undefined
     if (!(await githubLogin())) return undefined
     try {

@@ -9,6 +9,7 @@ import { useUpdate } from '../store/updateStore'
 import { showWhatsNew } from '../changelog/WhatsNew'
 import { shareAmbience } from '../store/shareStore'
 import type { EnergySaver } from '../../../shared/types'
+import { t } from '../../../shared/i18n'
 
 export const STREAMS = [
   { label: 'laut.fm · lofi', url: 'https://stream.laut.fm/lofi' },
@@ -16,10 +17,10 @@ export const STREAMS = [
   { label: 'Zeno · Lofi Beats', url: 'https://stream.zeno.fm/0r0xa792kwzuv' }
 ]
 
-const ENERGY_MODES: { id: EnergySaver; label: string }[] = [
-  { id: 'auto', label: 'Automatisch (bei Akku)' },
-  { id: 'on', label: 'An' },
-  { id: 'off', label: 'Aus' }
+const ENERGY_MODES = (): { id: EnergySaver; label: string }[] => [
+  { id: 'auto', label: t('Automatisch (bei Akku)') },
+  { id: 'on', label: t('An') },
+  { id: 'off', label: t('Aus') }
 ]
 
 export function Toggle({ on, onChange, label }: { on: boolean; onChange(v: boolean): void; label: string }): React.JSX.Element {
@@ -63,7 +64,7 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
       const url = await api.scenes.addCustom(path)
       set({ customScenes: [...s.customScenes, url], scene: 'custom:' + url })
     } catch (err) {
-      await alert('Bild konnte nicht hinzugefügt werden', errorText(err))
+      await alert(t('Bild konnte nicht hinzugefügt werden'), errorText(err))
     }
   }
 
@@ -73,9 +74,9 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
     <div className="amb-menu" ref={ref} data-testid="ambience-menu">
       <section>
         <div className="row between">
-          <h4>Ausblick</h4>
-          <button className="btn small ghost" onClick={() => (onClose(), void shareAmbience())} title="Atmosphäre als Code teilen">
-            Teilen
+          <h4>{t('Ausblick')}</h4>
+          <button className="btn small ghost" onClick={() => (onClose(), void shareAmbience())} title={t('Atmosphäre als Code teilen')}>
+            {t('Teilen')}
           </button>
         </div>
         <div className="row chips">
@@ -88,11 +89,11 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
             <span key={url} className={`chip custom${s.scene === 'custom:' + url ? ' on' : ''}`}>
               <button onClick={() => set({ scene: 'custom:' + url })}>
                 <img src={url} alt="" />
-                Bild {i + 1}
+                {t('Bild {n}', { n: i + 1 })}
               </button>
               <button
                 className="chip-x"
-                title="Entfernen"
+                title={t('Entfernen')}
                 onClick={() => set({ customScenes: s.customScenes.filter((x) => x !== url), scene: s.scene === 'custom:' + url ? 'city' : s.scene })}
               >
                 ×
@@ -111,25 +112,25 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
             if (f) addImage(api.fs.pathForFile(f))
           }}
         >
-          Eigenes Bild hierher ziehen
+          {t('Eigenes Bild hierher ziehen')}
         </div>
       </section>
 
       <section>
         <div className="row">
-          <h4>Regen</h4>
+          <h4>{t('Regen')}</h4>
         </div>
-        <Slider label="Stärke" value={s.rainIntensity} onChange={(v) => set({ rainIntensity: v })} />
-        <Slider label="Beschlag" value={s.blur} onChange={(v) => set({ blur: v })} />
+        <Slider label={t('Stärke')} value={s.rainIntensity} onChange={(v) => set({ rainIntensity: v })} />
+        <Slider label={t('Beschlag')} value={s.blur} onChange={(v) => set({ blur: v })} />
         <div className="row between">
-          <span>Regengeräusch</span>
-          <Toggle label="Regengeräusch" on={s.rainSoundOn} onChange={() => set(toggleRainSound(s))} />
+          <span>{t('Regengeräusch')}</span>
+          <Toggle label={t('Regengeräusch')} on={s.rainSoundOn} onChange={() => set(toggleRainSound(s))} />
         </div>
-        {s.rainSoundOn && <Slider label="Lautstärke" value={s.rainSoundVolume} onChange={(v) => set({ rainSoundVolume: v })} />}
-        <div className="row between" title="Sparsamer Regen: 15 statt 30 Bilder pro Sekunde und geringere Auflösung">
-          <span className="dim small">Energiesparen</span>
-          <div className="row chips" role="radiogroup" aria-label="Energiesparen">
-            {ENERGY_MODES.map((m) => (
+        {s.rainSoundOn && <Slider label={t('Lautstärke')} value={s.rainSoundVolume} onChange={(v) => set({ rainSoundVolume: v })} />}
+        <div className="row between" title={t('Sparsamer Regen: 15 statt 30 Bilder pro Sekunde und geringere Auflösung')}>
+          <span className="dim small">{t('Energiesparen')}</span>
+          <div className="row chips" role="radiogroup" aria-label={t('Energiesparen')}>
+            {ENERGY_MODES().map((m) => (
               <button
                 key={m.id}
                 role="radio"
@@ -146,14 +147,14 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
 
       <section>
         <div className="row between">
-          <h4>Ton bei „wartet auf dich“</h4>
-          <Toggle label="Ton" on={s.chimeOn} onChange={(v) => set({ chimeOn: v })} />
+          <h4>{t('Ton bei „wartet auf dich“')}</h4>
+          <Toggle label={t('Ton')} on={s.chimeOn} onChange={(v) => set({ chimeOn: v })} />
         </div>
         {s.chimeOn && (
           <div className="row">
-            <Slider label="Lautstärke" value={s.chimeVolume} onChange={(v) => set({ chimeVolume: v })} />
+            <Slider label={t('Lautstärke')} value={s.chimeVolume} onChange={(v) => set({ chimeVolume: v })} />
             <button className="btn small ghost" onClick={() => playChime(s.chimeVolume)}>
-              Test
+              {t('Test')}
             </button>
           </div>
         )}
@@ -162,11 +163,11 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
       <section>
         <div className="row between">
           <h4>
-            Lofi-Radio {offline && s.musicOn && <span className="badge">offline – neuer Versuch alle 30 s</span>}
+            Lofi-Radio {offline && s.musicOn && <span className="badge">{t('offline – neuer Versuch alle 30 s')}</span>}
           </h4>
-          <Toggle label="Musik" on={s.musicOn} onChange={() => set(toggleMusic(s))} />
+          <Toggle label={t('Musik')} on={s.musicOn} onChange={() => set(toggleMusic(s))} />
         </div>
-        <Slider label="Lautstärke" value={s.musicVolume} onChange={(v) => set({ musicVolume: v })} />
+        <Slider label={t('Lautstärke')} value={s.musicVolume} onChange={(v) => set({ musicVolume: v })} />
         <div className="row chips">
           {STREAMS.map((st) => (
             <button key={st.url} className={`chip${s.streamUrl === st.url ? ' on' : ''}`} onClick={() => set({ streamUrl: st.url })}>
@@ -176,7 +177,7 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
         </div>
         <input
           className="field mono small"
-          placeholder={presetUrl ? 'Eigene Stream-URL (https://…)' : s.streamUrl}
+          placeholder={presetUrl ? t('Eigene Stream-URL (https://…)') : s.streamUrl}
           value={customUrl}
           onChange={(e) => setCustomUrl(e.target.value)}
           onKeyDown={(e) => {
@@ -192,14 +193,20 @@ export function AmbienceMenu({ onClose, offline }: { onClose(): void; offline: b
           <span className="dim small">
             VibeDesk {update.version || '…'} ·{' '}
             <button className="linkish" onClick={() => (onClose(), showWhatsNew())}>
-              Was ist neu?
+              {t('Was ist neu?')}
             </button>
           </span>
           <button className="btn small ghost" disabled={update.status.state === 'checking' || update.status.state === 'downloading'} onClick={() => api.update.check()}>
-            {update.status.state === 'checking' ? 'Suche …' : update.status.state === 'none' ? 'Aktuell ✓' : update.status.state === 'error' ? 'Erneut suchen' : 'Nach Updates suchen'}
+            {update.status.state === 'checking'
+              ? t('Suche …')
+              : update.status.state === 'none'
+                ? t('Aktuell ✓')
+                : update.status.state === 'error'
+                  ? t('Erneut suchen')
+                  : t('Nach Updates suchen')}
           </button>
         </div>
-        {update.status.state === 'error' && <div className="dim tiny">Update-Prüfung fehlgeschlagen: {update.status.message}</div>}
+        {update.status.state === 'error' && <div className="dim tiny">{t('Update-Prüfung fehlgeschlagen: {message}', { message: update.status.message })}</div>}
       </section>
     </div>
   )

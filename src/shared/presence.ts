@@ -1,4 +1,5 @@
 // Discord Rich Presence: Konfiguration + Vorlagen-Rendering (rein, in Main und Renderer nutzbar).
+import { t, tn } from './i18n'
 
 export interface PresenceButton {
   label: string
@@ -64,20 +65,40 @@ export interface Activity {
 }
 
 /** Wer VibeDesk in deinem Discord-Profil sieht, kommt hierüber zur Seite */
-export const PROMO_BUTTON: PresenceButton = { label: 'VibeDesk holen (kostenlos)', url: 'https://fxd-gif.github.io/vibedesk/' }
+export const PROMO_BUTTON: PresenceButton = {
+  get label() {
+    return t('VibeDesk holen (kostenlos)')
+  },
+  url: 'https://fxd-gif.github.io/vibedesk/'
+}
 
 export const DEFAULT_CLIENT_ID = '1322704722276257822'
 /** Öffentlich gehostetes App-Icon – Fallback, wenn kein eigenes großes Bild gesetzt ist */
 export const DEFAULT_LARGE_IMAGE = 'https://raw.githubusercontent.com/fxd-gif/vibedesk/main/resources/icon.png'
 export const statusIconUrl = (key: StatusIconKey): string => `https://raw.githubusercontent.com/fxd-gif/vibedesk/main/resources/presence/${key}.png`
+/** Getter: übersetzt beim Lesen, nicht beim Import */
 export const STATUS_ICON_TEXT: Record<StatusIconKey, string> = {
-  working: 'arbeitet',
-  waiting: 'wartet auf Eingabe',
-  done: 'fertig',
-  error: 'Fehler',
-  idle: 'bereit',
-  focus: 'Fokus-Runde',
-  break: 'Pause'
+  get working() {
+    return t('arbeitet')
+  },
+  get waiting() {
+    return t('wartet auf Eingabe')
+  },
+  get done() {
+    return t('fertig')
+  },
+  get error() {
+    return t('Fehler')
+  },
+  get idle() {
+    return t('bereit')
+  },
+  get focus() {
+    return t('Fokus-Runde')
+  },
+  get break() {
+    return t('Pause')
+  }
 }
 
 export const DEFAULT_PRESENCE: PresenceConfig = {
@@ -100,26 +121,87 @@ export const DEFAULT_PRESENCE: PresenceConfig = {
   promoButton: true
 }
 
-export const PRESENCE_PRESETS: { id: string; label: string; patch: Partial<PresenceConfig> }[] = [
-  { id: 'detailed', label: 'Detailliert', patch: { details: 'Vibecodet an {project} · {model}', state: '{status} · Context {context}', idleDetails: 'Hört Regen & Lofi', idleState: 'Bereitet sich vor …', timestamp: 'session', privacy: false } },
-  { id: 'minimal', label: 'Minimal', patch: { details: 'Vibecoding', state: '{status}', idleDetails: 'Vibecoding', idleState: 'Pause', timestamp: 'app' } },
-  { id: 'focus', label: 'Fokus', patch: { details: '{focus} · {project}', state: 'Runde läuft – bitte nicht stören', timestamp: 'focus' } },
-  { id: 'stats', label: 'Zahlen', patch: { details: '{tokens} Tokens heute', state: '{sessions} · {cost}', timestamp: 'app' } },
-  { id: 'private', label: 'Privat', patch: { details: 'Vibecodet an einem Projekt', state: '{status}', privacy: true, timestamp: 'app' } }
+/** Vorlagen fürs Discord-Fenster – als Funktion, damit sie in der gewählten Sprache entstehen */
+export const presencePresets = (): { id: string; label: string; patch: Partial<PresenceConfig> }[] => [
+  {
+    id: 'detailed',
+    label: t('Detailliert'),
+    patch: { details: t('Vibecodet an {project} · {model}'), state: t('{status} · Context {context}'), idleDetails: t('Hört Regen & Lofi'), idleState: t('Bereitet sich vor …'), timestamp: 'session', privacy: false }
+  },
+  { id: 'minimal', label: t('Minimal'), patch: { details: 'Vibecoding', state: '{status}', idleDetails: 'Vibecoding', idleState: t('Pause'), timestamp: 'app' } },
+  { id: 'focus', label: t('Fokus'), patch: { details: '{focus} · {project}', state: t('Runde läuft – bitte nicht stören'), timestamp: 'focus' } },
+  { id: 'stats', label: t('Zahlen'), patch: { details: t('{tokens} Tokens heute'), state: '{sessions} · {cost}', timestamp: 'app' } },
+  { id: 'private', label: t('Privat'), patch: { details: t('Vibecodet an einem Projekt'), state: '{status}', privacy: true, timestamp: 'app' } }
 ]
 
-export const PLACEHOLDERS: { key: keyof PresenceVars; label: string }[] = [
-  { key: 'project', label: 'Projekt' },
-  { key: 'sessions', label: 'Anzahl Sessions' },
-  { key: 'status', label: 'Status' },
-  { key: 'model', label: 'Modell' },
-  { key: 'tokens', label: 'Tokens heute' },
-  { key: 'cost', label: '≈ Kosten heute' },
-  { key: 'context', label: 'Context %' },
-  { key: 'focus', label: 'Fokus-Phase' },
-  { key: 'focusLeft', label: 'Fokus-Restzeit' },
-  { key: 'scene', label: 'Ausblick' },
-  { key: 'music', label: 'Musik' }
+// label als Getter: übersetzt beim Lesen, nicht beim Import
+export const PLACEHOLDERS: { key: keyof PresenceVars; readonly label: string }[] = [
+  {
+    key: 'project',
+    get label() {
+      return t('Projekt')
+    }
+  },
+  {
+    key: 'sessions',
+    get label() {
+      return t('Anzahl Sessions')
+    }
+  },
+  {
+    key: 'status',
+    get label() {
+      return t('Status')
+    }
+  },
+  {
+    key: 'model',
+    get label() {
+      return t('Modell')
+    }
+  },
+  {
+    key: 'tokens',
+    get label() {
+      return t('Tokens heute')
+    }
+  },
+  {
+    key: 'cost',
+    get label() {
+      return t('≈ Kosten heute')
+    }
+  },
+  {
+    key: 'context',
+    get label() {
+      return t('Context %')
+    }
+  },
+  {
+    key: 'focus',
+    get label() {
+      return t('Fokus-Phase')
+    }
+  },
+  {
+    key: 'focusLeft',
+    get label() {
+      return t('Fokus-Restzeit')
+    }
+  },
+  {
+    key: 'scene',
+    get label() {
+      return t('Ausblick')
+    }
+  },
+  {
+    key: 'music',
+    get label() {
+      return t('Musik')
+    }
+  }
 ]
 
 const SEP = '·|•–—,:-'
@@ -130,7 +212,7 @@ const DOUBLE = /([·|•–—])(\s*[·|•–—])+/g
 export function fillTemplate(tpl: string, vars: Partial<PresenceVars>): string {
   const out = tpl.replace(/\{(\w+)\}/g, (m, k: string) => {
     const v = (vars as Record<string, unknown>)[k]
-    if (k === 'sessions' && typeof v === 'number') return `${v} ${v === 1 ? 'Session' : 'Sessions'}`
+    if (k === 'sessions' && typeof v === 'number') return tn(v, '{n} Session', '{n} Sessions')
     return v === undefined || v === null ? (k in vars ? '' : m) : String(v)
   })
   return out.replace(/\s+/g, ' ').replace(DOUBLE, '$1').replace(LEAD, '').replace(TRAIL, '').trim()
@@ -144,7 +226,7 @@ function fit(s: string): string | undefined {
 }
 
 export function renderPresence(cfg: PresenceConfig, vars: PresenceVars): Activity {
-  const v: PresenceVars = cfg.privacy ? { ...vars, project: vars.project ? 'einem geheimen Projekt' : '' } : vars
+  const v: PresenceVars = cfg.privacy ? { ...vars, project: vars.project ? t('einem geheimen Projekt') : '' } : vars
   const idle = vars.sessions === 0
   const a: Activity = {}
   const details = fit(fillTemplate(idle ? cfg.idleDetails : cfg.details, v))
@@ -168,7 +250,7 @@ export function renderPresence(cfg: PresenceConfig, vars: PresenceVars): Activit
     .filter((b) => b.label.trim() && /^https?:\/\/\S+$/.test(b.url.trim()))
     .slice(0, 2)
     .map((b) => ({ label: b.label.trim().slice(0, 32), url: b.url.trim() }))
-  if (cfg.promoButton !== false && buttons.length < 2 && !buttons.some((b) => b.url === PROMO_BUTTON.url)) buttons.push(PROMO_BUTTON)
+  if (cfg.promoButton !== false && buttons.length < 2 && !buttons.some((b) => b.url === PROMO_BUTTON.url)) buttons.push({ ...PROMO_BUTTON })
   if (buttons.length) a.buttons = buttons
 
   // Party-Größe hängt Discord hinter Zeile 2 an – ohne Zeile 2 zeigt es nichts

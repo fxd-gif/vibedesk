@@ -9,6 +9,7 @@ import { Icon } from './icons'
 import { UpdateToast } from './UpdateToast'
 import { PermissionCards } from './PermissionCards'
 import './notify.css'
+import { t } from '../../../shared/i18n'
 
 const KIND_DOT: Record<Notice['kind'], string> = { waiting: 'waiting', done: 'done', error: 'error', watch: 'waiting', info: '' }
 
@@ -22,7 +23,7 @@ function NoticeCard({ n }: { n: Notice }): React.JSX.Element {
           {n.body && <span>{n.body}</span>}
         </span>
       </button>
-      <button className="ntoast-x" onClick={() => dismiss(n.id)} aria-label="Schließen">
+      <button className="ntoast-x" onClick={() => dismiss(n.id)} aria-label={t('Schließen')}>
         <i className="gbtn-x" />
       </button>
       {!!n.actions?.length && (
@@ -57,11 +58,11 @@ export function ToastStack(): React.JSX.Element {
   )
 }
 
-const KINDS: { id: NoticeKind; label: string }[] = [
-  { id: 'waiting', label: 'Session wartet auf dich' },
-  { id: 'done', label: 'Session ist fertig' },
-  { id: 'error', label: 'Session abgestürzt' },
-  { id: 'watch', label: 'Wächter: hängt, Fehlerschleife, Kontext voll' }
+const KINDS = (): { id: NoticeKind; label: string }[] => [
+  { id: 'waiting', label: t('Session wartet auf dich') },
+  { id: 'done', label: t('Session ist fertig') },
+  { id: 'error', label: t('Session abgestürzt') },
+  { id: 'watch', label: t('Wächter: hängt, Fehlerschleife, Kontext voll') }
 ]
 
 function NotifySettingsView(): React.JSX.Element | null {
@@ -81,13 +82,13 @@ function NotifySettingsView(): React.JSX.Element | null {
   )
   return (
     <div className="nset">
-      <h4>Wie</h4>
-      {row('Karten unten rechts', null, n.toasts, (v) => put({ toasts: v }))}
-      {row('Windows-Benachrichtigungen', 'wenn VibeDesk im Hintergrund ist', n.windows, (v) => put({ windows: v }))}
-      {row('Ton', 'wenn eine Session auf dich wartet', s.chimeOn, (v) => set({ chimeOn: v }))}
-      {row('Ruhe in Fokus-Runden', 'nur Wichtiges sofort, der Rest danach', n.focusQuiet, (v) => put({ focusQuiet: v }))}
-      <h4>Was</h4>
-      {KINDS.map((k) => (
+      <h4>{t('Wie')}</h4>
+      {row(t('Karten unten rechts'), null, n.toasts, (v) => put({ toasts: v }))}
+      {row(t('Windows-Benachrichtigungen'), t('wenn VibeDesk im Hintergrund ist'), n.windows, (v) => put({ windows: v }))}
+      {row(t('Ton'), t('wenn eine Session auf dich wartet'), s.chimeOn, (v) => set({ chimeOn: v }))}
+      {row(t('Ruhe in Fokus-Runden'), t('nur Wichtiges sofort, der Rest danach'), n.focusQuiet, (v) => put({ focusQuiet: v }))}
+      <h4>{t('Was')}</h4>
+      {KINDS().map((k) => (
         <div key={k.id}>{row(k.label, null, n.kinds[k.id], (v) => put({ kinds: { ...n.kinds, [k.id]: v } }))}</div>
       ))}
     </div>
@@ -121,13 +122,13 @@ export function NotifyPanel(): React.JSX.Element | null {
   return (
     <div className="npanel" ref={ref} data-testid="notify-panel">
       <div className="npanel-head">
-        <h4>{settings ? 'Einstellungen' : 'Mitteilungen'}</h4>
+        <h4>{settings ? t('Einstellungen') : t('Mitteilungen')}</h4>
         {!settings && log.length > 0 && (
           <button className="btn small ghost" onClick={clearLog}>
-            Leeren
+            {t('Leeren')}
           </button>
         )}
-        <button className={`btn small ghost${settings ? ' on' : ''}`} onClick={() => setSettings((v) => !v)} title="Einstellungen" data-testid="notify-settings">
+        <button className={`btn small ghost${settings ? ' on' : ''}`} onClick={() => setSettings((v) => !v)} title={t('Einstellungen')} data-testid="notify-settings">
           <Icon name={settings ? 'back' : 'gear'} size={14} />
         </button>
       </div>
@@ -150,9 +151,9 @@ export function NotifyPanel(): React.JSX.Element | null {
         </ul>
       ) : (
         <div className="panel-empty">
-          Alles ruhig.
+          {t('Alles ruhig.')}
           <br />
-          Hier landet, was deine Sessions dir melden.
+          {t('Hier landet, was deine Sessions dir melden.')}
         </div>
       )}
     </div>

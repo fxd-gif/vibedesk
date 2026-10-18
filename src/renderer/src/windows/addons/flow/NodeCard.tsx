@@ -3,6 +3,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { isTrigger, KINDS, outputsOf, type FlowNodeData } from '../../../addons/flowModel'
 import { HANDLE_LABELS, summarize } from '../../../addons/flowLabels'
 import { FlowIcon } from './FlowIcon'
+import { t } from '../../../../../shared/i18n'
 
 const SIDE = new Set(['next', 'body'])
 
@@ -10,9 +11,9 @@ const SIDE = new Set(['next', 'body'])
 function outLabel(d: FlowNodeData, h: string): string {
   const m = /^case(\d+)$/.exec(h)
   if (m) return d.cases?.[Number(m[1])] || '–'
-  if (d.type === 'vd_ask' && h === 'yes') return String(d.fields.YES_LABEL || 'Ja')
-  if (d.type === 'vd_ask' && h === 'no') return String(d.fields.NO_LABEL || 'Nein')
-  return HANDLE_LABELS[h] ?? h
+  if (d.type === 'vd_ask' && h === 'yes') return String(d.fields.YES_LABEL || t('Ja'))
+  if (d.type === 'vd_ask' && h === 'no') return String(d.fields.NO_LABEL || t('Nein'))
+  return HANDLE_LABELS()[h] ?? h
 }
 
 /** Kartenknoten im Neon-Stil: Icon-Kachel, Titel, Kurzfassung; Anschlüsse je nach Typ. */
@@ -52,13 +53,13 @@ export const NodeCard = memo(function NodeCard({ data, selected }: NodeProps): R
       )}
       {outs.includes('body') && (
         <>
-          <span className="fnode-side-label">Schleife</span>
+          <span className="fnode-side-label">{t('Schleife')}</span>
           <Handle type="source" id="body" position={Position.Right} className="fh fh-body" />
         </>
       )}
       {nextSide && (
         <>
-          <span className="fnode-side-label">Danach</span>
+          <span className="fnode-side-label">{t('Danach')}</span>
           <Handle type="source" id="next" position={Position.Right} className="fh fh-body" />
         </>
       )}

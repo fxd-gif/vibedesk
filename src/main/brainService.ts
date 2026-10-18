@@ -1,5 +1,6 @@
 // Gehirn-Dienst: sammelt aus den Hooks mit, was Claude liest und ändert, beantwortet Claudes
 // Werkzeug-Aufrufe (MCP) und liefert dem Graph-Fenster Daten.
+import { t } from '../shared/i18n'
 import { ipcMain, shell } from 'electron'
 import fs from 'fs'
 import path from 'path'
@@ -160,10 +161,10 @@ export class BrainService {
 
   /** Werkzeug-Aufruf vom MCP-Server. Antwort ist Text für Claude. */
   tool(sessionId: string, name: string, args: Record<string, unknown>, cwd?: string): { text: string; isError?: boolean } {
-    if (!this.d.enabled()) return { text: 'Das VibeDesk-Gehirn ist ausgeschaltet.', isError: true }
+    if (!this.d.enabled()) return { text: t('Das VibeDesk-Gehirn ist ausgeschaltet.'), isError: true }
     // Session aus einem früheren App-Start (z. B. vor einem Update): Projekt über den Arbeitsordner finden
     const p = this.d.projectOfSession(sessionId) ?? (cwd ? this.d.projectOfDir?.(cwd) : undefined)
-    if (!p) return { text: 'Diese Session gehört zu keinem VibeDesk-Projekt.', isError: true }
+    if (!p) return { text: t('Diese Session gehört zu keinem VibeDesk-Projekt.'), isError: true }
     const store = this.store(p)
     const act = this.activity(p.id)
     const s = (k: string): string => (typeof args[k] === 'string' ? (args[k] as string) : '')
@@ -177,33 +178,33 @@ export class BrainService {
           const notes = store.list()
           const hits = searchNotes(notes, s('query'))
           hits.forEach((h) => pulse(h.title, 'read'))
-          if (!hits.length) return { text: `Keine Notizen zu „${s('query')}“. Wenn du dir das gerade erschließt, halte es danach mit brain_write fest.` }
+          if (!hits.length) return { text: t('Keine Notizen zu „{query}“. Wenn du dir das gerade erschließt, halte es danach mit brain_write fest.', { query: s('query') }) }
           return { text: hits.map((h) => `- [[${h.title}]] (${NOTE_TYPE_LABEL[h.type]}) – ${h.snippet}`).join('\n') }
         }
         case 'brain_read': {
           const n = store.get(s('title'))
           if (!n) {
             const alt = searchNotes(store.list(), s('title'), 5)
-            return { text: `Keine Notiz „${s('title')}“.${alt.length ? ' Meintest du: ' + alt.map((h) => `[[${h.title}]]`).join(', ') + '?' : ''}`, isError: true }
+            return { text: t('Keine Notiz „{title}“.', { title: s('title') }) + (alt.length ? ' ' + t('Meintest du: {list}?', { list: alt.map((h) => `[[${h.title}]]`).join(', ') }) : ''), isError: true }
           }
           pulse(n.title, 'read')
           const back = backlinks(store.list(), n.title)
-          const head = [`# ${n.title}`, `Typ: ${NOTE_TYPE_LABEL[n.type]} · aktualisiert ${new Date(n.updated).toISOString().slice(0, 10)}${isStale(n, act) ? ' · ZU PRÜFEN: verknüpfte Dateien wurden seitdem geändert' : ''}`]
-          if (n.files.length) head.push(`Dateien: ${n.files.join(', ')}`)
+          const head = [`# ${n.title}`, t('Typ: {type} · aktualisiert {date}', { type: NOTE_TYPE_LABEL[n.type], date: new Date(n.updated).toISOString().slice(0, 10) }) + (isStale(n, act) ? ' · ' + t('ZU PRÜFEN: verknüpfte Dateien wurden seitdem geändert') : '')]
+          if (n.files.length) head.push(t('Dateien: {list}', { list: n.files.join(', ') }))
           if (n.tags.length) head.push(`Tags: ${n.tags.join(', ')}`)
-          return { text: [...head, '', n.body, ...(back.length ? ['', `Verlinkt von: ${back.map((b) => `[[${b}]]`).join(', ')}`] : [])].join('\n') }
+          return { text: [...head, '', n.body, ...(back.length ? ['', t('Verlinkt von: {list}', { list: back.map((b) => `[[${b}]]`).join(', ') })] : [])].join('\n') }
         }
         case 'brain_related': {
           const rel = relPath(s('file'), p.path)
-          if (!rel) return { text: 'Bitte einen Pfad innerhalb des Projekts angeben.', isError: true }
+          if (!rel) return { text: t('Bitte einen Pfad innerhalb des Projekts angeben.'), isError: true }
           const notes = store.list().filter((n) => n.files.includes(rel) || n.body.includes(rel))
           notes.forEach((n) => pulse(n.title, 'read'))
           const co = coEditedWith(act, rel)
           const f = act.files[rel]
-          const lines = [`# Wissen zu ${rel}`]
-          lines.push(notes.length ? notes.map((n) => `- [[${n.title}]] (${NOTE_TYPE_LABEL[n.type]})${isStale(n, act) ? ' – zu prüfen' : ''}`).join('\n') : '- noch keine Notiz zu dieser Datei')
-          if (co.length) lines.push('', 'Wird oft zusammen geändert mit:', ...co.map((c) => `- ${c.file} (${c.count}×)`))
-          if (f) lines.push('', `Bisher ${f.reads}× gelesen, ${f.edits}× geändert.`)
+          const lines = [t('# Wissen zu {file}', { file: rel })]
+          lines.push(notes.length ? notes.map((n) => `- [[${n.title}]] (${NOTE_TYPE_LABEL[n.type]})${isStale(n, act) ? ' – ' + t('zu prüfen') : ''}`).join('\n') : '- ' + t('noch keine Notiz zu dieser Datei'))
+          if (co.length) lines.push('', t('Wird oft zusammen geändert mit:'), ...co.map((c) => `- ${c.file} (${c.count}×)`))
+          if (f) lines.push('', t('Bisher {reads}× gelesen, {edits}× geändert.', { reads: f.reads, edits: f.edits }))
           return { text: lines.join('\n') }
         }
         case 'brain_write': {
@@ -221,15 +222,15 @@ export class BrainService {
           this.watch(p)
           this.changed(p.id)
           const missing = note.links.filter((l) => !store.get(l))
-          return { text: `${created ? 'Angelegt' : 'Aktualisiert'}: [[${note.title}]]${missing.length ? `\nNoch ohne Notiz: ${missing.map((m) => `[[${m}]]`).join(', ')}` : ''}` }
+          return { text: (created ? t('Angelegt: {note}', { note: `[[${note.title}]]` }) : t('Aktualisiert: {note}', { note: `[[${note.title}]]` })) + (missing.length ? '\n' + t('Noch ohne Notiz: {list}', { list: missing.map((m) => `[[${m}]]`).join(', ') }) : '') }
         }
         case 'brain_forget': {
           const ok = store.remove(s('title'))
           if (ok) this.changed(p.id)
-          return ok ? { text: `[[${s('title')}]] archiviert.` } : { text: `Keine Notiz „${s('title')}“.`, isError: true }
+          return ok ? { text: t('{note} archiviert.', { note: `[[${s('title')}]]` }) } : { text: t('Keine Notiz „{title}“.', { title: s('title') }), isError: true }
         }
         default:
-          return { text: `Unbekanntes Werkzeug ${name}`, isError: true }
+          return { text: t('Unbekanntes Werkzeug {name}', { name }), isError: true }
       }
     } catch (err) {
       return { text: err instanceof Error ? err.message : String(err), isError: true }
@@ -278,7 +279,7 @@ export class BrainService {
 
   write(projectId: string, input: NoteInput, previousTitle?: string): NoteDetail {
     const p = this.d.project(projectId)
-    if (!p) throw new Error('Projekt nicht gefunden')
+    if (!p) throw new Error(t('Projekt nicht gefunden'))
     const store = this.store(p)
     if (previousTitle && titleKey(previousTitle) !== titleKey(input.title)) store.rename(previousTitle, input.title)
     const { note } = store.write(input)

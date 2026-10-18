@@ -1,17 +1,31 @@
 // VibeDesk-Gehirn: Projektwissen als Markdown-Notizen mit [[Links]] (Obsidian-kompatibel)
 // plus lokal mitgeschriebene Aktivität (welche Dateien Claude liest und ändert).
+import { t } from './i18n'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
 export const NOTE_TYPES = ['module', 'decision', 'pitfall', 'convention', 'task', 'fact'] as const
 export type NoteType = (typeof NOTE_TYPES)[number]
 
+/** Getter: übersetzt beim Lesen, nicht beim Import */
 export const NOTE_TYPE_LABEL: Record<NoteType, string> = {
-  module: 'Bereich',
-  decision: 'Entscheidung',
-  pitfall: 'Stolperfalle',
-  convention: 'Konvention',
-  task: 'Aufgabe',
-  fact: 'Wissen'
+  get module() {
+    return t('Bereich')
+  },
+  get decision() {
+    return t('Entscheidung')
+  },
+  get pitfall() {
+    return t('Stolperfalle')
+  },
+  get convention() {
+    return t('Konvention')
+  },
+  get task() {
+    return t('Aufgabe')
+  },
+  get fact() {
+    return t('Wissen')
+  }
 }
 
 export const BRAIN_DIR = '.vibedesk/brain'
@@ -233,22 +247,22 @@ export function overview(projectName: string, notes: NoteMeta[], act: Activity, 
   const lines: string[] = []
   if (!notes.length) {
     lines.push(
-      `# VibeDesk-Gehirn für „${projectName}“`,
-      'Das Gehirn ist noch leer. Wenn du dir einen Bereich des Projekts erschließt, halte das Wichtigste mit brain_write fest – so musst du (und jede künftige Session) es nicht erneut erkunden.'
+      t('# VibeDesk-Gehirn für „{project}“', { project: projectName }),
+      t('Das Gehirn ist noch leer. Wenn du dir einen Bereich des Projekts erschließt, halte das Wichtigste mit brain_write fest – so musst du (und jede künftige Session) es nicht erneut erkunden.')
     )
   } else {
-    lines.push(`# VibeDesk-Gehirn für „${projectName}“ (${notes.length} Notizen)`)
+    lines.push(t('# VibeDesk-Gehirn für „{project}“ ({n} Notizen)', { project: projectName, n: notes.length }))
     const stale = notes.filter((n) => isStale(n, act))
-    if (stale.length) lines.push('', '## Zu prüfen (Dateien haben sich seitdem geändert)', ...stale.slice(0, 8).map((n) => `- [[${n.title}]]`))
-    for (const t of TYPE_ORDER) {
-      const of = notes.filter((n) => n.type === t).sort((a, b) => b.updated - a.updated)
+    if (stale.length) lines.push('', t('## Zu prüfen (Dateien haben sich seitdem geändert)'), ...stale.slice(0, 8).map((n) => `- [[${n.title}]]`))
+    for (const ty of TYPE_ORDER) {
+      const of = notes.filter((n) => n.type === ty).sort((a, b) => b.updated - a.updated)
       if (!of.length) continue
-      lines.push('', `## ${NOTE_TYPE_LABEL[t]}`)
-      for (const n of of.slice(0, t === 'pitfall' || t === 'convention' ? 12 : 8)) {
+      lines.push('', `## ${NOTE_TYPE_LABEL[ty]}`)
+      for (const n of of.slice(0, ty === 'pitfall' || ty === 'convention' ? 12 : 8)) {
         const d = firstLine(n.body)
         lines.push(`- [[${n.title}]]${d ? ' – ' + d : ''}`)
       }
-      if (of.length > 8) lines.push(`- … und ${of.length - 8} weitere (brain_search)`)
+      if (of.length > 8) lines.push(t('- … und {n} weitere (brain_search)', { n: of.length - 8 }))
     }
   }
   const hot = Object.entries(act.files)
@@ -256,14 +270,14 @@ export function overview(projectName: string, notes: NoteMeta[], act: Activity, 
     .sort((a, b) => b[1].lastEdit - a[1].lastEdit)
     .slice(0, 8)
     .map(([f]) => f)
-  if (hot.length) lines.push('', '## Zuletzt geändert', hot.join(', '))
+  if (hot.length) lines.push('', t('## Zuletzt geändert'), hot.join(', '))
   lines.push(
     '',
-    '## So nutzt du das Gehirn',
-    '- Bevor du einen Bereich erkundest: brain_search oder brain_related(Datei) – vielleicht weißt du es schon.',
-    '- Wenn du etwas Wichtiges lernst oder entscheidest: brain_write (kurz, sachlich, mit [[Links]] zu verwandten Notizen und den betroffenen Dateien).',
-    '- Typen: module (Überblick über einen Bereich), decision (warum so), pitfall (Falle, die Zeit gekostet hat), convention (Regel im Projekt), task, fact.',
-    '- „Zu prüfen“-Notizen nach dem Lesen der Dateien aktualisieren oder mit brain_forget löschen.'
+    t('## So nutzt du das Gehirn'),
+    t('- Bevor du einen Bereich erkundest: brain_search oder brain_related(Datei) – vielleicht weißt du es schon.'),
+    t('- Wenn du etwas Wichtiges lernst oder entscheidest: brain_write (kurz, sachlich, mit [[Links]] zu verwandten Notizen und den betroffenen Dateien).'),
+    t('- Typen: module (Überblick über einen Bereich), decision (warum so), pitfall (Falle, die Zeit gekostet hat), convention (Regel im Projekt), task, fact.'),
+    t('- „Zu prüfen“-Notizen nach dem Lesen der Dateien aktualisieren oder mit brain_forget löschen.')
   )
   let out = lines.join('\n')
   if (out.length > max) out = out.slice(0, max - 2).replace(/\n[^\n]*$/, '') + '\n…'

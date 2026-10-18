@@ -5,6 +5,7 @@ import { answerPermission, usePermissions } from '../store/permissionStore'
 import { termWin, useSessions } from '../store/sessionStore'
 import { redactText } from '../store/streamerStore'
 import { useUi } from '../store/uiStore'
+import { t } from '../../../shared/i18n'
 
 function PermissionCard({ a }: { a: PermissionAsk }): React.JSX.Element {
   const name = useSessions((s) => s.sessions.find((x) => x.id === a.sessionId)?.name ?? 'Claude')
@@ -15,29 +16,29 @@ function PermissionCard({ a }: { a: PermissionAsk }): React.JSX.Element {
     if (d === 'terminal') useUi.getState().focus(termWin(a.sessionId))
   }
   return (
-    <div className="ntoast k-waiting perm-card" role="alertdialog" aria-label={`Freigabe für ${name}`} data-testid="perm-card">
+    <div className="ntoast k-waiting perm-card" role="alertdialog" aria-label={t('Freigabe für {name}', { name })} data-testid="perm-card">
       <button className="ntoast-main" onClick={() => useUi.getState().focus(termWin(a.sessionId))}>
         <span className="dot waiting" />
         <span className="ntoast-text">
-          <b>{name} braucht eine Freigabe</b>
+          <b>{t('{name} braucht eine Freigabe', { name })}</b>
           <span>{a.summary}</span>
         </span>
       </button>
       {a.detail && <pre className="perm-detail">{redactText(a.detail)}</pre>}
       <div className="ntoast-actions">
-        <button className="btn small ghost" disabled={busy} onClick={() => decide('terminal')} title="Die normale Frage im Terminal beantworten">
-          Im Terminal
+        <button className="btn small ghost" disabled={busy} onClick={() => decide('terminal')} title={t('Die normale Frage im Terminal beantworten')}>
+          {t('Im Terminal')}
         </button>
         <button className="btn small" disabled={busy} onClick={() => decide('deny')}>
-          Ablehnen
+          {t('Ablehnen')}
         </button>
         {a.canAlways && (
-          <button className="btn small" disabled={busy} onClick={() => decide('always')} title="Erlauben und für ähnliche Fälle merken">
-            Immer
+          <button className="btn small" disabled={busy} onClick={() => decide('always')} title={t('Erlauben und für ähnliche Fälle merken')}>
+            {t('Immer')}
           </button>
         )}
         <button className="btn small primary" disabled={busy} onClick={() => decide('allow')} data-testid="perm-allow">
-          Erlauben
+          {t('Erlauben')}
         </button>
       </div>
     </div>

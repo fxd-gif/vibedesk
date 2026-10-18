@@ -2,6 +2,7 @@
 // Die App erreicht ein Addon ausschließlich über AddonActions (und AddonStorage für „Dauerhaft merken“).
 import type { BlocklyBlock, BlocklyProgram } from '../../../shared/addonBlocks'
 import type { StoredValue } from '../../../shared/types'
+import { t } from '../../../shared/i18n'
 
 export type { StoredValue }
 
@@ -316,7 +317,7 @@ export class AddonRunner {
   private async claudeBudget(): Promise<void> {
     const now = this.opts.clock.now()
     this.claudeSent = this.claudeSent.filter((t) => now - t < 3_600_000)
-    if (this.claudeSent.length >= LIMITS.claudePerHour) throw new Error(`Mehr als ${LIMITS.claudePerHour} Prompts in einer Stunde – Makro angehalten.`)
+    if (this.claudeSent.length >= LIMITS.claudePerHour) throw new Error(t('Mehr als {n} Prompts in einer Stunde – Makro angehalten.', { n: LIMITS.claudePerHour }))
     const last = this.claudeSent[this.claudeSent.length - 1]
     if (last !== undefined && now - last < LIMITS.claudeEveryMs) await this.sleep(LIMITS.claudeEveryMs - (now - last))
     this.claudeSent.push(this.opts.clock.now())
@@ -468,7 +469,7 @@ export class AddonRunner {
       case 'vd_claude_start': {
         await this.throttle()
         const sid = await this.abortable(a.claudeStart(String(field(b, 'PROJECT') ?? '').trim()))
-        if (!sid) throw new Error('Session konnte nicht geöffnet werden – gibt es das Projekt?')
+        if (!sid) throw new Error(t('Session konnte nicht geöffnet werden – gibt es das Projekt?'))
         ctx.session = sid
         return
       }
@@ -477,7 +478,7 @@ export class AddonRunner {
         if (!text) return
         await this.claudeBudget()
         const sid = await this.abortable(a.claudeSend(ctx.session, text))
-        if (!sid) throw new Error('Keine Claude-Session offen – öffne eine oder nutze „Session öffnen“.')
+        if (!sid) throw new Error(t('Keine Claude-Session offen – öffne eine oder nutze „Session öffnen“.'))
         ctx.session = sid
         if (isTrue(field(b, 'AWAIT'))) await this.abortable(a.claudeWait(sid, LIMITS.claudeWaitMin * 60_000, this.ctrl.signal))
         return
@@ -538,7 +539,7 @@ export class AddonRunner {
         const v = await val('VALUE')
         const cur = this.vars.get(varId(b))
         const list = Array.isArray(cur) ? [...cur] : []
-        if (this.listEntries >= LIMITS.listTotal) throw new Error('Listen-Speicher voll (max. 20.000 Einträge über alle Listen)')
+        if (this.listEntries >= LIMITS.listTotal) throw new Error(t('Listen-Speicher voll (max. 20.000 Einträge über alle Listen)'))
         const item = Array.isArray(v) ? str(v) : v
         if (list.length < LIMITS.listLen) list.push(typeof item === 'string' ? item.slice(0, LIMITS.listItemLen) : item)
         this.vars.set(varId(b), list)

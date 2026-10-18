@@ -1,4 +1,5 @@
 // Vorschau → Claude: Konsolenfehler sammeln und „Zeig drauf“ (Element anklicken, Claude bekommt Selektor, Text und Bild).
+import { tn, t } from '../../../shared/i18n'
 
 export interface PreviewError {
   message: string
@@ -46,18 +47,23 @@ export function errorsPrompt(url: string, errs: PreviewError[]): string {
   const lines = errs
     .slice(0, 8)
     .map((e) => `• ${oneLine(e.message).slice(0, 300)}${e.source ? ` (${shortSource(e.source)}${e.line ? `:${e.line}` : ''})` : ''}${e.count > 1 ? ` ×${e.count}` : ''}`)
-  return `Die Vorschau ${url} zeigt ${errs.length === 1 ? 'diesen Fehler' : 'diese Fehler'} in der Browser-Konsole: ${lines.join(' ')} – finde die Ursache und behebe sie.`
+  return tn(
+    errs.length,
+    'Die Vorschau {url} zeigt diesen Fehler in der Browser-Konsole: {lines} – finde die Ursache und behebe sie.',
+    'Die Vorschau {url} zeigt diese Fehler in der Browser-Konsole: {lines} – finde die Ursache und behebe sie.',
+    { url, lines: lines.join(' ') }
+  )
 }
 
 export function pickPrompt(url: string, p: PickedElement, wish: string, shot?: string): string {
   const text = oneLine(p.text).slice(0, 160)
   const html = oneLine(p.html).slice(0, 400)
   return [
-    `In der Vorschau ${url} meine ich dieses Element: \`${p.selector}\``,
-    text ? `mit dem Text „${text}“` : '',
+    t('In der Vorschau {url} meine ich dieses Element: `{selector}`', { url, selector: p.selector }),
+    text ? t('mit dem Text „{text}“', { text }) : '',
     `(HTML: \`${html}\`).`,
-    shot ? `Screenshot davon: ${shot}` : '',
-    `Bitte: ${oneLine(wish)}`
+    shot ? t('Screenshot davon: {path}', { path: shot }) : '',
+    t('Bitte: {wish}', { wish: oneLine(wish) })
   ]
     .filter(Boolean)
     .join(' ')

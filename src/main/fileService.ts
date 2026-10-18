@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import type { Eol, FileChange, FileContent, FileEntry, FileErrorCode, FileResult } from '../shared/types'
@@ -25,12 +26,12 @@ const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i
 
 /** Prüft einen einzelnen Datei-/Ordnernamen (Windows-Regeln). Liefert eine Fehlermeldung oder null. */
 export function nameError(name: string): string | null {
-  if (!name || !name.trim()) return 'Bitte einen Namen eingeben'
-  if (name.length > 255) return 'Name ist zu lang'
-  if (name === '.' || name === '..') return 'Ungültiger Name'
-  if (/[<>:"|?*\x00-\x1f]/.test(name)) return 'Diese Zeichen sind nicht erlaubt: < > : " | ? *'
-  if (/[. ]$/.test(name)) return 'Name darf nicht mit Punkt oder Leerzeichen enden'
-  if (RESERVED.test(name)) return `„${name}“ ist unter Windows reserviert`
+  if (!name || !name.trim()) return t('Bitte einen Namen eingeben')
+  if (name.length > 255) return t('Name ist zu lang')
+  if (name === '.' || name === '..') return t('Ungültiger Name')
+  if (/[<>:"|?*\x00-\x1f]/.test(name)) return t('Diese Zeichen sind nicht erlaubt: < > : " | ? *')
+  if (/[. ]$/.test(name)) return t('Name darf nicht mit Punkt oder Leerzeichen enden')
+  if (RESERVED.test(name)) return t('„{name}“ ist unter Windows reserviert', { name })
   return null
 }
 
@@ -66,16 +67,16 @@ export class FileService {
 
   create(parent: string, name: string, kind: 'file' | 'dir'): FileResult<{ path: string }> {
     const d = this.resolve(parent)
-    if (!d) return fail('outside', 'Ordner liegt außerhalb des Projekts')
+    if (!d) return fail('outside', t('Ordner liegt außerhalb des Projekts'))
     const parts = String(name).trim().split(/[\\/]+/).filter(Boolean)
     for (const p of parts.length ? parts : ['']) {
       const e = nameError(p)
       if (e) return fail('invalid', e)
     }
     const target = this.resolve(path.join(d, ...parts))
-    if (!target) return fail('outside', 'Ziel liegt außerhalb des Projekts')
+    if (!target) return fail('outside', t('Ziel liegt außerhalb des Projekts'))
     try {
-      if (fs.existsSync(target)) return fail('exists', `„${parts.join('/')}“ gibt es schon`)
+      if (fs.existsSync(target)) return fail('exists', t('„{name}“ gibt es schon', { name: parts.join('/') }))
       if (kind === 'dir') fs.mkdirSync(target, { recursive: true })
       else {
         fs.mkdirSync(path.dirname(target), { recursive: true })
@@ -89,18 +90,18 @@ export class FileService {
 
   rename(file: string, newName: string): FileResult<{ path: string }> {
     const f = this.resolve(file)
-    if (!f) return fail('outside', 'Datei liegt außerhalb des Projekts')
-    if (this.isRoot(f)) return fail('invalid', 'Der Projektordner selbst kann hier nicht umbenannt werden')
+    if (!f) return fail('outside', t('Datei liegt außerhalb des Projekts'))
+    if (this.isRoot(f)) return fail('invalid', t('Der Projektordner selbst kann hier nicht umbenannt werden'))
     const name = String(newName).trim()
-    const e = nameError(name) ?? (/[\\/]/.test(name) ? 'Name darf keinen Schrägstrich enthalten' : null)
+    const e = nameError(name) ?? (/[\\/]/.test(name) ? t('Name darf keinen Schrägstrich enthalten') : null)
     if (e) return fail('invalid', e)
     const target = path.join(path.dirname(f), name)
-    if (!this.resolve(target)) return fail('outside', 'Ziel liegt außerhalb des Projekts')
+    if (!this.resolve(target)) return fail('outside', t('Ziel liegt außerhalb des Projekts'))
     try {
-      if (!fs.existsSync(f)) return fail('not_found', 'Existiert nicht mehr')
+      if (!fs.existsSync(f)) return fail('not_found', t('Existiert nicht mehr'))
       // nur Groß-/Kleinschreibung geändert → unter Windows dieselbe Datei, trotzdem umbenennen
       const caseOnly = target.toLowerCase() === f.toLowerCase()
-      if (!caseOnly && fs.existsSync(target)) return fail('exists', `„${name}“ gibt es schon`)
+      if (!caseOnly && fs.existsSync(target)) return fail('exists', t('„{name}“ gibt es schon', { name }))
       fs.renameSync(f, target)
       return { ok: true, path: target }
     } catch (err) {
@@ -111,15 +112,15 @@ export class FileService {
   /** Prüft, ob etwas gelöscht werden darf (nicht der Projektordner selbst). */
   removable(file: string): FileResult<{ path: string }> {
     const f = this.resolve(file)
-    if (!f) return fail('outside', 'Datei liegt außerhalb des Projekts')
-    if (this.isRoot(f)) return fail('invalid', 'Der Projektordner selbst kann hier nicht gelöscht werden')
-    if (!fs.existsSync(f)) return fail('not_found', 'Existiert nicht mehr')
+    if (!f) return fail('outside', t('Datei liegt außerhalb des Projekts'))
+    if (this.isRoot(f)) return fail('invalid', t('Der Projektordner selbst kann hier nicht gelöscht werden'))
+    if (!fs.existsSync(f)) return fail('not_found', t('Existiert nicht mehr'))
     return { ok: true, path: f }
   }
 
   list(dir: string): FileResult<{ entries: FileEntry[] }> {
     const d = this.resolve(dir)
-    if (!d) return fail('outside', 'Ordner liegt außerhalb des Projekts')
+    if (!d) return fail('outside', t('Ordner liegt außerhalb des Projekts'))
     try {
       const entries = fs
         .readdirSync(d, { withFileTypes: true })
@@ -134,31 +135,31 @@ export class FileService {
 
   read(file: string): FileResult<FileContent> {
     const f = this.resolve(file)
-    if (!f) return fail('outside', 'Datei liegt außerhalb des Projekts')
+    if (!f) return fail('outside', t('Datei liegt außerhalb des Projekts'))
     try {
       const st = fs.statSync(f)
-      if (!st.isFile()) return fail('io', 'Keine Datei')
-      if (st.size > MAX_FILE_BYTES) return fail('too_large', 'Datei ist größer als 2 MB')
+      if (!st.isFile()) return fail('io', t('Keine Datei'))
+      if (st.size > MAX_FILE_BYTES) return fail('too_large', t('Datei ist größer als 2 MB'))
       const buf = fs.readFileSync(f)
-      if (buf.subarray(0, 8000).includes(0)) return fail('binary', 'Binärdatei')
+      if (buf.subarray(0, 8000).includes(0)) return fail('binary', t('Binärdatei'))
       const bom = buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf
       const raw = buf.toString('utf8', bom ? 3 : 0)
       const eol: Eol = raw.includes('\r\n') ? 'crlf' : 'lf'
       return { ok: true, path: f, text: raw.replace(/\r\n/g, '\n'), mtime: st.mtimeMs, eol, bom }
     } catch (err) {
       const e = err as NodeJS.ErrnoException
-      return e.code === 'ENOENT' ? fail('not_found', 'Datei existiert nicht mehr') : fail('io', e.message)
+      return e.code === 'ENOENT' ? fail('not_found', t('Datei existiert nicht mehr')) : fail('io', e.message)
     }
   }
 
   /** expectedMtime = null überschreibt bewusst bzw. legt die Datei neu an. */
   write(file: string, text: string, expectedMtime: number | null, eol: Eol, bom: boolean): FileResult<{ mtime: number }> {
     const f = this.resolve(file)
-    if (!f) return fail('outside', 'Datei liegt außerhalb des Projekts')
+    if (!f) return fail('outside', t('Datei liegt außerhalb des Projekts'))
     try {
       if (expectedMtime !== null) {
         const cur = fs.existsSync(f) ? fs.statSync(f).mtimeMs : null
-        if (cur !== expectedMtime) return fail('conflict', 'Datei wurde inzwischen geändert')
+        if (cur !== expectedMtime) return fail('conflict', t('Datei wurde inzwischen geändert'))
       }
       const body = eol === 'crlf' ? String(text).replace(/\r?\n/g, '\r\n') : String(text)
       fs.mkdirSync(path.dirname(f), { recursive: true })

@@ -1,4 +1,5 @@
 // Wohin eine Mitteilung geht: Verlauf, Karte unten rechts, Windows-Benachrichtigung – oder erst nach der Fokus-Runde.
+import { tn } from '../../../shared/i18n'
 import type { NoticeKind, NotifySettings } from '../../../shared/types'
 
 /** Wichtig genug, um auch in Fokus-Runden sofort zu erscheinen */
@@ -49,5 +50,5 @@ export function pushLog<T extends LogEntry>(log: T[], n: T, max = LOG_MAX): T[] 
 }
 
 export function heldSummary(count: number): string {
-  return count === 1 ? 'Während der Fokus-Runde kam 1 Mitteilung' : `Während der Fokus-Runde kamen ${count} Mitteilungen`
+  return tn(count, 'Während der Fokus-Runde kam {n} Mitteilung', 'Während der Fokus-Runde kamen {n} Mitteilungen')
 }

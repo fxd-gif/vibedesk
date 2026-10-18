@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../desktop/icons'
 import { copySelection, dropFiles, getTerminal, mountTerminal, onTerminalUi, pasteInto } from '../store/terminals'
+import { t } from '../../../shared/i18n'
 
 const MATCH = { matchBackground: '#3b4a7a', matchOverviewRuler: '#7c9cff', activeMatchBackground: '#c8f04a', activeMatchColorOverviewRuler: '#c8f04a' }
 
@@ -99,8 +100,8 @@ export function TermPane({ id, testId, focused, label }: { id: string; testId?: 
             ref={input}
             className="field small"
             value={search}
-            placeholder="Im Terminal suchen"
-            aria-label="Im Terminal suchen"
+            placeholder={t('Im Terminal suchen')}
+            aria-label={t('Im Terminal suchen')}
             autoFocus
             onChange={(e) => {
               setSearch(e.target.value)
@@ -111,14 +112,14 @@ export function TermPane({ id, testId, focused, label }: { id: string; testId?: 
               else if (e.key === 'Enter') find(search, e.shiftKey)
             }}
           />
-          <span className="dim small term-search-count">{search ? (hits ? `${hits.index + 1}/${hits.count}` : 'keine Treffer') : ''}</span>
-          <button className="icon-btn" title="Vorheriger (Umschalt+Enter)" onClick={() => find(search, true)}>
+          <span className="dim small term-search-count">{search ? (hits ? `${hits.index + 1}/${hits.count}` : t('keine Treffer')) : ''}</span>
+          <button className="icon-btn" title={t('Vorheriger (Umschalt+Enter)')} onClick={() => find(search, true)}>
             ↑
           </button>
-          <button className="icon-btn" title="Nächster (Enter)" onClick={() => find(search)}>
+          <button className="icon-btn" title={t('Nächster (Enter)')} onClick={() => find(search)}>
             ↓
           </button>
-          <button className="icon-btn" title="Schließen (Esc)" onClick={closeSearch}>
+          <button className="icon-btn" title={t('Schließen (Esc)')} onClick={closeSearch}>
             ✕
           </button>
         </div>

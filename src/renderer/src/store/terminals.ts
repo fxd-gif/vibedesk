@@ -1,3 +1,4 @@
+import { t } from '../../../shared/i18n'
 import { Terminal, type ILink, type ITerminalOptions } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebglAddon } from '@xterm/addon-webgl'
@@ -281,8 +282,8 @@ function wire(): void {
   }
   api.on.sessionData(write)
   api.on.shellData(write)
-  api.on.sessionExit((id, code) => entries.get(id)?.term.write(`\r\n\x1b[2m— ${code === 0 ? 'Claude wurde beendet.' : `Claude ist unerwartet beendet (Code ${code}).`} —\x1b[0m\r\n`))
-  api.on.shellExit((id, code) => entries.get(id)?.term.write(`\r\n\x1b[2m— Shell beendet (Code ${code}) —\x1b[0m\r\n`))
+  api.on.sessionExit((id, code) => entries.get(id)?.term.write(`\r\n\x1b[2m— ${code === 0 ? t('Claude wurde beendet.') : t('Claude ist unerwartet beendet (Code {code}).', { code })} —\x1b[0m\r\n`))
+  api.on.shellExit((id, code) => entries.get(id)?.term.write(`\r\n\x1b[2m— ${t('Shell beendet (Code {code})', { code })} —\x1b[0m\r\n`))
   let last = useSettings.getState().s
   useSettings.subscribe((st) => {
     if (st.s?.terminal === last?.terminal && st.s?.scene === last?.scene) return

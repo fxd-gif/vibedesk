@@ -1,21 +1,47 @@
 // Baustein-Katalog für Addons: die einzige Wahrheit darüber, welche Blöcke es gibt.
 // Codec, Prüfung, Interpreter und Blockly-Definitionen bauen darauf auf.
+import { t } from './i18n'
 
 export type Capability = 'scene' | 'rain' | 'audio' | 'sound' | 'notice' | 'ask' | 'focus' | 'clipboard' | 'hotkey' | 'schedule' | 'storage' | 'claude'
 
+/** Getter: übersetzt beim Lesen, nicht beim Import */
 export const CAPABILITY_LABELS: Record<Capability, string> = {
-  scene: 'wechselt die Szene',
-  rain: 'ändert den Regen',
-  audio: 'ändert Lautstärken und Musik',
-  sound: 'spielt Töne ab',
-  notice: 'zeigt Hinweise an',
-  ask: 'stellt Fragen mit Knöpfen',
-  focus: 'steuert den Fokus-Timer',
-  clipboard: 'kopiert Text in die Zwischenablage',
-  hotkey: 'reagiert auf Tastenkürzel',
-  schedule: 'läuft zeitgesteuert',
-  storage: 'merkt sich Werte dauerhaft',
-  claude: 'steuert Claude: öffnet Sessions und schickt Prompts'
+  get scene() {
+    return t('wechselt die Szene')
+  },
+  get rain() {
+    return t('ändert den Regen')
+  },
+  get audio() {
+    return t('ändert Lautstärken und Musik')
+  },
+  get sound() {
+    return t('spielt Töne ab')
+  },
+  get notice() {
+    return t('zeigt Hinweise an')
+  },
+  get ask() {
+    return t('stellt Fragen mit Knöpfen')
+  },
+  get focus() {
+    return t('steuert den Fokus-Timer')
+  },
+  get clipboard() {
+    return t('kopiert Text in die Zwischenablage')
+  },
+  get hotkey() {
+    return t('reagiert auf Tastenkürzel')
+  },
+  get schedule() {
+    return t('läuft zeitgesteuert')
+  },
+  get storage() {
+    return t('merkt sich Werte dauerhaft')
+  },
+  get claude() {
+    return t('steuert Claude: öffnet Sessions und schickt Prompts')
+  }
 }
 
 export type FieldSpec =

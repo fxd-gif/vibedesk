@@ -1,4 +1,5 @@
 // Freigaben (PermissionRequest-Hook): lesbare Zusammenfassung für Karten/Handy und die Antwort an Claude Code.
+import { t } from './i18n'
 
 export type PermissionDecision = 'allow' | 'always' | 'deny' | 'terminal'
 
@@ -30,27 +31,27 @@ export function describePermission(tool: string, input: unknown): { summary: str
   switch (tool) {
     case 'Bash':
     case 'PowerShell':
-      return { summary: 'Befehl ausführen', detail: clip(str(i.command)) }
+      return { summary: t('Befehl ausführen'), detail: clip(str(i.command)) }
     case 'Edit':
     case 'MultiEdit':
-      return { summary: 'Datei ändern', detail: file(str(i.file_path)) }
+      return { summary: t('Datei ändern'), detail: file(str(i.file_path)) }
     case 'Write':
-      return { summary: 'Datei schreiben', detail: file(str(i.file_path)) }
+      return { summary: t('Datei schreiben'), detail: file(str(i.file_path)) }
     case 'NotebookEdit':
-      return { summary: 'Notebook ändern', detail: file(str(i.notebook_path)) }
+      return { summary: t('Notebook ändern'), detail: file(str(i.notebook_path)) }
     case 'Read':
-      return { summary: 'Datei lesen', detail: file(str(i.file_path)) }
+      return { summary: t('Datei lesen'), detail: file(str(i.file_path)) }
     case 'WebFetch':
-      return { summary: 'Webseite abrufen', detail: clip(str(i.url), 200) }
+      return { summary: t('Webseite abrufen'), detail: clip(str(i.url), 200) }
     case 'WebSearch':
-      return { summary: 'Im Web suchen', detail: clip(str(i.query), 200) }
+      return { summary: t('Im Web suchen'), detail: clip(str(i.query), 200) }
     case 'Task':
     case 'Agent':
-      return { summary: 'Agent starten', detail: clip(str(i.description), 200) }
+      return { summary: t('Agent starten'), detail: clip(str(i.description), 200) }
   }
   const mcp = /^mcp__([^_]+(?:_[^_]+)*)__(.+)$/.exec(tool)
-  if (mcp) return { summary: `Werkzeug „${mcp[2]}“ (${mcp[1]})`, detail: clip(JSON.stringify(i), 300) }
-  return { summary: `Werkzeug „${clip(tool, 60)}“`, detail: clip(JSON.stringify(i), 300) }
+  if (mcp) return { summary: t('Werkzeug „{tool}“ ({server})', { tool: mcp[2], server: mcp[1] }), detail: clip(JSON.stringify(i), 300) }
+  return { summary: t('Werkzeug „{tool}“', { tool: clip(tool, 60) }), detail: clip(JSON.stringify(i), 300) }
 }
 
 const SUGGEST_MAX_BYTES = 20_000
@@ -70,7 +71,7 @@ export function permissionReply(decision: PermissionDecision, suggestions: unkno
   if (decision === 'terminal') return ''
   const d =
     decision === 'deny'
-      ? { behavior: 'deny', message: 'In VibeDesk abgelehnt. Frag nach, was stattdessen passieren soll.' }
+      ? { behavior: 'deny', message: t('In VibeDesk abgelehnt. Frag nach, was stattdessen passieren soll.') }
       : decision === 'always' && suggestions
         ? { behavior: 'allow', updatedPermissions: suggestions }
         : { behavior: 'allow' }

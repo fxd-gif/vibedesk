@@ -1,5 +1,6 @@
 // Gehirn-Autopflege: Will Claude eine Runde beenden, in der es Dateien geändert, aber nichts
 // ins Gehirn geschrieben hat, hält der Stop-Hook es einmal an und bittet um kurze Pflege.
+import { t } from '../shared/i18n'
 
 export interface TurnActivity {
   /** geänderte Projektdateien in dieser Runde (ohne das Gehirn selbst) */
@@ -8,10 +9,11 @@ export interface TurnActivity {
   tended: boolean
 }
 
-export const TEND_REASON =
-  'VibeDesk-Gehirn: Bevor du fertig bist – halte mit brain_write kurz fest, was du in dieser Runde gelernt oder entschieden hast ' +
-  '(neue Bereiche, Entscheidungen samt Grund, Stolperfallen) und aktualisiere Notizen, die dadurch veraltet sind. ' +
-  'Gibt es nichts Neues, antworte nur „Gehirn ist aktuell.“ Wiederhole deine vorige Antwort nicht und fasse dich kurz.'
+/** Bitte an Claude (in der Sprache der Oberfläche) – erst beim Aufruf übersetzt */
+export const tendReason = (): string =>
+  t(
+    'VibeDesk-Gehirn: Bevor du fertig bist – halte mit brain_write kurz fest, was du in dieser Runde gelernt oder entschieden hast (neue Bereiche, Entscheidungen samt Grund, Stolperfallen) und aktualisiere Notizen, die dadurch veraltet sind. Gibt es nichts Neues, antworte nur „Gehirn ist aktuell.“ Wiederhole deine vorige Antwort nicht und fasse dich kurz.'
+  )
 
 /** `stop_hook_active` heißt: Claude läuft schon wegen eines Stop-Hooks weiter – dann nie erneut anhalten. */
 export function shouldTend(turn: TurnActivity | undefined, stopHookActive: boolean): boolean {
@@ -19,5 +21,5 @@ export function shouldTend(turn: TurnActivity | undefined, stopHookActive: boole
 }
 
 export function stopHookReply(): string {
-  return JSON.stringify({ decision: 'block', reason: TEND_REASON })
+  return JSON.stringify({ decision: 'block', reason: tendReason() })
 }

@@ -1,3 +1,4 @@
+import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import { ambienceAudio } from '../ambience/audio'
@@ -15,12 +16,12 @@ interface FocusStore {
 const DEFAULT = { work: 25, short: 5, long: 15, rounds: 4 }
 const cfg = () => useSettings.getState().s?.focus ?? DEFAULT
 
-const BANNERS: Record<Phase, string> = {
+const BANNERS = (): Record<Phase, string> => ({
   idle: '',
-  work: 'Fokus – los geht’s.',
-  short: 'Pause – kurz aufstehen, Augen weg vom Bildschirm.',
-  long: 'Lange Pause – Wasser holen, frische Luft.'
-}
+  work: t('Fokus – los geht’s.'),
+  short: t('Pause – kurz aufstehen, Augen weg vom Bildschirm.'),
+  long: t('Lange Pause – Wasser holen, frische Luft.')
+})
 
 function applyPhase(prev: Phase, next: Phase): void {
   if (prev === next) return
@@ -31,7 +32,7 @@ function applyPhase(prev: Phase, next: Phase): void {
   if (next === 'idle') return
   const vol = useSettings.getState().s?.chimeVolume ?? 0.5
   playChime(vol, breakNow ? [783.99, 523.25] : [523.25, 783.99])
-  useFocus.setState({ banner: { text: BANNERS[next], until: Date.now() + (breakNow ? 8000 : 4000) } })
+  useFocus.setState({ banner: { text: BANNERS()[next], until: Date.now() + (breakNow ? 8000 : 4000) } })
 }
 
 export const useFocus = create<FocusStore>((set, get) => ({

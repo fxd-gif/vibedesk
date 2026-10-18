@@ -1,11 +1,18 @@
 // Reine Logik für die Einrichtung: Anmeldung bei Claude erkennen, Fehlschläge erklären, Texte fürs Terminal.
+import { getLang, t } from './i18n'
 
 /** Seiten, auf die die Knöpfe „Anleitung“ und „Mehr zur Anmeldung“ verweisen */
 export const SETUP_LINKS = {
-  node: 'https://nodejs.org/de/download',
-  claude: 'https://code.claude.com/docs/de/troubleshoot-install',
-  login: 'https://code.claude.com/docs/de/authentication'
-} as const
+  get node(): string {
+    return `https://nodejs.org/${getLang()}/download`
+  },
+  get claude(): string {
+    return `https://code.claude.com/docs/${getLang()}/troubleshoot-install`
+  },
+  get login(): string {
+    return `https://code.claude.com/docs/${getLang()}/authentication`
+  }
+}
 
 const filled = (v: unknown): boolean => typeof v === 'string' && v.trim().length > 0
 
@@ -43,22 +50,23 @@ export const EXIT_MARK = 'Installer beendet mit Code '
 export function installFailReason(log: string[]): string | null {
   const text = log.join('\n')
   if (/spawn winget ENOENT/i.test(text))
-    return 'Der Windows-Paketmanager (winget) fehlt auf diesem Rechner – lade Node.js über die Download-Seite.'
+    return t('Der Windows-Paketmanager (winget) fehlt auf diesem Rechner – lade Node.js über die Download-Seite.')
   if (/0x800704c7|2147943623|\b1223\b|\b1602\b|cancel+ed|abgebrochen|denied|verweigert/i.test(text))
-    return 'Die Installation wurde abgebrochen – vermutlich wurde die Administrator-Abfrage nicht bestätigt. Versuch es nochmal und klick dort auf „Ja“.'
+    return t('Die Installation wurde abgebrochen – vermutlich wurde die Administrator-Abfrage nicht bestätigt. Versuch es nochmal und klick dort auf „Ja“.')
   if (/0x80072ee7|0x80072efd|0x80072f8f|not be resolved|could not resolve|nicht aufgelöst|remote name|Remotename|unable to connect|Verbindung (mit|zum|konnte)|network|Netzwerk|timed? ?out|Zeitüberschreitung|offline|internet/i.test(text))
-    return 'Es gab keine Verbindung zum Internet. Prüf deine Verbindung und versuch es nochmal.'
+    return t('Es gab keine Verbindung zum Internet. Prüf deine Verbindung und versuch es nochmal.')
   if (/ExecutionPolicy|Ausführungsrichtlinie|running scripts is disabled|Ausführung von Skripts/i.test(text))
-    return 'Windows hat das Installationsskript blockiert. Folge der Anleitung, um Claude Code von Hand zu installieren.'
+    return t('Windows hat das Installationsskript blockiert. Folge der Anleitung, um Claude Code von Hand zu installieren.')
   return null
 }
 
 /** Text, wenn eine Claude-Session endet */
 export function sessionExitText(code: number): string {
   return code === 0
-    ? 'Claude wurde beendet.'
-    : `Claude ist unerwartet beendet (Code ${code}). Neu starten – oder prüf unter Einrichtung, ob Claude Code installiert und angemeldet ist.`
+    ? t('Claude wurde beendet.')
+    : t('Claude ist unerwartet beendet (Code {code}). Neu starten – oder prüf unter Einrichtung, ob Claude Code installiert und angemeldet ist.', { code })
 }
 
 /** Fehlermeldung beim Sessionstart, wenn Claude Code fehlt – der Renderer erkennt sie und bietet die Einrichtung an */
-export const CLAUDE_MISSING_MESSAGE = 'Claude Code ist auf diesem Rechner noch nicht installiert. Du kannst es in der Einrichtung mit einem Klick nachholen.'
+export const claudeMissingMessage = (): string =>
+  t('Claude Code ist auf diesem Rechner noch nicht installiert. Du kannst es in der Einrichtung mit einem Klick nachholen.')

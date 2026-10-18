@@ -1,7 +1,8 @@
 // Das VibeDesk-Gehirn: was Claude über ein Projekt weiß – als lebendiger Graph.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../../api'
-import { NOTE_TYPES, NOTE_TYPE_LABEL, noteId, type BrainView, type GraphNodeKind } from '../../../../shared/brain'
+import { NOTE_TYPES, noteId, type BrainView, type GraphNodeKind } from '../../../../shared/brain'
+import { t, tn } from '../../../../shared/i18n'
 import type { Project } from '../../../../shared/types'
 import { Icon } from '../../desktop/icons'
 import { alert } from '../../store/dialogStore'
@@ -10,16 +11,16 @@ import { useSessions } from '../../store/sessionStore'
 import { activeProjectId } from '../../store/activeProject'
 import { useSettings } from '../../store/settingsStore'
 import { Toggle } from '../AmbienceMenu'
-import { BrainGraph, KIND_COLOR, type GraphHandle } from './BrainGraph'
+import { BrainGraph, KIND_COLOR, noteTypeLabel, type GraphHandle } from './BrainGraph'
 import { BrainSide, emptyDraft, type Draft } from './BrainSide'
 import './brain.css'
 
-export const BUILD_PROMPT =
-  'Erkunde dieses Projekt und baue das VibeDesk-Gehirn auf: Lege mit brain_write für jeden wichtigen Bereich eine kurze Überblicks-Notiz (type module) mit den zentralen Dateien an, dazu die wichtigsten Konventionen und erkennbare Stolperfallen. Verlinke verwandte Notizen mit [[Titel]] und halte jede Notiz kurz (5–15 Zeilen).'
-export const TEND_PROMPT =
-  'Pflege das VibeDesk-Gehirn: Prüfe mit brain_overview die Notizen „zu prüfen“ gegen den aktuellen Code und aktualisiere oder archiviere sie. Halte danach mit brain_write fest, was du in dieser Session gelernt oder entschieden hast.'
+export const buildPrompt = (): string =>
+  t('Erkunde dieses Projekt und baue das VibeDesk-Gehirn auf: Lege mit brain_write für jeden wichtigen Bereich eine kurze Überblicks-Notiz (type module) mit den zentralen Dateien an, dazu die wichtigsten Konventionen und erkennbare Stolperfallen. Verlinke verwandte Notizen mit [[Titel]] und halte jede Notiz kurz (5–15 Zeilen).')
+export const tendPrompt = (): string =>
+  t('Pflege das VibeDesk-Gehirn: Prüfe mit brain_overview die Notizen „zu prüfen“ gegen den aktuellen Code und aktualisiere oder archiviere sie. Halte danach mit brain_write fest, was du in dieser Session gelernt oder entschieden hast.')
 
-const FILTERS: { kind: GraphNodeKind; label: string }[] = [...NOTE_TYPES.map((t) => ({ kind: t as GraphNodeKind, label: NOTE_TYPE_LABEL[t] })), { kind: 'file', label: 'Dateien' }]
+const filters = (): { kind: GraphNodeKind; label: string }[] => [...NOTE_TYPES.map((k) => ({ kind: k as GraphNodeKind, label: noteTypeLabel(k) })), { kind: 'file', label: t('Dateien') }]
 
 export function BrainWindow(): React.JSX.Element {
   const [projects, setProjects] = useState<Project[]>([])
@@ -87,7 +88,7 @@ export function BrainWindow(): React.JSX.Element {
   const ask = async (prompt: string): Promise<void> => {
     if (!projectId) return
     if (!brainOn) {
-      await alert('Gehirn ist ausgeschaltet', 'Schalte oben „Claude nutzt das Gehirn“ ein – neue Sessions bekommen es dann automatisch.')
+      await alert(t('Gehirn ist ausgeschaltet'), t('Schalte oben „Claude nutzt das Gehirn“ ein – neue Sessions bekommen es dann automatisch.'))
       return
     }
     await promptProject(projectId, prompt)
@@ -107,7 +108,7 @@ export function BrainWindow(): React.JSX.Element {
     <div className="brain" data-testid="brain-window">
       <div className="brain-bar">
         <select className="field small brain-project" value={projectId ?? ''} onChange={(e) => setProjectId(e.target.value)} data-testid="brain-project">
-          {!projectId && <option value="">Projekt wählen</option>}
+          {!projectId && <option value="">{t('Projekt wählen')}</option>}
           {projects
             .filter((p) => !p.missing)
             .map((p) => (
@@ -120,7 +121,7 @@ export function BrainWindow(): React.JSX.Element {
           <Icon name="search" size={14} />
           <input
             className="field small"
-            placeholder="Suchen …"
+            placeholder={t('Suchen …')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => {
@@ -132,71 +133,71 @@ export function BrainWindow(): React.JSX.Element {
         </div>
         {view && (
           <span className="brain-stats">
-            {view.notes} Notizen{view.stale ? <b> · {view.stale} zu prüfen</b> : null}
+            {tn(view.notes, '{n} Notiz', '{n} Notizen')}{view.stale ? <b> · {t('{n} zu prüfen', { n: view.stale })}</b> : null}
           </span>
         )}
         <span className="brain-spacer" />
-        <label className="brain-on" title="Neue Sessions bekommen das Gehirn als Werkzeug und einen Überblick beim Start">
-          <span>Claude nutzt das Gehirn</span>
-          <Toggle on={brainOn} onChange={(v) => useSettings.getState().set({ brainOn: v })} label="Claude nutzt das Gehirn" />
+        <label className="brain-on" title={t('Neue Sessions bekommen das Gehirn als Werkzeug und einen Überblick beim Start')}>
+          <span>{t('Claude nutzt das Gehirn')}</span>
+          <Toggle on={brainOn} onChange={(v) => useSettings.getState().set({ brainOn: v })} label={t('Claude nutzt das Gehirn')} />
         </label>
         <button className="btn small" disabled={!projectId} onClick={() => (select(null), setDraft(emptyDraft()))} data-testid="brain-new">
-          <Icon name="plus" size={13} /> Notiz
+          <Icon name="plus" size={13} /> {t('Notiz')}
         </button>
-        <button className="btn small primary" disabled={!projectId || empty === true} onClick={() => void ask(TEND_PROMPT)} title={sessionCount ? 'Schickt den Auftrag an die laufende Session' : 'Startet eine Session und schickt den Auftrag'}>
-          <Icon name="spark" size={13} /> Gehirn pflegen
+        <button className="btn small primary" disabled={!projectId || empty === true} onClick={() => void ask(tendPrompt())} title={sessionCount ? t('Schickt den Auftrag an die laufende Session') : t('Startet eine Session und schickt den Auftrag')}>
+          <Icon name="spark" size={13} /> {t('Gehirn pflegen')}
         </button>
-        <button className="btn small ghost" disabled={!view?.notes} title="Ordner öffnen (auch in Obsidian nutzbar)" onClick={() => projectId && void api.brain.reveal(projectId)}>
+        <button className="btn small ghost" disabled={!view?.notes} title={t('Ordner öffnen (auch in Obsidian nutzbar)')} onClick={() => projectId && void api.brain.reveal(projectId)}>
           <Icon name="folder" size={14} />
         </button>
       </div>
       <div className="brain-filters">
-        {FILTERS.map((f) => (
+        {filters().map((f) => (
           <button key={f.kind} className={`brain-filter${hidden.has(f.kind) ? ' off' : ''}`} onClick={() => toggleKind(f.kind)}>
             <i style={{ background: KIND_COLOR[f.kind] }} />
             {f.label}
           </button>
         ))}
         <span className="brain-spacer" />
-        <button className="brain-filter" onClick={() => graph.current?.fit()} title="Alles einpassen">
-          <Icon name="grid" size={12} /> Einpassen
+        <button className="brain-filter" onClick={() => graph.current?.fit()} title={t('Alles einpassen')}>
+          <Icon name="grid" size={12} /> {t('Einpassen')}
         </button>
       </div>
       <div className="brain-main">
         <div className="brain-stage">
           {view && <BrainGraph ref={graph} graph={view.graph} hidden={hidden} query={query} selected={selected} onSelect={select} />}
-          {!projectId && <div className="brain-empty">Lege zuerst ein Projekt an – dann wächst hier sein Gehirn.</div>}
+          {!projectId && <div className="brain-empty">{t('Lege zuerst ein Projekt an – dann wächst hier sein Gehirn.')}</div>}
           {empty && (
             <div className="brain-empty card" data-testid="brain-empty">
               <Icon name="brain" size={34} />
-              <h3>Das Gehirn von {project?.name ?? 'diesem Projekt'} ist noch leer</h3>
+              <h3>{project ? t('Das Gehirn von {name} ist noch leer', { name: project.name }) : t('Das Gehirn dieses Projekts ist noch leer')}</h3>
               <p>
-                Hier sammelt sich, was Claude über dein Projekt lernt: Bereiche, Entscheidungen, Stolperfallen und Konventionen – als verlinkte Notizen. Jede neue Session startet mit diesem Wissen, statt alles neu zu erkunden.
+                {t('Hier sammelt sich, was Claude über dein Projekt lernt: Bereiche, Entscheidungen, Stolperfallen und Konventionen – als verlinkte Notizen. Jede neue Session startet mit diesem Wissen, statt alles neu zu erkunden.')}
               </p>
               <div className="row">
-                <button className="btn primary" onClick={() => void ask(BUILD_PROMPT)} data-testid="brain-build">
-                  <Icon name="spark" size={14} /> Gehirn aufbauen lassen
+                <button className="btn primary" onClick={() => void ask(buildPrompt())} data-testid="brain-build">
+                  <Icon name="spark" size={14} /> {t('Gehirn aufbauen lassen')}
                 </button>
                 <button className="btn ghost" onClick={() => setDraft(emptyDraft())}>
-                  Selbst eine Notiz schreiben
+                  {t('Selbst eine Notiz schreiben')}
                 </button>
               </div>
-              {view.graph.nodes.length > 0 && <small className="dim">Die Punkte im Hintergrund sind Dateien, an denen Claude schon gearbeitet hat.</small>}
+              {view.graph.nodes.length > 0 && <small className="dim">{t('Die Punkte im Hintergrund sind Dateien, an denen Claude schon gearbeitet hat.')}</small>}
             </div>
           )}
           {view && !empty && (
             <div className="brain-legend">
               <span>
-                <i className="pulse read" /> liest
+                <i className="pulse read" /> {t('liest')}
               </span>
               <span>
-                <i className="pulse edit" /> ändert
+                <i className="pulse edit" /> {t('ändert')}
               </span>
               <span>
-                <i className="pulse write" /> lernt
+                <i className="pulse write" /> {t('lernt')}
               </span>
               <span>
-                <i className="stale" /> zu prüfen
+                <i className="stale" /> {t('zu prüfen')}
               </span>
             </div>
           )}

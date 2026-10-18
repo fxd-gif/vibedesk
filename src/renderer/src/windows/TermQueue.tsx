@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Icon } from '../desktop/icons'
 import { dequeue, enqueue, moveUp, setPaused, useQueue, type QueuedPrompt } from '../store/queueStore'
+import { t } from '../../../shared/i18n'
 
 const NONE: QueuedPrompt[] = []
 
@@ -8,8 +9,8 @@ const NONE: QueuedPrompt[] = []
 export function QueueChip({ sessionId, open, onToggle }: { sessionId: string; open: boolean; onToggle(): void }): React.JSX.Element {
   const n = useQueue((s) => (s.items[sessionId] ?? NONE).length)
   return (
-    <button className={`queue-chip${n ? ' on' : ''}${open ? ' open' : ''}`} onClick={onToggle} title="Aufträge vormerken – sie starten, sobald Claude fertig ist" data-testid="queue-chip">
-      {n ? `⏭ ${n} vorgemerkt` : '＋ Danach'}
+    <button className={`queue-chip${n ? ' on' : ''}${open ? ' open' : ''}`} onClick={onToggle} title={t('Aufträge vormerken – sie starten, sobald Claude fertig ist')} data-testid="queue-chip">
+      {n ? `⏭ ${t('{n} vorgemerkt', { n })}` : `＋ ${t('Danach')}`}
     </button>
   )
 }
@@ -31,27 +32,27 @@ export function TermQueue({ sessionId }: { sessionId: string }): React.JSX.Eleme
             {q.text}
           </span>
           {i > 0 && (
-            <button className="icon-btn" title="Nach vorn" onClick={() => moveUp(sessionId, q.id)}>
+            <button className="icon-btn" title={t('Nach vorn')} onClick={() => moveUp(sessionId, q.id)}>
               ↑
             </button>
           )}
-          <button className="icon-btn" title="Entfernen" onClick={() => dequeue(sessionId, q.id)}>
+          <button className="icon-btn" title={t('Entfernen')} onClick={() => dequeue(sessionId, q.id)}>
             <Icon name="trash" size={13} />
           </button>
         </div>
       ))}
       {paused && (
         <div className="tq-paused">
-          Angehalten – die Session hatte einen Fehler.
+          {t('Angehalten – die Session hatte einen Fehler.')}
           <button className="btn small ghost" onClick={() => setPaused(sessionId, false)}>
-            Weiter
+            {t('Weiter')}
           </button>
         </div>
       )}
       <div className="tq-add">
         <input
           className="field small"
-          placeholder={items.length ? 'Noch etwas danach …' : 'Wenn Claude fertig ist, mach …'}
+          placeholder={items.length ? t('Noch etwas danach …') : t('Wenn Claude fertig ist, mach …')}
           value={text}
           maxLength={4000}
           onChange={(e) => setText(e.target.value)}
@@ -63,7 +64,7 @@ export function TermQueue({ sessionId }: { sessionId: string }): React.JSX.Eleme
           autoFocus
         />
         <button className="btn small primary" disabled={!text.trim()} onClick={add}>
-          Vormerken
+          {t('Vormerken')}
         </button>
       </div>
     </div>

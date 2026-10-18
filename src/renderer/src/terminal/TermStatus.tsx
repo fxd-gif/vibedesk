@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { fmtDuration, fmtTokens, fmtUsd, modelLabel, useStats } from '../store/statsStore'
 import { api } from '../api'
 import { getTerminal } from '../store/terminals'
+import { t } from '../../../shared/i18n'
 
 /** Doppel-Esc öffnet in Claude Code das Zurückspulen (Gespräch und Code auf einen früheren Stand) */
 function rewind(id: string): void {
@@ -22,18 +23,18 @@ export function TermStatus({ sessionId, startedAt }: { sessionId: string; starte
   const level = ctx >= 0.85 ? 'hot' : ctx >= 0.6 ? 'warm' : ''
   return (
     <div className="term-status" data-testid="term-status">
-      <span title="Modell">{st?.model ? modelLabel(st.model) : 'Modell folgt'}</span>
+      <span title={t('Modell')}>{st?.model ? modelLabel(st.model) : t('Modell folgt')}</span>
       {st && st.contextWindow > 0 && (
-        <span className={`ts-ctx ${level}`} title={`Kontext: ${fmtTokens(st.contextUsed)} von ${fmtTokens(st.contextWindow)} Tokens`}>
+        <span className={`ts-ctx ${level}`} title={t('Kontext: {used} von {total} Tokens', { used: fmtTokens(st.contextUsed), total: fmtTokens(st.contextWindow) })}>
           <i style={{ width: `${Math.round(ctx * 100)}%` }} />
-          <b>Kontext {Math.round(ctx * 100)} %</b>
+          <b>{t('Kontext {n} %', { n: Math.round(ctx * 100) })}</b>
         </span>
       )}
-      {st && st.costUsd > 0 && <span title={st.estimated ? 'geschätzt nach API-Preisen' : 'nach API-Preisen'}>{fmtUsd(st.costUsd)}</span>}
-      <button className="ts-rewind" title="Zurückspulen: Claude zeigt seine bisherigen Schritte – wähl einen aus, um Gespräch und Code auf diesen Stand zurückzusetzen" onClick={() => rewind(sessionId)} data-testid="term-rewind">
-        ↶ Zurückspulen
+      {st && st.costUsd > 0 && <span title={st.estimated ? t('geschätzt nach API-Preisen') : t('nach API-Preisen')}>{fmtUsd(st.costUsd)}</span>}
+      <button className="ts-rewind" title={t('Zurückspulen: Claude zeigt seine bisherigen Schritte – wähl einen aus, um Gespräch und Code auf diesen Stand zurückzusetzen')} onClick={() => rewind(sessionId)} data-testid="term-rewind">
+        ↶ {t('Zurückspulen')}
       </button>
-      <span className="ts-time" title="Laufzeit der Session">
+      <span className="ts-time" title={t('Laufzeit der Session')}>
         {fmtDuration(now - (st?.startedAt ?? startedAt))}
       </span>
     </div>

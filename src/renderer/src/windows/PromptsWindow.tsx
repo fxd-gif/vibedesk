@@ -8,6 +8,7 @@ import { useUi } from '../store/uiStore'
 import { bracketedPaste } from '../../../shared/paste'
 import type { Project, Prompt } from '../../../shared/types'
 import { sharePrompts } from '../store/shareStore'
+import { t } from '../../../shared/i18n'
 
 /** Session des obersten Terminal-Fensters (sonst die erste). */
 function useActiveSession(): string | null {
@@ -28,17 +29,17 @@ function PromptCard({ p, target, onEdit }: { p: Prompt; target: string | null; o
       <div className="row">
         <b>{p.title}</b>
         <div className="prompt-actions">
-          <button className="btn small ghost" title="Bearbeiten" onClick={onEdit}>
+          <button className="btn small ghost" title={t('Bearbeiten')} onClick={onEdit}>
             <Icon name="pen" size={13} />
           </button>
-          <button className="btn small ghost" title="Als Code teilen" onClick={() => sharePrompts([p])}>
+          <button className="btn small ghost" title={t('Als Code teilen')} onClick={() => sharePrompts([p])}>
             <Icon name="share" size={13} />
           </button>
-          <button className="btn small" disabled={!target} onClick={() => send(false)} title="Ins Terminal einfügen (nicht abschicken)">
-            Einfügen
+          <button className="btn small" disabled={!target} onClick={() => send(false)} title={t('Ins Terminal einfügen (nicht abschicken)')}>
+            {t('Einfügen')}
           </button>
-          <button className="btn small primary" disabled={!target} onClick={() => send(true)} title="Einfügen und abschicken" data-testid={`send-${p.id}`}>
-            Senden
+          <button className="btn small primary" disabled={!target} onClick={() => send(true)} title={t('Einfügen und abschicken')} data-testid={`send-${p.id}`}>
+            {t('Senden')}
           </button>
         </div>
       </div>
@@ -60,27 +61,27 @@ function PromptEditor({ p, onDone }: { p: Prompt; onDone(): void }): React.JSX.E
     onDone()
   }
   const remove = async (): Promise<void> => {
-    if (await confirm({ title: `„${p.title || 'Prompt'}“ löschen?`, confirmLabel: 'Löschen', danger: true })) {
+    if (await confirm({ title: t('„{name}“ löschen?', { name: p.title || 'Prompt' }), confirmLabel: t('Löschen'), danger: true })) {
       set({ prompts: s.prompts.filter((x) => x.id !== p.id) })
       onDone()
     }
   }
   return (
     <li className="prompt editing">
-      <input className="field small" placeholder="Titel" value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
-      <textarea className="field small mono" rows={5} placeholder="Prompt-Text …" value={text} onChange={(e) => setText(e.target.value)} />
+      <input className="field small" placeholder={t('Titel')} value={title} onChange={(e) => setTitle(e.target.value)} autoFocus />
+      <textarea className="field small mono" rows={5} placeholder={t('Prompt-Text …')} value={text} onChange={(e) => setText(e.target.value)} />
       <div className="row">
         {s.prompts.some((x) => x.id === p.id) && (
           <button className="btn small ghost" onClick={remove}>
-            <Icon name="trash" size={13} /> Löschen
+            <Icon name="trash" size={13} /> {t('Löschen')}
           </button>
         )}
         <span style={{ flex: 1 }} />
         <button className="btn small ghost" onClick={onDone}>
-          Abbrechen
+          {t('Abbrechen')}
         </button>
         <button className="btn small primary" disabled={!text.trim()} onClick={save}>
-          Speichern
+          {t('Speichern')}
         </button>
       </div>
     </li>
@@ -107,21 +108,21 @@ function Notes(): React.JSX.Element {
 
   useEffect(() => {
     if (!pid) return
-    api.notes.get(pid).then((t) => {
-      setText(t)
+    api.notes.get(pid).then((v) => {
+      setText(v)
       setState('idle')
     })
   }, [pid])
 
-  const change = (t: string): void => {
-    setText(t)
+  const change = (v: string): void => {
+    setText(v)
     setState('dirty')
     clearTimeout(timer.current)
     const id = pid
-    timer.current = setTimeout(() => id && api.notes.set(id, t).then(() => setState('saved')), 600)
+    timer.current = setTimeout(() => id && api.notes.set(id, v).then(() => setState('saved')), 600)
   }
 
-  if (!projects.length) return <div className="panel-empty">Leg zuerst ein Projekt an.</div>
+  if (!projects.length) return <div className="panel-empty">{t('Leg zuerst ein Projekt an.')}</div>
   return (
     <div className="notes">
       <div className="row chips">
@@ -131,14 +132,14 @@ function Notes(): React.JSX.Element {
           </button>
         ))}
         <span className="dim small" style={{ marginLeft: 'auto' }}>
-          {state === 'dirty' ? 'speichert …' : state === 'saved' ? 'gespeichert' : ''}
+          {state === 'dirty' ? t('speichert …') : state === 'saved' ? t('gespeichert') : ''}
         </span>
       </div>
       <div className="notes-wrap">
-        <textarea className={`field notes-area${hide && !revealed ? ' veiled' : ''}`} placeholder="Ideen, Todos, Links für dieses Projekt …" value={text} onChange={(e) => change(e.target.value)} />
+        <textarea className={`field notes-area${hide && !revealed ? ' veiled' : ''}`} placeholder={t('Ideen, Todos, Links für dieses Projekt …')} value={text} onChange={(e) => change(e.target.value)} />
         {hide && !revealed && (
           <button className="veil" onClick={() => setRevealed(true)}>
-            Notizen verdeckt (Streamer-Modus) · zum Anzeigen klicken
+            {t('Notizen verdeckt (Streamer-Modus) · zum Anzeigen klicken')}
           </button>
         )}
       </div>
@@ -161,11 +162,11 @@ export function PromptsWindow(): React.JSX.Element {
           Prompts
         </button>
         <button className={`tab${tab === 'notes' ? ' on' : ''}`} onClick={() => setTab('notes')}>
-          Notizen
+          {t('Notizen')}
         </button>
         {tab === 'prompts' && (
           <span className="dim small" style={{ marginLeft: 'auto' }}>
-            {target ? `→ ${target.name}` : 'keine Session offen'}
+            {target ? `→ ${target.name}` : t('keine Session offen')}
           </span>
         )}
       </div>
@@ -186,11 +187,11 @@ export function PromptsWindow(): React.JSX.Element {
           {!editing && (
             <div className="row">
               <button className="btn small" onClick={() => setEditing({ id: crypto.randomUUID(), title: '', text: '' })}>
-                <Icon name="plus" size={13} /> Neuer Prompt
+                <Icon name="plus" size={13} /> {t('Neuer Prompt')}
               </button>
               {prompts.length > 1 && (
                 <button className="btn small ghost" onClick={() => sharePrompts(prompts)}>
-                  <Icon name="share" size={13} /> Alle teilen
+                  <Icon name="share" size={13} /> {t('Alle teilen')}
                 </button>
               )}
             </div>

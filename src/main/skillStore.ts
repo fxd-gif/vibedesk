@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import { parse as parseYaml } from 'yaml'
@@ -85,7 +86,7 @@ export function readSkillFiles(dir: string, maxBytes = 1024 * 1024): { path: str
       } else if (d.isFile()) {
         const data = fs.readFileSync(path.join(abs, d.name))
         bytes += data.length
-        if (bytes > maxBytes || out.length >= 200) throw new Error('Der Skill ist zu groß zum Teilen per Code (max. 1 MB, 200 Dateien).')
+        if (bytes > maxBytes || out.length >= 200) throw new Error(t('Der Skill ist zu groß zum Teilen per Code (max. 1 MB, 200 Dateien).'))
         out.push({ path: r, data })
       }
     }
@@ -137,7 +138,7 @@ export function candidatesFromPath(p: string): SkillCandidate[] {
     const data = fs.readFileSync(p)
     return fromEntries(new Map([['SKILL.md', data]]))
   }
-  throw new Error('Bitte einen Ordner, eine .zip oder eine SKILL.md wählen')
+  throw new Error(t('Bitte einen Ordner, eine .zip oder eine SKILL.md wählen'))
 }
 
 export class SkillStore {
@@ -177,7 +178,7 @@ export class SkillStore {
 
   async install(c: SkillCandidate, target: SkillTarget, opts: { replace: boolean }): Promise<SkillInfo> {
     const base = target.kind === 'global' ? this.globalDir : this.projectDir(target.projectId)
-    if (!base) throw new Error('Projekt nicht gefunden')
+    if (!base) throw new Error(t('Projekt nicht gefunden'))
     const folder = sanitizeSkillName(c.name) || 'skill'
     const dir = path.join(base, folder)
     if (fs.existsSync(dir)) {
@@ -208,7 +209,7 @@ export class SkillStore {
     const ok = [this.globalDir, ...projects.map((p) => this.projectDir(p.id)).filter(Boolean)].some(
       (root) => path.dirname(abs).toLowerCase() === path.resolve(root as string).toLowerCase()
     )
-    if (!ok || !fs.existsSync(path.join(abs, 'SKILL.md'))) throw new Error('Kein Skill-Ordner')
+    if (!ok || !fs.existsSync(path.join(abs, 'SKILL.md'))) throw new Error(t('Kein Skill-Ordner'))
     await this.trash(abs)
   }
 }

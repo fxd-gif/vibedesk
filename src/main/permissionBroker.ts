@@ -1,4 +1,5 @@
 // Hält Freigabe-Anfragen von Claude Code offen, bis jemand antwortet – am Desktop, auf dem Handy oder im Terminal.
+import { t } from '../shared/i18n'
 import { randomBytes } from 'crypto'
 import type { HookEvent } from '../shared/types'
 import { cleanSuggestions, describePermission, permissionReply, sameCall, type PermissionAsk, type PermissionDecision } from '../shared/permissions'
@@ -36,7 +37,7 @@ export class PermissionBroker {
   /** Neue Anfrage vom Hook. Liefert den Antwort-Body ('' = keine Entscheidung). `cancel` räumt ab, wenn der Hook aufgibt. */
   ask(sessionId: string, payload: Record<string, unknown>): { reply: Promise<string>; cancel(): void } {
     if (!this.o.enabled()) return { reply: Promise.resolve(''), cancel: () => {} }
-    const tool = typeof payload.tool_name === 'string' ? payload.tool_name.slice(0, 200) : 'unbekannt'
+    const tool = typeof payload.tool_name === 'string' ? payload.tool_name.slice(0, 200) : t('unbekannt')
     const suggestions = cleanSuggestions(payload.permission_suggestions)
     const id = randomBytes(8).toString('hex')
     const { summary, detail } = describePermission(tool, payload.tool_input)

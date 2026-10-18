@@ -4,6 +4,7 @@ import { Icon } from '../desktop/icons'
 import { alert, confirm } from '../store/dialogStore'
 import type { Project, SkillCandidateSummary, SkillInfo, SkillTarget } from '../../../shared/types'
 import { openPaste, shareSkill } from '../store/shareStore'
+import { t, tn } from '../../../shared/i18n'
 
 export function SkillsWindow(): React.JSX.Element {
   const [skills, setSkills] = useState<SkillInfo[]>([])
@@ -34,15 +35,15 @@ export function SkillsWindow(): React.JSX.Element {
     } catch (err) {
       if (!errorText(err).includes('SKILL_EXISTS')) throw err
       const ok = await confirm({
-        title: 'Skill existiert bereits',
-        message: 'Ein Skill mit diesem Namen ist am Ziel schon vorhanden. Ersetzen? Der alte Ordner wandert in den Papierkorb.',
-        confirmLabel: 'Ersetzen',
+        title: t('Skill existiert bereits'),
+        message: t('Ein Skill mit diesem Namen ist am Ziel schon vorhanden. Ersetzen? Der alte Ordner wandert in den Papierkorb.'),
+        confirmLabel: t('Ersetzen'),
         danger: true
       })
       if (!ok) return
       await api.skills.install(tokens, tgt(), true)
     }
-    setDone(`${tokens.length === 1 ? 'Skill' : tokens.length + ' Skills'} installiert – gilt für neu gestartete Sessions.`)
+    setDone(tn(tokens.length, 'Skill installiert – gilt für neu gestartete Sessions.', '{n} Skills installiert – gilt für neu gestartete Sessions.'))
     setPending(null)
     reload()
   }
@@ -58,18 +59,18 @@ export function SkillsWindow(): React.JSX.Element {
         setPicked(new Set())
       }
     } catch (err) {
-      await alert('Import fehlgeschlagen', errorText(err))
+      await alert(t('Import fehlgeschlagen'), errorText(err))
     } finally {
       setBusy(false)
     }
   }
 
   const remove = async (s: SkillInfo): Promise<void> => {
-    if (!(await confirm({ title: `Skill „${s.name}“ entfernen?`, message: 'Der Ordner wird in den Papierkorb verschoben.', confirmLabel: 'Entfernen', danger: true }))) return
+    if (!(await confirm({ title: t('Skill „{name}“ entfernen?', { name: s.name }), message: t('Der Ordner wird in den Papierkorb verschoben.'), confirmLabel: t('Entfernen'), danger: true }))) return
     try {
       await api.skills.remove(s.dir)
     } catch (err) {
-      await alert('Entfernen fehlgeschlagen', errorText(err))
+      await alert(t('Entfernen fehlgeschlagen'), errorText(err))
     }
     reload()
   }
@@ -99,25 +100,25 @@ export function SkillsWindow(): React.JSX.Element {
         data-testid="skill-drop"
       >
         <Icon name="spark" size={20} />
-        <div>{busy ? 'Importiere …' : 'Ordner, .zip oder SKILL.md hierher ziehen'}</div>
+        <div>{busy ? t('Importiere …') : t('Ordner, .zip oder SKILL.md hierher ziehen')}</div>
       </div>
       <div className="row">
         <input
           className="field small"
-          placeholder="GitHub-URL, z. B. https://github.com/owner/repo/tree/main/skills/x"
+          placeholder={t('GitHub-URL, z. B. https://github.com/owner/repo/tree/main/skills/x')}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && url.trim() && handle(() => api.skills.importGithub(url.trim()))}
         />
         <button className="btn small primary" disabled={!url.trim() || busy} onClick={() => handle(() => api.skills.importGithub(url.trim()))}>
-          <Icon name="github" size={14} /> Laden
+          <Icon name="github" size={14} /> {t('Laden')}
         </button>
-        <button className="btn small ghost" title="Share-Code einfügen" onClick={openPaste}>
-          <Icon name="share" size={14} /> Code
+        <button className="btn small ghost" title={t('Share-Code einfügen')} onClick={openPaste}>
+          <Icon name="share" size={14} /> {t('Code')}
         </button>
       </div>
       <div className="row">
-        <span className="dim">Installieren nach</span>
+        <span className="dim">{t('Installieren nach')}</span>
         <div className="row chips">
           {[{ id: 'global', name: 'Global' }, ...projects].map((p) => (
             <button key={p.id} className={`chip${target === p.id ? ' on' : ''}`} onClick={() => setTarget(p.id)}>
@@ -131,12 +132,12 @@ export function SkillsWindow(): React.JSX.Element {
       {pending && (
         <div className="pick">
           <div className="row">
-            <b>{pending.length} Skills gefunden</b>
+            <b>{t('{n} Skills gefunden', { n: pending.length })}</b>
             <button className="btn small ghost" style={{ marginLeft: 'auto' }} onClick={() => setPicked(picked.size === pending.length ? new Set() : new Set(pending.map((c) => c.token)))}>
-              {picked.size === pending.length ? 'Keine' : 'Alle'}
+              {picked.size === pending.length ? t('Keine') : t('Alle')}
             </button>
             <button className="btn small ghost" onClick={() => setPending(null)}>
-              Abbrechen
+              {t('Abbrechen')}
             </button>
           </div>
           <ul>
@@ -161,14 +162,14 @@ export function SkillsWindow(): React.JSX.Element {
               </li>
             ))}
           </ul>
-          <button className="btn primary small" disabled={!picked.size} onClick={() => install([...picked]).catch((err) => alert('Import fehlgeschlagen', errorText(err)))}>
-            {picked.size ? picked.size + ' installieren' : 'Skills auswählen'}
+          <button className="btn primary small" disabled={!picked.size} onClick={() => install([...picked]).catch((err) => alert(t('Import fehlgeschlagen'), errorText(err)))}>
+            {picked.size ? t('{n} installieren', { n: picked.size }) : t('Skills auswählen')}
           </button>
         </div>
       )}
 
-      <input className="field small" placeholder="Skills durchsuchen …" value={query} onChange={(e) => setQuery(e.target.value)} />
-      {groups.length === 0 && <div className="panel-empty">Noch keine Skills installiert.</div>}
+      <input className="field small" placeholder={t('Skills durchsuchen …')} value={query} onChange={(e) => setQuery(e.target.value)} />
+      {groups.length === 0 && <div className="panel-empty">{t('Noch keine Skills installiert.')}</div>}
       {groups.map((g) => (
         <section key={g.scope} className="skill-group">
           <h4>
@@ -184,10 +185,10 @@ export function SkillsWindow(): React.JSX.Element {
                   </div>
                 </div>
                 <div className="pactions">
-                  <button className="btn small ghost" title="Als Code teilen" onClick={() => void shareSkill(s.dir, s.name)}>
+                  <button className="btn small ghost" title={t('Als Code teilen')} onClick={() => void shareSkill(s.dir, s.name)}>
                     <Icon name="share" size={14} />
                   </button>
-                  <button className="btn small ghost" title="Entfernen" onClick={() => remove(s)}>
+                  <button className="btn small ghost" title={t('Entfernen')} onClick={() => remove(s)}>
                     <Icon name="trash" size={14} />
                   </button>
                 </div>

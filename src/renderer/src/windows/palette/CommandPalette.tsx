@@ -20,6 +20,7 @@ import { showWrapped } from '../../wrapped/VibeWrapped'
 import { findShareCode } from '../../../../shared/shareCode'
 import { openPaste, sharePrompts, startImport } from '../../store/shareStore'
 import { redactText, toggleCurtain } from '../../store/streamerStore'
+import { t } from '../../../../shared/i18n'
 
 interface Cmd {
   id: string
@@ -51,46 +52,46 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
   const s = useSettings.getState().s
   const win = (id: PanelId, hint?: string): Cmd => {
     const d = panelDef(id)!
-    return { id: 'win:' + id, label: d.title, group: 'Fenster', icon: d.icon, hint, run: () => openPanel(id) }
+    return { id: 'win:' + id, label: d.title, group: t('Fenster'), icon: d.icon, hint, run: () => openPanel(id) }
   }
   return [
     win('projects'),
-    { id: 'win:editor', label: 'Editor', group: 'Fenster', icon: 'code', run: () => void openEditor() },
-    win('inspector', 'Status · Feed · Todos · Agents · Stats'),
+    { id: 'win:editor', label: t('Editor'), group: t('Fenster'), icon: 'code', run: () => void openEditor() },
+    win('inspector', t('Status · Feed · Todos · Agents · Stats')),
     ...INSPECTOR_TABS.map(
-      (t): Cmd => ({ id: 'insp:' + t.id, label: `Session-Inspector: ${t.label}`, group: 'Fenster', icon: 'inspect', searchOnly: true, run: () => openInspector(t.id) })
+      (tab): Cmd => ({ id: 'insp:' + tab.id, label: t('Session-Inspector: {tab}', { tab: tab.label }), group: t('Fenster'), icon: 'inspect', searchOnly: true, run: () => openInspector(tab.id) })
     ),
-    win('git', 'Änderungen, Commits, Push & Pull, GitHub'),
-    win('brain', 'Projektgedächtnis von Claude als Graph'),
+    win('git', t('Änderungen, Commits, Push & Pull, GitHub')),
+    win('brain', t('Projektgedächtnis von Claude als Graph')),
     win('prompts'),
     win('skills'),
     win('focus'),
     win('discord'),
-    win('addons', 'Eigene Addons bauen, importieren, exportieren'),
-    { id: 'act:addonImport', label: 'Addon importieren…', group: 'Aktionen', icon: 'puzzle', run: () => void pickAndInstall() },
-    { id: 'act:addonMaker', label: 'Neues Addon bauen', group: 'Aktionen', icon: 'puzzle', run: () => (useAddonUi.getState().newAddon(), openPanel('addons')) },
-    win('lounge', 'Mit Freunden vibecoden – ohne Server'),
-    win('streamer', 'Schutz, OBS-Overlay, Twitch-Chat'),
-    win('companion', 'Freigaben, Vorschläge und Prompts vom Handy'),
-    ...addonCommands().map((c): Cmd => ({ id: 'macro:' + c.name, label: `Makro: ${c.name}`, group: 'Makros', icon: 'puzzle', hint: c.addon, run: () => runCommand(c.name) })),
+    win('addons', t('Eigene Addons bauen, importieren, exportieren')),
+    { id: 'act:addonImport', label: t('Addon importieren…'), group: t('Aktionen'), icon: 'puzzle', run: () => void pickAndInstall() },
+    { id: 'act:addonMaker', label: t('Neues Addon bauen'), group: t('Aktionen'), icon: 'puzzle', run: () => (useAddonUi.getState().newAddon(), openPanel('addons')) },
+    win('lounge', t('Mit Freunden vibecoden – ohne Server')),
+    win('streamer', t('Schutz, OBS-Overlay, Twitch-Chat')),
+    win('companion', t('Freigaben, Vorschläge und Prompts vom Handy')),
+    ...addonCommands().map((c): Cmd => ({ id: 'macro:' + c.name, label: t('Makro: {name}', { name: c.name }), group: t('Makros'), icon: 'puzzle', hint: c.addon, run: () => runCommand(c.name) })),
     ...projects
       .filter((p) => !p.missing)
-      .map((p): Cmd => ({ id: 'proj:' + p.id, label: `Session starten: ${p.name}`, group: 'Projekte', icon: 'play', hint: redactText(p.path), run: () => void useSessions.getState().start(p.id) })),
+      .map((p): Cmd => ({ id: 'proj:' + p.id, label: t('Session starten: {name}', { name: p.name }), group: t('Projekte'), icon: 'play', hint: redactText(p.path), run: () => void useSessions.getState().start(p.id) })),
     ...projects
       .filter((p) => !p.missing)
-      .map((p): Cmd => ({ id: 'shell:' + p.id, label: `Shell öffnen: ${p.name}`, group: 'Projekte', icon: 'terminal', hint: 'PowerShell im Projektordner', searchOnly: true, run: () => void useShells.getState().open(p.id) })),
-    { id: 'act:paste', label: 'Share-Code einfügen …', group: 'Teilen', icon: 'share', hint: 'Prompts, Skills, Atmosphären', run: openPaste },
-    ...(s?.prompts.length ? [{ id: 'act:sharePrompts', label: 'Alle Prompts als Code teilen', group: 'Teilen', icon: 'share', searchOnly: true, run: () => sharePrompts(s.prompts) }] : []),
-    { id: 'act:curtain', label: 'Vorhang zuziehen', group: 'Aktionen', icon: 'eyeoff', hint: 'Strg+Umschalt+H', searchOnly: true, run: () => toggleCurtain(true) },
-    { id: 'act:arrange', label: 'Fenster anordnen', group: 'Aktionen', icon: 'grid', run: () => useUi.getState().arrangeAll(kindOf) },
-    { id: 'act:ambience', label: 'Atmosphäre & Musik einstellen', group: 'Aktionen', icon: 'rain', run: onAmbience },
-    ...(s ? [{ id: 'act:music', label: s.musicOn ? 'Lofi-Radio aus' : 'Lofi-Radio an', group: 'Aktionen', icon: 'music', run: () => useSettings.getState().set(toggleMusic(s)) }] : []),
-    { id: 'act:fullscreen', label: 'Vollbild umschalten', group: 'Aktionen', icon: 'exit', hint: 'F11 · Esc halten', run: () => api.app.toggleFullscreen() },
-    { id: 'act:quick', label: 'Schnell-Prompt öffnen', group: 'Aktionen', icon: 'send', hint: 'Strg+Alt+Leertaste, auch in anderen Apps', run: () => api.quick.open() },
-    { id: 'act:wrapped', label: 'Vibe Wrapped – deine Woche', group: 'Aktionen', icon: 'stats', hint: 'Rückblick als teilbares Bild', run: () => void showWrapped() },
-    { id: 'act:news', label: 'Was ist neu?', group: 'Aktionen', icon: 'spark', run: showWhatsNew },
-    { id: 'act:update', label: 'Nach Updates suchen', group: 'Aktionen', icon: 'restart', run: () => void api.update.check() },
-    { id: 'act:quit', label: 'VibeDesk beenden', group: 'Aktionen', icon: 'exit', run: () => api.app.quit() }
+      .map((p): Cmd => ({ id: 'shell:' + p.id, label: t('Shell öffnen: {name}', { name: p.name }), group: t('Projekte'), icon: 'terminal', hint: t('PowerShell im Projektordner'), searchOnly: true, run: () => void useShells.getState().open(p.id) })),
+    { id: 'act:paste', label: t('Share-Code einfügen …'), group: t('Teilen'), icon: 'share', hint: t('Prompts, Skills, Atmosphären'), run: openPaste },
+    ...(s?.prompts.length ? [{ id: 'act:sharePrompts', label: t('Alle Prompts als Code teilen'), group: t('Teilen'), icon: 'share', searchOnly: true, run: () => sharePrompts(s.prompts) }] : []),
+    { id: 'act:curtain', label: t('Vorhang zuziehen'), group: t('Aktionen'), icon: 'eyeoff', hint: t('Strg+Umschalt+H'), searchOnly: true, run: () => toggleCurtain(true) },
+    { id: 'act:arrange', label: t('Fenster anordnen'), group: t('Aktionen'), icon: 'grid', run: () => useUi.getState().arrangeAll(kindOf) },
+    { id: 'act:ambience', label: t('Atmosphäre & Musik einstellen'), group: t('Aktionen'), icon: 'rain', run: onAmbience },
+    ...(s ? [{ id: 'act:music', label: s.musicOn ? t('Lofi-Radio aus') : t('Lofi-Radio an'), group: t('Aktionen'), icon: 'music', run: () => useSettings.getState().set(toggleMusic(s)) }] : []),
+    { id: 'act:fullscreen', label: t('Vollbild umschalten'), group: t('Aktionen'), icon: 'exit', hint: t('F11 · Esc halten'), run: () => api.app.toggleFullscreen() },
+    { id: 'act:quick', label: t('Schnell-Prompt öffnen'), group: t('Aktionen'), icon: 'send', hint: t('Strg+Alt+Leertaste, auch in anderen Apps'), run: () => api.quick.open() },
+    { id: 'act:wrapped', label: t('Vibe Wrapped – deine Woche'), group: t('Aktionen'), icon: 'stats', hint: t('Rückblick als teilbares Bild'), run: () => void showWrapped() },
+    { id: 'act:news', label: t('Was ist neu?'), group: t('Aktionen'), icon: 'spark', run: showWhatsNew },
+    { id: 'act:update', label: t('Nach Updates suchen'), group: t('Aktionen'), icon: 'restart', run: () => void api.update.check() },
+    { id: 'act:quit', label: t('VibeDesk beenden'), group: t('Aktionen'), icon: 'exit', run: () => api.app.quit() }
   ]
 }
 
@@ -114,7 +115,7 @@ function PaletteBox({ onAmbience }: { onAmbience(): void }): React.JSX.Element {
   const items = useMemo(() => {
     // eingefügter Share-Code → direkt öffnen
     const code = findShareCode(q.replace(/\s+/g, ''))
-    if (code) return [{ id: 'act:importCode', label: 'Share-Code öffnen', group: 'Teilen', icon: 'share', hint: 'Vorschau ansehen', run: () => void startImport(code) }]
+    if (code) return [{ id: 'act:importCode', label: t('Share-Code öffnen'), group: t('Teilen'), icon: 'share', hint: t('Vorschau ansehen'), run: () => void startImport(code) }]
     return q.trim() ? rank(all, q, (c) => `${c.label} ${c.group}`) : all.filter((c) => !c.searchOnly)
   }, [all, q])
   const cur = Math.min(idx, items.length - 1)
@@ -132,13 +133,13 @@ function PaletteBox({ onAmbience }: { onAmbience(): void }): React.JSX.Element {
 
   return (
     <div className="pal-backdrop" onPointerDown={(e) => e.target === e.currentTarget && close()}>
-      <div className="pal" role="dialog" aria-label="Befehle" data-testid="palette">
+      <div className="pal" role="dialog" aria-label={t('Befehle')} data-testid="palette">
         <div className="pal-input">
           <Icon name="search" size={16} />
           <input
             autoFocus
             value={q}
-            placeholder="Fenster, Projekt oder Aktion …"
+            placeholder={t('Fenster, Projekt oder Aktion …')}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Escape') close()
@@ -151,7 +152,7 @@ function PaletteBox({ onAmbience }: { onAmbience(): void }): React.JSX.Element {
           <kbd>Esc</kbd>
         </div>
         <ul className="pal-list" ref={listRef}>
-          {!items.length && <li className="pal-empty">Nichts gefunden.</li>}
+          {!items.length && <li className="pal-empty">{t('Nichts gefunden.')}</li>}
           {items.map((c, i) => (
             <li key={c.id}>
               {(i === 0 || items[i - 1].group !== c.group) && !q.trim() && <div className="pal-group">{c.group}</div>}

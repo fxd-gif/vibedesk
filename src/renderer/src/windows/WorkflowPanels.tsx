@@ -5,27 +5,28 @@ import { centeredRect, useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
 import type { FeedEntry } from '../store/workflowReducer'
 import { clock, relTime } from '../util'
-import { STATUS_TEXT } from './TerminalWindow'
+import { statusText } from './TerminalWindow'
 import { openInEditor } from '../store/editorStore'
 import { useRedact } from '../store/streamerStore'
+import { t } from '../../../shared/i18n'
 
 function useNow(ms = 15000): number {
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), ms)
-    return () => clearInterval(t)
+    const iv = setInterval(() => setNow(Date.now()), ms)
+    return () => clearInterval(iv)
   }, [ms])
   return now
 }
 
 const NoSessions = () => (
   <div className="panel-empty">
-    Keine laufenden Sessions.
+    {t('Keine laufenden Sessions.')}
     <br />
-    Öffne ein Projekt, dann siehst du hier live, was Claude tut.
+    {t('Öffne ein Projekt, dann siehst du hier live, was Claude tut.')}
     <br />
     <button className="btn small primary" style={{ marginTop: 12 }} onClick={() => useUi.getState().openWin('projects', centeredRect(520, 480))}>
-      <Icon name="folder" size={14} /> Projekt öffnen
+      <Icon name="folder" size={14} /> {t('Projekt öffnen')}
     </button>
   </div>
 )
@@ -46,8 +47,8 @@ export function StatusPanel(): React.JSX.Element {
               <span className={`dot ${st}`} />
               <b>{s.name}</b>
             </div>
-            <div className="status-text">{STATUS_TEXT[st]}</div>
-            <div className="dim small">{w?.lastActivity ? relTime(w.lastActivity, now) : 'noch keine Aktivität'}</div>
+            <div className="status-text">{statusText(st)}</div>
+            <div className="dim small">{w?.lastActivity ? relTime(w.lastActivity, now) : t('noch keine Aktivität')}</div>
           </button>
         )
       })}
@@ -56,7 +57,7 @@ export function StatusPanel(): React.JSX.Element {
 }
 
 const resultMark = (r: FeedEntry['result']) =>
-  r === 'ok' ? <span className="ok">✓</span> : r === 'fail' ? <span className="fail">✗</span> : r === 'stopped' ? <span className="dim" title="abgebrochen">–</span> : <span className="spin" />
+  r === 'ok' ? <span className="ok">✓</span> : r === 'fail' ? <span className="fail">✗</span> : r === 'stopped' ? <span className="dim" title={t('abgebrochen')}>–</span> : <span className="spin" />
 
 export function FeedPanel(): React.JSX.Element {
   const sessions = useAllSessions()
@@ -75,7 +76,7 @@ export function FeedPanel(): React.JSX.Element {
       {sessions.length > 1 && (
         <div className="row chips">
           <button className={`chip${!filter ? ' on' : ''}`} onClick={() => setFilter(null)}>
-            Alle
+            {t('Alle')}
           </button>
           {sessions.map((s) => (
             <button key={s.id} className={`chip${filter === s.id ? ' on' : ''}`} onClick={() => setFilter(s.id)}>
@@ -84,7 +85,7 @@ export function FeedPanel(): React.JSX.Element {
           ))}
         </div>
       )}
-      {!entries.length && <div className="panel-empty">Noch keine Aktionen.</div>}
+      {!entries.length && <div className="panel-empty">{t('Noch keine Aktionen.')}</div>}
       <ul className="feed-list">
         {entries.map((e) => (
           <li
@@ -92,7 +93,7 @@ export function FeedPanel(): React.JSX.Element {
             className={`feed-row ${e.result}${e.filePath ? ' link' : ''}`}
             data-testid="feed-row"
             onClick={e.filePath ? () => openInEditor(e.filePath!, e.find) : undefined}
-            title={e.filePath ? `Im Editor öffnen: ${e.filePath}` : undefined}
+            title={e.filePath ? t('Im Editor öffnen: {path}', { path: e.filePath }) : undefined}
           >
             <span className="mono dim">{clock(e.ts)}</span>
             {sessions.length > 1 && <span className="feed-sess">{names[e.sessionId]}</span>}
@@ -113,12 +114,18 @@ export function TodoPanel(): React.JSX.Element {
   const wf = useWorkflow((s) => s.sessions)
   if (!sessions.length) return <NoSessions />
   const withTodos = sessions.filter((s) => wf[s.id]?.todos.length)
-  if (!withTodos.length) return <div className="panel-empty">Noch keine Todo-Listen.<br />Sobald Claude plant, erscheinen sie hier.</div>
+  if (!withTodos.length) return (
+      <div className="panel-empty">
+        {t('Noch keine Todo-Listen.')}
+        <br />
+        {t('Sobald Claude plant, erscheinen sie hier.')}
+      </div>
+    )
   return (
     <div className="panel">
       {withTodos.map((s) => {
         const todos = wf[s.id].todos
-        const done = todos.filter((t) => t.status === 'completed').length
+        const done = todos.filter((x) => x.status === 'completed').length
         return (
           <section key={s.id} className="todo-block">
             <div className="row">
@@ -131,10 +138,10 @@ export function TodoPanel(): React.JSX.Element {
               <i style={{ width: `${(done / todos.length) * 100}%` }} />
             </div>
             <ul className="todo-list">
-              {todos.map((t, i) => (
-                <li key={t.id ?? i} className={t.status}>
-                  <span className="todo-mark">{t.status === 'completed' ? <Icon name="check" size={12} /> : null}</span>
-                  {t.status === 'in_progress' && t.activeForm ? `${t.activeForm} …` : t.content}
+              {todos.map((x, i) => (
+                <li key={x.id ?? i} className={x.status}>
+                  <span className="todo-mark">{x.status === 'completed' ? <Icon name="check" size={12} /> : null}</span>
+                  {x.status === 'in_progress' && x.activeForm ? `${x.activeForm} …` : x.content}
                 </li>
               ))}
             </ul>
@@ -160,15 +167,15 @@ export function AgentPanel(): React.JSX.Element {
               <div className="row tree-root">
                 <span className={`dot ${st}`} />
                 <b>{s.name}</b>
-                <span className="dim">· Hauptsession</span>
+                <span className="dim">· {t('Hauptsession')}</span>
               </div>
               {agents.length > 0 && (
                 <ul>
                   {agents.map((a) => (
-                    <li key={a.id} className={`tree-node${a.done ? ' done' : ''}`} title={a.result ?? (a.done ? 'fertig' : 'arbeitet …')}>
+                    <li key={a.id} className={`tree-node${a.done ? ' done' : ''}`} title={a.result ?? (a.done ? t('fertig') : t('arbeitet …'))}>
                       {a.done ? <span className="ok">✓</span> : <span className="spin" />}
                       <b>{a.type}</b>
-                      <span className="dim">{a.description || (a.done ? 'fertig' : 'arbeitet …')}</span>
+                      <span className="dim">{a.description || (a.done ? t('fertig') : t('arbeitet …'))}</span>
                     </li>
                   ))}
                 </ul>

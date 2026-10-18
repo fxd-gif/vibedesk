@@ -1,4 +1,5 @@
 // Handy-Begleiter verdrahten: Server an/aus, Koppeln per Code, Geräte, QR-Codes, Strom, KI-Aufrufe und Prompts über den Renderer.
+import { t } from '../shared/i18n'
 import { ipcMain, powerMonitor, powerSaveBlocker } from 'electron'
 import { randomBytes } from 'crypto'
 import fs from 'fs'
@@ -38,8 +39,8 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     const args = ['/d', '/c', d.claudeCmd(), '-p', 'Follow the instructions in the input.', '--model', 'haiku', '--output-format', 'text', '--no-session-persistence', '--tools', '']
     const r = await defaultRunner('cmd.exe', args, { cwd: d.tmpDir, input, timeout: AI_TIMEOUT_MS })
     if (r.code !== 0) {
-      if (/is not recognized|nicht als interner|ENOENT/i.test(r.stderr)) throw new Error('Claude Code wurde nicht gefunden.')
-      throw new Error(r.stderr.trim().split('\n').slice(-2).join(' ') || 'Claude hat nicht geantwortet.')
+      if (/is not recognized|nicht als interner|ENOENT/i.test(r.stderr)) throw new Error(t('Claude Code wurde nicht gefunden.'))
+      throw new Error(r.stderr.trim().split('\n').slice(-2).join(' ') || t('Claude hat nicht geantwortet.'))
     }
     return r.stdout
   }

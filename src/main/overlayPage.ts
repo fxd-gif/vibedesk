@@ -1,7 +1,12 @@
 // OBS-Browserquelle: transparente Seite mit Live-Status. Daten nur per textContent einsetzen – nie als HTML.
+import { getLang, t } from '../shared/i18n'
+
+/** Text sicher als JS-Literal ins Skript einsetzen */
+const js = (s: string): string => JSON.stringify(s).replace(/</g, '\\u003c')
+
 export function overlayPage(nonce: string): string {
   return `<!doctype html>
-<html lang="de"><head><meta charset="utf-8"><title>VibeDesk Overlay</title>
+<html lang="${getLang()}"><head><meta charset="utf-8"><title>VibeDesk Overlay</title>
 <style>
   :root { --bg: rgba(12,15,22,.78); --line: rgba(255,255,255,.1); --text: #e7ecf5; --dim: rgba(231,236,245,.6); --accent: #9fb8ff; }
   html, body { margin: 0; background: transparent; color: var(--text); font: 15px/1.4 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
@@ -38,12 +43,12 @@ export function overlayPage(nonce: string): string {
 </style></head>
 <body>
 <div id="root">
-  <div class="card" id="w-chat" hidden><div class="label"><span>Chat-Vorschlag übernommen</span></div><div><b id="sh-by"></b> <span id="sh-text"></span></div></div>
-  <div class="card" id="w-focus" hidden><div class="label"><span id="fo-label">Fokus</span></div><div class="big" id="fo-left"></div></div>
+  <div class="card" id="w-chat" hidden><div class="label"><span>${t('Chat-Vorschlag übernommen')}</span></div><div><b id="sh-by"></b> <span id="sh-text"></span></div></div>
+  <div class="card" id="w-focus" hidden><div class="label"><span id="fo-label">${t('Fokus')}</span></div><div class="big" id="fo-left"></div></div>
   <div class="card" id="w-todos" hidden><div class="label"><span>Plan</span><span id="td-count"></span></div><div class="bar"><i id="td-bar"></i></div><ul id="td-list"></ul></div>
   <div class="card" id="w-feed" hidden><div class="label"><span>Live</span></div><ul id="fd-list" class="mono"></ul></div>
-  <div class="card" id="w-stats" hidden><div class="row"><div><div class="label">Session</div><div class="big" id="st-time">–</div></div><div><div class="label">Tokens</div><div class="big" id="st-tokens">–</div></div><div id="st-cost-box"><div class="label">Kosten</div><div class="big" id="st-cost">–</div></div></div></div>
-  <div class="card" id="w-status" hidden><div class="head"><span class="dot" id="s-dot"></span><span id="s-text">Verbinde …</span></div><div class="sub mono" id="s-current"></div></div>
+  <div class="card" id="w-stats" hidden><div class="row"><div><div class="label">Session</div><div class="big" id="st-time">–</div></div><div><div class="label">Tokens</div><div class="big" id="st-tokens">–</div></div><div id="st-cost-box"><div class="label">${t('Kosten')}</div><div class="big" id="st-cost">–</div></div></div></div>
+  <div class="card" id="w-status" hidden><div class="head"><span class="dot" id="s-dot"></span><span id="s-text">${t('Verbinde …')}</span></div><div class="sub mono" id="s-current"></div></div>
   <div class="credit" id="credit">made with VibeDesk · fxd-gif.github.io/vibedesk</div>
 </div>
 <script nonce="${nonce}">
@@ -58,7 +63,8 @@ export function overlayPage(nonce: string): string {
   root.style.transform = 'scale(' + scale + ')';
   var $ = function (id) { return document.getElementById(id); };
   var state = null;
-  var PH = { work: 'Fokus', short: 'Kurze Pause', long: 'Lange Pause' };
+  var PH = { work: ${js(t('Fokus'))}, short: ${js(t('Kurze Pause'))}, long: ${js(t('Lange Pause'))} };
+  var QUOTE = ${js(t('„{text}“'))};
   var MARK = { ok: '✓', fail: '✗', pending: '…', stopped: '–' };
   var TODO = { completed: '✓', in_progress: '▸', pending: '○' };
 
@@ -97,7 +103,7 @@ export function overlayPage(nonce: string): string {
     list($('fd-list'), feed, function (f) { return li('', MARK[f.result], f.result, f.tool + (f.target ? ' · ' + f.target : '')); });
 
     show('chat', !!s.shoutout && Date.now() - s.shoutout.ts < 25000);
-    if (s.shoutout) { $('sh-by').textContent = '@' + s.shoutout.by; $('sh-text').textContent = '„' + s.shoutout.text + '“'; }
+    if (s.shoutout) { $('sh-by').textContent = '@' + s.shoutout.by; $('sh-text').textContent = QUOTE.replace('{text}', function () { return s.shoutout.text; }); }
 
     show('stats', s.status !== 'none' || !!s.tokens);
     $('st-tokens').textContent = s.tokens || '–';
@@ -112,7 +118,7 @@ export function overlayPage(nonce: string): string {
     if (!s) return;
     if (s.focus) {
       show('focus', true);
-      $('fo-label').textContent = PH[s.focus.phase] || 'Fokus';
+      $('fo-label').textContent = PH[s.focus.phase] || PH.work;
       $('fo-left').textContent = clock(focusBase - (Date.now() - focusAt));
     } else show('focus', false);
     $('st-time').textContent = s.sessionStart ? clock(Date.now() - s.sessionStart) : '–';

@@ -1,4 +1,5 @@
 // Wächter verdrahten: prüft regelmäßig alle Sessions und meldet Hänger, Fehlerschleifen und vollen Kontext.
+import { t } from '../../../shared/i18n'
 import { api } from '../api'
 import { notify, retract, type NoticeAction } from './notifyStore'
 import { sendToSession } from './sessionPrompt'
@@ -10,33 +11,38 @@ import { useWorkflow } from './workflowStore'
 
 const TICK_MS = 30_000
 
-const TITLE: Record<WatchAlert['kind'], string> = {
-  stuck: 'hängt vermutlich',
-  loop: 'steckt in einer Fehlerschleife',
-  context: 'hat den Kontext fast voll'
+function title(kind: WatchAlert['kind'], name: string): string {
+  switch (kind) {
+    case 'stuck':
+      return t('{name} hängt vermutlich', { name })
+    case 'loop':
+      return t('{name} steckt in einer Fehlerschleife', { name })
+    case 'context':
+      return t('{name} hat den Kontext fast voll', { name })
+  }
 }
 
-const RETHINK =
-  'Stopp – du versuchst seit mehreren Anläufen dasselbe und es scheitert jedes Mal. Halte kurz an, erkläre in zwei Sätzen, warum es fehlschlägt, und versuche dann einen anderen Ansatz.'
+const rethink = (): string =>
+  t('Stopp – du versuchst seit mehreren Anläufen dasselbe und es scheitert jedes Mal. Halte kurz an, erkläre in zwei Sätzen, warum es fehlschlägt, und versuche dann einen anderen Ansatz.')
 
 function actions(id: string, a: WatchAlert): NoticeAction[] {
-  const open: NoticeAction = { label: 'Öffnen', run: () => useUi.getState().focus(termWin(id)) }
+  const open: NoticeAction = { label: t('Öffnen'), run: () => useUi.getState().focus(termWin(id)) }
   // Esc unterbricht Claude Code, ohne die Session zu beenden
   const interrupt = (): void => api.sessions.write(id, '\x1b')
-  if (a.kind === 'stuck') return [{ label: 'Unterbrechen', primary: true, run: interrupt }, open]
+  if (a.kind === 'stuck') return [{ label: t('Unterbrechen'), primary: true, run: interrupt }, open]
   if (a.kind === 'loop')
     return [
       {
-        label: 'Anders versuchen',
+        label: t('Anders versuchen'),
         primary: true,
         run: () => {
           interrupt()
-          setTimeout(() => sendToSession(id, RETHINK), 900)
+          setTimeout(() => sendToSession(id, rethink()), 900)
         }
       },
       open
     ]
-  return [{ label: 'Zusammenfassen (/compact)', primary: true, run: () => sendToSession(id, '/compact') }, open]
+  return [{ label: t('Zusammenfassen (/compact)'), primary: true, run: () => sendToSession(id, '/compact') }, open]
 }
 
 const memory = new WatchMemory()
@@ -54,7 +60,7 @@ export function checkSessions(now = Date.now()): void {
       notify({
         kind: 'watch',
         key: `watch:${a.kind}:${s.id}`,
-        title: `${s.name} ${TITLE[a.kind]}`,
+        title: title(a.kind, s.name),
         body: a.detail,
         actions: actions(s.id, a),
         onOpen: () => useUi.getState().focus(termWin(s.id))

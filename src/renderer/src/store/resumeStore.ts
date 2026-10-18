@@ -1,7 +1,8 @@
 // Weiter nach dem Limit: Meldet Claude „limit reached · resets 10:30pm“, schickt VibeDesk nach dem Reset von selbst „mach weiter“.
+import { locale, t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
-import { RESUME_GRACE_MS, RESUME_PROMPT, scanLimit } from '../../../shared/limitReset'
+import { RESUME_GRACE_MS, resumePrompt, scanLimit } from '../../../shared/limitReset'
 import { inform } from './notifyStore'
 import { sendToSession } from './sessionPrompt'
 import { useSessions } from './sessionStore'
@@ -16,7 +17,7 @@ export const useResume = create<ResumeState>(() => ({ plans: {} }))
 
 const timers: Record<string, ReturnType<typeof setTimeout>> = {}
 
-export const fmtTime = (t: number): string => new Date(t).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
+export const fmtTime = (t: number): string => new Date(t).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' })
 
 export function cancelResume(id: string): void {
   clearTimeout(timers[id])
@@ -34,9 +35,9 @@ function resume(id: string): void {
   if (!alive) return
   // erst ein Esc – falls Claude noch das Limit-Auswahlmenü zeigt –, dann der Auftrag
   api.sessions.write(id, '\x1b')
-  setTimeout(() => sendToSession(id, RESUME_PROMPT, false), 700)
+  setTimeout(() => sendToSession(id, resumePrompt(), false), 700)
   const name = useSessions.getState().sessions.find((s) => s.id === id)?.name ?? 'Claude'
-  inform(`${name} macht weiter`, 'Das Nutzungslimit ist wieder frei.')
+  inform(t('{name} macht weiter', { name }), t('Das Nutzungslimit ist wieder frei.'))
 }
 
 export function planResume(id: string, resetAt: number): void {
@@ -47,7 +48,7 @@ export function planResume(id: string, resetAt: number): void {
   timers[id] = setTimeout(() => resume(id), Math.max(0, at - Date.now()))
   useResume.setState((s) => ({ plans: { ...s.plans, [id]: at } }))
   const name = useSessions.getState().sessions.find((s) => s.id === id)?.name ?? 'Claude'
-  inform(`Limit erreicht – ${name} macht um ${fmtTime(at)} weiter`, 'VibeDesk schickt Claude dann von selbst „mach weiter“. Abbrechen kannst du oben im Terminal.', [{ label: 'Nicht weitermachen', run: () => cancelResume(id) }])
+  inform(t('Limit erreicht – {name} macht um {time} weiter', { name, time: fmtTime(at) }), t('VibeDesk schickt Claude dann von selbst „mach weiter“. Abbrechen kannst du oben im Terminal.'), [{ label: t('Nicht weitermachen'), run: () => cancelResume(id) }])
 }
 
 let wired = false

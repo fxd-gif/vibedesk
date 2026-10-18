@@ -5,8 +5,9 @@ import fs from 'fs'
 import os from 'os'
 import { join } from 'path'
 import type { SplashView } from './splashGate'
+import { getLang, t } from '../shared/i18n'
 
-const HTML = `<!doctype html><html lang="de"><head><meta charset="utf-8"><style>
+const html = (): string => `<!doctype html><html lang="${getLang()}"><head><meta charset="utf-8"><style>
 html,body{margin:0;height:100%;background:#07090d;color:#e8ecf3;font:13px/1.4 'Segoe UI',system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-app-region:drag}
 body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;border:1px solid rgba(255,255,255,.08);box-sizing:border-box;border-radius:12px;
 background:radial-gradient(120% 80% at 50% 0%,rgba(110,140,255,.18),transparent 60%),#07090d}
@@ -18,7 +19,7 @@ h1{margin:0;font-size:20px;font-weight:600;letter-spacing:.5px}
 #f{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#5865f2,#a9b8ff);border-radius:2px;transition:width .25s}
 .indet #f{width:35%;animation:s 1.2s ease-in-out infinite}
 @keyframes s{from{left:-35%}to{left:100%}}
-</style></head><body class="indet"><div class="orb"></div><h1>VibeDesk</h1><div id="t">Suche nach Updates …</div><div class="bar"><div id="f"></div></div>
+</style></head><body class="indet"><div class="orb"></div><h1>VibeDesk</h1><div id="t">${t('Suche nach Updates …')}</div><div class="bar"><div id="f"></div></div>
 <script>window.setView=function(v){document.getElementById('t').textContent=v.text;document.body.classList.toggle('indet',v.percent===null);
 if(v.percent!==null)document.getElementById('f').style.width=v.percent+'%'}</script></body></html>`
 
@@ -48,7 +49,7 @@ export class SplashWindow {
       if (this.last) this.set(this.last)
     })
     this.win.on('closed', () => (this.win = null))
-    this.win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(HTML))
+    this.win.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html()))
   }
 
   get open(): boolean {

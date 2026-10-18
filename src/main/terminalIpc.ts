@@ -1,4 +1,5 @@
 // Main-Seite der Terminals: Shells (PowerShell/cmd) und Zwischenablage (Text oder Bild als Temp-Datei).
+import { t } from '../shared/i18n'
 import { BrowserWindow, clipboard, dialog, ipcMain } from 'electron'
 import fs from 'fs'
 import { join } from 'path'
@@ -40,7 +41,7 @@ export function registerTerminalIpc(d: { shells: ShellManager; projects: Project
   ipcMain.handle('terminal:pickFiles', async (e, defaultPath: unknown) => {
     const win = BrowserWindow.fromWebContents(e.sender)
     const opts: Electron.OpenDialogOptions = {
-      title: 'Dateien für Claude anhängen',
+      title: t('Dateien für Claude anhängen'),
       properties: ['openFile', 'multiSelections'],
       defaultPath: typeof defaultPath === 'string' && fs.existsSync(defaultPath) ? defaultPath : undefined
     }
@@ -58,7 +59,7 @@ export function registerTerminalIpc(d: { shells: ShellManager; projects: Project
 
   ipcMain.handle('shells:start', (_e, projectId: unknown, attachedTo: unknown) => {
     const p = typeof projectId === 'string' ? d.projects.get(projectId) : undefined
-    if (!p) throw new Error('Projekt nicht gefunden')
+    if (!p) throw new Error(t('Projekt nicht gefunden'))
     return d.shells.start(p, typeof attachedTo === 'string' ? attachedTo : undefined)
   })
   ipcMain.handle('shells:stop', (_e, id: unknown) => typeof id === 'string' && d.shells.stop(id))

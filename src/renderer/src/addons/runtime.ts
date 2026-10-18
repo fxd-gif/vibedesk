@@ -9,6 +9,7 @@ import { AddonRunner, realClock, type AddonEvent } from './interpreter'
 import { createStorage, type ManagedStorage } from './storage'
 import { dismissAsks } from './AskToast'
 import { api } from '../api'
+import { t } from '../../../shared/i18n'
 import { useSessions } from '../store/sessionStore'
 
 const runners = new Map<string, AddonRunner>()
@@ -25,7 +26,7 @@ const storages = new Map<string, ManagedStorage>()
 /** Speicher für ein Addon (Laufzeit oder Test im Maker). */
 export function addonStorage(id: string): ManagedStorage {
   const prev = storages.get(id)
-  const s = createStorage(id, storageIO, prev ? prev.flush() : Promise.resolve(), (m) => useAddons.getState().setError(id, 'Speichern: ' + m))
+  const s = createStorage(id, storageIO, prev ? prev.flush() : Promise.resolve(), (m) => useAddons.getState().setError(id, t('Speichern: {error}', { error: m })))
   storages.set(id, s)
   return s
 }
@@ -156,7 +157,7 @@ export function startAddonRuntime(): void {
 export function addonCommands(): { name: string; addon: string }[] {
   const out: { name: string; addon: string }[] = []
   for (const [id, r] of runners) for (const name of r.commands()) out.push({ name, addon: addonName(id) })
-  if (testRunner) for (const name of testRunner.commands()) out.push({ name, addon: 'Test im Maker' })
+  if (testRunner) for (const name of testRunner.commands()) out.push({ name, addon: t('Test im Maker') })
   return out.filter((c, i) => out.findIndex((x) => x.name === c.name) === i)
 }
 

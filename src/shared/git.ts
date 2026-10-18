@@ -1,4 +1,5 @@
 // Git ohne Bibliothek: reine Parser für die Ausgaben von git status/log/diff.
+import { t } from './i18n'
 
 export interface GitFile {
   path: string
@@ -60,7 +61,7 @@ export function parseStatus(out: string): Omit<GitStatus, 'remoteUrl' | 'webUrl'
     if (p.startsWith('# ')) {
       const [, key, ...rest] = p.split(' ')
       const val = rest.join(' ')
-      if (key === 'branch.head') st.branch = val === '(detached)' ? 'losgelöst' : val
+      if (key === 'branch.head') st.branch = val === '(detached)' ? t('losgelöst') : val
       else if (key === 'branch.oid') st.unborn = val === '(initial)'
       else if (key === 'branch.upstream') st.upstream = val
       else if (key === 'branch.ab') {
@@ -92,8 +93,6 @@ export function parseStatus(out: string): Omit<GitStatus, 'remoteUrl' | 'webUrl'
 
 export const isStaged = (f: GitFile): boolean => !f.untracked && !f.conflict && f.index !== '.'
 export const isUnstaged = (f: GitFile): boolean => f.untracked || f.conflict || f.work !== '.'
-
-export const STATUS_LABEL: Record<string, string> = { M: 'geändert', N: 'neu', D: 'gelöscht', R: 'umbenannt', C: 'kopiert', T: 'Typ geändert', U: 'Konflikt' }
 
 /** Buchstabe für die Liste: im jeweiligen Bereich */
 export function letter(f: GitFile, staged: boolean): string {
@@ -191,21 +190,21 @@ export function addedFileDiff(path: string, content: string): string {
 export const AI_DIFF_MAX = 60_000
 
 export function commitPrompt(diff: string, recent: string[], stat: string): string {
-  const cut = diff.length > AI_DIFF_MAX ? diff.slice(0, AI_DIFF_MAX) + '\n… (gekürzt)' : diff
+  const cut = diff.length > AI_DIFF_MAX ? diff.slice(0, AI_DIFF_MAX) + '\n… ' + t('(gekürzt)') : diff
   return [
-    'Schreibe eine Git-Commit-Nachricht für die Änderungen unten.',
-    'Regeln:',
-    '- Sprache und Stil wie in den bisherigen Commits dieses Repos (Liste unten). Ohne bisherige Commits: Deutsch, Conventional Commits (feat:, fix:, …).',
-    '- Erste Zeile: Zusammenfassung, höchstens 72 Zeichen, kein Punkt am Ende.',
-    '- Bei größeren Änderungen danach eine Leerzeile und 1–5 knappe Stichpunkte mit „- “.',
-    '- Beschreibe das Warum und Was, nicht jede Datei einzeln.',
-    '- Gib NUR die Nachricht aus: kein Codeblock, keine Einleitung, keine Anführungszeichen.',
+    t('Schreibe eine Git-Commit-Nachricht für die Änderungen unten.'),
+    t('Regeln:'),
+    t('- Sprache und Stil wie in den bisherigen Commits dieses Repos (Liste unten). Ohne bisherige Commits: Deutsch, Conventional Commits (feat:, fix:, …).'),
+    t('- Erste Zeile: Zusammenfassung, höchstens 72 Zeichen, kein Punkt am Ende.'),
+    t('- Bei größeren Änderungen danach eine Leerzeile und 1–5 knappe Stichpunkte mit „- “.'),
+    t('- Beschreibe das Warum und Was, nicht jede Datei einzeln.'),
+    t('- Gib NUR die Nachricht aus: kein Codeblock, keine Einleitung, keine Anführungszeichen.'),
     '',
-    '## Bisherige Commits',
-    recent.length ? recent.map((s) => '- ' + s).join('\n') : '(noch keine)',
+    t('## Bisherige Commits'),
+    recent.length ? recent.map((s) => '- ' + s).join('\n') : t('(noch keine)'),
     '',
-    '## Übersicht',
-    stat.trim() || '(keine)',
+    t('## Übersicht'),
+    stat.trim() || t('(keine)'),
     '',
     '## Diff',
     cut

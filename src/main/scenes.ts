@@ -1,3 +1,4 @@
+import { t } from '../shared/i18n'
 import { ipcMain } from 'electron'
 import fs from 'fs'
 import path from 'path'
@@ -9,7 +10,7 @@ const IMAGE_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif', '.
 /** Kopiert ein eigenes Szenenbild in den App-Ordner und liefert dessen URL. */
 export function copyScene(scenesDir: string, src: string): string {
   const ext = path.extname(src).toLowerCase()
-  if (!IMAGE_EXT.has(ext)) throw new Error('Nur Bilder (jpg, png, webp, gif, avif) sind möglich')
+  if (!IMAGE_EXT.has(ext)) throw new Error(t('Nur Bilder (jpg, png, webp, gif, avif) sind möglich'))
   fs.mkdirSync(scenesDir, { recursive: true })
   const name = randomUUID() + ext
   fs.copyFileSync(src, path.join(scenesDir, name))

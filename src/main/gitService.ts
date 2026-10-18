@@ -1,4 +1,5 @@
 // Git-Fenster: führt git (und optional gh/claude) im Projektordner aus – ohne Shell, Pfade immer hinter „--“.
+import { t } from '../shared/i18n'
 import { execFile, spawn, type ChildProcess } from 'child_process'
 import fs from 'fs'
 import path from 'path'
@@ -45,10 +46,10 @@ export const defaultRunner: Runner = (file, args, opts) =>
 
 /** Pfad aus dem Fenster: muss relativ sein und im Projekt bleiben */
 export function safeRel(root: string, rel: unknown): string {
-  if (typeof rel !== 'string' || !rel || path.isAbsolute(rel)) throw new Error('Ungültiger Pfad')
+  if (typeof rel !== 'string' || !rel || path.isAbsolute(rel)) throw new Error(t('Ungültiger Pfad'))
   const abs = path.resolve(root, rel)
   const r = path.relative(root, abs)
-  if (!r || r.startsWith('..') || path.isAbsolute(r)) throw new Error('Pfad liegt außerhalb des Projekts')
+  if (!r || r.startsWith('..') || path.isAbsolute(r)) throw new Error(t('Pfad liegt außerhalb des Projekts'))
   return r.replace(/\\/g, '/')
 }
 
@@ -107,7 +108,7 @@ export class GitService {
 
   private async need(tool: Tool): Promise<string> {
     const b = await this.bin(tool)
-    if (!b) throw new Error(tool === 'git' ? 'Git ist nicht installiert.' : 'Die GitHub-CLI (gh) ist nicht installiert.')
+    if (!b) throw new Error(tool === 'git' ? t('Git ist nicht installiert.') : t('Die GitHub-CLI (gh) ist nicht installiert.'))
     return b
   }
 
@@ -174,13 +175,13 @@ export class GitService {
       }
       p.stdout?.on('data', read)
       p.stderr?.on('data', read)
-      const t = setTimeout(() => p.kill(), LOGIN_TIMEOUT_MS)
-      p.on('error', (err) => (clearTimeout(t), reject(err)))
+      const timer = setTimeout(() => p.kill(), LOGIN_TIMEOUT_MS)
+      p.on('error', (err) => (clearTimeout(timer), reject(err)))
       p.on('exit', (code) => {
-        clearTimeout(t)
+        clearTimeout(timer)
         if (this.login === p) this.login = null
         if (code === 0) resolve()
-        else reject(new Error(p.killed ? 'Anmeldung abgebrochen.' : cleanGitError(out) || 'Anmeldung fehlgeschlagen.'))
+        else reject(new Error(p.killed ? t('Anmeldung abgebrochen.') : cleanGitError(out) || t('Anmeldung fehlgeschlagen.')))
       })
     })
     await this.run(gh, ['auth', 'setup-git', '--hostname', 'github.com'], { cwd: process.cwd(), timeout: 30_000 })
@@ -196,7 +197,7 @@ export class GitService {
   private async git(cwd: string, args: string[], input?: string, timeout?: number): Promise<string> {
     const r = await this.run(await this.need('git'), args, { cwd, input, timeout })
     if (r.code !== 0) {
-      const msg = cleanGitError(r.stderr || r.stdout) || `git ${args[0]} ist fehlgeschlagen`
+      const msg = cleanGitError(r.stderr || r.stdout) || t('git {cmd} ist fehlgeschlagen', { cmd: args[0] })
       throw new Error(AUTH_RE.test(r.stderr) ? AUTH_MARK + msg : msg)
     }
     return r.stdout
@@ -227,7 +228,7 @@ export class GitService {
       return addedFileDiff(p, buf.toString('utf8'))
     }
     const out = await this.git(cwd, ['-c', 'core.quotepath=off', 'diff', '--no-color', '--no-ext-diff', ...(staged ? ['--cached'] : []), '--', p])
-    return out.length > DIFF_MAX ? out.slice(0, DIFF_MAX) + '\n\\ … gekürzt' : out
+    return out.length > DIFF_MAX ? out.slice(0, DIFF_MAX) + '\n\\ … ' + t('gekürzt') : out
   }
 
   async stage(cwd: string, paths: string[]): Promise<void> {
@@ -259,7 +260,7 @@ export class GitService {
 
   async commit(cwd: string, message: string, all: boolean): Promise<string> {
     const msg = message.trim()
-    if (!msg) throw new Error('Die Commit-Nachricht ist leer.')
+    if (!msg) throw new Error(t('Die Commit-Nachricht ist leer.'))
     if (all) await this.stageAll(cwd)
     await this.git(cwd, ['commit', '-q', '-F', '-'], msg + '\n')
     return (await this.git(cwd, ['rev-parse', '--short', 'HEAD'])).trim()
@@ -273,9 +274,9 @@ export class GitService {
   }
 
   async show(cwd: string, hash: string): Promise<string> {
-    if (!/^[0-9a-f]{4,40}$/i.test(hash)) throw new Error('Ungültiger Commit')
+    if (!/^[0-9a-f]{4,40}$/i.test(hash)) throw new Error(t('Ungültiger Commit'))
     const out = await this.git(cwd, ['-c', 'core.quotepath=off', 'show', '--no-color', '--no-ext-diff', '--format=%B%x00', hash])
-    return out.length > DIFF_MAX ? out.slice(0, DIFF_MAX) + '\n\\ … gekürzt' : out
+    return out.length > DIFF_MAX ? out.slice(0, DIFF_MAX) + '\n\\ … ' + t('gekürzt') : out
   }
 
   async init(cwd: string): Promise<void> {
@@ -298,10 +299,10 @@ export class GitService {
   async publish(cwd: string, name: string, priv: boolean): Promise<string> {
     const gh = await this.need('gh')
     const repo = name.trim().replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-+|-+$/g, '')
-    if (!repo) throw new Error('Ungültiger Repo-Name')
+    if (!repo) throw new Error(t('Ungültiger Repo-Name'))
     const r = await this.run(gh, ['repo', 'create', repo, priv ? '--private' : '--public', '--source', '.', '--remote', 'origin', '--push'], { cwd, timeout: 180_000 })
     if (r.code !== 0) {
-      const msg = cleanGitError(r.stderr || r.stdout) || 'GitHub-Repo konnte nicht angelegt werden'
+      const msg = cleanGitError(r.stderr || r.stdout) || t('GitHub-Repo konnte nicht angelegt werden')
       throw new Error(/gh auth login|not logged in/i.test(r.stderr) || AUTH_RE.test(r.stderr) ? AUTH_MARK + msg : msg)
     }
     return webUrl((await this.run(await this.need('git'), ['remote', 'get-url', 'origin'], { cwd })).stdout.trim()) ?? ''
@@ -310,7 +311,7 @@ export class GitService {
   /** Commit-Nachricht von Claude Code (claude -p) – nutzt das Abo, kein API-Key nötig */
   async aiMessage(cwd: string): Promise<string> {
     const st = await this.status(cwd)
-    if (!st.repo) throw new Error('Kein Git-Repository')
+    if (!st.repo) throw new Error(t('Kein Git-Repository'))
     const staged = st.files.some((f) => !f.untracked && !f.conflict && f.index !== '.')
     // ohne Vorgemerktes: alles, was „Alles committen“ mitnehmen würde
     const range = staged ? ['--cached'] : st.unborn ? null : ['HEAD']
@@ -325,7 +326,7 @@ export class GitService {
         }
       }
     }
-    if (!diff.trim()) throw new Error('Es gibt keine Änderungen für eine Nachricht.')
+    if (!diff.trim()) throw new Error(t('Es gibt keine Änderungen für eine Nachricht.'))
     const recent = (await this.log(cwd, 12)).map((c) => c.subject)
     const cmd = this.d.claudeCmd?.() ?? 'claude'
     const r = await this.run('cmd.exe', ['/d', '/c', cmd, '-p', 'Write the commit message as instructed in the input.', '--model', 'haiku', '--output-format', 'text'], {
@@ -334,11 +335,11 @@ export class GitService {
       timeout: 120_000
     })
     if (r.code !== 0) {
-      if (/is not recognized|nicht als interner|ENOENT/i.test(r.stderr)) throw new Error('Claude Code wurde nicht gefunden.')
-      throw new Error(r.stderr.trim().split('\n').slice(-3).join('\n') || 'Claude hat keine Nachricht geliefert.')
+      if (/is not recognized|nicht als interner|ENOENT/i.test(r.stderr)) throw new Error(t('Claude Code wurde nicht gefunden.'))
+      throw new Error(r.stderr.trim().split('\n').slice(-3).join('\n') || t('Claude hat keine Nachricht geliefert.'))
     }
     const msg = cleanMessage(r.stdout)
-    if (!msg) throw new Error('Claude hat keine Nachricht geliefert.')
+    if (!msg) throw new Error(t('Claude hat keine Nachricht geliefert.'))
     return msg
   }
 }

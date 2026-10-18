@@ -2,16 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import { Icon } from '../desktop/icons'
 import { collectVars, useDiscord } from '../store/discordStore'
 import { useSettings } from '../store/settingsStore'
-import { DEFAULT_CLIENT_ID, PLACEHOLDERS, PRESENCE_PRESETS, renderPresence, type PresenceConfig } from '../../../shared/presence'
+import { DEFAULT_CLIENT_ID, PLACEHOLDERS, presencePresets, renderPresence, type PresenceConfig } from '../../../shared/presence'
 import { isWebhookUrl, testEmbed, type WebhookSettings } from '../../../shared/webhook'
 import { api } from '../api'
 import { sendRecap } from '../store/webhookStore'
+import { t } from '../../../shared/i18n'
 
 function useTick(ms = 1000): number {
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), ms)
-    return () => clearInterval(t)
+    const iv = setInterval(() => setNow(Date.now()), ms)
+    return () => clearInterval(iv)
   }, [ms])
   return now
 }
@@ -40,20 +41,20 @@ function Preview({ cfg }: { cfg: PresenceConfig }): React.JSX.Element {
   const user = status.state === 'connected' ? status.user : null
   const avatar = user?.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128` : null
   const ts = a.timestamps
-  const time = ts?.end ? `noch ${clockOf(ts.end - now)}` : ts?.start ? `${clockOf(now - ts.start)} vergangen` : null
+  const time = ts?.end ? t('noch {time}', { time: clockOf(ts.end - now) }) : ts?.start ? t('{time} vergangen', { time: clockOf(now - ts.start) }) : null
 
   return (
     <div className="dc-card">
       <div className="dc-banner" />
       <div className="dc-avatar">
-        {avatar ? <img src={avatar} alt="" /> : <span>{(user?.globalName ?? user?.username ?? 'Du').slice(0, 1).toUpperCase()}</span>}
+        {avatar ? <img src={avatar} alt="" /> : <span>{(user?.globalName ?? user?.username ?? t('Du')).slice(0, 1).toUpperCase()}</span>}
         <i className="dc-online" />
       </div>
       <div className="dc-body">
-        <div className="dc-name">{user?.globalName ?? user?.username ?? 'Dein Name'}</div>
-        <div className="dc-user">{user ? user.username : 'Vorschau'}</div>
+        <div className="dc-name">{user?.globalName ?? user?.username ?? t('Dein Name')}</div>
+        <div className="dc-user">{user ? user.username : t('Vorschau')}</div>
         <div className="dc-section">
-          <div className="dc-label">Spielt</div>
+          <div className="dc-label">{t('Spielt')}</div>
           <div className="dc-activity">
             <div className="dc-images">
               {large ? <img className="dc-large" src={large} alt="" title={a.assets?.large_text} /> : <div className="dc-large dc-fallback" title={a.assets?.large_text}><Icon name="rain" size={30} /></div>}
@@ -65,7 +66,7 @@ function Preview({ cfg }: { cfg: PresenceConfig }): React.JSX.Element {
               {a.state && (
                 <span>
                   {a.state}
-                  {a.party && ` (${a.party.size[0]} von ${a.party.size[1]})`}
+                  {a.party && ` (${t('{n} von {max}', { n: a.party.size[0], max: a.party.size[1] })})`}
                 </span>
               )}
               {time && <span className="dc-time">{time}</span>}
@@ -132,24 +133,24 @@ function WebhookSection(): React.JSX.Element | null {
   const commit = (): void => {
     const url = draft.trim()
     if (url === hook.url) return
-    if (url && !isWebhookUrl(url)) return setMsg({ ok: false, text: 'Das ist keine Discord-Webhook-URL (https://discord.com/api/webhooks/…).' })
+    if (url && !isWebhookUrl(url)) return setMsg({ ok: false, text: t('Das ist keine Discord-Webhook-URL (https://discord.com/api/webhooks/…).') })
     set({ url })
     setMsg(null)
   }
   const run = async (fn: () => Promise<{ ok: boolean; error?: string }>, okText: string): Promise<void> => {
     commit()
     setBusy(true)
-    const r = await fn().catch(() => ({ ok: false, error: 'Senden fehlgeschlagen.' }))
+    const r = await fn().catch(() => ({ ok: false, error: t('Senden fehlgeschlagen.') }))
     setBusy(false)
-    setMsg(r.ok ? { ok: true, text: okText } : { ok: false, text: r.error ?? 'Senden fehlgeschlagen.' })
+    setMsg(r.ok ? { ok: true, text: okText } : { ok: false, text: r.error ?? t('Senden fehlgeschlagen.') })
   }
   // im Streamer-Modus bleibt die URL immer verdeckt – wer sie kennt, kann in deinen Kanal schreiben
   const masked = s.streamer.enabled || !show
 
   return (
     <section data-testid="dc-webhook">
-      <h4>Benachrichtigungen per Webhook</h4>
-      <div className="dim tiny">Discord-Kanal → Bearbeiten → Integrationen → Webhooks → Neuer Webhook → „Webhook-URL kopieren“. Am besten ein privater Kanal nur für dich.</div>
+      <h4>{t('Benachrichtigungen per Webhook')}</h4>
+      <div className="dim tiny">{t('Discord-Kanal → Bearbeiten → Integrationen → Webhooks → Neuer Webhook → „Webhook-URL kopieren“. Am besten ein privater Kanal nur für dich.')}</div>
       <div className="row">
         <input
           className="field small mono"
@@ -164,36 +165,36 @@ function WebhookSection(): React.JSX.Element | null {
           data-testid="dc-webhook-url"
         />
         {!s.streamer.enabled && (
-          <button className="btn small ghost" title={show ? 'Verbergen' : 'Anzeigen'} onClick={() => setShow(!show)}>
+          <button className="btn small ghost" title={show ? t('Verbergen') : t('Anzeigen')} onClick={() => setShow(!show)}>
             <Icon name={show ? 'eyeoff' : 'eye'} size={13} />
           </button>
         )}
       </div>
-      <Toggle label="Melden, wenn eine Session auf dich wartet" on={hook.onWaiting} onChange={(v) => set({ onWaiting: v })} testid="dc-hook-waiting" />
-      <Toggle label="… nur wenn ich nicht am Rechner bin" on={hook.onlyAway} disabled={!hook.onWaiting} onChange={(v) => set({ onlyAway: v })} />
-      <Toggle label="Tagesrückblick senden" on={hook.recap} onChange={(v) => set({ recap: v })} testid="dc-hook-recap" />
+      <Toggle label={t('Melden, wenn eine Session auf dich wartet')} on={hook.onWaiting} onChange={(v) => set({ onWaiting: v })} testid="dc-hook-waiting" />
+      <Toggle label={t('… nur wenn ich nicht am Rechner bin')} on={hook.onlyAway} disabled={!hook.onWaiting} onChange={(v) => set({ onlyAway: v })} />
+      <Toggle label={t('Tagesrückblick senden')} on={hook.recap} onChange={(v) => set({ recap: v })} testid="dc-hook-recap" />
       {hook.recap && (
         <label className="dc-field">
-          <span>ab</span>
+          <span>{t('ab')}</span>
           <select className="field small" value={hook.recapHour} onChange={(e) => set({ recapHour: Number(e.target.value), lastRecap: '' })}>
             {Array.from({ length: 24 }, (_, h) => (
               <option key={h} value={h}>
-                {String(h).padStart(2, '0')}:00 Uhr
+                {t('{h}:00 Uhr', { h: String(h).padStart(2, '0') })}
               </option>
             ))}
           </select>
         </label>
       )}
       <div className="row">
-        <button className="btn small ghost" disabled={!valid || busy} onClick={() => void run(() => api.discord.webhook('test', testEmbed()), 'Gesendet – schau in deinen Kanal.')}>
-          Testnachricht
+        <button className="btn small ghost" disabled={!valid || busy} onClick={() => void run(() => api.discord.webhook('test', testEmbed()), t('Gesendet – schau in deinen Kanal.'))}>
+          {t('Testnachricht')}
         </button>
-        <button className="btn small ghost" disabled={!valid || busy} onClick={() => void run(() => sendRecap(true), 'Rückblick gesendet.')}>
-          Rückblick jetzt senden
+        <button className="btn small ghost" disabled={!valid || busy} onClick={() => void run(() => sendRecap(true), t('Rückblick gesendet.'))}>
+          {t('Rückblick jetzt senden')}
         </button>
       </div>
       {msg && <div className={`tiny ${msg.ok ? 'ok' : 'warn'}`}>{msg.text}</div>}
-      <div className="dim tiny">Gemeldet wird erst nach 20 Sekunden Warten und höchstens alle 5 Minuten pro Session. Im Privat- und Streamer-Modus ohne Projektnamen.</div>
+      <div className="dim tiny">{t('Gemeldet wird erst nach 20 Sekunden Warten und höchstens alle 5 Minuten pro Session. Im Privat- und Streamer-Modus ohne Projektnamen.')}</div>
     </section>
   )
 }
@@ -226,12 +227,12 @@ export function DiscordWindow(): React.JSX.Element | null {
   }
   const badge =
     status.state === 'connected'
-      ? { cls: 'ok', text: `Verbunden als ${status.user.globalName ?? status.user.username}` }
+      ? { cls: 'ok', text: t('Verbunden als {name}', { name: status.user.globalName ?? status.user.username }) }
       : status.state === 'connecting'
-        ? { cls: 'wait', text: 'Verbinde …' }
+        ? { cls: 'wait', text: t('Verbinde …') }
         : status.state === 'unavailable'
           ? { cls: 'err', text: status.reason }
-          : { cls: '', text: 'Aus' }
+          : { cls: '', text: t('Aus') }
   const buttons = [...cfg.buttons, { label: '', url: '' }, { label: '', url: '' }].slice(0, 2)
 
   return (
@@ -252,28 +253,28 @@ export function DiscordWindow(): React.JSX.Element | null {
           <Chips
             value={custom ? 'custom' : 'hosted'}
             options={[
-              ['hosted', 'VibeDesk (gehostet)'],
-              ['custom', 'Eigene App-ID']
+              ['hosted', t('VibeDesk (gehostet)')],
+              ['custom', t('Eigene App-ID')]
             ]}
             onChange={(v) => set({ clientId: v === 'hosted' ? DEFAULT_CLIENT_ID : idDraft || cfg.clientId })}
           />
           {custom && (
             <input
               className="field small mono"
-              placeholder="Application ID aus dem Discord Developer Portal"
+              placeholder={t('Application ID aus dem Discord Developer Portal')}
               value={idDraft}
               onChange={(e) => setIdDraft(e.target.value.replace(/\D/g, ''))}
               onBlur={() => idDraft && set({ clientId: idDraft })}
               onKeyDown={(e) => e.key === 'Enter' && idDraft && set({ clientId: idDraft })}
             />
           )}
-          <div className="dim tiny">Der App-Name ({app?.name ?? '…'}) erscheint in Discord als „Spielt …“.</div>
+          <div className="dim tiny">{t('Der App-Name ({name}) erscheint in Discord als „Spielt …“.', { name: app?.name ?? '…' })}</div>
         </section>
 
         <section>
-          <h4>Vorlage</h4>
+          <h4>{t('Vorlage')}</h4>
           <div className="row chips">
-            {PRESENCE_PRESETS.map((p) => (
+            {presencePresets().map((p) => (
               <button key={p.id} className="chip" onClick={() => set(p.patch)}>
                 {p.label}
               </button>
@@ -282,11 +283,11 @@ export function DiscordWindow(): React.JSX.Element | null {
         </section>
 
         <section>
-          <h4>Text</h4>
-          {textField('details', 'Zeile 1')}
-          {textField('state', 'Zeile 2')}
-          {textField('idleDetails', 'Ohne Session · Zeile 1')}
-          {textField('idleState', 'Ohne Session · Zeile 2')}
+          <h4>{t('Text')}</h4>
+          {textField('details', t('Zeile 1'))}
+          {textField('state', t('Zeile 2'))}
+          {textField('idleDetails', t('Ohne Session · Zeile 1'))}
+          {textField('idleState', t('Ohne Session · Zeile 2'))}
           <div className="row chips ph">
             {PLACEHOLDERS.map((p) => (
               <button key={p.key} className="chip" title={p.label} onMouseDown={(e) => e.preventDefault()} onClick={() => insert(p.key)}>
@@ -297,34 +298,34 @@ export function DiscordWindow(): React.JSX.Element | null {
         </section>
 
         <section>
-          <h4>Bilder</h4>
-          <Field label="Großes Bild" value={cfg.largeImage} placeholder="leer = VibeDesk-Icon · Asset-Name · https://… · none" onChange={(v) => set({ largeImage: v })} />
-          {textField('largeText', 'Tooltip groß')}
-          <Field label="Kleines Bild" value={cfg.smallImage} placeholder="Asset-Name oder https://…" onChange={(v) => set({ smallImage: v })} />
-          {textField('smallText', 'Tooltip klein')}
-          <Toggle label="Status als kleines Bild (arbeitet, wartet, Fokus …)" on={cfg.statusIcons} disabled={!!cfg.smallImage.trim()} onChange={(v) => set({ statusIcons: v })} testid="dc-status-icons" />
+          <h4>{t('Bilder')}</h4>
+          <Field label={t('Großes Bild')} value={cfg.largeImage} placeholder={t('leer = VibeDesk-Icon · Asset-Name · https://… · none')} onChange={(v) => set({ largeImage: v })} />
+          {textField('largeText', t('Tooltip groß'))}
+          <Field label={t('Kleines Bild')} value={cfg.smallImage} placeholder={t('Asset-Name oder https://…')} onChange={(v) => set({ smallImage: v })} />
+          {textField('smallText', t('Tooltip klein'))}
+          <Toggle label={t('Status als kleines Bild (arbeitet, wartet, Fokus …)')} on={cfg.statusIcons} disabled={!!cfg.smallImage.trim()} onChange={(v) => set({ statusIcons: v })} testid="dc-status-icons" />
           {app && app.assets.length > 0 ? (
             <div className="dc-assets">
               {app.assets.map((a) => (
-                <button key={a.id} className="dc-asset" title={`${a.name} – Klick: groß, Rechtsklick: klein`} onClick={() => set({ largeImage: a.name })} onContextMenu={(e) => (e.preventDefault(), set({ smallImage: a.name }))}>
+                <button key={a.id} className="dc-asset" title={t('{name} – Klick: groß, Rechtsklick: klein', { name: a.name })} onClick={() => set({ largeImage: a.name })} onContextMenu={(e) => (e.preventDefault(), set({ smallImage: a.name }))}>
                   <img src={a.url} alt={a.name} />
                 </button>
               ))}
             </div>
           ) : (
-            <div className="dim tiny">Diese App hat noch keine hochgeladenen Bilder – nutze eine Bild-URL oder lade sie im Developer Portal unter „Rich Presence → Art Assets“ hoch.</div>
+            <div className="dim tiny">{t('Diese App hat noch keine hochgeladenen Bilder – nutze eine Bild-URL oder lade sie im Developer Portal unter „Rich Presence → Art Assets“ hoch.')}</div>
           )}
         </section>
 
         <section>
-          <h4>Buttons (max. 2)</h4>
-          <Toggle label="„VibeDesk holen“ zeigen, solange ein Platz frei ist" on={cfg.promoButton !== false} onChange={(v) => set({ promoButton: v })} testid="dc-promo" />
+          <h4>{t('Buttons (max. 2)')}</h4>
+          <Toggle label={t('„VibeDesk holen“ zeigen, solange ein Platz frei ist')} on={cfg.promoButton !== false} onChange={(v) => set({ promoButton: v })} testid="dc-promo" />
           {buttons.map((b, i) => (
             <div key={i} className="row">
               <input
                 className="field small"
                 style={{ flex: 1 }}
-                placeholder="Beschriftung"
+                placeholder={t('Beschriftung')}
                 value={b.label}
                 maxLength={32}
                 onChange={(e) => {
@@ -346,40 +347,40 @@ export function DiscordWindow(): React.JSX.Element | null {
               />
             </div>
           ))}
-          <div className="dim tiny">Hinweis: Eigene Buttons sieht man bei dir selbst nicht, nur andere sehen sie.</div>
+          <div className="dim tiny">{t('Hinweis: Eigene Buttons sieht man bei dir selbst nicht, nur andere sehen sie.')}</div>
         </section>
 
         <section>
-          <h4>Zeit</h4>
+          <h4>{t('Zeit')}</h4>
           <Chips
             value={cfg.timestamp}
             options={[
-              ['app', 'Seit App-Start'],
-              ['session', 'Seit Session-Start'],
-              ['focus', 'Fokus-Countdown'],
-              ['none', 'Keine']
+              ['app', t('Seit App-Start')],
+              ['session', t('Seit Session-Start')],
+              ['focus', t('Fokus-Countdown')],
+              ['none', t('Keine')]
             ]}
             onChange={(v) => set({ timestamp: v })}
           />
-          <h4>In der Mitgliederliste</h4>
+          <h4>{t('In der Mitgliederliste')}</h4>
           <Chips
             value={cfg.statusDisplay}
             options={[
-              ['name', 'App-Name'],
-              ['details', 'Zeile 1'],
-              ['state', 'Zeile 2']
+              ['name', t('App-Name')],
+              ['details', t('Zeile 1')],
+              ['state', t('Zeile 2')]
             ]}
             onChange={(v) => set({ statusDisplay: v })}
           />
-          <Toggle label="Projektnamen verbergen" on={cfg.privacy} onChange={(v) => set({ privacy: v })} />
-          <Toggle label="Lounge-Größe zeigen („2 von 16“)" on={cfg.showParty} onChange={(v) => set({ showParty: v })} testid="dc-party" />
+          <Toggle label={t('Projektnamen verbergen')} on={cfg.privacy} onChange={(v) => set({ privacy: v })} />
+          <Toggle label={t('Lounge-Größe zeigen („2 von 16“)')} on={cfg.showParty} onChange={(v) => set({ showParty: v })} testid="dc-party" />
         </section>
 
         <WebhookSection />
       </div>
       <div className="dc-side">
         <div className="dim small" style={{ marginBottom: 8 }}>
-          Live-Vorschau
+          {t('Live-Vorschau')}
         </div>
         <Preview cfg={cfg} />
       </div>

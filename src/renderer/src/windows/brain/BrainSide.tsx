@@ -1,14 +1,15 @@
 // Rechte Spalte des Gehirns: Notiz lesen/bearbeiten, Datei-Wissen, leere Links anlegen.
 import { useEffect, useState } from 'react'
 import { api, errorText } from '../../api'
-import { NOTE_TYPES, NOTE_TYPE_LABEL, fileId, noteId, type NoteDetail, type NoteType } from '../../../../shared/brain'
+import { NOTE_TYPES, fileId, noteId, type NoteDetail, type NoteType } from '../../../../shared/brain'
 import type { BrainFileInfo } from '../../../../shared/types'
 import { alert, confirm } from '../../store/dialogStore'
 import { openInEditor } from '../../store/editorStore'
 import { useSettings } from '../../store/settingsStore'
 import { relTime } from '../../util'
 import { Icon } from '../../desktop/icons'
-import { KIND_COLOR } from './BrainGraph'
+import { KIND_COLOR, noteTypeLabel } from './BrainGraph'
+import { t } from '../../../../shared/i18n'
 import { Markdown } from './Markdown'
 
 export interface Draft {
@@ -44,25 +45,25 @@ function Editor({ projectId, draft, setDraft, onSaved }: { projectId: string; dr
       setDraft(null)
       onSaved(n.title)
     } catch (err) {
-      await alert('Notiz nicht gespeichert', errorText(err))
+      await alert(t('Notiz nicht gespeichert'), errorText(err))
     } finally {
       setBusy(false)
     }
   }
   return (
     <div className="bs-edit" data-testid="brain-editor">
-      <input className="field" placeholder="Titel" value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus={!draft.prev} data-testid="brain-title" />
+      <input className="field" placeholder={t('Titel')} value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} autoFocus={!draft.prev} data-testid="brain-title" />
       <div className="bs-types">
-        {NOTE_TYPES.map((t) => (
-          <button key={t} className={`chip${draft.type === t ? ' on' : ''}`} onClick={() => setDraft({ ...draft, type: t })}>
-            <i style={{ background: KIND_COLOR[t] }} />
-            {NOTE_TYPE_LABEL[t]}
+        {NOTE_TYPES.map((k) => (
+          <button key={k} className={`chip${draft.type === k ? ' on' : ''}`} onClick={() => setDraft({ ...draft, type: k })}>
+            <i style={{ background: KIND_COLOR[k] }} />
+            {noteTypeLabel(k)}
           </button>
         ))}
       </div>
       <textarea
         className="field mono"
-        placeholder={'Was sollte Claude (und du) beim nächsten Mal wissen?\nVerlinke verwandte Notizen mit [[Titel]].'}
+        placeholder={t('Was sollte Claude (und du) beim nächsten Mal wissen?\nVerlinke verwandte Notizen mit [[Titel]].')}
         value={draft.body}
         onChange={(e) => setDraft({ ...draft, body: e.target.value })}
         onKeyDown={(e) => {
@@ -73,13 +74,13 @@ function Editor({ projectId, draft, setDraft, onSaved }: { projectId: string; dr
         }}
         data-testid="brain-body"
       />
-      <input className="field small mono" placeholder="Dateien, z. B. src/main/index.ts, src/app.tsx" value={draft.files} onChange={(e) => setDraft({ ...draft, files: e.target.value })} />
+      <input className="field small mono" placeholder={t('Dateien, z. B. src/main/index.ts, src/app.tsx')} value={draft.files} onChange={(e) => setDraft({ ...draft, files: e.target.value })} />
       <div className="row between">
         <button className="btn small ghost" onClick={() => setDraft(null)}>
-          Abbrechen
+          {t('Abbrechen')}
         </button>
         <button className="btn small primary" disabled={busy || !draft.title.trim() || !draft.body.trim()} onClick={() => void save()} data-testid="brain-save">
-          Speichern
+          {t('Speichern')}
         </button>
       </div>
     </div>
@@ -122,33 +123,33 @@ export function BrainSide({ projectId, selected, draft, setDraft, onSelect, onSa
     return (
       <div className="bs" data-testid="brain-file">
         <div className="bs-kind">
-          <i style={{ background: KIND_COLOR.file }} /> Datei
+          <i style={{ background: KIND_COLOR.file }} /> {t('Datei')}
         </div>
         <h3 className="mono">{file.file}</h3>
         <p className="dim small">
-          {file.reads}× gelesen · {file.edits}× geändert
+          {t('{reads}× gelesen · {edits}× geändert', { reads: file.reads, edits: file.edits })}
         </p>
         <div className="row">
           <button className="btn small" onClick={() => void openInEditor(file.abs)}>
-            <Icon name="code" size={13} /> Im Editor öffnen
+            <Icon name="code" size={13} /> {t('Im Editor öffnen')}
           </button>
           <button className="btn small" onClick={() => setDraft(emptyDraft({ files: file.file, type: 'module' }))}>
-            <Icon name="plus" size={13} /> Notiz dazu
+            <Icon name="plus" size={13} /> {t('Notiz dazu')}
           </button>
         </div>
         {file.notes.length > 0 && (
           <section>
-            <h4>Wissen dazu</h4>
-            {file.notes.map((t) => (
-              <button key={t} className="bs-ref" onClick={() => openNote(t)}>
-                {t}
+            <h4>{t('Wissen dazu')}</h4>
+            {file.notes.map((n) => (
+              <button key={n} className="bs-ref" onClick={() => openNote(n)}>
+                {n}
               </button>
             ))}
           </section>
         )}
         {file.co.length > 0 && (
           <section>
-            <h4>Wird oft zusammen geändert mit</h4>
+            <h4>{t('Wird oft zusammen geändert mit')}</h4>
             {file.co.map((c) => (
               <button key={c.file} className="bs-ref mono" onClick={() => onSelect(fileId(c.file))}>
                 {c.file} <span className="dim">{c.count}×</span>
@@ -156,7 +157,7 @@ export function BrainSide({ projectId, selected, draft, setDraft, onSelect, onSa
             ))}
           </section>
         )}
-        {!file.notes.length && <p className="bs-hint">Zu dieser Datei gibt es noch kein Wissen. Claude legt es an, wenn es hier arbeitet – oder du schreibst selbst eine Notiz.</p>}
+        {!file.notes.length && <p className="bs-hint">{t('Zu dieser Datei gibt es noch kein Wissen. Claude legt es an, wenn es hier arbeitet – oder du schreibst selbst eine Notiz.')}</p>}
       </div>
     )
   }
@@ -166,19 +167,19 @@ export function BrainSide({ projectId, selected, draft, setDraft, onSelect, onSa
     return (
       <div className="bs" data-testid="brain-missing">
         <div className="bs-kind">
-          <i className="hollow" /> Noch nicht angelegt
+          <i className="hollow" /> {t('Noch nicht angelegt')}
         </div>
         <h3>{key}</h3>
-        <p className="bs-hint">Andere Notizen verweisen hierher, aber die Notiz fehlt noch.</p>
+        <p className="bs-hint">{t('Andere Notizen verweisen hierher, aber die Notiz fehlt noch.')}</p>
         <button className="btn small primary" onClick={() => setDraft(emptyDraft({ title: key }))}>
-          <Icon name="plus" size={13} /> Anlegen
+          <Icon name="plus" size={13} /> {t('Anlegen')}
         </button>
       </div>
     )
   }
 
   const archive = async (): Promise<void> => {
-    if (!(await confirm({ title: `„${note.title}“ archivieren?`, message: 'Die Notiz wandert nach .vibedesk/brain/.archiv und verschwindet aus dem Gehirn.', confirmLabel: 'Archivieren', danger: true }))) return
+    if (!(await confirm({ title: t('„{title}“ archivieren?', { title: note.title }), message: t('Die Notiz wandert nach .vibedesk/brain/.archiv und verschwindet aus dem Gehirn.'), confirmLabel: t('Archivieren'), danger: true }))) return
     await api.brain.remove(projectId, note.title)
     onSelect(null)
   }
@@ -186,21 +187,21 @@ export function BrainSide({ projectId, selected, draft, setDraft, onSelect, onSa
   return (
     <div className="bs" data-testid="brain-note">
       <div className="bs-kind">
-        <i style={{ background: KIND_COLOR[note.type] }} /> {NOTE_TYPE_LABEL[note.type]}
+        <i style={{ background: KIND_COLOR[note.type] }} /> {noteTypeLabel(note.type)}
         <span className="dim">· {relTime(note.updated)}</span>
       </div>
       <h3>{note.title}</h3>
-      {note.stale && <div className="bs-stale">Zu prüfen – verknüpfte Dateien wurden seitdem geändert.</div>}
+      {note.stale && <div className="bs-stale">{t('Zu prüfen – verknüpfte Dateien wurden seitdem geändert.')}</div>}
       {hideNotes && !reveal ? (
         <button className="bs-veil" onClick={() => setReveal(true)}>
-          <Icon name="eyeoff" size={16} /> Im Streamer-Modus verdeckt – klicken zum Anzeigen
+          <Icon name="eyeoff" size={16} /> {t('Im Streamer-Modus verdeckt – klicken zum Anzeigen')}
         </button>
       ) : (
         <Markdown text={note.body} onLink={openNote} />
       )}
       {note.files.length > 0 && (
         <section>
-          <h4>Dateien</h4>
+          <h4>{t('Dateien')}</h4>
           {note.files.map((f) => (
             <button key={f} className="bs-ref mono" onClick={() => onSelect(fileId(f))}>
               {f}
@@ -210,24 +211,24 @@ export function BrainSide({ projectId, selected, draft, setDraft, onSelect, onSa
       )}
       {note.backlinks.length > 0 && (
         <section>
-          <h4>Verlinkt von</h4>
-          {note.backlinks.map((t) => (
-            <button key={t} className="bs-ref" onClick={() => openNote(t)}>
-              {t}
+          <h4>{t('Verlinkt von')}</h4>
+          {note.backlinks.map((n) => (
+            <button key={n} className="bs-ref" onClick={() => openNote(n)}>
+              {n}
             </button>
           ))}
         </section>
       )}
-      {note.tags.length > 0 && <div className="bs-tags">{note.tags.map((t) => <span key={t}>#{t}</span>)}</div>}
+      {note.tags.length > 0 && <div className="bs-tags">{note.tags.map((tag) => <span key={tag}>#{tag}</span>)}</div>}
       <div className="row bs-actions">
         <button
           className="btn small"
           onClick={() => setDraft({ title: note.title, type: note.type, body: note.body, files: note.files.join(', '), prev: note.title })}
           data-testid="brain-edit"
         >
-          <Icon name="pen" size={13} /> Bearbeiten
+          <Icon name="pen" size={13} /> {t('Bearbeiten')}
         </button>
-        <button className="btn small ghost" title="Archivieren" onClick={() => void archive()}>
+        <button className="btn small ghost" title={t('Archivieren')} onClick={() => void archive()}>
           <Icon name="trash" size={13} />
         </button>
       </div>

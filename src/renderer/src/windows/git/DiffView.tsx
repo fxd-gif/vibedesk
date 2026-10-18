@@ -1,17 +1,18 @@
 // Unified Diff mit Zeilennummern – Zeilen grün/rot, Abschnittsköpfe dezent.
 import { useMemo } from 'react'
 import { parseDiff } from '../../../../shared/git'
+import { t } from '../../../../shared/i18n'
 
-export function DiffView({ text, empty = 'Keine Änderungen.' }: { text: string; empty?: string }): React.JSX.Element {
+export function DiffView({ text, empty }: { text: string; empty?: string }): React.JSX.Element {
   const files = useMemo(() => parseDiff(text), [text])
-  if (!files.length || files.every((f) => !f.lines.length && !f.binary)) return <div className="panel-empty">{empty}</div>
+  if (!files.length || files.every((f) => !f.lines.length && !f.binary)) return <div className="panel-empty">{empty ?? t('Keine Änderungen.')}</div>
   return (
     <div className="diff" data-testid="git-diff">
       {files.map((f, i) => (
         <section key={i}>
           {files.length > 1 && <h5 className="diff-file mono">{f.path}</h5>}
           {f.binary ? (
-            <div className="diff-binary">Binärdatei – keine Textansicht</div>
+            <div className="diff-binary">{t('Binärdatei – keine Textansicht')}</div>
           ) : (
             <table>
               <tbody>

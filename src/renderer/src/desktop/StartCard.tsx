@@ -10,6 +10,7 @@ import { openPanel } from '../windows/palette/CommandPalette'
 import { newProject } from '../windows/ProjectsWindow'
 import { Icon } from './icons'
 import { recentProjects } from './recentProjects'
+import { t } from '../../../shared/i18n'
 
 export function StartCard(): React.JSX.Element | null {
   const onboarded = useSettings((s) => !!s.s?.onboarded)
@@ -28,7 +29,7 @@ export function StartCard(): React.JSX.Element | null {
 
   return (
     <div className="start-card" data-testid="start-card">
-      <h2>Woran baust du heute?</h2>
+      <h2>{t('Woran baust du heute?')}</h2>
       {recent.length ? (
         <ul className="start-list">
           {recent.map((p, i) => (
@@ -43,14 +44,14 @@ export function StartCard(): React.JSX.Element | null {
           ))}
         </ul>
       ) : (
-        <p>Leg dein erstes Projekt an – VibeDesk startet Claude Code direkt darin.</p>
+        <p>{t('Leg dein erstes Projekt an – VibeDesk startet Claude Code direkt darin.')}</p>
       )}
       <div className="start-actions">
         <button className={`btn${recent.length ? '' : ' primary big'}`} onClick={() => void newProject()} data-testid="start-new">
-          <Icon name="plus" size={14} /> Neues Projekt
+          <Icon name="plus" size={14} /> {t('Neues Projekt')}
         </button>
         <button className="btn ghost" onClick={() => openPanel('projects')}>
-          {recent.length ? 'Alle Projekte' : 'Bestehenden Ordner öffnen'}
+          {recent.length ? t('Alle Projekte') : t('Bestehenden Ordner öffnen')}
         </button>
       </div>
     </div>

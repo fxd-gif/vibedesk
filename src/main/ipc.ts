@@ -1,5 +1,5 @@
 import { app, BrowserWindow, clipboard, ipcMain, Notification, shell } from 'electron'
-import { resolveLang, setLang } from '../shared/i18n'
+import { resolveLang, setLang, t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import type { ProjectStore } from './projectStore'
@@ -101,8 +101,8 @@ export function registerSessionIpc(d: SessionIpcDeps): void {
   })
   ipcMain.handle('sessions:start', (_e, projectId: string, resumeId?: string) => {
     const p = d.projects.get(projectId)
-    if (!p) throw new Error('Projekt nicht gefunden')
-    if (!fs.existsSync(p.path)) throw new Error('Projektordner fehlt: ' + p.path)
+    if (!p) throw new Error(t('Projekt nicht gefunden'))
+    if (!fs.existsSync(p.path)) throw new Error(t('Projektordner fehlt: {path}', { path: p.path }))
     const info = d.sessions.start(p, { resumeId })
     d.projects.touch(p.id)
     return info
@@ -122,7 +122,7 @@ export function registerSkillIpc(d: SkillIpcDeps): void {
   // Kandidaten bleiben im Main-Prozess, der Renderer sieht nur Token + Metadaten
   const pending = new Map<string, import('./skillStore').SkillCandidate>()
   const summarize = (cands: import('./skillStore').SkillCandidate[]) => {
-    if (!cands.length) throw new Error('Keine SKILL.md mit gültigem Frontmatter (name, description) gefunden')
+    if (!cands.length) throw new Error(t('Keine SKILL.md mit gültigem Frontmatter (name, description) gefunden'))
     return cands.map((c) => {
       const token = randomUUID()
       pending.set(token, c)
@@ -134,25 +134,25 @@ export function registerSkillIpc(d: SkillIpcDeps): void {
   ipcMain.handle('skills:importGithub', async (_e, url: string) => summarize(await fetchGithubCandidates(url)))
   ipcMain.handle('skills:install', async (_e, tokens: string[], target: SkillTarget, replace: boolean) => {
     const out = []
-    for (const t of tokens) {
-      const c = pending.get(t)
-      if (!c) throw new Error('Import abgelaufen – bitte erneut hinzufügen')
+    for (const tok of tokens) {
+      const c = pending.get(tok)
+      if (!c) throw new Error(t('Import abgelaufen – bitte erneut hinzufügen'))
       out.push(await d.skills.install(c, target, { replace }))
-      pending.delete(t)
+      pending.delete(tok)
     }
     return out
   })
   ipcMain.handle('skills:remove', (_e, dir: string) => d.skills.remove(dir, d.projects.list()))
   ipcMain.handle('skills:exportCode', (_e, dir: string, from: string) => {
-    if (!d.skills.isSkillDir(String(dir), d.projects.list())) throw new Error('Kein Skill-Ordner')
+    if (!d.skills.isSkillDir(String(dir), d.projects.list())) throw new Error(t('Kein Skill-Ordner'))
     const files = readSkillFiles(String(dir))
     const cand = candidatesFromFiles(files).find((c) => c.files.has('SKILL.md') && [...c.files.keys()].length === files.length)
-    if (!cand) throw new Error('Die SKILL.md dieses Skills hat kein gültiges Frontmatter (name, description).')
+    if (!cand) throw new Error(t('Die SKILL.md dieses Skills hat kein gültiges Frontmatter (name, description).'))
     return encodeShare({ kind: 'skill', name: cand.name, description: cand.description, files: files.map((f) => toSharedFile(f.path, f.data)), from: String(from ?? '').slice(0, 40) })
   })
   ipcMain.handle('skills:importCode', (_e, code: string) => {
     const e = decodeShare(String(code))
-    if (e.kind !== 'skill') throw new Error('Der Code enthält keinen Skill.')
+    if (e.kind !== 'skill') throw new Error(t('Der Code enthält keinen Skill.'))
     return summarize(candidatesFromFiles(e.files.map((f) => ({ path: f.path, data: fileBytes(f) }))).filter((c) => c.files.has('SKILL.md') && c.files.size === e.files.length))
   })
 }

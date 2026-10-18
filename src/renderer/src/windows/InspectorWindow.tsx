@@ -3,10 +3,17 @@ import { useAllSessions, useSessions } from '../store/sessionStore'
 import { useWorkflow } from '../store/workflowStore'
 import { StatsPanel } from './StatsPanel'
 import { AgentPanel, FeedPanel, StatusPanel, TodoPanel } from './WorkflowPanels'
+import { t } from '../../../shared/i18n'
 
 export const INSPECTOR_TABS = [
   { id: 'status', label: 'Status' },
-  { id: 'feed', label: 'Live-Feed' },
+  {
+    id: 'feed',
+    // Getter: erst beim Anzeigen übersetzen, nicht beim Import
+    get label() {
+      return t('Live-Feed')
+    }
+  },
   { id: 'todos', label: 'Todos' },
   { id: 'agents', label: 'Agents' },
   { id: 'stats', label: 'Stats' }
@@ -18,7 +25,7 @@ const KEY = 'vibedesk.inspectorTab'
 const initial = (): InspectorTab => {
   try {
     const v = localStorage.getItem(KEY)
-    if (INSPECTOR_TABS.some((t) => t.id === v)) return v as InspectorTab
+    if (INSPECTOR_TABS.some((x) => x.id === v)) return v as InspectorTab
   } catch {
     // Speicher nicht verfügbar – Standard
   }
@@ -44,7 +51,7 @@ function useCounts(): Partial<Record<InspectorTab, number>> {
   let todos = 0
   let agents = 0
   for (const s of sessions) {
-    todos += wf[s.id]?.todos.filter((t) => t.status !== 'completed').length ?? 0
+    todos += wf[s.id]?.todos.filter((x) => x.status !== 'completed').length ?? 0
     agents += wf[s.id]?.agents.filter((a) => !a.done).length ?? 0
   }
   return { todos, agents }
@@ -57,10 +64,10 @@ export function InspectorWindow(): React.JSX.Element {
   return (
     <div className="inspector">
       <div className="row tabs inspector-tabs">
-        {INSPECTOR_TABS.map((t) => (
-          <button key={t.id} className={`tab${tab === t.id ? ' on' : ''}`} onClick={() => setTab(t.id)} data-testid={`inspector-${t.id}`}>
-            {t.label}
-            {!!counts[t.id] && <span className="tab-count">{counts[t.id]}</span>}
+        {INSPECTOR_TABS.map((x) => (
+          <button key={x.id} className={`tab${tab === x.id ? ' on' : ''}`} onClick={() => setTab(x.id)} data-testid={`inspector-${x.id}`}>
+            {x.label}
+            {!!counts[x.id] && <span className="tab-count">{counts[x.id]}</span>}
           </button>
         ))}
       </div>

@@ -3,6 +3,7 @@ import { DOCK_H, useUi } from '../store/uiStore'
 import { magnetize, snapRect, type Guide } from './layout'
 import { ErrorBoundary } from './ErrorBoundary'
 import type { WindowRect } from '../../../shared/types'
+import { t } from '../../../shared/i18n'
 
 interface Props {
   id: string
@@ -96,13 +97,13 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
         >
           <div className="gwin-title">{title}</div>
           <div className="gwin-btns">
-            <button className="gbtn" title="Minimieren" onClick={() => minimize(id)}>
+            <button className="gbtn" title={t('Minimieren')} onClick={() => minimize(id)}>
               <span className="gbtn-min" />
             </button>
-            <button className="gbtn" title={maximized ? 'Wiederherstellen' : 'Maximieren'} onClick={() => toggleMax(id)}>
+            <button className="gbtn" title={maximized ? t('Wiederherstellen') : t('Maximieren')} onClick={() => toggleMax(id)}>
               <span className="gbtn-max" />
             </button>
-            <button className="gbtn close" title="Schließen" onClick={() => (onClose ? onClose() : closeWin(id))}>
+            <button className="gbtn close" title={t('Schließen')} onClick={() => (onClose ? onClose() : closeWin(id))}>
               <span className="gbtn-x" />
             </button>
           </div>

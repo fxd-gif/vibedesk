@@ -1,8 +1,9 @@
+import { t } from '../shared/i18n'
 import fs from 'fs'
 import path from 'path'
 import { randomUUID } from 'crypto'
 import { execFile, execFileSync } from 'child_process'
-import { CLAUDE_MISSING_MESSAGE } from '../shared/setupHints'
+import { claudeMissingMessage } from '../shared/setupHints'
 import type { Project, SessionInfo } from '../shared/types'
 import { buildBrainMcpConfig, buildHookSettings } from './hookSettings'
 
@@ -70,12 +71,12 @@ export class SessionManager {
 
   start(project: Project, opts: { resumeId?: string } = {}): SessionInfo {
     // ID landet in der cmd.exe-Zeile → nur harmlose Zeichen zulassen
-    if (opts.resumeId !== undefined && !/^[A-Za-z0-9-]{1,64}$/.test(opts.resumeId)) throw new Error('Ungültige Session-ID')
+    if (opts.resumeId !== undefined && !/^[A-Za-z0-9-]{1,64}$/.test(opts.resumeId)) throw new Error(t('Ungültige Session-ID'))
     const max = this.o.maxSessions()
-    if (this.sessions.size >= max) throw new Error(`Maximal ${max} Sessions gleichzeitig – schließe zuerst eine.`)
+    if (this.sessions.size >= max) throw new Error(t('Maximal {max} Sessions gleichzeitig – schließe zuerst eine.', { max }))
     const cmd = process.env.VIBEDESK_CLAUDE_CMD || 'claude'
     if (cmd === 'claude' && !(this.o.isClaudeInstalled ?? claudeOnPath)())
-      throw new Error(CLAUDE_MISSING_MESSAGE)
+      throw new Error(claudeMissingMessage())
 
     const id = randomUUID()
     fs.mkdirSync(this.o.tmpDir, { recursive: true })

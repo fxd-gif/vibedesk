@@ -1,5 +1,6 @@
 // Share-Codes: Prompts, Skills und Atmosphären als kopierbarer Text (vibe1:…) – kein Server nötig.
 // Rein und in Main + Renderer nutzbar. Alles Eingehende ist fremd: streng prüfen, Größen begrenzen.
+import { t } from './i18n'
 import { deflateSync, Inflate, strFromU8, strToU8 } from 'fflate'
 
 export const SHARE_PREFIX = 'vibe1:'
@@ -71,7 +72,7 @@ function inflateLimited(data: Uint8Array, limit: number): Uint8Array {
   })
   // kleine Häppchen: Deflate vervielfacht höchstens ~1000×, so bleibt jeder Schritt klein
   for (let i = 0; i < data.length && !over; i += 1024) inf.push(data.subarray(i, i + 1024), i + 1024 >= data.length)
-  if (over) throw new ShareError('Der Code ist zu groß.')
+  if (over) throw new ShareError(t('Der Code ist zu groß.'))
   const out = new Uint8Array(total)
   let o = 0
   for (const p of parts) (out.set(p, o), (o += p.length))
@@ -96,7 +97,7 @@ const obj = (x: unknown): Record<string, unknown> => (x && typeof x === 'object'
 
 function validate(raw: unknown): ShareEnvelope {
   const o = obj(raw)
-  if (o.v !== 1) throw new ShareError('Dieser Code stammt aus einer neueren VibeDesk-Version.')
+  if (o.v !== 1) throw new ShareError(t('Dieser Code stammt aus einer neueren VibeDesk-Version.'))
   const from = cleanText(o.from, 40).trim() || undefined
   const d = obj(o.data)
   switch (o.kind) {
@@ -106,33 +107,33 @@ function validate(raw: unknown): ShareEnvelope {
         .slice(0, 50)
         .map((p) => ({ title: cleanText(obj(p).title, 120).trim(), text: cleanText(obj(p).text, 20_000, true) }))
         .filter((p) => p.text.trim())
-      if (!prompts.length) throw new ShareError('Der Code enthält keine Prompts.')
+      if (!prompts.length) throw new ShareError(t('Der Code enthält keine Prompts.'))
       return { kind: 'prompts', prompts, from }
     }
     case 'skill': {
       const name = cleanText(d.name, 64).trim()
       const description = cleanText(d.description, 1024).trim()
       const list = Array.isArray(d.files) ? d.files : []
-      if (!name || !list.length || list.length > MAX_FILES) throw new ShareError('Der Skill im Code ist unvollständig.')
+      if (!name || !list.length || list.length > MAX_FILES) throw new ShareError(t('Der Skill im Code ist unvollständig.'))
       const files: SharedFile[] = []
       const seen = new Set<string>()
       for (const f of list) {
         const fo = obj(f)
         const path = typeof fo.path === 'string' ? fo.path : ''
-        if (!safeRelPath(path) || seen.has(path.toLowerCase())) throw new ShareError(`Ungültiger Dateipfad im Skill: ${cleanText(path, 80)}`)
+        if (!safeRelPath(path) || seen.has(path.toLowerCase())) throw new ShareError(t('Ungültiger Dateipfad im Skill: {path}', { path: cleanText(path, 80) }))
         seen.add(path.toLowerCase())
         if (typeof fo.text === 'string') files.push({ path, text: fo.text })
         else if (typeof fo.b64 === 'string' && /^[A-Za-z0-9+/=]*$/.test(fo.b64)) files.push({ path, b64: fo.b64 })
-        else throw new ShareError(`Datei ohne Inhalt im Skill: ${cleanText(path, 80)}`)
+        else throw new ShareError(t('Datei ohne Inhalt im Skill: {path}', { path: cleanText(path, 80) }))
       }
-      if (!files.some((f) => f.path === 'SKILL.md' && f.text !== undefined)) throw new ShareError('Dem Skill fehlt die SKILL.md.')
+      if (!files.some((f) => f.path === 'SKILL.md' && f.text !== undefined)) throw new ShareError(t('Dem Skill fehlt die SKILL.md.'))
       return { kind: 'skill', name, description, files, from }
     }
     case 'ambience': {
       const a = obj(d.ambience)
       const scene = cleanText(a.scene, 40)
       const url = cleanText(a.streamUrl, 500).trim()
-      if (!/^[a-z0-9-]+$/.test(scene)) throw new ShareError('Unbekannter Ausblick im Code.')
+      if (!/^[a-z0-9-]+$/.test(scene)) throw new ShareError(t('Unbekannter Ausblick im Code.'))
       return {
         kind: 'ambience',
         from,
@@ -149,7 +150,7 @@ function validate(raw: unknown): ShareEnvelope {
       }
     }
     default:
-      throw new ShareError('Unbekannter Code-Typ.')
+      throw new ShareError(t('Unbekannter Code-Typ.'))
   }
 }
 
@@ -164,16 +165,16 @@ export function encodeShare(e: ShareEnvelope): string {
 
 export function decodeShare(code: string): ShareEnvelope {
   const c = code.trim().replace(/\s+/g, '')
-  if (!c.toLowerCase().startsWith(SHARE_PREFIX)) throw new ShareError('Das ist kein VibeDesk-Code (er beginnt mit „vibe1:“).')
+  if (!c.toLowerCase().startsWith(SHARE_PREFIX)) throw new ShareError(t('Das ist kein VibeDesk-Code (er beginnt mit „vibe1:“).'))
   const body = c.slice(SHARE_PREFIX.length)
-  if (body.length > MAX_CODE) throw new ShareError('Der Code ist zu groß.')
-  if (!/^[A-Za-z0-9_-]+$/.test(body)) throw new ShareError('Der Code ist beschädigt – wurde er vollständig kopiert?')
+  if (body.length > MAX_CODE) throw new ShareError(t('Der Code ist zu groß.'))
+  if (!/^[A-Za-z0-9_-]+$/.test(body)) throw new ShareError(t('Der Code ist beschädigt – wurde er vollständig kopiert?'))
   let json: unknown
   try {
     json = JSON.parse(strFromU8(inflateLimited(fromB64Url(body), MAX_RAW)))
   } catch (err) {
     if (err instanceof ShareError) throw err
-    throw new ShareError('Der Code ist beschädigt – wurde er vollständig kopiert?')
+    throw new ShareError(t('Der Code ist beschädigt – wurde er vollständig kopiert?'))
   }
   return validate(json)
 }
@@ -206,8 +207,15 @@ export function toSharedFile(path: string, data: Uint8Array): SharedFile {
   return { path, b64: toB64(data) }
 }
 
+/** Getter: übersetzt beim Lesen, nicht beim Import */
 export const SHARE_KIND_LABEL: Record<ShareData['kind'], string> = {
-  prompts: 'Prompts',
-  skill: 'Skill',
-  ambience: 'Atmosphäre'
+  get prompts() {
+    return t('Prompts')
+  },
+  get skill() {
+    return t('Skill')
+  },
+  get ambience() {
+    return t('Atmosphäre')
+  }
 }
