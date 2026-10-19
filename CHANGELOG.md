@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 1.9.0
+
 ### Neu
 
 - **Branches im Git-Fenster**: Ein Klick auf den Branch oben zeigt alle lokalen Branches zum Wechseln, und „Neuer Branch …“ legt einen an und wechselt gleich hinein. Nicht committete Änderungen nimmt git mit, solange sie nicht kollidieren – sonst erklärt VibeDesk, was im Weg ist
