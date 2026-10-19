@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 1.4.0
+
 ### Neu
 
 - **Anfänger oder Profi**: Der Einrichtungs-Rundgang fragt nach deiner Vibecoding-Erfahrung. Anfänger bekommen eine ruhige Oberfläche mit Dock und leisen Tipps, Profis den Studio-Aufbau mit Seitenleiste, Statusleiste und allen Werkzeugen. Alles bleibt einzeln an- und abschaltbar
