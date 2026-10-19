@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 1.3.0
+
 ### Neu
 
 - **Ganzes Terminal auf dem Handy**: Im Fenster „Handy-Begleiter“ lässt sich unter „Terminal“ freigeben, dass das Handy das komplette Terminal einer Session sieht, live, mit Farben und dem ganzen Verlauf. Ältere Zeilen lädt ein Tipp nach. Wer oben im Verlauf liest, wird nicht nach unten gerissen, ein Knopf „Neue Ausgabe“ bringt einen zurück. Trennlinien bleiben Linien, lange Zeilen brechen um (abschaltbar). Standardmäßig aus, weil im Terminal auch Geheimnisse stehen können
