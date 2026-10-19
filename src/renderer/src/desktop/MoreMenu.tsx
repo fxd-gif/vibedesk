@@ -1,20 +1,15 @@
-// „Mehr“ im Dock: alles, was gerade nicht im Dock steht – mit einem Satz, wofür es da ist.
+// „Mehr“ im Dock: alles, was gerade nicht im Dock steht – mit einem Satz, wofür es da ist. Einstellungen haben ein eigenes Fenster.
 import { useEffect, useRef } from 'react'
-import type { LayoutTheme, PanelId } from '../../../shared/types'
-import { useSettings } from '../store/settingsStore'
-import { Toggle } from './Toggle'
+import type { PanelId } from '../../../shared/types'
 import { panelDef } from '../windows/panels'
 import { openPanel } from '../windows/palette/CommandPalette'
 import { Icon } from './icons'
 import { openAbout } from './About'
-import { t, type LangSetting } from '../../../shared/i18n'
+import { t } from '../../../shared/i18n'
+import { openSettings } from '../windows/SettingsWindow'
 
 export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void }): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null)
-  const dockAll = useSettings((s) => !!s.s?.dockAll)
-  const quick = useSettings((s) => s.s?.quickPrompt !== false)
-  const lang = useSettings((s) => s.s?.language ?? 'auto')
-  const layout = useSettings((s) => s.s?.layout ?? 'desktop')
 
   useEffect(() => {
     const down = (e: PointerEvent): void => {
@@ -55,35 +50,26 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
         )
       })}
       <div className="more-foot">
-        <span>{t('Alle Symbole im Dock zeigen')}</span>
-        <Toggle on={dockAll} onChange={(v) => useSettings.getState().set({ dockAll: v })} label={t('Alle Symbole im Dock zeigen')} />
-      </div>
-      <div className="more-foot">
-        <span title={t('Öffnet über jeder App ein Eingabefeld – der Text geht an Claude')}>
-          {t('Schnell-Prompt')} <kbd className="mono">{t('Strg+Alt+Leertaste')}</kbd>
-        </span>
-        <Toggle on={quick} onChange={(v) => useSettings.getState().set({ quickPrompt: v })} label={t('Schnell-Prompt von überall')} />
-      </div>
-      <div className="more-foot">
-        {/* bewusst zweisprachig – man muss den Umschalter auch finden, wenn man die andere Sprache nicht liest */}
-        <span>Sprache · Language</span>
-        <select
-          className="field small"
-          value={lang}
-          onChange={(e) => useSettings.getState().set({ language: e.target.value as LangSetting })}
-          data-testid="more-language"
+        <button
+          className="link-btn"
+          onClick={() => {
+            onClose()
+            openSettings()
+          }}
+          data-testid="more-settings"
         >
-          <option value="auto">{t('Automatisch')}</option>
-          <option value="de">Deutsch</option>
-          <option value="en">English</option>
-        </select>
-      </div>
-      <div className="more-foot">
-        <span title={t('Wie das Dashboard aufgebaut ist: freie Fenster mit Dock oder Seitenleiste mit Seiten')}>{t('Aufbau')}</span>
-        <select className="field small" value={layout} onChange={(e) => useSettings.getState().set({ layout: e.target.value as LayoutTheme })} data-testid="more-layout">
-          <option value="desktop">{t('Desktop · freie Fenster')}</option>
-          <option value="studio">{t('Studio · Seitenleiste')}</option>
-        </select>
+          <Icon name="gear" size={14} /> {t('Einstellungen')}
+        </button>
+        <button
+          className="link-btn"
+          onClick={() => {
+            onClose()
+            openSettings('toolbox')
+          }}
+          data-testid="more-toolbox"
+        >
+          {t('Werkzeugkasten')}
+        </button>
       </div>
       <div className="more-foot">
         <button

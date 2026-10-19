@@ -14,6 +14,7 @@ import { openSetup } from './ToolSetup'
 import { shortUrl, usePreview } from '../store/previewStore'
 import { TermPane } from '../terminal/TermPane'
 import { TermSettings } from '../terminal/TermSettings'
+import { toggleZen } from '../desktop/calm'
 import { TermStatus } from '../terminal/TermStatus'
 import { QueueChip, TermQueue } from './TermQueue'
 import { AttachButton, TermAttach } from './TermAttach'
@@ -63,6 +64,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
   const tending = useWorkflow((s) => !!s.sessions[session.id]?.tending && s.sessions[session.id]?.status === 'working')
   const exitCode = useSessions((s) => s.exited[session.id])
   const isTop = useUi((s) => s.open[s.open.length - 1] === id)
+  const zenMe = useUi((s) => s.zen === id)
   const urls = usePreview((s) => s.urls[session.id])
   const shell = useShells((s) => attachedShell(s.shells, session.id))
   const shellExit = useShells((s) => (shell ? s.exited[shell.id] : undefined))
@@ -125,6 +127,9 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
             <AttachButton sessionId={session.id} open={panel === 'attach'} onToggle={() => togglePanel('attach')} />
             <button className={`term-tool${shell ? ' on' : ''}`} title={shell ? t('Shell schließen') : t('Shell daneben öffnen (PowerShell im Projektordner)')} onClick={() => void toggleShell()} data-testid="term-split">
               <Icon name="terminal" size={13} />
+            </button>
+            <button className={`term-tool${zenMe ? ' on' : ''}`} title={zenMe ? t('Alles zeigen (Strg+.)') : t('Nur diese Session – Zen-Modus (Strg+.)')} onClick={() => toggleZen(id)} data-testid="term-zen">
+              <Icon name="eye" size={13} />
             </button>
             <button className={`term-tool${settingsOpen ? ' on' : ''}`} title={t('Terminal-Einstellungen')} onClick={() => setSettingsOpen((v) => !v)} data-testid="term-settings-btn">
               <Icon name="gear" size={13} />

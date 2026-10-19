@@ -132,7 +132,6 @@ const dict: Record<string, string> = {
 
   // StatsPanel
   Heute: 'Today',
-  'Tokens · {cost} ≈ · {cache} aus Cache': 'tokens · {cost} ≈ · {cache} from cache',
   'Deine Woche ansehen': 'See your week',
   'Letzte 7 Tage': 'Last 7 days',
   'Starte eine Session – Tokens, Context und Kosten erscheinen hier live.': 'Start a session – tokens, context and costs show up here live.',

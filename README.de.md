@@ -18,7 +18,7 @@ Regen an der Scheibe, Lofi im Ohr – und alle Claude-Code-Sessions auf einem Wi
 <br/><br/>
 
 <!-- hero.gif: sobald .github/assets/hero.gif existiert, src unten auf .github/assets/hero.gif ändern -->
-<img src=".github/assets/hero.jpg" alt="VibeDesk mit zwei Claude-Code-Sessions, Stats, Todos und Agent-Baum vor einer verregneten Scheibe" />
+<img src=".github/assets/hero.jpg" alt="VibeDesk: eine Claude-Code-Session vor einer verregneten Scheibe, darunter ein kleines Dock" />
 
 </div>
 
@@ -32,17 +32,24 @@ In den Terminals läuft das echte Claude Code. VibeDesk legt den Blick darum: wa
 
 ## Warum VibeDesk
 
-- **Alle Sessions auf einen Blick.** Mehrere Claude-Code-Sessions nebeneinander – du siehst sofort, welche arbeitet, welche auf dich wartet und welche fertig ist.
-- **Claude antworten, ohne das Terminal zu suchen.** Freigaben kommen als Karte (Erlauben · Immer · Ablehnen), am PC und auf dem Handy.
-- **Sessions parallel arbeiten lassen, dann sicher zusammenführen.** Merge Studio gibt jeder Session einen eigenen Git-Worktree und Branch, erkennt Konflikte, bevor sie passieren, und übernimmt ganze Branches, einzelne Dateien oder einzelne Abschnitte – immer mit Checkpoint vorher.
-- **Claude kennt dein Projekt.** Das „Gehirn“ hält Bereiche, Entscheidungen, Stolperfallen und Konventionen als verlinkte Markdown-Notizen fest, damit neue Sessions nicht jedes Mal von vorn erkunden.
-- **Ein Ort, an dem man gern sitzt.** Regen, Lofi-Radio und Fokus-Timer – lange Sessions fühlen sich weniger nach Konsole an.
+- **Alle Claude-Code-Sessions auf einen Blick:** welche arbeitet, welche auf dich wartet, welche fertig ist – und Freigaben beantwortest du als Karte, am PC oder auf dem Handy.
+- **Sessions parallel arbeiten lassen, dann sicher zusammenführen.** Merge Studio gibt jeder Session einen eigenen Worktree, erkennt Konflikte vorher und setzt immer erst einen Checkpoint.
+- **Ein ruhiger Ort.** Regen an der Scheibe, Lofi oder Spotify, ein Fokus-Timer – und ein Desktop, der still bleibt, bis du mehr brauchst.
 
 ## Features
 
+**Ruhig von Anfang an**
+- Das Dock wächst mit deiner Arbeit: Werkzeuge erscheinen erst, wenn sie etwas zu tun haben (Git, sobald Claude Dateien geändert hat, Merge Studio bei zwei Sessions, …)
+- **Werkzeugkasten:** „Einfach“ starten und Module wie Addons, Handy-Begleiter, Discord oder Streamer-Modus dazuschalten, wenn du sie willst
+- **Zen-Modus** (<kbd>Strg</kbd> + <kbd>.</kbd>): nur Claude und der Regen, andere Sessions als kleine Pillen oben
+- Eine Karte auf einmal, „fertig“-Meldungen werden gebündelt, und das Dock blendet sich beim Tippen ab
+
+<details>
+<summary><b>Alle Features</b></summary>
+
 **Zwei Aufbau-Varianten**
 - **Desktop:** frei schwebende Glasfenster und ein Dock, das mit dem wächst, was du nutzt
-- **Studio:** Seitenleiste links, jedes Fenster als ganze Seite und eine Statusleiste mit Projekt, Branch, offenen Änderungen und dem, was Claude gerade tut. Umschalten im Mehr-Menü unter „Aufbau“ oder per Befehlspalette
+- **Studio:** Seitenleiste links, jedes Fenster als ganze Seite und eine Statusleiste mit Projekt, Branch, offenen Änderungen und dem, was Claude gerade tut. Umschalten in den Einstellungen oder per Befehlspalette
 
 **Atmosphäre**
 - Regen auf der Scheibe (WebGL) – Stadt bei Nacht, Wald, Tokio-Gasse oder dein eigenes Bild
@@ -108,6 +115,8 @@ In den Terminals läuft das echte Claude Code. VibeDesk legt den Blick darum: wa
 - Discord Rich Presence mit eigenen Texten, Bildern und Status-Icons, Live-Status, was Claude gerade tut („schreibt Code“, „führt Befehle aus“, aktuelle Aufgabe mit Fortschritt), und wechselnden Zeilen; Discord-Webhook-Nachrichten, wenn eine Session wartet, und ein Tagesrückblick
 - OBS-Overlay (Status, Plan, Live-Feed, Fokus-Timer) als lokale Browserquelle; Twitch-Chat-Vorschläge per `!vibe …`, über die du entscheidest
 
+</details>
+
 <table>
   <tr>
     <td><img src=".github/assets/focus.jpg" alt="Fokus-Timer vor der Tokio-Szene" /></td>
@@ -152,6 +161,7 @@ Die Kosten in VibeDesk sind eine **Schätzung** nach Anthropics API-Preisen. Mit
 | <kbd>Win</kbd> + <kbd>R</kbd> → `vibe` | VibeDesk starten |
 | <kbd>Strg</kbd> + <kbd>Alt</kbd> + <kbd>Leertaste</kbd> | Schnell-Prompt aus jeder App |
 | <kbd>Strg</kbd> + <kbd>K</kbd> · <kbd>Strg</kbd> + <kbd>⇧</kbd> + <kbd>P</kbd> | Befehls-Palette (im Terminal nur die zweite) |
+| <kbd>Strg</kbd> + <kbd>.</kbd> | Zen-Modus: nur die aktuelle Session |
 | <kbd>Esc</kbd> halten · <kbd>F11</kbd> | Vollbild verlassen |
 | <kbd>Strg</kbd> + <kbd>⇧</kbd> + <kbd>H</kbd> | Vorhang (Bildschirm verdecken) |
 | <kbd>Strg</kbd> + <kbd>S</kbd> | im Editor speichern |

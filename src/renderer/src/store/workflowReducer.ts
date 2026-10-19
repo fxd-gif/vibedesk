@@ -234,3 +234,9 @@ export function workflowReducer(state: WorkflowState, a: WorkflowAction): Workfl
     }
   }
 }
+
+/** Werkzeuge, mit denen Claude Dateien ändert */
+const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
+
+/** Hat Claude in irgendeiner Session schon Dateien geändert? */
+export const hasEdits = (s: Pick<WorkflowState, 'sessions'>): boolean => Object.values(s.sessions).some((w) => w.feed.some((f) => EDIT_TOOLS.has(f.tool) && f.result !== 'fail'))

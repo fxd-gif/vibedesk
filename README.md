@@ -18,7 +18,7 @@ Rain on the window, lofi in your ears, and every Claude Code session on one Wind
 <br/><br/>
 
 <!-- hero.gif: once .github/assets/hero.gif exists, change the src below to .github/assets/hero.gif -->
-<img src=".github/assets/hero.jpg" alt="VibeDesk with two Claude Code sessions, stats, todos and the agent tree in front of a rainy window" />
+<img src=".github/assets/hero.jpg" alt="VibeDesk: one Claude Code session in front of a rainy window, with a small dock" />
 
 </div>
 
@@ -32,17 +32,24 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 
 ## Why VibeDesk
 
-- **See all sessions at once.** Run several Claude Code sessions side by side and see at a glance which one is working, which one waits for you and which one is done.
-- **Answer Claude without hunting for the terminal.** Permission requests show up as cards (Allow · Always · Deny), on your desktop and on your phone.
-- **Let sessions work in parallel, then merge safely.** Merge Studio gives each session its own Git worktree and branch, predicts conflicts before they happen and merges whole branches, single files or single hunks – always with a checkpoint first.
-- **Claude remembers your project.** The "brain" keeps areas, decisions, pitfalls and conventions as linked Markdown notes, so new sessions do not have to explore the project from scratch.
-- **A place you like to sit in.** Rain shader, lofi radio and a focus timer, so long sessions feel less like staring at a console.
+- **See every Claude Code session at a glance:** which one is working, which one waits for you, which one is done – and answer permission requests as cards, on your PC or your phone.
+- **Let sessions work in parallel, then merge safely.** Merge Studio gives each session its own worktree, predicts conflicts and always sets a checkpoint first.
+- **A calm place to sit.** Rain on the window, lofi or Spotify, a focus timer – and a desktop that stays quiet until you need more.
 
 ## Features
 
+**Calm by default**
+- The dock grows with your work: tools appear only when they have something to do (Git after Claude changed files, Merge Studio with two sessions, …)
+- **Toolbox:** start "Simple" and switch modules like addons, phone companion, Discord or streamer mode on when you want them
+- **Zen mode** (<kbd>Ctrl</kbd> + <kbd>.</kbd>): only Claude and the rain, other sessions as small pills at the top
+- One card at a time, "done" messages are bundled, and the dock dims while you type
+
+<details>
+<summary><b>All features</b></summary>
+
 **Two layouts**
 - **Desktop:** free floating glass windows and a dock that grows with what you use
-- **Studio:** a sidebar on the left, every window as a full page, and a status bar with project, branch, uncommitted changes and what Claude is doing. Switch in the More menu under "Layout" or via the command palette
+- **Studio:** a sidebar on the left, every window as a full page, and a status bar with project, branch, uncommitted changes and what Claude is doing. Switch in Settings or via the command palette
 
 **Atmosphere**
 - Rain running down the window (WebGL): city at night, forest, a Tokyo alley, or your own picture
@@ -108,6 +115,8 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 - Discord Rich Presence with your own texts, images and status icons, live status of what Claude is doing ("writing code", "running commands", current task with progress) and rotating lines; Discord webhook messages when a session waits for you and a daily summary
 - OBS overlay (status, plan, live feed, focus timer) as a local browser source; Twitch chat suggestions via `!vibe …` that you approve
 
+</details>
+
 <table>
   <tr>
     <td><img src=".github/assets/focus.jpg" alt="Focus timer in front of the Tokyo scene" /></td>
@@ -152,6 +161,7 @@ Costs shown in VibeDesk are **estimates** based on Anthropic's API prices. With 
 | <kbd>Win</kbd> + <kbd>R</kbd> → `vibe` | Start VibeDesk |
 | <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> | Quick prompt from any app |
 | <kbd>Ctrl</kbd> + <kbd>K</kbd> · <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>P</kbd> | Command palette (inside the terminal only the second one) |
+| <kbd>Ctrl</kbd> + <kbd>.</kbd> | Zen mode: only the current session |
 | Hold <kbd>Esc</kbd> · <kbd>F11</kbd> | Leave full screen |
 | <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd> | Curtain (hide the screen) |
 | <kbd>Ctrl</kbd> + <kbd>S</kbd> | Save in the editor |

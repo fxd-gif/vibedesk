@@ -19,8 +19,6 @@ const SHELLS = (): { id: ShellKind; label: string }[] => [
 ]
 
 export function TermSettings({ onClose }: { onClose(): void }): React.JSX.Element | null {
-  const s = useSettings((x) => x.s)
-  const set = useSettings((x) => x.set)
   const box = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -38,12 +36,23 @@ export function TermSettings({ onClose }: { onClose(): void }): React.JSX.Elemen
     }
   }, [onClose])
 
+  return (
+    <div className="term-settings" ref={box} onMouseDown={(e) => e.stopPropagation()} data-testid="term-settings">
+      <TermSettingsFields />
+    </div>
+  )
+}
+
+/** Die Felder selbst – auch im Einstellungen-Fenster */
+export function TermSettingsFields(): React.JSX.Element | null {
+  const s = useSettings((x) => x.s)
+  const set = useSettings((x) => x.set)
   if (!s) return null
   const term = s.terminal
   const patch = (p: Partial<TerminalSettings>): void => set({ terminal: { ...term, ...p } })
 
   return (
-    <div className="term-settings" ref={box} onMouseDown={(e) => e.stopPropagation()} data-testid="term-settings">
+    <>
       <label className="ts-row">
         <span>{t('Schriftgröße')}</span>
         <span className="row">
@@ -114,6 +123,6 @@ export function TermSettings({ onClose }: { onClose(): void }): React.JSX.Elemen
         </select>
       </label>
       <div className="dim tiny">{t('Strg+F sucht, Strg+Plus/Minus zoomt, Strg+0 setzt zurück. Rechtsklick kopiert oder fügt ein.')}</div>
-    </div>
+    </>
   )
 }

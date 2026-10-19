@@ -178,3 +178,10 @@ export const STUDIO_STATUS = 44
 export function pageRect(screen: Screen): WindowRect {
   return { x: STUDIO_SIDE + 4, y: 10, w: Math.max(320, screen.w - STUDIO_SIDE - 14), h: Math.max(200, screen.h - STUDIO_STATUS - 18) }
 }
+
+/** Zen-Modus: Platz oben für die Session-Leiste, sonst fast der ganze Bildschirm (das Dock ist versteckt) */
+export const ZEN_TOP = 52
+
+export function zenRect(screen: Screen): WindowRect {
+  return { x: 24, y: ZEN_TOP, w: Math.max(320, screen.w - 48), h: Math.max(200, screen.h - ZEN_TOP - 24) }
+}

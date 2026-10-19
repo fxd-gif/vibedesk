@@ -21,6 +21,9 @@ import { findShareCode } from '../../../../shared/shareCode'
 import { openPaste, sharePrompts, startImport } from '../../store/shareStore'
 import { redactText, toggleCurtain } from '../../store/streamerStore'
 import { t } from '../../../../shared/i18n'
+import { moduleOn } from '../../desktop/modules'
+import { tidyNow, toggleZen } from '../../desktop/calm'
+import { openSettings } from '../SettingsWindow'
 
 interface Cmd {
   id: string
@@ -54,6 +57,9 @@ function buildCommands(projects: Project[]): Cmd[] {
     const d = panelDef(id)!
     return { id: 'win:' + id, label: d.title, group: t('Fenster'), icon: d.icon, hint, run: () => openPanel(id) }
   }
+  const off = s?.modulesOff ?? []
+  /** Werkzeugkasten: ausgeblendete Module samt ihren Aktionen weglassen */
+  const hidden = (c: Cmd): boolean => (c.id.startsWith('win:') && !moduleOn(c.id.slice(4), off)) || (c.id.startsWith('act:addon') && !moduleOn('addons', off))
   return [
     win('projects'),
     { id: 'win:editor', label: t('Editor'), group: t('Fenster'), icon: 'code', run: () => void openEditor() },
@@ -92,8 +98,12 @@ function buildCommands(projects: Project[]): Cmd[] {
     { id: 'act:wrapped', label: t('Vibe Wrapped – deine Woche'), group: t('Aktionen'), icon: 'stats', hint: t('Rückblick als teilbares Bild'), run: () => void showWrapped() },
     { id: 'act:news', label: t('Was ist neu?'), group: t('Aktionen'), icon: 'spark', run: showWhatsNew },
     { id: 'act:update', label: t('Nach Updates suchen'), group: t('Aktionen'), icon: 'restart', run: () => void api.update.check() },
+    { id: 'act:zen', label: t('Zen-Modus'), group: t('Aktionen'), icon: 'eyeoff', hint: t('Strg+. · nur Claude und der Regen'), run: () => toggleZen() },
+    { id: 'act:tidy', label: t('Aufräumen'), group: t('Aktionen'), icon: 'grid', hint: t('Übrige Fenster ins Dock, Rest anordnen'), run: tidyNow },
+    { id: 'win:settings', label: t('Einstellungen'), group: t('Fenster'), icon: 'gear', hint: t('Sprache, Aufbau, Mitteilungen, Terminal'), run: () => openSettings() },
+    { id: 'act:toolbox', label: t('Werkzeugkasten'), group: t('Fenster'), icon: 'puzzle', hint: t('Module ein- und ausblenden'), run: () => openSettings('toolbox') },
     { id: 'act:quit', label: t('VibeDesk beenden'), group: t('Aktionen'), icon: 'exit', run: () => api.app.quit() }
-  ]
+  ].filter((c) => !hidden(c))
 }
 
 export function CommandPalette(): React.JSX.Element | null {

@@ -5,6 +5,10 @@ import { api } from '../api'
 import { inform } from './notifyStore'
 import { useSettings } from './settingsStore'
 import { useUi } from './uiStore'
+import { create } from 'zustand'
+
+/** Claude hat das Gehirn in dieser Sitzung schon benutzt – erst dann bekommt es ein Symbol im Dock */
+export const useBrainUsed = create<boolean>(() => false)
 
 const GATHER_MS = 1500
 
@@ -26,6 +30,7 @@ export function wireBrainActivity(): void {
     inform(title, list.join(' · '), [{ label: t('Ansehen'), run: () => useUi.getState().openWin('brain') }], 'brain-write')
   }
   api.on.brainPulse((p) => {
+    if (!useBrainUsed.getState()) useBrainUsed.setState(true, true)
     if (p.kind !== 'write' || !p.title) return
     if (!titles.includes(p.title)) titles.push(p.title)
     if (p.projectId !== ME_ID) onlyMe = false

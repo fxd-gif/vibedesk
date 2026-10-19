@@ -5,6 +5,8 @@ import type { DockItem } from './Dock'
 import { useUi } from '../store/uiStore'
 import { openPanel } from '../windows/palette/CommandPalette'
 import { t } from '../../../shared/i18n'
+import { useSettings } from '../store/settingsStore'
+import { moduleOn } from './modules'
 import './studio.css'
 
 function Item({ it, beta }: { it: DockItem; beta?: boolean }): React.JSX.Element {
@@ -26,12 +28,13 @@ function Item({ it, beta }: { it: DockItem; beta?: boolean }): React.JSX.Element
 
 /**
  * Gruppen wie im Dock: [Befehle, Projekte] [Atmosphäre, Fokus] [Sessions …] [Werkzeuge …] [Mitteilungen, Mehr].
- * Merge Studio steht im Studio-Aufbau immer in der Leiste.
+ * Merge Studio steht im Studio-Aufbau immer in der Leiste – außer es ist im Werkzeugkasten ausgeblendet.
  */
 export function Sidebar({ groups }: { groups: DockItem[][] }): React.JSX.Element {
   const [start = [], mood = [], sessions = [], tools = [], end = []] = groups
   const [open, setOpen] = useState(true)
   const mergeOn = useUi((s) => s.open[s.open.length - 1] === 'merge' && !s.minimized.includes('merge'))
+  const mergeAllowed = useSettings((s) => moduleOn('merge', s.s?.modulesOff))
   const merge: DockItem = { id: 'merge', icon: 'merge', label: t('Merge Studio'), hint: t('Parallele Sessions vergleichen und sicher zusammenführen'), active: mergeOn, onClick: () => openPanel('merge') }
 
   return (
@@ -53,7 +56,7 @@ export function Sidebar({ groups }: { groups: DockItem[][] }): React.JSX.Element
         </button>
         {open && (sessions.length ? sessions.map((it) => <Item key={it.id} it={{ ...it, className: 'sb-session' }} />) : <p className="sb-empty">{t('Keine laufende Session')}</p>)}
         <div className="sb-sep" />
-        <Item it={merge} beta />
+        {mergeAllowed && <Item it={merge} beta />}
         {tools
           .filter((it) => it.id !== 'merge')
           .map((it) => (

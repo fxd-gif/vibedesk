@@ -13,6 +13,8 @@ export function StatsPanel(): React.JSX.Element {
   const days = useStats((s) => s.days).slice(-7) // Store hält 30 Tage für die Streak
   const wf = useWorkflow((s) => s.sessions)
   const [now, setNow] = useState(Date.now())
+  // Rohzahlen (Cache, Tool-Aufrufe …) nur auf Wunsch – vorn steht, was man wirklich wissen will
+  const [details, setDetails] = useState(false)
   useEffect(() => {
     const iv = setInterval(() => setNow(Date.now()), 30000)
     return () => clearInterval(iv)
@@ -27,7 +29,7 @@ export function StatsPanel(): React.JSX.Element {
         <div>
           <div className="dim small">{t('Heute')}</div>
           <div className="big">{fmtTokens(today?.tokens ?? 0)}</div>
-          <div className="dim small">{t('Tokens · {cost} ≈ · {cache} aus Cache', { cost: fmtUsd(today?.costUsd ?? 0), cache: fmtTokens(today?.cacheRead ?? 0) })}</div>
+          <div className="dim small">{t('Tokens · ≈ {cost}', { cost: fmtUsd(today?.costUsd ?? 0) })}</div>
           <button className="btn small ghost" style={{ marginTop: 6 }} onClick={() => void showWrapped()} data-testid="stats-wrapped">
             ✨ {t('Deine Woche ansehen')}
           </button>
@@ -70,7 +72,11 @@ export function StatsPanel(): React.JSX.Element {
                   {t('Context wird knapp – tippe')} <code>/compact</code> {t('oder starte frisch.')}
                 </div>}
             </div>
-            <div className="stat-grid">
+            <div className="row between small stat-sum">
+              <span className="dim">{t('≈ Kosten')}</span>
+              <b>{st ? fmtUsd(st.costUsd) : '–'}</b>
+            </div>
+            {details && <div className="stat-grid">
               <div>
                 <span>Input</span>
                 <b>{fmtTokens(tot?.input ?? 0)}</b>
@@ -103,10 +109,15 @@ export function StatsPanel(): React.JSX.Element {
                 <span>{t('Tool-Aufrufe')}</span>
                 <b>{wf[s.id]?.feed.length ?? 0}</b>
               </div>
-            </div>
+            </div>}
           </section>
         )
       })}
+      {sessions.length > 0 && (
+        <button className="btn small ghost" onClick={() => setDetails((v) => !v)} data-testid="stats-details">
+          {details ? t('Weniger anzeigen') : t('Details: Cache, Antworten, Tool-Aufrufe')}
+        </button>
+      )}
       <div className="dim tiny">{t('Kosten = Schätzung zu API-Preisen (im Abo nicht berechnet). Subagents nicht enthalten.')}</div>
     </div>
   )

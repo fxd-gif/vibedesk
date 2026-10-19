@@ -28,6 +28,8 @@ export interface Notice {
   actions?: NoticeAction[]
   /** Klick auf die Mitteilung selbst */
   onOpen?(): void
+  /** gebündelte Karte: so viele Mitteilungen stecken darin */
+  count?: number
 }
 
 interface NotifyState {
@@ -50,8 +52,26 @@ let seq = 0
 
 type NoticeInput = Omit<Notice, 'id' | 'time'>
 
-function showToast(n: Notice): void {
-  useNotify.setState((s) => ({ toasts: [n, ...s.toasts.filter((t) => !(n.key && t.key === n.key))].slice(0, MAX_TOASTS) }))
+/** Ruhe-Budget: mehrere „fertig“ werden zu einer Karte – sonst stapeln sich bei parallelen Sessions die Karten */
+export function bundleDone(list: Notice[], n: Notice): { list: Notice[]; n: Notice } {
+  const prev = n.kind === 'done' ? list.find((x) => x.kind === 'done' && x.key !== n.key) : undefined
+  if (!prev) return { list, n }
+  const count = (prev.count ?? 1) + 1
+  return {
+    list: list.filter((x) => x !== prev),
+    n: { ...n, key: 'done:bundle', count, title: t('{n} Sessions sind fertig', { n: count }), body: t('Zuletzt: {title}', { title: n.title }), onOpen: () => setPanel(true) }
+  }
+}
+
+function showToast(input: Notice): void {
+  useNotify.setState((s) => {
+    const { list, n } = bundleDone(
+      s.toasts.filter((x) => !(input.key && x.key === input.key)),
+      input
+    )
+    return { toasts: [n, ...list].slice(0, MAX_TOASTS) }
+  })
+  const n = useNotify.getState().toasts[0]
   const ms = TOAST_MS[n.kind]
   if (ms) setTimeout(() => dismiss(n.id), ms)
 }

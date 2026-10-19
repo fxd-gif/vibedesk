@@ -46,14 +46,29 @@ function NoticeCard({ n }: { n: Notice }): React.JSX.Element {
   )
 }
 
+const URGENT = new Set<Notice['kind']>(['waiting', 'error', 'watch'])
+
+/** Ruhe-Budget: eine Karte auf einmal, der Rest wartet hinter „+n“ */
 export function ToastStack(): React.JSX.Element {
   const toasts = useNotify((s) => s.toasts)
   const panel = useNotify((s) => s.panel)
+  const [expanded, setExpanded] = useState(false)
+  useEffect(() => {
+    if (toasts.length < 2) setExpanded(false)
+  }, [toasts.length])
+  // Wichtiges zuerst: wartet/Fehler/Wächter vor „fertig“ und Tipps
+  const ordered = [...toasts].sort((a, b) => Number(!URGENT.has(a.kind)) - Number(!URGENT.has(b.kind)))
+  const shown = expanded ? ordered : ordered.slice(0, 1)
   return (
     <div className="toast-stack" data-testid="toast-stack">
       <UpdateToast />
       <PermissionCards />
-      {!panel && toasts.map((n) => <NoticeCard key={n.id} n={n} />)}
+      {!panel && shown.map((n) => <NoticeCard key={n.id} n={n} />)}
+      {!panel && !expanded && toasts.length > 1 && (
+        <button className="ntoast-more" onClick={() => setExpanded(true)} data-testid="ntoast-more">
+          {t('+{n} weitere', { n: toasts.length - 1 })}
+        </button>
+      )}
     </div>
   )
 }
@@ -65,7 +80,7 @@ const KINDS = (): { id: NoticeKind; label: string }[] => [
   { id: 'watch', label: t('Wächter: hängt, Fehlerschleife, Kontext voll') }
 ]
 
-function NotifySettingsView(): React.JSX.Element | null {
+export function NotifySettingsView(): React.JSX.Element | null {
   const s = useSettings((x) => x.s)
   const set = useSettings((x) => x.set)
   if (!s) return null

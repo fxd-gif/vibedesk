@@ -1,6 +1,6 @@
 import { useRef, useState, type ReactNode, type PointerEvent as RPointerEvent } from 'react'
 import { DOCK_H, useUi } from '../store/uiStore'
-import { magnetize, pageRect, snapRect, type Guide } from './layout'
+import { magnetize, pageRect, snapRect, zenRect, type Guide } from './layout'
 import { useSettings } from '../store/settingsStore'
 import { ErrorBoundary } from './ErrorBoundary'
 import type { WindowRect } from '../../../shared/types'
@@ -24,6 +24,9 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
   const top = useUi((s) => s.open[s.open.length - 1] === id)
   const minimized = useUi((s) => s.minimized.includes(id))
   const maximized = useUi((s) => s.maximized === id)
+  // Zen-Modus: ein Fenster groß, alle anderen bleiben (mit ihrem Zustand) unsichtbar im Hintergrund
+  const zenMe = useUi((s) => s.zen === id)
+  const zenHide = useUi((s) => !!s.zen && s.zen !== id)
   // Studio-Aufbau: Fenster sind Seiten – nur die oberste ist sichtbar, die anderen bleiben (mit ihrem Zustand) im Hintergrund
   const page = useSettings((s) => s.s?.layout === 'studio')
   const { setRect, focus, toggleMax, minimize, closeWin } = useUi.getState()
@@ -33,10 +36,10 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
 
   if (!rect) return null
   const screen = { w: window.innerWidth, h: window.innerHeight }
-  const shown: WindowRect = page ? pageRect(screen) : maximized ? { x: 8, y: 8, w: screen.w - 16, h: screen.h - DOCK_H - 8 } : rect
+  const shown: WindowRect = zenMe ? zenRect(screen) : page ? pageRect(screen) : maximized ? { x: 8, y: 8, w: screen.w - 16, h: screen.h - DOCK_H - 8 } : rect
 
   const onDown = (e: RPointerEvent, resize: boolean): void => {
-    if (e.button !== 0 || maximized || page) return
+    if (e.button !== 0 || maximized || page || zenMe) return
     if ((e.target as HTMLElement).closest('button')) return
     e.currentTarget.setPointerCapture(e.pointerId)
     drag.current = { dx: e.clientX - rect.x, dy: e.clientY - rect.y, resize, start: rect, px: e.clientX, py: e.clientY }
@@ -86,7 +89,7 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
         <div className="snap-preview" style={{ left: snapPreview.x + 8, top: snapPreview.y + 8, width: snapPreview.w - 16, height: snapPreview.h - 16 }} />
       )}
       <section
-        className={`gwin${solid ? ' solid' : ''}${top ? ' top' : ''}${minimized ? ' min' : ''}${maximized ? ' max' : ''}${page ? ' page' + (top ? '' : ' behind') : ''}${className ? ' ' + className : ''}`}
+        className={`gwin${solid ? ' solid' : ''}${top ? ' top' : ''}${minimized ? ' min' : ''}${maximized ? ' max' : ''}${page ? ' page' + (top ? '' : ' behind') : ''}${zenMe ? ' zen-me' : ''}${zenHide ? ' zen-hide' : ''}${className ? ' ' + className : ''}`}
         style={{ left: shown.x, top: shown.y, width: shown.w, height: shown.h, zIndex: 10 + z }}
         onPointerDownCapture={() => !top && focus(id)}
         data-testid={`win-${id}`}
@@ -96,14 +99,14 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
           onPointerDown={(e) => onDown(e, false)}
           onPointerMove={onMove}
           onPointerUp={onUp}
-          onDoubleClick={() => !page && toggleMax(id)}
+          onDoubleClick={() => !page && !zenMe && toggleMax(id)}
         >
           <div className="gwin-title">{title}</div>
           <div className="gwin-btns">
             <button className="gbtn" title={t('Minimieren')} onClick={() => minimize(id)}>
               <span className="gbtn-min" />
             </button>
-            {!page && (
+            {!page && !zenMe && (
               <button className="gbtn" title={maximized ? t('Wiederherstellen') : t('Maximieren')} onClick={() => toggleMax(id)}>
                 <span className="gbtn-max" />
               </button>
@@ -116,7 +119,7 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
         <div className="gwin-body">
           <ErrorBoundary where={id}>{children}</ErrorBoundary>
         </div>
-        {!maximized && !page && (
+        {!maximized && !page && !zenMe && (
           <div className="gwin-resize" onPointerDown={(e) => onDown(e, true)} onPointerMove={onMove} onPointerUp={onUp} />
         )}
       </section>

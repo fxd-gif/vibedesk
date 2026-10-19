@@ -55,7 +55,7 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   dockAll: false,
   brainOn: true,
   approvalsOn: true,
-  companion: { enabled: false, port: COMPANION_PORT },
+  companion: { enabled: false, port: COMPANION_PORT, terminal: false },
   quickPrompt: true,
   lastWrapped: 0,
   terminal: { fontSize: 13, lineHeight: 1.2, cursorStyle: 'block', cursorBlink: true, theme: 'scene', shell: 'powershell', statusBar: true },
@@ -65,7 +65,12 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   energySaver: 'auto',
   spotifyClientId: '',
   layout: 'desktop',
-  mergeTestCmd: {}
+  mergeTestCmd: {},
+  modulesOff: [],
+  hintsOn: true,
+  hintsSeen: [],
+  autoTidy: false,
+  dockFade: true
 })
 
 export class SettingsStore {

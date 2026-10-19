@@ -49,12 +49,12 @@ import type { WebhookPayload, WebhookSettings } from './webhook'
 import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
-import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget } from './companion'
+import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget, TermChunk, TermQuery } from './companion'
 import type { PermissionAsk, PermissionDecision } from './permissions'
 import type { LangSetting } from './i18n'
 import type { SpotifyCommand, SpotifyDevice, SpotifyPlayer, SpotifyPlaylist, SpotifyQueue, SpotifyStatus, SpotifyTrack } from './spotify'
 
-export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion' | 'ambience' | 'merge'
+export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion' | 'ambience' | 'merge' | 'settings'
 
 export type DiscordStatus =
   | { state: 'off' }
@@ -233,6 +233,16 @@ export interface Settings {
   layout: LayoutTheme
   /** Merge Studio: eigener Testbefehl pro Projekt (sonst aus package.json & Co. erkannt) */
   mergeTestCmd: Record<string, string>
+  /** Werkzeugkasten: ausgeblendete Module – erscheinen weder im Dock noch im Mehr-Menü oder in der Palette */
+  modulesOff: PanelId[]
+  /** leise Tipps (z. B. „Merge Studio“ bei zwei Sessions) statt neuer Symbole */
+  hintsOn: boolean
+  /** schon gezeigte Tipps – jeder kommt nur einmal */
+  hintsSeen: string[]
+  /** Panels, die lange nicht benutzt wurden, von selbst minimieren */
+  autoTidy: boolean
+  /** Dock blendet sich ab, solange man im Terminal tippt */
+  dockFade: boolean
 }
 
 export type LayoutTheme = 'desktop' | 'studio'
@@ -440,6 +450,8 @@ export interface VibedeskApi {
     companionPower(cb: (action: 'shutdown' | 'sleep' | 'cancel', at: number | null) => void): Unsubscribe
     /** Neuer Stand von Main (z. B. Internet-Link ist da oder hat sich geändert) */
     companionStatus(cb: (s: CompanionStatus) => void): Unsubscribe
+    /** Handy will Terminal-Zeilen: lesen und mit companion.termDone(reqId, chunk) antworten */
+    companionTerm(cb: (reqId: string, q: TermQuery) => void): Unsubscribe
     /** Schnell-Prompt (Strg+Alt+Leertaste): Text und gewählte Session (null = keine offen) */
     quickPrompt(cb: (text: string, sessionId: string | null) => void): Unsubscribe
     /** Wechsel zwischen Akku (true) und Netzteil (false) */
@@ -613,6 +625,7 @@ export interface VibedeskApi {
     cancelShutdown(): Promise<boolean>
     push(s: CompanionSnapshot): void
     promptDone(reqId: string, ok: boolean): void
+    termDone(reqId: string, chunk: TermChunk | null): void
   }
   clipboard: {
     write(text: string): void

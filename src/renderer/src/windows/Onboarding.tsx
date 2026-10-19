@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { SCENES } from '../ambience/sceneParams'
-import { toggleMusic, toggleRainSound } from '../ambience/toggles'
-import { Icon } from '../desktop/icons'
+import type { PanelId } from '../../../shared/types'
+import { SIMPLE_OFF } from '../desktop/modules'
 import { useSettings } from '../store/settingsStore'
 import { centeredRect, useUi } from '../store/uiStore'
 import { PathInput } from './PathInput'
@@ -9,16 +8,9 @@ import { MissingHint, missingTools, ToolSetupPanel, useSetup } from './ToolSetup
 import iconUrl from '../assets/icon.png'
 import { t } from '../../../shared/i18n'
 
-const STEPS = ['welcome', 'claude', 'folder', 'mood', 'discord', 'done'] as const
+// kurz halten: Szene, Musik und Discord kommen später als leise Tipps
+const STEPS = ['welcome', 'claude', 'folder', 'amount', 'done'] as const
 type Step = (typeof STEPS)[number]
-
-function Toggle({ on, onClick }: { on: boolean; onClick(): void }): React.JSX.Element {
-  return (
-    <button className={`toggle${on ? ' on' : ''}`} role="switch" aria-checked={on} onClick={onClick}>
-      <i />
-    </button>
-  )
-}
 
 export function Onboarding(): React.JSX.Element | null {
   const s = useSettings((x) => x.s)
@@ -39,6 +31,10 @@ export function Onboarding(): React.JSX.Element | null {
   const next = (): void => {
     if (step === 'folder' && dir.trim()) set({ projectsDir: dir.trim().replace(/[\\/]+$/, '') })
     setI((x) => Math.min(STEPS.length - 1, x + 1))
+  }
+  const pick = (off: PanelId[]): void => {
+    set({ modulesOff: off })
+    next()
   }
   const finish = (newProject: boolean): void => {
     setLeaving(true)
@@ -87,57 +83,21 @@ export function Onboarding(): React.JSX.Element | null {
           </>
         )}
 
-        {step === 'mood' && (
+        {step === 'amount' && (
           <>
-            <h2>{t('Deine Atmosphäre')}</h2>
-            <div className="row chips" style={{ justifyContent: 'center' }}>
-              {SCENES.map((sc) => (
-                <button key={sc.id} className={`chip${s.scene === sc.id ? ' on' : ''}`} onClick={() => set({ scene: sc.id })}>
-                  {sc.label}
-                </button>
-              ))}
+            <h2>{t('Wie viel willst du sehen?')}</h2>
+            <p>{t('Du kannst das jederzeit im Werkzeugkasten ändern.')}</p>
+            <div className="onb-choices">
+              <button className="onb-choice" onClick={() => pick(SIMPLE_OFF)} data-testid="onb-next">
+                <b>{t('Einfach')}</b>
+                <span>{t('Projekte, Sessions, Atmosphäre und die wichtigsten Werkzeuge. Mehr schaltest du später dazu.')}</span>
+                <small>{t('Empfohlen')}</small>
+              </button>
+              <button className="onb-choice" onClick={() => pick([])} data-testid="onb-all">
+                <b>{t('Alles')}</b>
+                <span>{t('Alle Werkzeuge von Anfang an – auch Addons, Handy-Begleiter, Discord, Lounge und Streamer-Modus.')}</span>
+              </button>
             </div>
-            <div className="onb-list">
-              <div className="row between">
-                <span>
-                  <Icon name="music" size={15} /> Lofi-Radio
-                </span>
-                <Toggle on={s.musicOn} onClick={() => set(toggleMusic(s))} />
-              </div>
-              <div className="row between">
-                <span>
-                  <Icon name="rain" size={15} /> {t('Regengeräusch')}
-                </span>
-                <Toggle on={s.rainSoundOn} onClick={() => set(toggleRainSound(s))} />
-              </div>
-              <div className="row between">
-                <span>
-                  <Icon name="spark" size={15} /> {t('Ton, wenn Claude auf dich wartet')}
-                </span>
-                <Toggle on={s.chimeOn} onClick={() => set({ chimeOn: !s.chimeOn })} />
-              </div>
-            </div>
-            <button className="btn primary big" onClick={next} data-testid="onb-next">
-              {t('Weiter')}
-            </button>
-          </>
-        )}
-
-        {step === 'discord' && (
-          <>
-            <h2>Discord</h2>
-            <p>{t('Zeig deinen Freunden, woran du gerade baust – mit eigenem Text, Bild und Timer. Alles anpassbar im Discord-Fenster.')}</p>
-            <div className="onb-list">
-              <div className="row between">
-                <span>
-                  <Icon name="discord" size={15} /> {t('Rich Presence anzeigen')}
-                </span>
-                <Toggle on={s.discord.enabled} onClick={() => set({ discord: { ...s.discord, enabled: !s.discord.enabled } })} />
-              </div>
-            </div>
-            <button className="btn primary big" onClick={next} data-testid="onb-next">
-              {t('Weiter')}
-            </button>
           </>
         )}
 

@@ -56,9 +56,13 @@ import { wireQueue } from './store/queueStore'
 import { wireQuick } from './store/quickStore'
 import { StartCard } from './desktop/StartCard'
 import { MoreMenu } from './desktop/MoreMenu'
-import { dockPlan, showPreviewInDock } from './desktop/dockPlan'
+import { dockPlan, earned, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
-import { wireBrainActivity } from './store/brainActivity'
+import { useBrainUsed, wireBrainActivity } from './store/brainActivity'
+import { hasEdits } from './store/workflowReducer'
+import { wireCalm } from './desktop/calm'
+import { ZenBar } from './desktop/ZenBar'
+import { wireHints } from './store/hintStore'
 import { wirePermissions } from './store/permissionStore'
 import { wireCompanion } from './store/companionStore'
 import { t } from '../../shared/i18n'
@@ -139,6 +143,12 @@ export default function App(): React.JSX.Element {
   const notifyUnread = useNotify((s) => s.unread)
   const notifyOpen = useNotify((s) => s.panel)
   const addonCount = useAddons((s) => s.list.length)
+  const edits = useWorkflow(hasEdits)
+  const brainUsed = useBrainUsed()
+  const zen = useUi((s) => s.zen)
+  const detected = usePreview((s) => Object.values(s.urls).flat().length)
+  /** einmal verdiente Dock-Symbole bleiben bis zum Neustart */
+  const sticky = useRef(new Set<PanelId>())
   const [more, setMore] = useState(false)
   const closeMore = useCallback(() => setMore(false), [])
 
@@ -168,6 +178,8 @@ export default function App(): React.JSX.Element {
     wireBrainActivity()
     wirePermissions()
     wireCompanion()
+    wireCalm()
+    wireHints()
     useSettings.getState().load().then((s) => {
       const ui = useUi.getState()
       ui.initRects(s.windowRects)
@@ -217,9 +229,14 @@ export default function App(): React.JSX.Element {
     sessions: sessions.length,
     addons: addonCount,
     loungeOn: loungeState !== 'off',
-    isOpen: (id: PanelId) => open.includes(id)
+    isOpen: (id: PanelId) => open.includes(id),
+    edits,
+    brainUsed: brainUsed && settings?.brainOn !== false,
+    off: settings?.modulesOff ?? [],
+    sticky: sticky.current
   }
   const plan = dockPlan(dockCtx)
+  for (const id of plan.dock) if (earned(id, dockCtx)) sticky.current.add(id)
   const toolItem = (id: PanelId): DockItem => {
     if (id === 'editor') return { ...panelItem('editor'), onClick: () => void toggleEditor() }
     if (id === 'lounge')
@@ -236,7 +253,7 @@ export default function App(): React.JSX.Element {
   const Nav = studio ? Sidebar : Dock
 
   return (
-    <div className="app" data-layout={studio ? 'studio' : 'desktop'}>
+    <div className={`app${zen ? ' zen' : ''}`} data-layout={studio ? 'studio' : 'desktop'}>
       {settings && (
         <RainCanvas
           scene={settings.scene}
@@ -265,6 +282,8 @@ export default function App(): React.JSX.Element {
       {Object.keys(previews).map((k) => (
         <PreviewWindow key={k} id={k} />
       ))}
+      {/* im Zen-Modus holt die Maus am unteren Rand das Dock zurück – steht vor dem Dock, damit CSS (~) es findet */}
+      {zen && <div className="zen-reveal" aria-hidden />}
       <Nav
         groups={[
           [
@@ -311,7 +330,7 @@ export default function App(): React.JSX.Element {
           }),
           [
             ...plan.dock.map(toolItem),
-            ...(showPreviewInDock(dockCtx, Object.keys(previews).length)
+            ...(showPreviewInDock(dockCtx, Object.keys(previews).length + detected)
               ? [{ id: 'preview', icon: 'globe', label: t('Browser-Vorschau'), hint: t('Deine App live ansehen – Dev-Server werden erkannt'), active: Object.keys(previews).length > 0, onClick: () => usePreview.getState().openPreview(Object.values(usePreview.getState().urls).flat()[0]) }]
               : [])
           ],
@@ -329,6 +348,7 @@ export default function App(): React.JSX.Element {
         ]}
       />
       {studio && <StatusBar />}
+      <ZenBar />
       <LoungeFloaters />
       <StreamerPill onClick={() => openPanel('streamer')} />
       <CommandPalette />

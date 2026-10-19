@@ -43,7 +43,6 @@ const dict: Record<string, string> = {
   'Konflikte mit dem Ziel: {files}': 'Conflicts with the target: {files}',
 
   // Aufbau-Themes
-  'Wie das Dashboard aufgebaut ist: freie Fenster mit Dock oder Seitenleiste mit Seiten': 'How the dashboard is laid out: free windows with a dock or a sidebar with pages',
   Aufbau: 'Layout',
   'Desktop · freie Fenster': 'Desktop · free windows',
   'Studio · Seitenleiste': 'Studio · sidebar',
