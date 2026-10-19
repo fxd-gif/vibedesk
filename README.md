@@ -24,9 +24,6 @@ Rain on the window, lofi in your ears, and every Claude Code session on one Wind
 
 <br/>
 
-> [!NOTE]
-> The app interface is currently **German only**. An English interface is planned for 1.1.
-
 ## What is VibeDesk?
 
 VibeDesk is a full-screen workspace for Windows built around [Claude Code](https://docs.claude.com/en/docs/claude-code). Instead of switching between terminals, a browser and a music app, you sit in front of a rainy window, and the things you need for building float in front of it as glass windows.
@@ -37,14 +34,19 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 
 - **See all sessions at once.** Run several Claude Code sessions side by side and see at a glance which one is working, which one waits for you and which one is done.
 - **Answer Claude without hunting for the terminal.** Permission requests show up as cards (Allow · Always · Deny), on your desktop and on your phone.
+- **Let sessions work in parallel, then merge safely.** Merge Studio gives each session its own Git worktree and branch, predicts conflicts before they happen and merges whole branches, single files or single hunks – always with a checkpoint first.
 - **Claude remembers your project.** The "brain" keeps areas, decisions, pitfalls and conventions as linked Markdown notes, so new sessions do not have to explore the project from scratch.
 - **A place you like to sit in.** Rain shader, lofi radio and a focus timer, so long sessions feel less like staring at a console.
 
 ## Features
 
+**Two layouts**
+- **Desktop:** free floating glass windows and a dock that grows with what you use
+- **Studio:** a sidebar on the left, every window as a full page, and a status bar with project, branch, uncommitted changes and what Claude is doing. Switch in the More menu under "Layout" or via the command palette
+
 **Atmosphere**
 - Rain running down the window (WebGL): city at night, forest, a Tokyo alley, or your own picture
-- Lofi radio and synthetic rain sound with separate volume controls
+- Lofi radio or **Spotify** (control your Spotify app: playlists, liked songs, queue), plus synthetic rain sound with separate volume controls
 - Focus timer (Pomodoro); audio gets quieter during breaks
 - Streamer mode: hides API keys, passwords, user names and e-mail addresses, locks `.env` files in the editor; a curtain (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd>) covers the whole screen
 
@@ -59,6 +61,15 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 - Resume earlier sessions with one click
 - Hit your usage limit? VibeDesk reads the reset time and tells Claude to carry on once the limit is free again
 - Rewind button: jump Claude's conversation and code back to an earlier step
+
+**Merge Studio (beta) – parallel sessions**
+- "Isolated session": Claude gets its own working folder (Git worktree) on its own branch, so parallel sessions never get in each other's way
+- Session cards with branch, changed files, +/−, live status and a badge: ready · review · conflicts
+- Conflict prediction with `git merge-tree` – against the target branch and between sessions, even for uncommitted changes – without touching anything
+- Side-by-side file comparison: session · current target · other session
+- Merge a whole branch, selected files or selected hunks (3-way apply). Uncommitted changes in the target are never overwritten; risky steps always ask first
+- Automatic checkpoints before every merge (as Git refs under `refs/vibedesk/checkpoints`, not in your history) and one-click restore
+- AI summary with risks and recommended next steps; run your tests inside the session folder before merging
 
 **Inspector and stats**
 - Live feed of every action, todo progress, a tree of subagents, and stats in one tabbed window
@@ -94,7 +105,7 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 **Social and streaming**
 - Vibe Lounge: co-work with friends in a shared room, peer-to-peer without a VibeDesk server. See who is building, start focus rounds together, chat and react
 - Share codes for prompts, skills and your atmosphere, always with a preview before applying
-- Discord Rich Presence with your own texts, images and status icons; Discord webhook messages when a session waits for you and a daily summary
+- Discord Rich Presence with your own texts, images and status icons, live status of what Claude is doing ("writing code", "running commands", current task with progress) and rotating lines; Discord webhook messages when a session waits for you and a daily summary
 - OBS overlay (status, plan, live feed, focus timer) as a local browser source; Twitch chat suggestions via `!vibe …` that you approve
 
 <table>
@@ -161,7 +172,8 @@ VibeDesk has **no telemetry, no analytics and no account**. There is no VibeDesk
 |---|---|---|
 | Lofi radio | the selected stream (laut.fm by default; also ilovemusic.de, zeno.fm) | while music is on (on by default) |
 | Update check and download | GitHub Releases | on start |
-| Claude Code itself, AI commit messages, prompt formulation on the phone | Anthropic, through your own Claude Code | when you use Claude |
+| Claude Code itself, AI commit messages, Merge Studio review, prompt formulation on the phone | Anthropic, through your own Claude Code | when you use Claude |
+| Spotify | accounts.spotify.com (login) and api.spotify.com (control playback), with your own Spotify app ID | only if you connect Spotify |
 | Skill downloads | GitHub (codeload.github.com) | when you install a skill from a link |
 | Git window | your Git remotes; GitHub login via the GitHub CLI (device code in the browser) | when you push, pull, log in or publish |
 | Installing tools | winget / claude.ai installer | only when you click install |
@@ -173,6 +185,7 @@ VibeDesk has **no telemetry, no analytics and no account**. There is no VibeDesk
 
 **What VibeDesk changes on your PC**
 - **In your projects:** with the brain turned on (default), VibeDesk creates a `.vibedesk/` folder with the brain notes. Add it to `.gitignore` if you do not want to commit it.
+- **Merge Studio:** isolated sessions are Git worktrees in `.vibedesk/worktrees/` on branches named `vd/…`. VibeDesk adds that folder to the repository's local `.git/info/exclude` (your `.gitignore` stays untouched). Checkpoints are Git refs under `refs/vibedesk/checkpoints/`; delete them with `git for-each-ref --format="%(refname)" refs/vibedesk | % { git update-ref -d $_ }`.
 - **Claude Code settings:** VibeDesk does **not** edit your `~/.claude/settings.json` or project settings. For sessions started in VibeDesk it writes a temporary settings file with its hooks (and, with the brain on, an MCP config for the brain tools) to `%TEMP%\vibedesk` and passes it via `--settings` / `--mcp-config`. Sessions you start outside VibeDesk are not affected.
 - **Skills** you install go to `~/.claude/skills` (or the project's `.claude/skills`).
 - **Run alias:** `vibe` for <kbd>Win</kbd> + <kbd>R</kbd> is a registry entry under `HKCU\Software\Microsoft\Windows\CurrentVersion\App Paths\vibe.exe`.
@@ -220,7 +233,7 @@ Not yet. VibeDesk is Windows-only for now.
 VibeDesk is free and open source (MIT). You only need your own Claude subscription or API key for Claude Code.
 
 **Is the interface available in English?**
-Not yet. The interface is German for now; English is planned for 1.1.
+Yes. VibeDesk follows your Windows language (German or English). Switch it in the More menu under "Sprache · Language".
 
 ## Feedback and support
 
