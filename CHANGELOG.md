@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 1.7.0
+
 ### Neu
 
 - **Dev-Server per Klick**: Hat dein Projekt ein `dev`-Skript in der `package.json` (auch wenn Claude es gerade erst angelegt hat), steht im Terminal-Kopf „▶ Dev-Server“. Ein Klick startet ihn in einer Shell daneben, mit dem passenden Paketmanager (npm, pnpm, yarn oder bun), und die Adresse erscheint wie gewohnt als Vorschau-Chip. Funktioniert auch, wenn Windows PowerShell-Skripte gesperrt sind
