@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode, type PointerEvent as RPointerEvent } from 'react'
 import { DOCK_H, useUi } from '../store/uiStore'
-import { magnetize, snapRect, type Guide } from './layout'
+import { magnetize, pageRect, snapRect, type Guide } from './layout'
+import { useSettings } from '../store/settingsStore'
 import { ErrorBoundary } from './ErrorBoundary'
 import type { WindowRect } from '../../../shared/types'
 import { t } from '../../../shared/i18n'
@@ -23,6 +24,8 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
   const top = useUi((s) => s.open[s.open.length - 1] === id)
   const minimized = useUi((s) => s.minimized.includes(id))
   const maximized = useUi((s) => s.maximized === id)
+  // Studio-Aufbau: Fenster sind Seiten – nur die oberste ist sichtbar, die anderen bleiben (mit ihrem Zustand) im Hintergrund
+  const page = useSettings((s) => s.s?.layout === 'studio')
   const { setRect, focus, toggleMax, minimize, closeWin } = useUi.getState()
   const drag = useRef<{ dx: number; dy: number; resize: boolean; start: WindowRect; px: number; py: number } | null>(null)
   const [snapPreview, setSnapPreview] = useState<WindowRect | null>(null)
@@ -30,10 +33,10 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
 
   if (!rect) return null
   const screen = { w: window.innerWidth, h: window.innerHeight }
-  const shown: WindowRect = maximized ? { x: 8, y: 8, w: screen.w - 16, h: screen.h - DOCK_H - 8 } : rect
+  const shown: WindowRect = page ? pageRect(screen) : maximized ? { x: 8, y: 8, w: screen.w - 16, h: screen.h - DOCK_H - 8 } : rect
 
   const onDown = (e: RPointerEvent, resize: boolean): void => {
-    if (e.button !== 0 || maximized) return
+    if (e.button !== 0 || maximized || page) return
     if ((e.target as HTMLElement).closest('button')) return
     e.currentTarget.setPointerCapture(e.pointerId)
     drag.current = { dx: e.clientX - rect.x, dy: e.clientY - rect.y, resize, start: rect, px: e.clientX, py: e.clientY }
@@ -83,7 +86,7 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
         <div className="snap-preview" style={{ left: snapPreview.x + 8, top: snapPreview.y + 8, width: snapPreview.w - 16, height: snapPreview.h - 16 }} />
       )}
       <section
-        className={`gwin${solid ? ' solid' : ''}${top ? ' top' : ''}${minimized ? ' min' : ''}${maximized ? ' max' : ''}${className ? ' ' + className : ''}`}
+        className={`gwin${solid ? ' solid' : ''}${top ? ' top' : ''}${minimized ? ' min' : ''}${maximized ? ' max' : ''}${page ? ' page' + (top ? '' : ' behind') : ''}${className ? ' ' + className : ''}`}
         style={{ left: shown.x, top: shown.y, width: shown.w, height: shown.h, zIndex: 10 + z }}
         onPointerDownCapture={() => !top && focus(id)}
         data-testid={`win-${id}`}
@@ -93,16 +96,18 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
           onPointerDown={(e) => onDown(e, false)}
           onPointerMove={onMove}
           onPointerUp={onUp}
-          onDoubleClick={() => toggleMax(id)}
+          onDoubleClick={() => !page && toggleMax(id)}
         >
           <div className="gwin-title">{title}</div>
           <div className="gwin-btns">
             <button className="gbtn" title={t('Minimieren')} onClick={() => minimize(id)}>
               <span className="gbtn-min" />
             </button>
-            <button className="gbtn" title={maximized ? t('Wiederherstellen') : t('Maximieren')} onClick={() => toggleMax(id)}>
-              <span className="gbtn-max" />
-            </button>
+            {!page && (
+              <button className="gbtn" title={maximized ? t('Wiederherstellen') : t('Maximieren')} onClick={() => toggleMax(id)}>
+                <span className="gbtn-max" />
+              </button>
+            )}
             <button className="gbtn close" title={t('Schließen')} onClick={() => (onClose ? onClose() : closeWin(id))}>
               <span className="gbtn-x" />
             </button>
@@ -111,7 +116,7 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
         <div className="gwin-body">
           <ErrorBoundary where={id}>{children}</ErrorBoundary>
         </div>
-        {!maximized && (
+        {!maximized && !page && (
           <div className="gwin-resize" onPointerDown={(e) => onDown(e, true)} onPointerMove={onMove} onPointerUp={onUp} />
         )}
       </section>

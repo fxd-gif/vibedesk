@@ -1,0 +1,61 @@
+/* ---------- Studio-Aufbau: Seitenleiste, Seiten, Statusleiste ---------- */
+/* Maße passen zu STUDIO_SIDE / STUDIO_STATUS in layout.ts */
+.sidebar {
+  position: absolute; left: 10px; top: 10px; bottom: 10px; width: 222px; z-index: 1000;
+  display: flex; flex-direction: column; gap: 6px; padding: 12px 10px;
+  border-radius: 18px; background: rgba(14, 18, 26, .55); backdrop-filter: blur(26px) saturate(150%);
+  border: 1px solid var(--glass-border); box-shadow: 0 24px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.sb-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 12px; font-size: 15px; }
+.sb-brand b { font-weight: 600; letter-spacing: .01em; }
+.sb-logo { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: var(--accent); background: rgba(var(--accent-rgb), .14); border: 1px solid rgba(var(--accent-rgb), .3); box-shadow: 0 0 18px rgba(var(--accent-rgb), .2); }
+.sb-scroll { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; gap: 2px; }
+.sb-foot { display: flex; flex-direction: column; gap: 2px; padding-top: 8px; border-top: 1px solid var(--glass-border); }
+.sb-item {
+  position: relative; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 36px; padding: 6px 10px;
+  border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--text-dim);
+  font-size: 13px; text-align: left; cursor: pointer; transition: background 140ms, color 140ms, border-color 140ms;
+}
+.sb-item:hover { background: rgba(255,255,255,.06); color: var(--text); }
+.sb-item.active { color: var(--text); background: rgba(var(--accent-rgb), .13); border-color: rgba(var(--accent-rgb), .28); box-shadow: inset 0 0 18px rgba(var(--accent-rgb), .08); }
+.sb-icon { width: 22px; height: 22px; flex: 0 0 22px; display: grid; place-items: center; }
+.sb-icon > span { font-family: var(--mono); font-size: 10px; font-weight: 600; }
+.sb-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sb-badge { display: inline-flex; align-items: center; }
+.sb-badge .dot { position: static; }
+.sb-badge .dock-count { position: static; }
+.sb-badge .dock-eq { position: static; }
+.sb-beta { font-size: 10px; padding: 1px 7px; border-radius: 999px; color: var(--accent); background: rgba(var(--accent-rgb), .12); border: 1px solid rgba(var(--accent-rgb), .3); }
+.sb-session .sb-icon { border-radius: 7px; background: rgba(255,255,255,.06); color: var(--text); }
+.sb-head { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 6px 10px 4px; border: 0; background: transparent; color: var(--text-dim); font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; }
+.sb-head:hover { color: var(--text); }
+.sb-count { min-width: 18px; padding: 0 5px; border-radius: 999px; font-size: 10.5px; line-height: 17px; text-align: center; background: rgba(255,255,255,.08); color: var(--text); letter-spacing: 0; }
+.sb-caret { margin-left: auto; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform 150ms; }
+.sb-caret.open { transform: rotate(45deg); }
+.sb-empty { margin: 2px 12px 4px; font-size: 12px; color: var(--text-dim); }
+.sb-sep { height: 1px; margin: 8px 6px; background: var(--glass-border); }
+
+/* Fenster als Seiten */
+.gwin.page { border-radius: 16px; animation: page-in 180ms cubic-bezier(.2,.8,.2,1); }
+.gwin.page .gwin-bar { cursor: default; }
+.gwin.page.behind { visibility: hidden; pointer-events: none; animation: none; }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } }
+
+.statusbar {
+  position: absolute; left: 246px; right: 10px; bottom: 8px; height: 30px; z-index: 1000;
+  display: flex; align-items: center; gap: 4px; padding: 0 6px;
+  border-radius: 11px; background: rgba(14, 18, 26, .5); backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--glass-border); font-size: 12px; color: var(--text-dim);
+}
+.stb-chip { padding: 2px 8px; border-radius: 7px; background: rgba(255,255,255,.06); font-size: 11px; }
+.stb-btn { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border: 0; border-radius: 7px; background: transparent; color: var(--text); font-size: 12px; cursor: pointer; white-space: nowrap; }
+.stb-btn:hover { background: rgba(255,255,255,.07); }
+.stb-btn .dot { width: 7px; height: 7px; }
+.stb-spacer { flex: 1; }
+
+/* Aufklapper und Mitteilungen gehören im Studio an die Seitenleiste statt ans Dock */
+[data-layout='studio'] .more-menu { left: 244px; bottom: 50px; transform: none; }
+[data-layout='studio'] .npanel { left: 244px; right: auto; bottom: 50px; }
+[data-layout='studio'] .toast-stack { bottom: 52px; }
+[data-layout='studio'] .start-card { left: calc(50% + 118px); }
+[data-layout='studio'] .focus-banner { left: calc(50% + 118px); }

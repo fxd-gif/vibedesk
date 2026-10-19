@@ -63,7 +63,9 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   autoResume: true,
   language: 'auto',
   energySaver: 'auto',
-  spotifyClientId: ''
+  spotifyClientId: '',
+  layout: 'desktop',
+  mergeTestCmd: {}
 })
 
 export class SettingsStore {

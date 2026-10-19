@@ -42,6 +42,8 @@ import { writeJsonAtomic } from './jsonFile'
 import { GitService } from './gitService'
 import { registerGitIpc } from './gitIpc'
 import { registerSpotifyIpc, SpotifyService } from './spotify'
+import { registerMergeIpc } from './mergeIpc'
+import { MergeService } from './mergeService'
 import { PermissionBroker } from './permissionBroker'
 import { setupCompanion } from './companionIpc'
 import { QuickPrompt, type QuickTarget } from './quickPrompt'
@@ -232,9 +234,13 @@ app.whenReady().then(async () => {
   })
   registerBrainIpc(brain)
   registerSpotifyIpc(new SpotifyService(join(userData, 'spotify.json')))
-  registerGitIpc(
-    new GitService({ claudeCmd: () => process.env.VIBEDESK_CLAUDE_CMD || 'claude', trash: (p) => shell.trashItem(p) }),
+  const gitService = new GitService({ claudeCmd: () => process.env.VIBEDESK_CLAUDE_CMD || 'claude', trash: (p) => shell.trashItem(p) })
+  registerGitIpc(gitService, projects, () => mainWindow)
+  registerMergeIpc(
+    new MergeService({ tmpDir: join(app.getPath('temp'), 'vibedesk', 'merge'), claudeCmd: () => process.env.VIBEDESK_CLAUDE_CMD || 'claude' }),
+    gitService,
     projects,
+    settings,
     () => mainWindow
   )
   // Freigaben: Karte in VibeDesk und Handy-Begleiter beantworten, was Claude sonst im Terminal fragt

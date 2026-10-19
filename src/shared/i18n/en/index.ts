@@ -3,12 +3,13 @@ import { registerEn } from '../../i18n'
 import addons from './addons'
 import core from './core'
 import main from './main'
+import merge from './merge'
 import shared from './shared'
 import social from './social'
 import store from './store'
 import tools from './tools'
 import windows from './windows'
 
-export const EN_DICTS = { addons, core, main, shared, social, store, tools, windows }
+export const EN_DICTS = { addons, core, main, merge, shared, social, store, tools, windows }
 
 for (const d of Object.values(EN_DICTS)) registerEn(d)

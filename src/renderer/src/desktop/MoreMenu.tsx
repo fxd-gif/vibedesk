@@ -1,6 +1,6 @@
 // „Mehr“ im Dock: alles, was gerade nicht im Dock steht – mit einem Satz, wofür es da ist.
 import { useEffect, useRef } from 'react'
-import type { PanelId } from '../../../shared/types'
+import type { LayoutTheme, PanelId } from '../../../shared/types'
 import { useSettings } from '../store/settingsStore'
 import { Toggle } from './Toggle'
 import { panelDef } from '../windows/panels'
@@ -14,6 +14,7 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
   const dockAll = useSettings((s) => !!s.s?.dockAll)
   const quick = useSettings((s) => s.s?.quickPrompt !== false)
   const lang = useSettings((s) => s.s?.language ?? 'auto')
+  const layout = useSettings((s) => s.s?.layout ?? 'desktop')
 
   useEffect(() => {
     const down = (e: PointerEvent): void => {
@@ -75,6 +76,13 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
           <option value="auto">{t('Automatisch')}</option>
           <option value="de">Deutsch</option>
           <option value="en">English</option>
+        </select>
+      </div>
+      <div className="more-foot">
+        <span title={t('Wie das Dashboard aufgebaut ist: freie Fenster mit Dock oder Seitenleiste mit Seiten')}>{t('Aufbau')}</span>
+        <select className="field small" value={layout} onChange={(e) => useSettings.getState().set({ layout: e.target.value as LayoutTheme })} data-testid="more-layout">
+          <option value="desktop">{t('Desktop · freie Fenster')}</option>
+          <option value="studio">{t('Studio · Seitenleiste')}</option>
         </select>
       </div>
       <div className="more-foot">

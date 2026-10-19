@@ -13,6 +13,7 @@ import { LoungeWindow } from './LoungeWindow'
 import { StreamerWindow } from './StreamerWindow'
 import { BrainWindow } from './brain/BrainWindow'
 import { GitWindow } from './git/GitWindow'
+import { MergeStudio } from './merge/MergeStudio'
 import { CompanionWindow } from './CompanionWindow'
 import { AmbienceWindow } from './ambience/AmbienceWindow'
 import { t } from '../../../shared/i18n'
@@ -57,6 +58,7 @@ export const PANELS: PanelDef[] = [
   panel({ id: 'streamer', title: () => t('Streamer-Modus'), hint: () => t('Geheimnisse schwärzen, OBS-Overlay und Twitch-Chat'), icon: 'broadcast', w: 580, h: 680, render: () => <StreamerWindow /> }),
   panel({ id: 'editor', title: () => t('Editor'), hint: () => t('Dateien ansehen und schnell selbst anpassen'), icon: 'code', ...EDITOR_SIZE, render: () => <EditorWindow />, onClose: () => void closeEditor() }),
   panel({ id: 'git', title: () => t('Git & GitHub'), hint: () => t('Änderungen ansehen, committen und mit GitHub synchronisieren'), icon: 'github', w: 1080, h: 680, render: () => <GitWindow /> }),
+  panel({ id: 'merge', title: () => t('Merge Studio'), hint: () => t('Parallele Sessions vergleichen, Konflikte erkennen und sicher zusammenführen'), icon: 'merge', w: 1240, h: 800, render: () => <MergeStudio /> }),
   panel({ id: 'brain', title: () => t('Gehirn'), hint: () => t('Was Claude über dein Projekt weiß – als lebendiger Graph'), icon: 'brain', w: 1160, h: 720, render: () => <BrainWindow /> }),
   panel({ id: 'addons', title: () => t('Addons'), hint: () => t('Eigene Abläufe bauen – ganz ohne Code'), icon: 'puzzle', w: 1240, h: 780, render: () => <AddonWindow /> })
 ]

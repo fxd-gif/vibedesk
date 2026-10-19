@@ -19,7 +19,8 @@ interface SessionStore {
   /** Sessions aus einem früheren App-Start, die sich per Hook melden – nur Inspector, kein Terminal */
   external: SessionInfo[]
   exited: Record<string, number>
-  start(projectId: string, resumeId?: string): Promise<SessionInfo | null>
+  /** cwd: Worktree im Projekt (Merge Studio) */
+  start(projectId: string, resumeId?: string, cwd?: string): Promise<SessionInfo | null>
   close(id: string): Promise<void>
   restart(id: string): Promise<void>
 }
@@ -28,9 +29,9 @@ export const useSessions = create<SessionStore>((set, get) => ({
   sessions: [],
   external: [],
   exited: {},
-  start: async (projectId, resumeId) => {
+  start: async (projectId, resumeId, cwd) => {
     try {
-      const info = await api.sessions.start(projectId, resumeId)
+      const info = await api.sessions.start(projectId, resumeId, cwd)
       createTerminal(info.id, { cwd: info.cwd })
       useWorkflow.getState().dispatch({ type: 'start', sessionId: info.id })
       set((s) => ({ sessions: [...s.sessions, info] }))
@@ -61,7 +62,7 @@ export const useSessions = create<SessionStore>((set, get) => ({
     const old = get().sessions.find((s) => s.id === id)
     if (!old) return
     await get().close(id)
-    await get().start(old.projectId)
+    await get().start(old.projectId, undefined, old.cwd)
   }
 }))
 

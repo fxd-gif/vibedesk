@@ -12,7 +12,7 @@ export interface DockCtx {
 }
 
 /** Reihenfolge im Dock bzw. im Mehr-Menü */
-const OPTIONAL: PanelId[] = ['inspector', 'editor', 'git', 'brain', 'addons', 'lounge', 'prompts', 'skills', 'companion', 'discord', 'streamer']
+const OPTIONAL: PanelId[] = ['inspector', 'editor', 'git', 'brain', 'merge', 'addons', 'lounge', 'prompts', 'skills', 'companion', 'discord', 'streamer']
 
 function earned(id: PanelId, c: DockCtx): boolean {
   switch (id) {
@@ -21,6 +21,9 @@ function earned(id: PanelId, c: DockCtx): boolean {
     case 'git':
     case 'brain':
       return c.sessions > 0
+    // erst bei parallelen Sessions gibt es etwas zusammenzuführen
+    case 'merge':
+      return c.sessions > 1
     case 'addons':
       return c.addons > 0
     case 'lounge':
@@ -31,7 +34,7 @@ function earned(id: PanelId, c: DockCtx): boolean {
 }
 
 /** Nur diese wandern mit „Alle Symbole“ ins Dock – der Rest bleibt im Mehr-Menü */
-const DOCKABLE = new Set<PanelId>(['inspector', 'editor', 'git', 'brain', 'addons', 'lounge'])
+const DOCKABLE = new Set<PanelId>(['inspector', 'editor', 'git', 'brain', 'merge', 'addons', 'lounge'])
 
 export function dockPlan(c: DockCtx): { dock: PanelId[]; more: PanelId[] } {
   const dock = OPTIONAL.filter((id) => DOCKABLE.has(id) && (c.all || c.isOpen(id) || earned(id, c)))

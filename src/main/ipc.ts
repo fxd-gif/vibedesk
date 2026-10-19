@@ -99,11 +99,11 @@ export function registerSessionIpc(d: SessionIpcDeps): void {
     const p = d.projects.get(projectId)
     return p ? listClaudeSessions(p.path, d.claudeProjectsDir) : []
   })
-  ipcMain.handle('sessions:start', (_e, projectId: string, resumeId?: string) => {
+  ipcMain.handle('sessions:start', (_e, projectId: string, resumeId?: string, cwd?: string) => {
     const p = d.projects.get(projectId)
     if (!p) throw new Error(t('Projekt nicht gefunden'))
     if (!fs.existsSync(p.path)) throw new Error(t('Projektordner fehlt: {path}', { path: p.path }))
-    const info = d.sessions.start(p, { resumeId })
+    const info = d.sessions.start(p, { resumeId, cwd: typeof cwd === 'string' && cwd ? cwd : undefined })
     d.projects.touch(p.id)
     return info
   })

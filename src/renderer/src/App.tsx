@@ -4,6 +4,8 @@ import { centeredRect, useUi } from './store/uiStore'
 import { GlassWindow } from './desktop/GlassWindow'
 import { DialogHost } from './desktop/Dialog'
 import { Dock, type DockItem } from './desktop/Dock'
+import { Sidebar } from './desktop/Sidebar'
+import { StatusBar } from './desktop/StatusBar'
 import { migratePanels, PANELS, PANEL_IDS, panelDef } from './windows/panels'
 import { checkWhatsNew, WhatsNew } from './changelog/WhatsNew'
 import { checkWrapped, VibeWrapped } from './wrapped/VibeWrapped'
@@ -210,7 +212,8 @@ export default function App(): React.JSX.Element {
     return { id, icon: def.icon, label: def.title, hint: def.hint, active: isOn(id), onClick: () => ui.toggleWin(id, centeredRect(def.w, def.h)) }
   }
   const dockCtx = {
-    all: !!settings?.dockAll,
+    // die Seitenleiste hat Platz – dort stehen die Werkzeuge immer
+    all: !!settings?.dockAll || settings?.layout === 'studio',
     sessions: sessions.length,
     addons: addonCount,
     loungeOn: loungeState !== 'off',
@@ -228,8 +231,12 @@ export default function App(): React.JSX.Element {
     return panelItem(id)
   }
 
+  // Aufbau-Theme: Desktop (Dock) oder Studio (Seitenleiste + Statusleiste) – beide bekommen dieselben Gruppen
+  const studio = settings?.layout === 'studio'
+  const Nav = studio ? Sidebar : Dock
+
   return (
-    <div className="app">
+    <div className="app" data-layout={studio ? 'studio' : 'desktop'}>
       {settings && (
         <RainCanvas
           scene={settings.scene}
@@ -258,7 +265,7 @@ export default function App(): React.JSX.Element {
       {Object.keys(previews).map((k) => (
         <PreviewWindow key={k} id={k} />
       ))}
-      <Dock
+      <Nav
         groups={[
           [
             { id: 'palette', icon: 'command', label: t('Befehle (Strg+K)'), hint: t('Alles per Suche: Fenster, Projekte, Aktionen'), active: paletteOpen, onClick: () => usePalette.getState().show(!paletteOpen) },
@@ -321,6 +328,7 @@ export default function App(): React.JSX.Element {
           ]
         ]}
       />
+      {studio && <StatusBar />}
       <LoungeFloaters />
       <StreamerPill onClick={() => openPanel('streamer')} />
       <CommandPalette />

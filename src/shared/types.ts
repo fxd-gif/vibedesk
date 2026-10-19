@@ -48,12 +48,13 @@ import type { OverlayState } from './overlay'
 import type { WebhookPayload, WebhookSettings } from './webhook'
 import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
+import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget } from './companion'
 import type { PermissionAsk, PermissionDecision } from './permissions'
 import type { LangSetting } from './i18n'
 import type { SpotifyCommand, SpotifyDevice, SpotifyPlayer, SpotifyPlaylist, SpotifyQueue, SpotifyStatus, SpotifyTrack } from './spotify'
 
-export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion' | 'ambience'
+export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion' | 'ambience' | 'merge'
 
 export type DiscordStatus =
   | { state: 'off' }
@@ -228,7 +229,13 @@ export interface Settings {
   energySaver: EnergySaver
   /** Client-ID der eigenen Spotify-App (developer.spotify.com) – öffentlich, kein Geheimnis */
   spotifyClientId: string
+  /** Aufbau der Oberfläche: 'desktop' = freie Fenster + Dock, 'studio' = Seitenleiste + Seiten + Statusleiste */
+  layout: LayoutTheme
+  /** Merge Studio: eigener Testbefehl pro Projekt (sonst aus package.json & Co. erkannt) */
+  mergeTestCmd: Record<string, string>
 }
+
+export type LayoutTheme = 'desktop' | 'studio'
 
 export type EnergySaver = 'auto' | 'on' | 'off'
 
@@ -377,7 +384,8 @@ export interface VibedeskApi {
     openDownload(tool: ToolId): void
   }
   sessions: {
-    start(projectId: string, resumeId?: string): Promise<SessionInfo>
+    /** cwd: Worktree im Projekt (Merge Studio) statt des Projektordners */
+    start(projectId: string, resumeId?: string, cwd?: string): Promise<SessionInfo>
     stop(id: string): Promise<void>
     write(id: string, data: string): void
     resize(id: string, cols: number, rows: number): void
@@ -422,6 +430,7 @@ export interface VibedeskApi {
     brainPulse(cb: (p: BrainPulse) => void): Unsubscribe
     gitLoginCode(cb: (code: string, url: string) => void): Unsubscribe
     gitInstallLog(cb: (tool: 'git' | 'gh', line: string) => void): Unsubscribe
+    mergeTestLog(cb: (line: string) => void): Unsubscribe
     permissions(cb: (list: PermissionAsk[]) => void): Unsubscribe
     /** Prompt vom Handy: abschicken und mit companion.promptDone(reqId, ok) bestätigen */
     companionPrompt(cb: (reqId: string, target: PromptTarget, text: string) => void): Unsubscribe
@@ -534,6 +543,26 @@ export interface VibedeskApi {
     publish(projectId: string, name: string, priv: boolean): Promise<string>
     aiMessage(projectId: string): Promise<string>
     openWeb(url: string): void
+  }
+  /** Merge Studio: parallele Sessions (Worktrees) vergleichen und sicher zusammenführen. Destruktives nur mit confirmed = true. */
+  merge: {
+    overview(projectId: string): Promise<MergeOverview | null>
+    fileDiff(projectId: string, worktree: string, file: string): Promise<MergeFileView>
+    create(projectId: string, name: string): Promise<{ path: string; branch: string }>
+    commit(projectId: string, worktree: string, message: string): Promise<string>
+    aiMessage(projectId: string, worktree: string): Promise<string>
+    apply(projectId: string, worktree: string, files: string[], hunks: Record<string, number[]> | null, confirmed: boolean): Promise<ApplyResult>
+    merge(projectId: string, branch: string, confirmed: boolean): Promise<MergeResult>
+    abort(projectId: string, confirmed: boolean): Promise<void>
+    finish(projectId: string): Promise<string>
+    checkpoint(projectId: string, label: string): Promise<Checkpoint>
+    checkpoints(projectId: string): Promise<Checkpoint[]>
+    restore(projectId: string, ref: string, resetBranch: boolean, confirmed: boolean): Promise<Checkpoint>
+    removeWorktree(projectId: string, worktree: string, force: boolean, confirmed: boolean): Promise<void>
+    deleteBranch(projectId: string, branch: string, confirmed: boolean): Promise<void>
+    review(projectId: string): Promise<ReviewResult>
+    runTests(projectId: string, worktree: string, cmd: string): Promise<TestRun>
+    stopTests(): void
   }
   brain: {
     view(projectId: string): Promise<BrainView | null>

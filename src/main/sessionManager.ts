@@ -69,9 +69,17 @@ export class SessionManager {
 
   constructor(private o: SessionManagerOptions) {}
 
-  start(project: Project, opts: { resumeId?: string } = {}): SessionInfo {
+  /** opts.cwd: Unterordner des Projekts (z. B. ein Worktree aus Merge Studio) statt des Projektordners */
+  start(project: Project, opts: { resumeId?: string; cwd?: string } = {}): SessionInfo {
     // ID landet in der cmd.exe-Zeile → nur harmlose Zeichen zulassen
     if (opts.resumeId !== undefined && !/^[A-Za-z0-9-]{1,64}$/.test(opts.resumeId)) throw new Error(t('Ungültige Session-ID'))
+    let cwd = project.path
+    if (opts.cwd) {
+      const abs = path.resolve(opts.cwd)
+      const rel = path.relative(project.path, abs)
+      if (rel.startsWith('..') || path.isAbsolute(rel) || !fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) throw new Error(t('Ordner liegt nicht im Projekt'))
+      cwd = abs
+    }
     const max = this.o.maxSessions()
     if (this.sessions.size >= max) throw new Error(t('Maximal {max} Sessions gleichzeitig – schließe zuerst eine.', { max }))
     const cmd = process.env.VIBEDESK_CLAUDE_CMD || 'claude'
@@ -100,12 +108,12 @@ export class SessionManager {
     // Kein /s: der erste Token bleibt unquotiert, damit cmd die Anführungszeichen des Pfads stehen lässt
     const args = ['/d', '/c', cmd, '--settings', settingsFile, ...(mcpFile ? ['--mcp-config', mcpFile] : []), ...(opts.resumeId ? ['--resume', opts.resumeId] : [])]
     const pty = this.o.spawn('cmd.exe', args, {
-      cwd: project.path,
+      cwd,
       env,
       cols: 100,
       rows: 30
     })
-    const info: SessionInfo = { id, projectId: project.id, name: project.name, cwd: project.path }
+    const info: SessionInfo = { id, projectId: project.id, name: cwd === project.path ? project.name : `${project.name} · ${path.basename(cwd)}`, cwd }
     this.sessions.set(id, { info, pty, settingsFile, mcpFile })
     pty.onData((d) => this.dataCbs.forEach((cb) => cb(id, d)))
     pty.onExit(({ exitCode }) => {

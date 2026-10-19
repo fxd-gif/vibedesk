@@ -170,3 +170,11 @@ export function magnetize(
   }
   return { rect: out, guides }
 }
+
+/** Studio-Aufbau: Seitenleiste links, Statusleiste unten – jedes Fenster ist eine Seite im Inhaltsbereich */
+export const STUDIO_SIDE = 236
+export const STUDIO_STATUS = 44
+
+export function pageRect(screen: Screen): WindowRect {
+  return { x: STUDIO_SIDE + 4, y: 10, w: Math.max(320, screen.w - STUDIO_SIDE - 14), h: Math.max(200, screen.h - STUDIO_STATUS - 18) }
+}

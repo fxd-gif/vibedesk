@@ -6,6 +6,8 @@
   --text: #dfe5ef;
   --text-dim: rgba(223, 229, 239, 0.55);
   --accent: #9fb8ff;
+  /* dieselbe Farbe als Kanäle – für rgba(var(--accent-rgb), .x) */
+  --accent-rgb: 159, 184, 255;
   --green: #4ade80;
   --yellow: #facc15;
   --blue: #60a5fa;

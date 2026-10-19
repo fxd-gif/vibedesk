@@ -38,7 +38,7 @@ const api: VibedeskApi = {
     info: () => ipcRenderer.invoke('app:info')
   },
   sessions: {
-    start: (projectId, resumeId) => ipcRenderer.invoke('sessions:start', projectId, resumeId),
+    start: (projectId, resumeId, cwd) => ipcRenderer.invoke('sessions:start', projectId, resumeId, cwd),
     stop: (id) => ipcRenderer.invoke('sessions:stop', id),
     write: (id, data) => ipcRenderer.send('sessions:write', id, data),
     resize: (id, cols, rows) => ipcRenderer.send('sessions:resize', id, cols, rows),
@@ -77,6 +77,7 @@ const api: VibedeskApi = {
     brainPulse: (cb) => listen<[BrainPulse]>('brain:pulse', cb),
     gitLoginCode: (cb) => listen<[string, string]>('git:loginCode', cb),
     gitInstallLog: (cb) => listen<['git' | 'gh', string]>('git:installLog', cb),
+    mergeTestLog: (cb) => listen<[string]>('merge:testLog', cb),
     permissions: (cb) => listen<[PermissionAsk[]]>('permissions:list', cb),
     companionPrompt: (cb) => listen<[string, PromptTarget, string]>('companion:prompt', cb),
     companionDevices: (cb) => listen<[CompanionDevice[], CompanionDevice | undefined]>('companion:devices', cb),
@@ -164,6 +165,25 @@ const api: VibedeskApi = {
     publish: (id, name, priv) => ipcRenderer.invoke('git:publish', id, name, priv),
     aiMessage: (id) => ipcRenderer.invoke('git:aiMessage', id),
     openWeb: (url) => ipcRenderer.send('git:openWeb', url)
+  },
+  merge: {
+    overview: (id) => ipcRenderer.invoke('merge:overview', id),
+    fileDiff: (id, wt, file) => ipcRenderer.invoke('merge:fileDiff', id, wt, file),
+    create: (id, name) => ipcRenderer.invoke('merge:create', id, name),
+    commit: (id, wt, message) => ipcRenderer.invoke('merge:commit', id, wt, message),
+    aiMessage: (id, wt) => ipcRenderer.invoke('merge:aiMessage', id, wt),
+    apply: (id, wt, files, hunks, confirmed) => ipcRenderer.invoke('merge:apply', id, wt, files, hunks, confirmed),
+    merge: (id, branch, confirmed) => ipcRenderer.invoke('merge:merge', id, branch, confirmed),
+    abort: (id, confirmed) => ipcRenderer.invoke('merge:abort', id, confirmed),
+    finish: (id) => ipcRenderer.invoke('merge:finish', id),
+    checkpoint: (id, label) => ipcRenderer.invoke('merge:checkpoint', id, label),
+    checkpoints: (id) => ipcRenderer.invoke('merge:checkpoints', id),
+    restore: (id, ref, resetBranch, confirmed) => ipcRenderer.invoke('merge:restore', id, ref, resetBranch, confirmed),
+    removeWorktree: (id, wt, force, confirmed) => ipcRenderer.invoke('merge:removeWorktree', id, wt, force, confirmed),
+    deleteBranch: (id, branch, confirmed) => ipcRenderer.invoke('merge:deleteBranch', id, branch, confirmed),
+    review: (id) => ipcRenderer.invoke('merge:review', id),
+    runTests: (id, wt, cmd) => ipcRenderer.invoke('merge:runTests', id, wt, cmd),
+    stopTests: () => ipcRenderer.send('merge:stopTests')
   },
   brain: {
     view: (projectId) => ipcRenderer.invoke('brain:view', projectId),

@@ -1,6 +1,7 @@
 // Prompts an Claude-Sessions schicken – startet sie bei Bedarf und wartet, bis Claude bereit bzw. fertig ist.
 import { api } from '../api'
 import { bracketedPaste, safePrompt } from '../../../shared/paste'
+import { samePath } from '../../../shared/merge'
 import type { SessionStatus } from '../../../shared/types'
 import { termWin, useSessions } from './sessionStore'
 import { useUi } from './uiStore'
@@ -27,13 +28,13 @@ function waitForFirstHook(sessionId: () => string | undefined): Promise<void> {
   })
 }
 
-/** Laufende Session des Projekts – oder neu starten und warten, bis Claude Eingaben annimmt */
-export async function ensureSession(projectId: string): Promise<string | null> {
-  const running = useSessions.getState().sessions.find((x) => x.projectId === projectId)
+/** Laufende Session des Projekts – oder neu starten und warten, bis Claude Eingaben annimmt. cwd: nur eine Session in genau diesem Ordner (Worktree) */
+export async function ensureSession(projectId: string, cwd?: string): Promise<string | null> {
+  const running = useSessions.getState().sessions.find((x) => x.projectId === projectId && (!cwd || samePath(x.cwd, cwd)))
   if (running) return running.id
   let id: string | undefined
   const ready = waitForFirstHook(() => id)
-  const started = await useSessions.getState().start(projectId)
+  const started = await useSessions.getState().start(projectId, undefined, cwd)
   if (!started) return null
   id = started.id
   await ready

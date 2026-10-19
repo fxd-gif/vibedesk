@@ -19,7 +19,7 @@ export interface RunResult {
   stderr: string
 }
 
-export type Runner = (file: string, args: string[], opts: { cwd: string; input?: string; timeout?: number }) => Promise<RunResult>
+export type Runner = (file: string, args: string[], opts: { cwd: string; input?: string; timeout?: number; env?: Record<string, string> }) => Promise<RunResult>
 
 export const defaultRunner: Runner = (file, args, opts) =>
   new Promise((resolve) => {
@@ -32,7 +32,7 @@ export const defaultRunner: Runner = (file, args, opts) =>
         maxBuffer: MAX_OUT,
         timeout: opts.timeout ?? 60_000,
         // nie interaktiv nachfragen – Anmeldung läuft über gh/Credential Manager oder schlägt verständlich fehl
-        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', GIT_OPTIONAL_LOCKS: '0', GH_PROMPT_DISABLED: '1', LC_ALL: 'C' }
+        env: { ...process.env, GIT_TERMINAL_PROMPT: '0', GIT_OPTIONAL_LOCKS: '0', GH_PROMPT_DISABLED: '1', LC_ALL: 'C', ...opts.env }
       },
       (err, stdout, stderr) => {
         // Exit-Code steht als Zahl in err.code; ENOENT & Co. (Programm fehlt) als Text → -1
