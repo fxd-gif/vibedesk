@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>Phone companion – VibeDesk</title>
+  <meta name="description" content="Answer Claude Code approvals from your phone, see what every session is doing, read the whole terminal live and send new tasks. In the browser, no app needed.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/phone/">
+  <meta property="og:title" content="Phone companion – VibeDesk">
+  <meta property="og:description" content="Answer Claude Code approvals from your phone, see what every session is doing, read the whole terminal live and send new tasks. In the browser, no app needed.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/phone-session.webp">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/phone/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/site.css">
+  <script src="../assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../sessions/">Sessions</a>
+        <a href="../phone/" aria-current="page">Phone</a>
+        <a href="../brain/">Brain</a>
+        <a href="../merge-studio/">Merge Studio</a>
+        <a href="../ambience/">Ambience</a>
+        <a href="../calm/">Calm</a>
+        <a href="../tools/">Tools</a>
+        <a href="../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../phone/" aria-current="page">Phone<small>Companion in the browser</small></a>
+            <a href="../brain/">Brain<small>Project memory</small></a>
+            <a href="../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../">VibeDesk</a><span>/</span><span>Phone companion</span></p>
+          <h1>Claude in your pocket.</h1>
+          <p class="lead">Open VibeDesk in your phone's browser. Answer approvals, see what every session is doing, follow the whole terminal live and send new tasks – from the sofa or on the go. No app to install.</p>
+          <div class="chips"><span class="chip">No app needed</span><span class="chip">6-digit pairing</span><span class="chip">Approvals with vibration</span><span class="chip">Whole terminal, live</span><span class="chip">Works from anywhere</span></div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-bar"><span>Illustration · PC and phone show the same session</span><span class="live"><span class="dot g"></span>plays on its own</span></div>
+          <div class="stage-body ph-demo" data-demo="phone">
+            <div class="win pc" aria-hidden="true">
+              <div class="win-bar"><span class="dot win-dot g"></span><b>shop-frontend</b><span class="win-st">· working</span><span class="pill" style="margin-left:auto">on your PC</span></div>
+              <div class="win-body"><div class="term"></div></div>
+            </div>
+            <div class="phone" aria-hidden="true">
+              <div class="phone-screen">
+                <div class="p-top">VibeDesk<small><span class="dot g"></span>connected</small></div>
+                <div class="p-card">
+                  <div class="p-head"><span class="dot p-dot g"></span>shop-frontend<span class="p-state">working</span></div>
+                  <p class="p-you"><b>You:</b> Build a login page with validation</p>
+                  <div class="acts"></div>
+                  <div class="p-view"><i>&gt;_</i> View terminal</div>
+                </div>
+                <div class="p-input" style="margin-top:auto"><span>What should Claude do next?</span><span>Send</span></div>
+                <div class="p-perm"><b><span class="dot y"></span>Permission · shop-frontend</b><code>npm test</code><div class="row3"><span>Deny</span><span>Always</span><span class="p-allow">Allow</span></div><div class="okmsg">✓ Allowed</div></div>
+                <div class="sheet"><div class="sheet-bar"><span class="dot g"></span>shop-frontend<span class="pill">Wrap</span></div><div class="term"></div></div>
+                <div class="p-sugg"><p>What's next?</p><button type="button" tabindex="-1">Add an E2E test for the login flow</button><button type="button" tabindex="-1">Add a “forgot password” link</button><button type="button" tabindex="-1">Commit the changes</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Pairing</p>
+            <h2>Scan, type six digits, done.</h2>
+            <p>Switch on the phone companion, scan the QR code with your camera and enter the one-time code from the PC screen. That is all – no account, no router settings, no firewall rules.</p>
+            <ul>
+              <li><b>From anywhere – no app:</b> VibeDesk sets up a secure HTTPS link through a Cloudflare quick tunnel, so it works on mobile data too. It is on by default once the companion runs and can be switched off.</li>
+              <li>Without the code from your screen nobody gets in. Paired phones are listed on the PC and can be signed out one by one.</li>
+              <li>While the companion runs, the PC does not go to sleep – you can put it to sleep or shut it down from the phone (with 60 seconds to cancel).</li>
+            </ul>
+          </div>
+          <div class="win" aria-hidden="true" style="max-width:440px;justify-self:center;width:100%">
+            <div class="win-bar"><b>Phone companion</b><span class="pill teal" style="margin-left:auto">running</span></div>
+            <div class="win-body" style="display:grid;gap:14px;padding:20px">
+              <p class="demo-caption">Enter the code on your phone</p>
+              <p style="font:600 40px var(--mono);letter-spacing:.08em">482 913</p>
+              <p class="demo-caption">valid for 5:00 · one time only</p>
+              <div class="status-row"><span class="dot g"></span><b>From anywhere – no app</b><span class="st">on</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">What is happening</p>
+            <h2>More than “working” or “waiting”.</h2>
+            <p>Every session shows your last prompt, the plan progress and Claude's latest steps – “Edits src/app.tsx”, “Command npm test” – with a checkmark, an error cross and the time. Notifications and watchdog messages arrive here too.</p>
+            <ul>
+              <li>Permission requests appear as cards with Allow, Always and Deny, and the phone vibrates.</li>
+              <li>Type a rough idea and tick <b>polish</b>: Claude turns it into a clear prompt and sends it to the session you pick – or starts a new one. This runs on your Claude plan, no API key needed.</li>
+              <li>When Claude is done, the phone suggests three sensible next steps. One tap sends one.</li>
+            </ul>
+          </div>
+          <div class="phone-shots">
+            <div class="phone-shot" style="width:min(70%,300px)"><img src="../img/phone-session.webp" width="600" height="1006" alt="Phone: VibeDesk connected, session shop-frontend working, your prompt, 1 of 3 Write the login form, the latest agent steps and a View terminal button; below an input field What should Claude do next? with polish and Send" loading="lazy" decoding="async"></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Whole terminal</p>
+            <h2>The complete terminal, live on your phone.</h2>
+            <p>Turn on “Whole terminal on the phone” in the companion window and your phone shows the full terminal of a session – live, in color, with the whole history. It is off by default, because a terminal can contain secrets.</p>
+            <ul>
+              <li>Older lines load with a tap. If you read further up, nothing yanks you down; a <b>New output</b> button takes you back.</li>
+              <li>Separator lines stay lines, long lines wrap – or switch wrapping off.</li>
+              <li>Optional keys: turn on “Allow keys from the phone” and a bar with <kbd>Esc</kbd> <kbd>↑</kbd> <kbd>↓</kbd> <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>Enter</kbd> appears – enough to answer Claude's menus or interrupt it. Free typing is deliberately not possible.</li>
+            </ul>
+          </div>
+          <div class="phone-shots">
+            <div class="phone-shot" style="width:min(70%,300px)"><img src="../img/phone-terminal.webp" width="600" height="662" alt="Phone: the full Claude Code terminal of shop-frontend in color, with Wrap and close buttons" loading="lazy" decoding="async"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="head left">
+          <p class="label">Privacy</p>
+          <h2>Your phone, your PC, nobody in between.</h2>
+        </div>
+        <div class="grid6">
+          <div><h3>Code from your screen</h3><p>Every pairing needs a fresh 6-digit code that is only valid for a few minutes.</p></div>
+          <div><h3>Key stays on the phone</h3><p>The PC only stores a hash of each phone's key. Sign out single phones any time.</p></div>
+          <div><h3>Off by default</h3><p>The whole terminal and the keys each need their own switch on the PC.</p></div>
+          <div><h3>Tunnel only while on</h3><p>The Cloudflare link exists only while the companion runs. Prefer Wi-Fi only? Switch it off.</p></div>
+          <div><h3>Streamer mode</h3><p>The pairing code is blurred while you stream.</p></div>
+          <div><h3>No VibeDesk server</h3><p>Your phone talks to your PC directly or through the tunnel – there is no account and no cloud of ours.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tight" style="padding-top:0;padding-bottom:0">
+      <div class="wrap pager">
+        <a href="../sessions/"><span>← Previous</span><b>Sessions</b></a>
+        <a class="next" href="../brain/"><span>Next →</span><b>The brain</b></a>
+      </div>
+    </section>
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../sessions/">Sessions</a></li><li><a href="../phone/">Phone companion</a></li><li><a href="../brain/">The brain</a></li><li><a href="../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../ambience/">Ambience & music</a></li><li><a href="../calm/">Calm by default</a></li><li><a href="../tools/">Tools</a></li><li><a href="../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

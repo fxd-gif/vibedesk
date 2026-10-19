@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>Social & streaming – VibeDesk</title>
+  <meta name="description" content="Discord Rich Presence that shows what Claude is doing, a peer-to-peer Vibe Lounge, an OBS overlay, streamer mode and a weekly Vibe Wrapped card.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/social/">
+  <meta property="og:title" content="Social &amp; streaming – VibeDesk">
+  <meta property="og:description" content="Discord Rich Presence that shows what Claude is doing, a peer-to-peer Vibe Lounge, an OBS overlay, streamer mode and a weekly Vibe Wrapped card.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/discord.webp">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/social/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/site.css">
+  <script src="../assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../sessions/">Sessions</a>
+        <a href="../phone/">Phone</a>
+        <a href="../brain/">Brain</a>
+        <a href="../merge-studio/">Merge Studio</a>
+        <a href="../ambience/">Ambience</a>
+        <a href="../calm/">Calm</a>
+        <a href="../tools/">Tools</a>
+        <a href="../social/" aria-current="page">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../brain/">Brain<small>Project memory</small></a>
+            <a href="../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../social/" aria-current="page">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../">VibeDesk</a><span>/</span><span>Social &amp; streaming</span></p>
+          <h1>Show what you build – if you want to.</h1>
+          <p class="lead">Let friends on Discord see what Claude is doing right now, co-work in a shared lounge, put a calm overlay on your stream and get a weekly look back. Every part is optional and off until you switch it on.</p>
+          <div class="chips"><span class="chip">Discord Rich Presence</span><span class="chip">Vibe Lounge</span><span class="chip">OBS overlay</span><span class="chip">Streamer mode</span><span class="chip">Vibe Wrapped</span></div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-bar"><span>Illustration · your Discord profile while Claude works</span><span class="live"><span class="dot g"></span>plays on its own</span></div>
+          <div class="stage-body ov-stage" style="align-items:center">
+            <div class="dc" data-demo="discord" aria-hidden="true">
+              <div class="dc-banner"></div>
+              <div class="dc-av">Y</div>
+              <div class="dc-name">Your name</div>
+              <div class="dc-sub">your_name</div>
+              <div class="dc-act">
+                <small>Playing</small>
+                <div class="dc-row">
+                  <div class="dc-img"><img src="../img/icon.png" alt="" width="64" height="64"></div>
+                  <div style="min-width:0">
+                    <b>Vibedesk</b>
+                    <p class="dc-l1">Vibecoding on shop-frontend</p>
+                    <p class="dc-l2">writing code</p>
+                    <p class="dc-el">00:42:12 elapsed</p>
+                  </div>
+                </div>
+                <span class="dc-btn">Get VibeDesk (free)</span>
+              </div>
+            </div>
+            <div class="row-text" style="padding:8px">
+              <p class="label">Live from Claude</p>
+              <h3>“writing code”, “running commands”, “sends 3 agents off”.</h3>
+              <p>Your friends see what Claude is doing, the current task from its todo list with progress, and your streak. File names and commands never leave your PC; in private and streamer mode the task is left out too.</p>
+              <div class="chips" style="margin-top:18px"><span class="chip">{doing}</span><span class="chip">{task}</span><span class="chip">{progress}</span><span class="chip">{streak}</span><span class="chip">{project}</span><span class="chip">{focus}</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Discord</p>
+            <h2>Your status, your words.</h2>
+            <p>Write your own lines with placeholders, pick images and status icons, or start from a preset – Live, Detailed, Minimal, Focus, Numbers or Private. Separate variants with <code>||</code> and Discord rotates between them every 20 seconds. A live preview shows exactly what others will see.</p>
+            <ul>
+              <li>Discord webhook messages when a session waits for you, and a daily summary.</li>
+              <li>Use the hosted VibeDesk app or your own Discord app ID.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/discord.webp" width="1600" height="1192" alt="Discord Rich Presence window: app choice, presets Live, Detailed, Minimal, Focus, Numbers, Private, text lines with placeholders, and a live preview of the profile card" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Discord Rich Presence</figcaption>
+          </figure>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">Vibe Lounge</p>
+            <h2>Co-work with friends, no server in between.</h2>
+            <p>Open a room and share its code. In the lounge you see who is building right now, start focus rounds together, chat and send reactions, and share prompts and skills by code – always with a preview before anything is applied.</p>
+            <ul>
+              <li>Peer-to-peer: public Nostr relays only help you find each other (encrypted with the room code), then WebRTC connects you directly.</li>
+              <li>Only name, status, focus timer, chat and reactions are shared – never code, files or terminal content. Anyone in the room can see your IP address, so only share the code with people you trust.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot narrow"><img src="../img/lounge.webp" width="1120" height="1320" alt="Vibe Lounge window: name field, avatar choice, Show project names switch, Open new room, a room code field and a note: No server, directly between you" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Vibe Lounge</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="head">
+          <p class="label">Streaming</p>
+          <h2>A calm overlay, and chat that can suggest.</h2>
+          <p>Add the OBS overlay as a browser source: status, plan, live feed and focus timer. Viewers can suggest tasks with <code>!vibe …</code> in Twitch chat – nothing happens until you accept.</p>
+        </div>
+        <div class="stage" style="margin-top:0">
+          <div class="stage-bar"><span>Illustration · OBS overlay and Twitch chat</span><span class="live"><span class="dot g"></span>plays on its own</span></div>
+          <div class="stage-body ov-stage" data-demo="overlay" aria-hidden="true">
+            <div class="ov">
+              <div class="ov-h"><span class="dot g"></span><span>shop-frontend · writing code</span><span>Opus 5.5</span></div>
+              <div class="ov-task"><span>Builds the login page</span><span class="ov-prog-t">3/7</span></div>
+              <div class="ov-prog"><i></i></div>
+              <div class="ov-feed"></div>
+              <div class="ov-task" style="border-top:1px solid var(--line);padding-top:10px"><span>Focus round 2 of 4</span><span style="font-family:var(--mono)">18:42</span></div>
+              <div class="ov-made">made with VibeDesk</div>
+            </div>
+            <div class="tw">
+              <div class="tw-chat"><div class="muted">Twitch chat</div></div>
+              <div class="tw-sug"><b>Suggestion from night_owl</b>add a dark mode toggle<div class="t-actions"><span class="tw-ok">Accept</span><span>Dismiss</span></div><div class="okmsg">✓ Accepted – shown in the overlay</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:clamp(72px,9vw,120px)">
+          <div class="row-text">
+            <p class="label">Streamer mode</p>
+            <h2>Stream without leaking secrets.</h2>
+            <p>API keys, tokens, passwords and private keys are redacted in the terminal, live feed and overlay. Streamer mode can also hide your user name in paths and e-mail addresses, cover notes and lock <code>.env</code> files in the editor.</p>
+            <ul>
+              <li>A curtain covers the whole screen instantly: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd> – also handy as a “be right back” screen.</li>
+              <li>Costs and Bash commands stay out of the overlay unless you want them.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot narrow"><img src="../img/streamer.webp" width="1240" height="1420" alt="Streamer mode window: protection switches for user name, e-mail addresses, notes and sensitive files, the curtain shortcut, and the OBS overlay with its URL and options" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Streamer mode</figcaption>
+          </figure>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">Vibe Wrapped</p>
+            <h2>Your week, on one quiet card.</h2>
+            <p>Every week VibeDesk sums up your active time, prompts, changed files, favourite tool, top projects and a persona – and how much Claude learned about you. Copy it as an image and share it, or just look.</p>
+            <ul>
+              <li>Find it in the stats window, the command palette, and once a week as a hint.</li>
+            </ul>
+          </div>
+          <div class="wr" data-demo="wrapped" aria-label="Example of a Vibe Wrapped card with active time per weekday">
+            <div class="wr-h"><b>Vibe Wrapped</b><span>Example</span></div>
+            <div class="wr-big">12 h 40 min<small>active this week</small></div>
+            <div class="wr-bars" aria-hidden="true"><i data-v="45"></i><i data-v="70"></i><i data-v="38"></i><i class="best" data-v="100"></i><i data-v="62"></i><i data-v="20"></i><i data-v="30"></i></div>
+            <div class="wr-days" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+            <div class="wr-stats"><span><b>214</b>prompts</span><span><b>87</b>files changed</span><span><b>Edit</b>favourite tool</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tight" style="padding-top:0;padding-bottom:0">
+      <div class="wrap pager">
+        <a href="../tools/"><span>← Previous</span><b>Tools</b></a>
+        <a class="next" href="../"><span>Back to →</span><b>Overview</b></a>
+      </div>
+    </section>
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../sessions/">Sessions</a></li><li><a href="../phone/">Phone companion</a></li><li><a href="../brain/">The brain</a></li><li><a href="../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../ambience/">Ambience & music</a></li><li><a href="../calm/">Calm by default</a></li><li><a href="../tools/">Tools</a></li><li><a href="../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

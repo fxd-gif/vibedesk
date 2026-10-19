@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>Sessions – VibeDesk</title>
+  <meta name="description" content="Run several Claude Code sessions side by side on Windows: live status, approval cards, a prompt queue, auto-continue after the usage limit, a watchdog and rewind.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/sessions/">
+  <meta property="og:title" content="Sessions – VibeDesk">
+  <meta property="og:description" content="Run several Claude Code sessions side by side on Windows: live status, approval cards, a prompt queue, auto-continue after the usage limit, a watchdog and rewind.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/approval.webp">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/sessions/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/site.css">
+  <script src="../assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../sessions/" aria-current="page">Sessions</a>
+        <a href="../phone/">Phone</a>
+        <a href="../brain/">Brain</a>
+        <a href="../merge-studio/">Merge Studio</a>
+        <a href="../ambience/">Ambience</a>
+        <a href="../calm/">Calm</a>
+        <a href="../tools/">Tools</a>
+        <a href="../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../sessions/" aria-current="page">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../brain/">Brain<small>Project memory</small></a>
+            <a href="../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../">VibeDesk</a><span>/</span><span>Sessions</span></p>
+          <h1>Every session at a glance.</h1>
+          <p class="lead">Run several Claude Code sessions in real terminals, side by side. VibeDesk shows which one is working, which one waits for you and which one is done – and lets you answer without searching.</p>
+          <div class="chips"><span class="chip">Live status</span><span class="chip">Approval cards</span><span class="chip">Prompt queue</span><span class="chip">Auto-continue after the limit</span><span class="chip">Watchdog</span><span class="chip">Rewind</span></div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-bar"><span>Illustration of the VibeDesk desk</span><span class="live"><span class="dot g"></span>plays on its own</span></div>
+          <div class="stage-body desk" data-demo="desk">
+            <div class="win desk-win" aria-hidden="true">
+              <div class="win-bar"><span class="dot win-dot g"></span><b>shop-frontend</b><span class="win-st">· working</span><span class="pill teal hide-s">▸ :5173</span><span class="pill dash queue">+ Next <em>Add an E2E test …</em></span></div>
+              <div class="win-body"><div class="term"></div></div>
+            </div>
+            <div class="desk-side">
+              <p class="demo-caption">Sessions</p>
+              <div class="status-list">
+                <div class="status-row" data-s="sf"><span class="dot g"></span><b>shop-frontend</b><span class="st">working</span></div>
+                <div class="status-row" data-s="as"><span class="dot g"></span><b>api-server</b><span class="st">working</span></div>
+                <div class="status-row" data-s="bl"><span class="dot b"></span><b>blog</b><span class="st">done</span></div>
+              </div>
+              <div class="approve" aria-hidden="true">
+                <div class="approve-top"><span class="dot y"></span><span>shop-frontend needs your permission</span></div>
+                <div class="approve-sub">Run command</div>
+                <code>npm test</code>
+                <div class="approve-btns"><button type="button" class="ghost" tabindex="-1">In terminal</button><button type="button" tabindex="-1">Deny</button><button type="button" tabindex="-1">Always</button><button type="button" class="primary" data-a="allow" tabindex="-1">Allow</button></div>
+              </div>
+              <div class="toast" aria-hidden="true"><span class="dot b" style="margin-top:6px"></span><div><b>shop-frontend is done</b><span>Claude finished the task.</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Approvals</p>
+            <h2>Answer Claude without hunting for the terminal.</h2>
+            <p>When Claude wants to run a command or change a file, a card appears in the corner – and on your phone at the same time. <b style="color:var(--ink);font-weight:500">Allow</b>, <b style="color:var(--ink);font-weight:500">Always</b> or <b style="color:var(--ink);font-weight:500">Deny</b>, or <b style="color:var(--ink);font-weight:500">In terminal</b> for Claude's usual prompt.</p>
+            <ul>
+              <li>Only one card at a time; the rest waits behind “+n more”, and “waiting for you” always comes first.</li>
+              <li>Several “done” messages are bundled into one.</li>
+              <li>While VibeDesk is in the background you get Windows notifications, and a history sits behind the bell.</li>
+              <li>During focus rounds only the important ones come through.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/approval.webp" width="1600" height="960" alt="A Claude Code terminal waiting for permission and the approval card: shop-frontend needs your permission, Run command, npm test, with In terminal, Deny, Always and Allow" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · the yellow dot in the dock and the title bar means “waiting for you”</figcaption>
+          </figure>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">Prompt queue · Quick prompt</p>
+            <h2>Line up the next task.</h2>
+            <p>Click <b style="color:var(--ink);font-weight:500">+ Next</b> in the title bar of a terminal and write what should happen after this. The prompt starts by itself as soon as Claude is done. Reorder or remove queued prompts at any time.</p>
+            <ul>
+              <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Space</kbd> opens an input field over any app – <kbd>Tab</kbd> picks the session, <kbd>Enter</kbd> sends.</li>
+              <li>If Claude is still working, the quick prompt goes into the queue.</li>
+              <li>Resume earlier sessions with one click from the projects window.</li>
+            </ul>
+          </div>
+          <div class="win" aria-hidden="true">
+            <div class="win-bar"><span class="dot g"></span><b>shop-frontend</b><span class="win-st">· working</span><span class="pill dash">+ Next</span></div>
+            <div class="win-body" style="display:grid;gap:8px">
+              <p class="demo-caption">Queued</p>
+              <div class="status-row"><span class="label" style="font-size:11px">1</span><span>Add an E2E test for the login flow</span></div>
+              <div class="status-row"><span class="label" style="font-size:11px">2</span><span>Write a short README section about the login</span></div>
+              <div class="status-row"><span class="label" style="font-size:11px">3</span><span>Commit with a clear message</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Usage limit</p>
+            <h2>Hit the limit at night, continue at the reset.</h2>
+            <p>When Claude reports “You've hit your session limit · resets …”, VibeDesk reads the reset time. A chip in the title bar shows when it continues, and once the limit is free again VibeDesk tells Claude to pick up exactly where it left off. One click on the chip cancels it; you can switch it off in the terminal settings.</p>
+          </div>
+          <div class="win limit" data-demo="limit" aria-hidden="true">
+            <div class="win-bar"><span class="dot b"></span><b>shop-frontend</b><span class="win-st">· done</span><span class="pill warn">⏰ continues at 00:00 ✕</span></div>
+            <div class="win-body term">
+              <div><span class="t-b">&gt;</span> You've hit your session limit · resets 12am (Europe/Berlin)</div>
+              <div class="t-dim">local time <span class="clock">23:59:54</span></div>
+              <div>&nbsp;</div>
+              <div class="resume"><span class="t-b">&gt;</span> The usage limit is free again. Please continue exactly where you left off.<br><span class="t-o">✻</span> <span class="t-dim">Continuing with the login tests …</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">Watchdog</p>
+            <h2>Someone keeps an eye on the long runs.</h2>
+            <p>VibeDesk speaks up when a session shows no sign of life for six minutes, fails at the same command three times in a row, or its context is 85&nbsp;% full – each time with a fitting next step. The same messages reach your phone.</p>
+          </div>
+          <div class="watch" data-demo="watchdog" aria-hidden="true">
+            <div class="toast"><span class="dot y" style="margin-top:6px"></span><div><b>api-server is probably stuck</b><span>No sign of life for 6 minutes.</span><div class="t-actions"><span class="p">Interrupt</span><span>Open</span></div></div></div>
+            <div class="toast"><span class="dot r" style="margin-top:6px"></span><div><b>shop-frontend is stuck in an error loop</b><span>Bash “npm test” failed 3 times in a row.</span><div class="t-actions"><span class="p">Try differently</span><span>Open</span></div></div></div>
+            <div class="toast"><span class="dot y" style="margin-top:6px"></span><div><b>blog has almost run out of context</b><span>The context is 85&nbsp;% full – soon Claude forgets the beginning.</span><div class="t-actions"><span class="p">Summarize (/compact)</span><span>Open</span></div></div></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Inspector</p>
+            <h2>Know what every agent is doing.</h2>
+            <p>One tabbed window with a live feed of every action, todo progress, a tree of subagents and stats: context usage, tokens, cache hits and the estimated cost per session and per day.</p>
+            <ul>
+              <li>Click a file in the feed and the editor opens exactly where Claude changed it.</li>
+              <li>Under every terminal: model, context, cost and runtime – and a <b>Rewind</b> button that takes conversation and code back to an earlier step.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/inspector-feed.webp" width="1600" height="960" alt="Session inspector over the terminal, tab Live feed: time, tool (Bash, Edit, Agent, Task, TodoWrite), target and a check or cross" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Session inspector, live feed</figcaption>
+          </figure>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">Two layouts</p>
+            <h2>Floating windows or a calm studio.</h2>
+            <p><b style="color:var(--ink);font-weight:500">Desktop</b> gives you free glass windows and a dock. <b style="color:var(--ink);font-weight:500">Studio</b> puts a sidebar on the left, opens every window as a full page and adds a status bar with project, branch, uncommitted changes and what Claude is doing. Switch in the settings or the command palette.</p>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/studio.webp" width="1600" height="960" alt="Studio layout: sidebar with Commands, Projects, sessions and tools, the terminal as a full page, and a status bar at the bottom" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Studio layout</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="head left">
+          <p class="label">The terminal</p>
+          <h2>Feels like Windows Terminal.</h2>
+        </div>
+        <div class="grid6">
+          <div><h3>Copy &amp; paste</h3><p><kbd>Ctrl</kbd> + <kbd>C</kbd> copies a selection, <kbd>Ctrl</kbd> + <kbd>V</kbd> pastes – screenshots too: Claude gets the image path.</p></div>
+          <div><h3>Clickable links and paths</h3><p>URLs open in the browser, <code>localhost</code> in the preview, <code>src/app.ts:42</code> in the editor at that line.</p></div>
+          <div><h3>Search and zoom</h3><p><kbd>Ctrl</kbd> + <kbd>F</kbd> searches, <kbd>Ctrl</kbd> + <kbd>+</kbd>/<kbd>-</kbd> changes the font size.</p></div>
+          <div><h3>Attachments</h3><p>The paper clip opens the file dialog; a list shows whether a file is sent and whether Claude has read it.</p></div>
+          <div><h3>PowerShell next to Claude</h3><p>One click opens a shell in the project folder beside the session.</p></div>
+          <div><h3>Survives a reload</h3><p>After reloading the window with <kbd>Ctrl</kbd> + <kbd>R</kbd>, running sessions and shells come back with their history.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tight" style="padding-top:0;padding-bottom:0">
+      <div class="wrap pager">
+        <a href="../"><span>← Overview</span><b>All features</b></a>
+        <a class="next" href="../phone/"><span>Next →</span><b>Phone companion</b></a>
+      </div>
+    </section>
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../sessions/">Sessions</a></li><li><a href="../phone/">Phone companion</a></li><li><a href="../brain/">The brain</a></li><li><a href="../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../ambience/">Ambience & music</a></li><li><a href="../calm/">Calm by default</a></li><li><a href="../tools/">Tools</a></li><li><a href="../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

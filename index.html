@@ -4,263 +4,80 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07090d">
-  <title>VibeDesk — A calm desk for Claude Code</title>
-  <meta name="description" content="Run several Claude Code sessions side by side on Windows. See at a glance which one is waiting for you and answer it in one click — on your PC or your phone. Free and open source.">
-  <meta property="og:title" content="VibeDesk — A calm desk for Claude Code">
-  <meta property="og:description" content="Several Claude Code sessions, one calm Windows desk. See who is waiting, answer in one click. Free and open source.">
-  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/desk-approval.jpg">
+  <title>VibeDesk – A calm desk for Claude Code</title>
+  <meta name="description" content="Run several Claude Code sessions side by side on Windows. See which one is waiting for you and answer in one click – on your PC or your phone. Rain, lofi and Spotify included. Free and open source.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/">
+  <meta property="og:title" content="VibeDesk – A calm desk for Claude Code">
+  <meta property="og:description" content="Run several Claude Code sessions side by side on Windows. See which one is waiting for you and answer in one click – on your PC or your phone. Rain, lofi and Spotify included. Free and open source.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/og.jpg">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/">
   <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VibeDesk">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" href="./img/icon.png">
+  <link rel="icon" href="img/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --night: #07090d;
-      --night-2: #0b0e14;
-      --card: #0e1118;
-      --card-2: #121620;
-      --ink: #eef1f6;
-      --ink-2: #a4abb8;
-      --ink-3: #6f7685;
-      --line: rgba(255, 255, 255, 0.08);
-      --line-2: rgba(255, 255, 255, 0.14);
-      --green: #4ade80;
-      --yellow: #facc15;
-      --blue: #60a5fa;
-      --accent: #9fb8ff;
-      --warm: #e8a35a;
-      --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-      --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
-      --ease: cubic-bezier(0.22, 1, 0.36, 1);
-      --max: 1180px;
-      --gutter: clamp(20px, 4vw, 40px);
-      color-scheme: dark;
-    }
-    * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; scroll-padding-top: 80px; background: var(--night); }
-    body {
-      margin: 0; font-family: var(--sans); font-size: 16px; line-height: 1.55;
-      color: var(--ink); background: var(--night); letter-spacing: -0.01em;
-      -webkit-font-smoothing: antialiased; overflow-x: hidden;
-    }
-    a { color: inherit; text-decoration: none; }
-    img { display: block; max-width: 100%; height: auto; }
-    h1, h2, h3, p { margin: 0; }
-    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
-    .wrap { width: min(100%, var(--max)); margin-inline: auto; padding-inline: var(--gutter); }
-    .label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-      height: 46px; padding: 0 22px; border-radius: 999px; font-size: 15px; font-weight: 500;
-      white-space: nowrap; transition: background-color .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
-    }
-    .btn:active { transform: scale(0.98); }
-    .btn-light { background: #fff; color: #0b0d12; }
-    .btn-light:hover { background: #e6eaf2; }
-    .btn-glass { background: rgba(255, 255, 255, 0.06); color: var(--ink); border: 1px solid var(--line-2); }
-    .btn-glass:hover { background: rgba(255, 255, 255, 0.12); }
-    .btn-sm { height: 36px; padding: 0 16px; font-size: 14px; }
-    .btn svg { width: 16px; height: 16px; flex: none; }
-
-    /* Nav */
-    .nav { position: sticky; top: 0; z-index: 20; background: rgba(7, 9, 13, 0.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid transparent; transition: border-color .3s; }
-    .nav.scrolled { border-bottom-color: var(--line); }
-    .nav-in { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; letter-spacing: -0.02em; }
-    .brand img { width: 26px; height: 26px; border-radius: 7px; }
-    .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--ink-2); }
-    .nav-links a:hover { color: var(--ink); }
-
-    /* Hero */
-    .hero { position: relative; isolation: isolate; overflow: hidden; padding-top: clamp(72px, 10vw, 120px); }
-    .hero::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 180px; z-index: -1; background: linear-gradient(to bottom, rgba(7, 9, 13, 0), var(--night)); pointer-events: none; }
-    #rain { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; pointer-events: none; }
-    .glow { position: absolute; z-index: -2; left: 50%; bottom: -10%; width: 140%; height: 70%; transform: translateX(-50%); pointer-events: none;
-      background:
-        radial-gradient(42% 55% at 28% 78%, rgba(232, 163, 90, 0.32), transparent 70%),
-        radial-gradient(32% 45% at 74% 82%, rgba(96, 165, 250, 0.2), transparent 70%),
-        radial-gradient(60% 50% at 50% 100%, rgba(232, 163, 90, 0.16), transparent 75%);
-      filter: blur(10px);
-    }
-    .hero-copy { text-align: center; max-width: 820px; margin-inline: auto; }
-    .hero-icon { width: 64px; height: 64px; margin: 0 auto 28px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
-    .hero h1 { font-size: clamp(44px, 7.4vw, 86px); line-height: 1.02; font-weight: 600; letter-spacing: -0.045em; text-wrap: balance; }
-    .hero-sub { margin: 22px auto 0; max-width: 560px; font-size: clamp(17px, 1.6vw, 19px); color: var(--ink-2); text-wrap: balance; }
-    .hero-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
-    .micro { margin-top: 18px; font-size: 13px; color: var(--ink-3); display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 14px; }
-    .micro a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(255,255,255,.25); }
-    .micro a:hover { color: var(--ink-2); }
-    #latest[hidden] { display: none; }
-
-    .shot { margin-top: clamp(48px, 7vw, 80px); position: relative; }
-    .frame { border: 1px solid var(--line-2); border-radius: 14px; background: #0a0d13; overflow: hidden; box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0,0,0,.4); }
-    .frame-bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 14px; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
-    .frame-bar .dot { margin-right: 2px; }
-    .frame > img { width: 100%; aspect-ratio: 2000 / 1251; object-fit: cover; }
-    .frame-bar img { width: 14px; height: 14px; border-radius: 4px; }
-    .shot-fade { position: absolute; left: 0; right: 0; bottom: -1px; height: 26%; background: linear-gradient(to bottom, transparent, var(--night)); pointer-events: none; border-radius: 0 0 14px 14px; }
-
-    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; }
-    .dot.g { background: var(--green); box-shadow: 0 0 10px rgba(74, 222, 128, .6); }
-    .dot.y { background: var(--yellow); box-shadow: 0 0 10px rgba(250, 204, 21, .6); animation: pulse 1.4s ease-in-out infinite; }
-    .dot.b { background: var(--blue); box-shadow: 0 0 8px rgba(96, 165, 250, .55); }
-    @keyframes pulse { 50% { opacity: .35; transform: scale(.8); } }
-
-    /* Sections */
-    section { padding-block: clamp(80px, 11vw, 140px); }
-    .head { text-align: center; max-width: 640px; margin: 0 auto clamp(40px, 6vw, 64px); }
-    .head h2 { font-size: clamp(34px, 4.6vw, 54px); font-weight: 600; letter-spacing: -0.04em; line-height: 1.06; text-wrap: balance; }
-    .head p { margin-top: 16px; color: var(--ink-2); font-size: 17px; text-wrap: balance; }
-
-    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 26px; display: flex; flex-direction: column; min-height: 300px; }
-    .card h3 { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; margin-top: auto; padding-top: 24px; }
-    .card p { margin-top: 6px; color: var(--ink-2); font-size: 15px; }
-    .viz { flex: 1; display: grid; place-items: center; min-height: 150px; }
-
-    .status-list { width: 100%; display: flex; flex-direction: column; gap: 8px; }
-    .status-row { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--card-2); font-size: 14px; }
-    .status-row b { font-weight: 500; }
-    .status-row span:last-child { margin-left: auto; color: var(--ink-3); font-size: 13px; }
-
-    .approve { width: 100%; border: 1px solid rgba(250, 204, 21, .35); border-radius: 12px; background: #0b0e16; padding: 14px; transition: border-color .3s; }
-    .approve.ok { border-color: rgba(74, 222, 128, .35); }
-    .approve-top { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; }
-    .approve-sub { margin: 2px 0 10px 18px; font-size: 12.5px; color: var(--ink-3); }
-    .approve code { display: block; font-family: var(--mono); font-size: 12.5px; background: #05070b; border-radius: 8px; padding: 9px 11px; color: var(--ink-2); }
-    .approve-btns { display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; }
-    .approve-btns button { font: 500 12.5px var(--sans); color: var(--ink); background: rgba(255,255,255,.05); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px 11px; cursor: pointer; }
-    .approve-btns button.primary { background: rgba(159, 184, 255, .14); border-color: rgba(159, 184, 255, .4); }
-    .approve-btns button:hover { background: rgba(255,255,255,.1); }
-    .approve-btns button:disabled { opacity: .45; cursor: default; }
-    .approve-hint { margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--ink-3); text-align: center; min-height: 1.4em; }
-
-    .phone { width: 128px; height: 220px; border: 6px solid #1a1e27; border-radius: 26px; background: #0b0e16; padding: 22px 10px 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 20px 50px rgba(0,0,0,.5); position: relative; }
-    .phone::before { content: ""; position: absolute; top: 8px; left: 50%; width: 34px; height: 6px; margin-left: -17px; border-radius: 4px; background: #1a1e27; }
-    .phone-card { border: 1px solid rgba(250, 204, 21, .35); border-radius: 8px; padding: 7px; font-size: 9.5px; color: var(--ink-2); }
-    .phone-card strong { display: flex; gap: 5px; align-items: center; color: var(--ink); font-weight: 500; margin-bottom: 6px; }
-    .phone-card .dot { width: 6px; height: 6px; }
-    .phone-btn { display: block; text-align: center; border-radius: 6px; padding: 4px; background: rgba(159, 184, 255, .16); color: var(--ink); font-size: 9.5px; }
-    .phone-line { height: 6px; border-radius: 3px; background: rgba(255,255,255,.07); }
-    .phone-line.s { width: 60%; }
-
-    .grid6 { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 40px; border-top: 1px solid var(--line); }
-    .grid6 > div { padding: 22px 22px 22px 0; border-bottom: 1px solid var(--line); }
-    .grid6 > div:not(:nth-child(3n+1)) { padding-left: 22px; border-left: 1px solid var(--line); }
-    .grid6 h4 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .grid6 p { margin-top: 4px; color: var(--ink-2); font-size: 14px; }
-    .soon { font-family: var(--mono); font-size: 10.5px; font-weight: 400; letter-spacing: .04em; color: var(--accent); border: 1px solid rgba(159,184,255,.35); border-radius: 999px; padding: 1px 8px; }
-
-    .row { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: clamp(32px, 6vw, 80px); align-items: center; }
-    .row + .row { margin-top: clamp(72px, 9vw, 120px); }
-    .row.flip .row-text { order: 2; }
-    .row-text h3 { font-size: clamp(28px, 3.4vw, 40px); font-weight: 600; letter-spacing: -0.035em; line-height: 1.1; margin-top: 14px; text-wrap: balance; }
-    .row-text p { margin-top: 16px; color: var(--ink-2); font-size: 16.5px; }
-    .row-text ul { margin: 22px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
-    .row-text li { display: flex; gap: 10px; color: var(--ink-2); font-size: 15px; }
-    .row-text li::before { content: ""; width: 5px; height: 5px; margin-top: 9px; border-radius: 50%; background: var(--accent); flex: none; }
-    .row-img { border: 1px solid var(--line-2); border-radius: 14px; overflow: hidden; background: #0a0d13; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
-    .row-img.narrow { max-width: 520px; justify-self: center; }
-
-    /* Price */
-    .price { max-width: 760px; margin-inline: auto; border: 1px solid var(--line-2); border-radius: 20px; background: var(--card); padding: clamp(28px, 5vw, 48px); display: grid; grid-template-columns: auto 1fr; gap: clamp(24px, 5vw, 56px); align-items: center; }
-    .price-num { font-size: clamp(64px, 9vw, 104px); font-weight: 600; letter-spacing: -0.06em; line-height: .9; }
-    .price-num small { display: block; margin-top: 12px; font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: .08em; color: var(--ink-3); text-transform: uppercase; }
-    .price ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
-    .price li { display: flex; gap: 12px; font-size: 15.5px; color: var(--ink-2); }
-    .price li svg { width: 18px; height: 18px; flex: none; color: var(--green); margin-top: 2px; }
-    .price li b { color: var(--ink); font-weight: 500; }
-    .price .btn { margin-top: 22px; }
-
-    /* FAQ */
-    .faq { max-width: 760px; margin-inline: auto; border-top: 1px solid var(--line); }
-    .faq details { border-bottom: 1px solid var(--line); }
-    .faq summary { list-style: none; cursor: pointer; padding: 20px 0; display: flex; justify-content: space-between; align-items: center; gap: 20px; font-size: 16.5px; font-weight: 500; }
-    .faq summary::-webkit-details-marker { display: none; }
-    .faq summary::after { content: "+"; font-size: 22px; font-weight: 300; color: var(--ink-3); transition: transform .25s var(--ease); }
-    .faq details[open] summary::after { transform: rotate(45deg); }
-    .faq details p { padding: 0 40px 22px 0; color: var(--ink-2); font-size: 15.5px; }
-    .faq a { text-decoration: underline; text-underline-offset: 3px; }
-
-    /* CTA + Footer */
-    .cta { position: relative; overflow: hidden; isolation: isolate; text-align: center; border: 1px solid var(--line); border-radius: 24px; padding: clamp(56px, 8vw, 96px) 24px; background: var(--night-2); }
-    .cta::before { content: ""; position: absolute; inset: auto -20% -60% -20%; height: 120%; z-index: -1; background: radial-gradient(40% 50% at 50% 100%, rgba(232, 163, 90, .18), transparent 70%); }
-    .cta h2 { font-size: clamp(32px, 4.6vw, 52px); font-weight: 600; letter-spacing: -0.04em; line-height: 1.08; text-wrap: balance; }
-    .cta p { margin-top: 14px; color: var(--ink-2); }
-    .cta .hero-actions { margin-top: 30px; }
-    footer { padding-block: 36px 48px; color: var(--ink-3); font-size: 13.5px; }
-    .foot-in { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 28px; }
-    .foot-links { display: flex; gap: 22px; flex-wrap: wrap; }
-    .foot-links a:hover { color: var(--ink); }
-
-    @media (max-width: 900px) {
-      .cards { grid-template-columns: 1fr; }
-      .card { min-height: 0; }
-      .grid6 { grid-template-columns: 1fr 1fr; }
-      .grid6 > div:not(:nth-child(3n+1)) { padding-left: 0; border-left: 0; }
-      .grid6 > div:nth-child(2n) { padding-left: 18px; border-left: 1px solid var(--line); }
-      .grid6 > div:nth-child(2n+1) { padding-left: 0; padding-right: 18px; border-left: 0; }
-      .row, .row.flip { grid-template-columns: 1fr; }
-      .row.flip .row-text { order: 0; }
-      .price { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 640px) {
-      .nav-links { display: none; }
-      .hero-actions .btn { width: 100%; max-width: 340px; }
-      .grid6 { grid-template-columns: 1fr; }
-      .grid6 > div, .grid6 > div:nth-child(2n), .grid6 > div:nth-child(2n+1) { padding: 18px 0; border-left: 0; }
-      .frame-bar span:not(.dot):not(.bar-title) { display: none; }
-      .faq details p { padding-right: 0; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      html { scroll-behavior: auto; }
-      .dot.y { animation: none; }
-      .btn, .approve { transition: none; }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/site.css">
+  <script src="assets/site.js" defer></script>
 </head>
 <body>
-  <header class="nav" id="nav">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
     <div class="wrap nav-in">
-      <a class="brand" href="#top" aria-label="VibeDesk home"><img src="./img/icon.png" alt="" width="26" height="26">VibeDesk</a>
-      <nav class="nav-links" aria-label="Main">
-        <a href="#features">Features</a>
-        <a href="#faq">FAQ</a>
-        <a href="https://github.com/fxd-gif/vibedesk">GitHub</a>
+      <a class="brand" href="./" aria-current="page"><img src="img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="sessions/">Sessions</a>
+        <a href="phone/">Phone</a>
+        <a href="brain/">Brain</a>
+        <a href="merge-studio/">Merge Studio</a>
+        <a href="ambience/">Ambience</a>
+        <a href="calm/">Calm</a>
+        <a href="tools/">Tools</a>
+        <a href="social/">Social</a>
       </nav>
-      <a class="btn btn-light btn-sm" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="./" aria-current="page">Overview<small>Start page</small></a>
+            <hr>
+            <a href="sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="phone/">Phone<small>Companion in the browser</small></a>
+            <a href="brain/">Brain<small>Project memory</small></a>
+            <a href="merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
     </div>
   </header>
 
-  <main id="top">
-    <div class="hero">
-      <canvas id="rain" aria-hidden="true"></canvas>
+  <main id="main">
+    <div class="sky hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
       <div class="glow" aria-hidden="true"></div>
       <div class="wrap">
         <div class="hero-copy">
-          <img class="hero-icon" src="./img/icon.png" alt="" width="64" height="64">
+          <img class="hero-icon" src="img/icon.png" alt="" width="64" height="64">
           <h1>A calm desk for Claude&nbsp;Code.</h1>
-          <p class="hero-sub">Run several Claude Code sessions side by side. See at a glance which one is waiting for you — and answer it in one click, on your PC or your phone.</p>
+          <p class="hero-sub">Run several Claude Code sessions side by side. See at a glance which one is waiting for you – and answer it in one click, on your PC or your phone.</p>
           <div class="hero-actions">
-            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>
-              Download for Windows
-            </a>
-            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>
-              View on GitHub
-            </a>
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
           </div>
           <p class="micro"><span>Free</span><span>·</span><span>Open source (MIT)</span><span>·</span><span>Windows 10/11</span><span>·</span><span>Uses your own Claude plan</span><span id="latest" hidden>·&nbsp;<a id="latest-link" href="https://github.com/fxd-gif/vibedesk/releases/latest">Latest: <span id="latest-v"></span></a></span></p>
         </div>
-        <figure class="shot" style="margin-left:0;margin-right:0;margin-bottom:0">
+        <figure class="hero-shot">
           <div class="frame">
-            <div class="frame-bar" aria-hidden="true"><img src="./img/icon.png" alt="" width="14" height="14" style="border-radius:4px"><span class="bar-title">VibeDesk</span></div>
-            <img src="./img/desk-approval.jpg" width="2000" height="1251" alt="VibeDesk with a Claude Code terminal waiting for approval, an approval card with Allow, Always and Deny, and the dock at the bottom" fetchpriority="high">
+            <div class="frame-bar" aria-hidden="true"><img src="img/icon.png" alt="" width="14" height="14"><span>VibeDesk</span></div>
+            <img src="img/approval.webp" width="1600" height="960" alt="VibeDesk: a Claude Code terminal for shop-frontend waiting for permission, an approval card with In terminal, Deny, Always and Allow, and the dock at the bottom" fetchpriority="high">
           </div>
           <div class="shot-fade" aria-hidden="true"></div>
         </figure>
@@ -271,7 +88,7 @@
       <div class="wrap">
         <div class="head">
           <p class="label">Features</p>
-          <h2 style="margin-top:14px">One desk. Every session.</h2>
+          <h2>One desk. Every session.</h2>
           <p>Claude Code runs in real terminals. VibeDesk puts the overview around them: what each session is doing, what it is waiting for, and what it costs.</p>
         </div>
 
@@ -279,9 +96,9 @@
           <article class="card">
             <div class="viz">
               <div class="status-list" aria-hidden="true">
-                <div class="status-row"><span class="dot g"></span><b>api-server</b><span>working</span></div>
-                <div class="status-row"><span class="dot y"></span><b>shop-frontend</b><span>waiting for you</span></div>
-                <div class="status-row"><span class="dot b"></span><b>blog</b><span>done</span></div>
+                <div class="status-row"><span class="dot g"></span><b>api-server</b><span class="st">working</span></div>
+                <div class="status-row"><span class="dot y"></span><b>shop-frontend</b><span class="st">waiting for you</span></div>
+                <div class="status-row"><span class="dot b"></span><b>blog</b><span class="st">done</span></div>
               </div>
             </div>
             <h3>See who is waiting</h3>
@@ -291,7 +108,7 @@
           <article class="card">
             <div class="viz">
               <div class="approve" id="demo">
-                <div class="approve-top"><span class="dot y" id="demo-dot"></span><span>shop-frontend needs approval</span></div>
+                <div class="approve-top"><span class="dot y" id="demo-dot"></span><span>shop-frontend needs your permission</span></div>
                 <div class="approve-sub">Run command</div>
                 <code>npm test</code>
                 <div class="approve-btns">
@@ -299,34 +116,45 @@
                   <button type="button" data-a="always">Always</button>
                   <button type="button" class="primary" data-a="allow">Allow</button>
                 </div>
-                <div class="approve-hint" id="demo-hint" aria-live="polite">Try it — click Allow</div>
+                <div class="approve-hint" id="demo-hint" aria-live="polite">Try it – click Allow</div>
               </div>
             </div>
             <h3>Answer with one click</h3>
-            <p>When Claude wants to run a command, a card appears. Allow, Always or Deny — without hunting for the terminal.</p>
+            <p>When Claude wants to run a command, a card appears. Allow, Always or Deny – without hunting for the terminal.</p>
           </article>
 
           <article class="card">
             <div class="viz">
-              <div class="phone" aria-hidden="true">
+              <div class="phone-mini" aria-hidden="true">
                 <div class="phone-line s"></div>
-                <div class="phone-card"><strong><span class="dot y"></span>Approval</strong>npm test<span class="phone-btn" style="margin-top:6px">Allow</span></div>
+                <div class="phone-card"><strong><span class="dot y"></span>Permission</strong>npm test<span class="phone-btn" style="margin-top:6px">Allow</span></div>
                 <div class="phone-line"></div>
                 <div class="phone-line s"></div>
               </div>
             </div>
             <h3>Same question on your phone</h3>
-            <p>Open VibeDesk in your phone's browser, pair with a 6-digit code, answer approvals from the kitchen. No app needed.</p>
+            <p>Open VibeDesk in your phone's browser, pair with a 6-digit code and answer from the kitchen. You can even follow the whole terminal live.</p>
           </article>
         </div>
+      </div>
+    </section>
 
-        <div class="grid6">
-          <div><h4>Project brain <span class="soon">"About you" coming in 1.1</span></h4><p>Areas, decisions and pitfalls as linked Markdown notes. New sessions start with what earlier ones learned.</p></div>
-          <div><h4>Prompt queue</h4><p>Line up the next task. It starts as soon as Claude is free.</p></div>
-          <div><h4>Continues after the limit</h4><p>Usage limit hit? VibeDesk reads the reset time and lets Claude carry on by itself.</p></div>
-          <div><h4>Git &amp; GitHub</h4><p>Diff, stage, commit with a message Claude writes, push, pull and publish.</p></div>
-          <div><h4>Preview &amp; "Point at it"</h4><p>Dev servers open automatically. Click an element and tell Claude what should change.</p></div>
-          <div><h4>Rain, lofi, focus timer</h4><p>Rain on the window, a lofi stream and Pomodoro rounds. Long sessions feel less like a console.</p></div>
+    <section id="explore" style="padding-top:0">
+      <div class="wrap">
+        <div class="head">
+          <p class="label">Explore</p>
+          <h2>Everything around the terminal.</h2>
+          <p>Each part has its own page with real screenshots and a small live demo.</p>
+        </div>
+        <div class="tiles">
+          <a class="tile" href="sessions/"><div class="tile-img"><img src="img/inspector-feed.webp" alt="" width="1600" height="960" loading="lazy" decoding="async"></div><div class="tile-body"><h3>Sessions <span>→</span></h3><p>Status, approval cards, a prompt queue, watchdog and auto-continue after the limit.</p></div></a>
+          <a class="tile" href="phone/"><div class="tile-img"><img src="img/phone-session.webp" alt="" width="600" height="1006" loading="lazy" decoding="async"></div><div class="tile-body"><h3>Phone companion <span>→</span></h3><p>Approvals, live actions and the whole terminal in your phone's browser.</p></div></a>
+          <a class="tile" href="brain/"><div class="tile-img"><img src="img/brain-graph.webp" alt="" width="1600" height="1014" loading="lazy" decoding="async"></div><div class="tile-body"><h3>Brain <span>→</span></h3><p>Project memory as linked Markdown notes, plus “About you”.</p></div></a>
+          <a class="tile" href="merge-studio/"><div class="tile-img"><img src="img/merge-studio.webp" alt="" width="1600" height="960" loading="lazy" decoding="async"></div><div class="tile-body"><h3>Merge Studio <span>→</span></h3><p>Parallel sessions in worktrees, conflict prediction, checkpoints.</p></div></a>
+          <a class="tile" href="ambience/"><div class="tile-img"><img src="img/ambience-spotify.webp" alt="" width="1600" height="1010" loading="lazy" decoding="async"></div><div class="tile-body"><h3>Ambience &amp; music <span>→</span></h3><p>Rain scenes, lofi radio, Spotify control and a focus timer.</p></div></a>
+          <a class="tile" href="calm/"><div class="tile-img"><img src="img/zen.webp" alt="" width="1600" height="960" loading="lazy" decoding="async"></div><div class="tile-body"><h3>Calm by default <span>→</span></h3><p>Zen mode, a toolbox for modules and a dock that grows with you.</p></div></a>
+          <a class="tile" href="tools/"><div class="tile-img"><img src="img/palette.webp" alt="" width="1600" height="960" loading="lazy" decoding="async"></div><div class="tile-body"><h3>Tools <span>→</span></h3><p>Editor, preview with “Point at it”, Git, palette and no-code addons.</p></div></a>
+          <a class="tile" href="social/"><div class="tile-img"><img src="img/discord.webp" alt="" width="1600" height="1192" loading="lazy" decoding="async"></div><div class="tile-body"><h3>Social &amp; streaming <span>→</span></h3><p>Discord presence, Vibe Lounge, OBS overlay and Vibe Wrapped.</p></div></a>
         </div>
       </div>
     </section>
@@ -335,30 +163,44 @@
       <div class="wrap">
         <div class="row">
           <div class="row-text">
-            <p class="label">Project memory</p>
-            <h3>Claude stops exploring from scratch.</h3>
-            <p>The brain keeps what Claude learns about your project in <code style="font-family:var(--mono);font-size:.9em">.vibedesk/brain</code> — plain Markdown with [[links]], readable in Obsidian and versionable with Git.</p>
+            <p class="label">Calm · new</p>
+            <h2>Only Claude and the rain.</h2>
+            <p>Press <kbd>Ctrl</kbd> + <kbd>.</kbd> and everything else steps back. Other sessions wait as small pills at the top, the dock returns when your mouse touches the bottom edge.</p>
             <ul>
-              <li>Every session starts with an overview and can search, read and extend it.</li>
-              <li>A living graph lights up while Claude reads, edits or learns.</li>
-              <li>Notes are tended automatically at the end of a turn.</li>
+              <li>The dock grows with your work: Git appears once Claude changed files, Merge Studio with a second session.</li>
+              <li>The toolbox switches whole modules off – they leave the dock, the menu and the palette.</li>
+              <li>One notification card at a time; “done” messages are bundled.</li>
             </ul>
+            <a class="more" href="calm/">How VibeDesk stays calm →</a>
           </div>
-          <div class="row-img"><img src="./img/brain.jpg" width="1400" height="822" alt="VibeDesk brain window: a graph of linked notes such as Login flow, Validation and Auth API"></div>
+          <div class="shot"><img src="img/zen.webp" width="1600" height="960" alt="Zen mode: a single Claude Code terminal fills the screen, a pill with the session name and Fit all at the top, no dock" loading="lazy" decoding="async"></div>
         </div>
 
         <div class="row flip">
           <div class="row-text">
-            <p class="label">Inspector</p>
-            <h3>Know what every agent is doing.</h3>
-            <p>A live feed of every action, todo progress, a tree of subagents, and stats — context usage, tokens, cache hits and estimated cost per session and day.</p>
+            <p class="label">Ambience · Spotify</p>
+            <h2>Your music, inside the desk.</h2>
+            <p>Control your own Spotify app right from VibeDesk – playlists, liked songs, search and the queue – or play a lofi stream without any account. Rain sound and alert sound have their own volume.</p>
             <ul>
-              <li>Click a file in the feed to open it exactly where Claude changed it.</li>
-              <li>A watcher speaks up when a session hangs or keeps failing.</li>
-              <li>Rewind conversation and code to an earlier step.</li>
+              <li>Scenes: city at night, forest at dusk, a Tokyo alley, or your own picture.</li>
+              <li>The focus timer lowers the music during breaks.</li>
             </ul>
+            <a class="more" href="ambience/">Rain, lofi and Spotify →</a>
           </div>
-          <div class="row-img narrow"><img src="./img/inspector.jpg" width="1000" height="929" alt="Session inspector showing a tree of subagents: Explore and Plan"></div>
+          <div class="shot"><img src="img/ambience-spotify.webp" width="1600" height="1010" alt="The Ambience &amp; music window with the Spotify tab selected: steps to connect your own Spotify app, and on the right scenes, rain and volume sliders" loading="lazy" decoding="async"></div>
+        </div>
+
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Phone companion · new</p>
+            <h2>The whole terminal in your pocket.</h2>
+            <p>Your phone shows each session's last prompt and Claude's latest steps with checkmarks. If you allow it on the PC, it shows the complete terminal too – live, in color, with the full history.</p>
+            <a class="more" href="phone/">The phone companion →</a>
+          </div>
+          <div class="phone-shots">
+            <div class="phone-shot"><img src="img/phone-session.webp" width="600" height="1006" alt="Phone: session shop-frontend working, your prompt, progress 1 of 3 and the latest agent steps, a View terminal button" loading="lazy" decoding="async"></div>
+            <div class="phone-shot"><img src="img/phone-terminal.webp" width="600" height="662" alt="Phone: the full Claude Code terminal of shop-frontend with colors, line wrapping switch and close button" loading="lazy" decoding="async"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -367,17 +209,17 @@
       <div class="wrap">
         <div class="head">
           <p class="label">Price</p>
-          <h2 style="margin-top:14px">Free. Open source.</h2>
+          <h2>Free. Open source.</h2>
         </div>
         <div class="price">
           <div class="price-num">€0<small>No subscription</small></div>
           <div>
             <ul>
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><span><b>MIT licensed</b> — the code is on GitHub.</span></li>
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><span><b>No account</b> and no sign-up.</span></li>
-              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><span><b>Your Claude plan</b> — usage runs on your own Pro/Max subscription or API key.</span></li>
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><span><b>MIT licensed</b> – the code is on GitHub.</span></li>
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><span><b>No account</b>, no telemetry, no VibeDesk server.</span></li>
+              <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><span><b>Your Claude plan</b> – usage runs on your own Pro/Max subscription or API key.</span></li>
             </ul>
-            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download for Windows</a>
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
           </div>
         </div>
       </div>
@@ -387,28 +229,30 @@
       <div class="wrap">
         <div class="head">
           <p class="label">FAQ</p>
-          <h2 style="margin-top:14px">Questions</h2>
+          <h2>Questions</h2>
         </div>
         <div class="faq">
-          <details><summary>Is VibeDesk made by Anthropic?</summary><p>No. VibeDesk is an independent, unofficial project. It runs the real Claude Code CLI that you install yourself.</p></details>
-          <details><summary>What do I need?</summary><p>Windows 10 or 11, Claude Code installed, and a Claude Pro/Max plan or an API key. VibeDesk can install Git and the GitHub CLI for you with one click if you want them.</p></details>
-          <details><summary>Is it really free?</summary><p>Yes. VibeDesk is free and open source under the MIT license. Claude usage is billed by Anthropic through your own plan, not by VibeDesk.</p></details>
-          <details><summary>Does it change my Claude Code settings?</summary><p>No. VibeDesk does not touch your <code style="font-family:var(--mono)">~/.claude/settings.json</code> or project settings. Sessions started in VibeDesk get a temporary settings file with its hooks, passed via <code style="font-family:var(--mono)">--settings</code>. Sessions you start elsewhere are not affected.</p></details>
-          <details><summary>What stays on my PC?</summary><p>Everything. Settings, stats and notes are stored locally; the brain lives in a <code style="font-family:var(--mono)">.vibedesk</code> folder inside your project. Phone access from outside your network only happens if you turn it on — then a Cloudflare tunnel is used, and pairing still needs the code from your screen.</p></details>
-          <details><summary>Which languages does the app support?</summary><p>The interface is German today. An English interface is coming with version 1.1.</p></details>
+          <details><summary>Is VibeDesk made by Anthropic?</summary><p>No. VibeDesk is an independent, unofficial open-source project. It runs the real Claude Code CLI that you install and log in to yourself.</p></details>
+          <details><summary>What do I need?</summary><p>Windows 10 or 11 (64-bit), Claude Code, and a Claude Pro/Max plan or an Anthropic API key. If Node.js or Claude Code are missing, VibeDesk offers to install them on first start. Git and the GitHub CLI can be installed with one click when you need them.</p></details>
+          <details><summary>Is it really free?</summary><p>Yes. VibeDesk is free and open source under the MIT license. Claude usage is billed by Anthropic through your own plan, not by VibeDesk. Costs shown in the app are estimates based on API prices.</p></details>
+          <details><summary>Which languages does the app support?</summary><p>English and German. VibeDesk follows your Windows language, and you can switch it any time in the settings.</p></details>
+          <details><summary>Do I need Spotify Premium?</summary><p>Only for Spotify. Controlling playback through Spotify needs Premium and your own (free) Spotify developer app ID – VibeDesk walks you through it in three steps. The lofi radio works without any account.</p></details>
+          <details><summary>Does it change my Claude Code settings?</summary><p>No. VibeDesk does not touch your <code>~/.claude/settings.json</code> or project settings. Sessions started in VibeDesk get a temporary settings file with its hooks, passed via <code>--settings</code>. Sessions you start elsewhere are not affected.</p></details>
+          <details><summary>What stays on my PC?</summary><p>Everything, unless you turn something on. There is no telemetry, no analytics and no account. Settings and stats stay local; the project brain lives in a <code>.vibedesk</code> folder inside your project, “About you” only on your PC. The phone companion uses a Cloudflare quick tunnel only while it is switched on, and pairing always needs the code from your screen.</p></details>
+          <details><summary>Windows says “Windows protected your PC”.</summary><p>The installer is not code-signed, so SmartScreen may warn about it. Click <b>More info → Run anyway</b>. To check the file, compare its SHA256 checksum with the one in the <a href="https://github.com/fxd-gif/vibedesk/releases">release notes</a>.</p></details>
           <details><summary>Mac or Linux?</summary><p>Not at the moment. VibeDesk is built for Windows 10 and 11.</p></details>
         </div>
       </div>
     </section>
 
-    <section style="padding-top:0">
+    <section class="tight">
       <div class="wrap">
         <div class="cta">
           <h2>Let Claude work.<br>Step in when it counts.</h2>
           <p>Free for Windows 10 and 11.</p>
           <div class="hero-actions">
-            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download for Windows</a>
-            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk">View on GitHub</a>
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
           </div>
         </div>
       </div>
@@ -416,95 +260,17 @@
   </main>
 
   <footer>
-    <div class="wrap foot-in">
-      <span>VibeDesk · MIT licensed · Not affiliated with Anthropic.</span>
-      <nav class="foot-links" aria-label="Footer">
-        <a href="https://github.com/fxd-gif/vibedesk">GitHub</a>
-        <a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a>
-        <a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a>
-        <a href="https://github.com/fxd-gif/vibedesk/security">Security</a>
-      </nav>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="./"><img src="img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="sessions/">Sessions</a></li><li><a href="phone/">Phone companion</a></li><li><a href="brain/">The brain</a></li><li><a href="merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="ambience/">Ambience & music</a></li><li><a href="calm/">Calm by default</a></li><li><a href="tools/">Tools</a></li><li><a href="social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li></ul></div>
+      </div>
     </div>
   </footer>
-
-  <script>
-    // Nav-Linie beim Scrollen
-    const nav = document.getElementById('nav')
-    const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 8)
-    addEventListener('scroll', onScroll, { passive: true }); onScroll()
-
-    // Neueste Version von GitHub (bei Fehler bleibt die Angabe verborgen)
-    fetch('https://api.github.com/repos/fxd-gif/vibedesk/releases/latest')
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((j) => {
-        if (!j || !j.tag_name) return
-        document.getElementById('latest-v').textContent = j.tag_name
-        if (j.html_url) document.getElementById('latest-link').href = j.html_url
-        document.getElementById('latest').hidden = false
-      })
-      .catch(() => {})
-
-    // Mini-Demo: Freigabe-Karte
-    const demo = document.getElementById('demo')
-    const dot = document.getElementById('demo-dot')
-    const hint = document.getElementById('demo-hint')
-    demo.addEventListener('click', (e) => {
-      const b = e.target.closest('button')
-      if (!b) return
-      const a = b.dataset.a
-      demo.querySelectorAll('button').forEach((x) => (x.disabled = true))
-      if (a === 'deny') {
-        dot.className = 'dot b'
-        hint.textContent = 'Denied — Claude takes another route'
-      } else {
-        dot.className = 'dot g'
-        demo.classList.add('ok')
-        hint.textContent = a === 'always' ? 'Allowed and remembered — working again' : 'Allowed — working again'
-      }
-      setTimeout(() => {
-        dot.className = 'dot y'
-        demo.classList.remove('ok')
-        demo.querySelectorAll('button').forEach((x) => (x.disabled = false))
-        hint.textContent = 'Try it — click Allow'
-      }, 3200)
-    })
-
-    // Regen: dünne Striche, höchstens 30 FPS, bei reduzierter Bewegung statisch
-    ;(() => {
-      const c = document.getElementById('rain')
-      const ctx = c.getContext('2d')
-      const still = matchMedia('(prefers-reduced-motion: reduce)').matches
-      let w = 0, h = 0, drops = []
-      const resize = () => {
-        const r = c.getBoundingClientRect()
-        const dpr = Math.min(devicePixelRatio || 1, 2)
-        w = r.width; h = r.height
-        c.width = w * dpr; c.height = h * dpr
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-        const n = Math.round((w * h) / 16000)
-        drops = Array.from({ length: n }, () => ({ x: Math.random() * w, y: Math.random() * h, l: 10 + Math.random() * 22, v: 3 + Math.random() * 5, a: 0.04 + Math.random() * 0.1 }))
-      }
-      const draw = () => {
-        ctx.clearRect(0, 0, w, h)
-        ctx.lineWidth = 1
-        for (const d of drops) {
-          ctx.strokeStyle = `rgba(190, 205, 235, ${d.a})`
-          ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - d.l * 0.08, d.y + d.l); ctx.stroke()
-        }
-      }
-      resize(); addEventListener('resize', resize); draw()
-      if (still) return
-      let last = 0, visible = true
-      new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(c)
-      const tick = (t) => {
-        requestAnimationFrame(tick)
-        if (!visible || document.hidden || t - last < 33) return
-        last = t
-        for (const d of drops) { d.y += d.v; d.x -= d.v * 0.08; if (d.y > h) { d.y = -d.l; d.x = Math.random() * w } }
-        draw()
-      }
-      requestAnimationFrame(tick)
-    })()
-  </script>
 </body>
 </html>

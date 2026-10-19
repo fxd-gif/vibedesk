@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>Calm by default – VibeDesk</title>
+  <meta name="description" content="A dock that grows with your work, a toolbox to switch modules off, zen mode with Ctrl + . and quiet tips – VibeDesk stays out of the way.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/calm/">
+  <meta property="og:title" content="Calm by default – VibeDesk">
+  <meta property="og:description" content="A dock that grows with your work, a toolbox to switch modules off, zen mode with Ctrl + . and quiet tips – VibeDesk stays out of the way.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/zen.webp">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/calm/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/site.css">
+  <script src="../assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../sessions/">Sessions</a>
+        <a href="../phone/">Phone</a>
+        <a href="../brain/">Brain</a>
+        <a href="../merge-studio/">Merge Studio</a>
+        <a href="../ambience/">Ambience</a>
+        <a href="../calm/" aria-current="page">Calm</a>
+        <a href="../tools/">Tools</a>
+        <a href="../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../brain/">Brain<small>Project memory</small></a>
+            <a href="../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../calm/" aria-current="page">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../">VibeDesk</a><span>/</span><span>Calm by default</span></p>
+          <h1>A desk that stays quiet until you need more.</h1>
+          <p class="lead">VibeDesk starts small and grows with what you do. Tools appear when they have something to do, the dock steps back while you type, and zen mode leaves only Claude and the rain.</p>
+          <div class="chips"><span class="chip">Zen mode <kbd>Ctrl</kbd>&nbsp;+&nbsp;<kbd>.</kbd></span><span class="chip">Growing dock</span><span class="chip">Toolbox</span><span class="chip">Beginner or pro</span><span class="chip">Quiet tips</span></div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-bar"><span>Illustration · the dock grows with your work</span><span class="live"><span class="dot g"></span>plays on its own</span></div>
+          <div class="stage-body dock-demo" data-demo="dock" style="isolation:isolate">
+            <div class="bokeh" aria-hidden="true" style="opacity:.55"></div>
+            <p class="dock-cap"></p>
+            <div class="zen-pills" aria-hidden="true"><span><span class="dot y"></span>shop-frontend</span><span><span class="dot g"></span>api-server</span><span>Fit all</span></div>
+            <div class="win calm-win" aria-hidden="true">
+              <div class="win-bar"><span class="dot g"></span><b>shop-frontend</b><span class="win-st">· working</span><span class="pill teal hide-s">▸ :5173</span></div>
+              <div class="win-body"><div class="term">
+                <div><span class="t-o">✻</span> <span class="t-b">Claude Code</span>  <span class="t-dim">~/Projects/shop-frontend</span></div>
+                <div>&nbsp;</div>
+                <div><span class="t-b">&gt;</span> Build a login page with validation</div>
+                <div>&nbsp;</div>
+                <div><span class="t-g">●</span> Edit(<span class="t-b">src/pages/Login.tsx</span>)</div>
+                <div><span class="t-dim">  ⎿ </span> <span class="t-g">+42</span> <span class="t-r">-3</span></div>
+                <div><span class="t-g">●</span> Bash(<span class="t-b">npm test</span>)</div>
+                <div><span class="t-dim">  ⎿ </span> <span class="t-g">✓ 24 tests passed</span></div>
+                <div><span class="t-g">●</span> Bash(<span class="t-b">npm run dev</span>)</div>
+              </div></div>
+            </div>
+            <div class="dock-tip" aria-hidden="true"></div>
+            <div class="dock" aria-hidden="true">
+              <span class="di in base" data-k="palette"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3z"/></svg></span>
+              <span class="di in base" data-k="projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+              <span class="dsep"></span>
+              <span class="di in base" data-k="amb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></span>
+              <span class="di in base" data-k="focus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="13" r="7"/><path d="M12 9v4l2.5 1.5M10 3h4"/></svg></span>
+              <span class="dsep"></span>
+              <span class="di sess" data-k="sf">SF<span class="dot g"></span></span>
+              <span class="di sess" data-k="as">AS<span class="dot y"></span></span>
+              <span class="di" data-k="git"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="7" r="2"/><path d="M6 7v10M18 9c0 5-7 4-11 8"/></svg></span>
+              <span class="di" data-k="brain"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9.5 4A3 3 0 0 0 6.5 7 3 3 0 0 0 4.5 12a3 3 0 0 0 2 5 3 3 0 0 0 5.5 1.5V5.5A2.5 2.5 0 0 0 9.5 4zM14.5 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-5.5 1.5"/></svg></span>
+              <span class="di" data-k="preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></svg></span>
+              <span class="di" data-k="merge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 7v10M6 7c0 4 4 5 10 5"/></svg></span>
+              <span class="dsep"></span>
+              <span class="di in base" data-k="bell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg></span>
+              <span class="di in base" data-k="more"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Zen mode</p>
+            <h2>Only Claude and the rain.</h2>
+            <p>Press <kbd>Ctrl</kbd> + <kbd>.</kbd> or the eye in the terminal's title bar. The current session fills the screen, other sessions wait as small pills at the top, and the dock only comes back when your mouse touches the bottom edge.</p>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/zen.webp" width="1600" height="960" alt="Zen mode: one Claude Code terminal fills the screen in front of the rain, a pill with shop-frontend and Fit all at the top, no dock" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · zen mode</figcaption>
+          </figure>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">Settings → View</p>
+            <h2>Switch off what you don't use.</h2>
+            <p>The toolbox lists every module – brain, Merge Studio, prompts &amp; notes, skills, addons, phone companion, Vibe Lounge, Discord and streamer mode. Hidden modules disappear from the dock, the More menu and the command palette; their settings are kept.</p>
+            <ul>
+              <li>“Simple” or “Everything” with one click, or each module on its own.</li>
+              <li>The same page holds your experience level, the layout and which inspector tabs you see.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot narrow"><img src="../img/toolbox.webp" width="1282" height="1215" alt="Settings window, tab View: Experience with Beginner · simple and Pro · Studio, Layout with Desktop · free windows, and the Toolbox with switches for Brain, Merge Studio, Prompts &amp; notes, Skills and more" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Settings → View</figcaption>
+          </figure>
+        </div>
+
+        <div class="row">
+          <div class="row-text">
+            <p class="label">First start</p>
+            <h2>Beginner or pro – you choose.</h2>
+            <p>The setup asks how much vibe coding experience you have. Beginners get a calm desktop with a dock and quiet tips that introduce more tools over time. Pros get the Studio layout with sidebar, status bar and every tool switched on.</p>
+            <ul>
+              <li>A short click tour shows where things are. Start it again any time from the command palette (“Start the tour”) or the settings.</li>
+              <li>Everything stays switchable one by one.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/onboarding.webp" width="1500" height="1000" alt="Setup: How much vibe coding experience do you have? Two choices: I'm just starting – a calm interface with a dock, and I know my way around – Studio layout with all tools" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · setup</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="head left">
+          <p class="label">Small things</p>
+          <h2>Quiet on purpose.</h2>
+        </div>
+        <div class="grid6">
+          <div><h3>A dock that grows</h3><p>Git appears once Claude changed files, the brain once Claude uses it, the preview with a running dev server. Icons that appeared stay, so nothing jumps around.</p></div>
+          <div><h3>Quiet tips</h3><p>Instead of new icons popping up silently, VibeDesk says once when something fits – and you can turn tips off.</p></div>
+          <div><h3>Fades while you type</h3><p>The dock dims while you write in the terminal.</p></div>
+          <div><h3>Tidy up</h3><p>One palette command sends leftover windows to the dock. Optionally windows go there by themselves after 15 minutes unused.</p></div>
+          <div><h3>Windows that snap</h3><p>Drag a window and it snaps to other windows, the screen edge, halves, thirds and quarters. Hold <kbd>Alt</kbd> to place it freely.</p></div>
+          <div><h3>Updates your way</h3><p>Updates install in the background on the next start – or switch that off and VibeDesk only tells you about new versions.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tight" style="padding-top:0;padding-bottom:0">
+      <div class="wrap pager">
+        <a href="../ambience/"><span>← Previous</span><b>Ambience & music</b></a>
+        <a class="next" href="../tools/"><span>Next →</span><b>Tools</b></a>
+      </div>
+    </section>
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../sessions/">Sessions</a></li><li><a href="../phone/">Phone companion</a></li><li><a href="../brain/">The brain</a></li><li><a href="../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../ambience/">Ambience & music</a></li><li><a href="../calm/">Calm by default</a></li><li><a href="../tools/">Tools</a></li><li><a href="../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

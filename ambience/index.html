@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>Ambience & music – VibeDesk</title>
+  <meta name="description" content="Rain on the window, lofi radio or your own Spotify, and a focus timer – VibeDesk makes long Claude Code sessions feel calm.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/ambience/">
+  <meta property="og:title" content="Ambience &amp; music – VibeDesk">
+  <meta property="og:description" content="Rain on the window, lofi radio or your own Spotify, and a focus timer – VibeDesk makes long Claude Code sessions feel calm.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/ambience-spotify.webp">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/ambience/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/site.css">
+  <script src="../assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../sessions/">Sessions</a>
+        <a href="../phone/">Phone</a>
+        <a href="../brain/">Brain</a>
+        <a href="../merge-studio/">Merge Studio</a>
+        <a href="../ambience/" aria-current="page">Ambience</a>
+        <a href="../calm/">Calm</a>
+        <a href="../tools/">Tools</a>
+        <a href="../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../brain/">Brain<small>Project memory</small></a>
+            <a href="../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../ambience/" aria-current="page">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../">VibeDesk</a><span>/</span><span>Ambience &amp; music</span></p>
+          <h1>Rain on the window, music in your ears.</h1>
+          <p class="lead">Long sessions with Claude feel less like a console when there is weather outside. VibeDesk brings rain scenes, a lofi radio, control over your own Spotify and a focus timer – all in one window.</p>
+          <div class="chips"><span class="chip">Spotify control</span><span class="chip">Lofi radio</span><span class="chip">Rain scenes</span><span class="chip">Rain sound</span><span class="chip">Focus timer</span></div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-bar"><span>Illustration · try play, skip and the rain slider</span><span class="live"><span class="dot g"></span>interactive</span></div>
+          <div class="stage-body amb-stage" data-demo="player">
+            <div class="bokeh" aria-hidden="true"></div>
+            <canvas class="rain" data-density="1" aria-hidden="true"></canvas>
+            <div class="player">
+              <div class="seg" role="tablist" aria-label="Music source">
+                <button type="button" role="tab" id="tab-sp" aria-selected="true" aria-controls="panel-sp"><span class="sp-logo" aria-hidden="true"></span>Spotify</button>
+                <button type="button" role="tab" id="tab-lofi" aria-selected="false" aria-controls="panel-lofi">Lofi radio</button>
+              </div>
+              <div id="panel-sp" role="tabpanel" aria-labelledby="tab-sp">
+                <div class="sp-now">
+                  <div class="sp-cover" aria-hidden="true"></div>
+                  <div class="sp-meta">
+                    <div style="display:flex;align-items:center;min-width:0"><div class="sp-title"></div><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
+                    <div class="sp-artist"></div>
+                    <div class="sp-ctrl">
+                      <button type="button" class="sp-prev" aria-label="Previous"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4 3h1.6v10H4zM13 3.5v9L6.5 8z"/></svg></button>
+                      <button type="button" class="sp-play" aria-label="Pause"><svg class="i-pause" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M4.5 3h2.4v10H4.5zm4.6 0h2.4v10H9.1z"/></svg><svg class="i-play" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M5 3v10l8-5z"/></svg></button>
+                      <button type="button" class="sp-next" aria-label="Next"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M10.4 3H12v10h-1.6zM3 3.5v9L9.5 8z"/></svg></button>
+                    </div>
+                  </div>
+                </div>
+                <div class="sp-prog"><span class="sp-pos">0:00</span><div class="sp-bar"><i></i></div><span class="sp-dur">0:00</span></div>
+                <p class="sp-up">Up next</p>
+                <ul class="sp-queue"></ul>
+              </div>
+              <div id="panel-lofi" role="tabpanel" aria-labelledby="tab-lofi" hidden>
+                <div class="lofi-card"><div class="sp-cover" aria-hidden="true"></div><div><div class="sp-title">laut.fm · lofi</div><div class="sp-artist">Lofi radio around the clock – no account needed</div></div></div>
+                <div class="stations"><span class="chip">laut.fm · lofi</span><span class="chip">I Love Chillhop</span><span class="chip">Zeno · Lofi Beats</span><span class="chip">Custom stream URL</span></div>
+              </div>
+            </div>
+            <div class="side-panel">
+              <h4>Background</h4>
+              <div class="scene"><i style="background:linear-gradient(135deg,#3a2a1c,#0e1220 60%,#5d4a2a)"></i>City at night</div>
+              <div class="scene"><i style="background:linear-gradient(135deg,#1d3324,#0c1410)"></i>Forest at dusk</div>
+              <div class="scene on"><i style="background:linear-gradient(135deg,#6b2a6e,#141a3a 55%,#c0457a)"></i>Tokyo alley</div>
+              <h4 style="margin-top:6px">Rain</h4>
+              <label class="slider-row"><span>Intensity</span><input class="rain-slider" type="range" min="0" max="100" value="50"><span class="rain-val">50 %</span></label>
+              <div class="slider-row"><span>Rain sound</span><span class="sp-bar" style="height:4px"><i style="width:35%;background:var(--accent)"></i></span><span class="rain-val">35 %</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="stage-note">Illustration – track names are examples. Your own playlists appear in the real app.</p>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Spotify</p>
+            <h2>Your Spotify, without leaving the desk.</h2>
+            <p>Connect your Spotify account once and control your Spotify app right from VibeDesk: your playlists, liked songs, search and the queue, plus play, pause, skip, seek and volume.</p>
+            <ul>
+              <li>Uses your own Spotify app ID – the window walks you through creating it in three steps.</li>
+              <li>Playing and controlling music needs Spotify Premium.</li>
+              <li>VibeDesk only talks to Spotify after you connect it.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/ambience-spotify.webp" width="1600" height="1010" alt="Ambience &amp; music window with the Spotify tab: Connect Spotify, three steps with dashboard link, redirect URI and client ID field; on the right scenes, rain and volume settings" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · connecting Spotify</figcaption>
+          </figure>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">Lofi radio</p>
+            <h2>Or just press play.</h2>
+            <p>No account, no setup: a lofi stream plays around the clock. Pick one of three stations or paste your own stream URL. Music, rain and the alert sound each have their own volume.</p>
+            <ul>
+              <li>Stations: laut.fm · lofi, I Love Chillhop and Zeno · Lofi Beats.</li>
+              <li>A soft sound tells you when a session waits for you – if you want it.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/ambience-lofi.webp" width="1600" height="1010" alt="Ambience &amp; music window with Lofi radio selected: laut.fm lofi with a play button, volume slider, three stations and a field for a custom stream URL" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Lofi radio</figcaption>
+          </figure>
+        </div>
+
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Rain &amp; scenes</p>
+            <h2>Weather behind your windows.</h2>
+            <p>Rain runs down the window in front of a city at night, a forest at dusk, a Tokyo alley – or a picture of your own, dragged into the window. Adjust intensity and fog, and add a synthetic rain sound.</p>
+            <ul>
+              <li>Drawn with WebGL at up to 30 frames per second; on battery the energy saver draws even less.</li>
+              <li>Share your whole atmosphere as a code with friends.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/focus.webp" width="1600" height="960" alt="The Tokyo alley scene with rain drops and blurred neon lights, a running focus timer at 24:58 in the middle and a small dock" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Tokyo alley with the focus timer</figcaption>
+          </figure>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">Focus timer</p>
+            <h2>Pomodoro rounds that turn the music down.</h2>
+            <p>Focus 25, break 5, a long break after four rounds – or your own numbers. During breaks the music gets quieter and the rain is muffled. While a focus round runs, only important notifications come through.</p>
+          </div>
+          <div class="focus" data-demo="focus" aria-hidden="true">
+            <svg viewBox="0 0 200 200"><circle class="ring-bg" cx="100" cy="100" r="88"/><circle class="ring-fg" cx="100" cy="100" r="88"/><text class="f-time" x="100" y="108" text-anchor="middle">25:00</text></svg>
+            <span class="f-phase">Focus</span>
+            <span class="f-dots"><i></i><i></i><i></i><i></i></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tight" style="padding-top:0;padding-bottom:0">
+      <div class="wrap pager">
+        <a href="../merge-studio/"><span>← Previous</span><b>Merge Studio</b></a>
+        <a class="next" href="../calm/"><span>Next →</span><b>Calm by default</b></a>
+      </div>
+    </section>
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../sessions/">Sessions</a></li><li><a href="../phone/">Phone companion</a></li><li><a href="../brain/">The brain</a></li><li><a href="../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../ambience/">Ambience & music</a></li><li><a href="../calm/">Calm by default</a></li><li><a href="../tools/">Tools</a></li><li><a href="../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

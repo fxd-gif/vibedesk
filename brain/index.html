@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>The brain – VibeDesk</title>
+  <meta name="description" content="Project memory for Claude Code: linked Markdown notes in your repo, a personal “About you” brain and a live graph that lights up while Claude reads, edits and learns.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/brain/">
+  <meta property="og:title" content="The brain – VibeDesk">
+  <meta property="og:description" content="Project memory for Claude Code: linked Markdown notes in your repo, a personal “About you” brain and a live graph that lights up while Claude reads, edits and learns.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/brain-graph.webp">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/brain/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/site.css">
+  <script src="../assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../sessions/">Sessions</a>
+        <a href="../phone/">Phone</a>
+        <a href="../brain/" aria-current="page">Brain</a>
+        <a href="../merge-studio/">Merge Studio</a>
+        <a href="../ambience/">Ambience</a>
+        <a href="../calm/">Calm</a>
+        <a href="../tools/">Tools</a>
+        <a href="../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../brain/" aria-current="page">Brain<small>Project memory</small></a>
+            <a href="../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../">VibeDesk</a><span>/</span><span>Brain</span></p>
+          <h1>Claude stops exploring from scratch.</h1>
+          <p class="lead">The brain keeps what Claude learns about your project as linked Markdown notes inside your repo. Every new session starts with that knowledge – and a living graph shows Claude reading, editing and learning.</p>
+          <div class="chips"><span class="chip">Plain Markdown</span><span class="chip">[[links]] like Obsidian</span><span class="chip">Versioned with Git</span><span class="chip">“About you” for all projects</span></div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-bar"><span>Illustration · shop-frontend · drag a node</span><span class="live"><span class="dot g"></span>live graph</span></div>
+          <div class="stage-body brain-stage">
+            <div class="brain-top" aria-hidden="true">
+              <span class="tchip"><i style="background:#a5b8ff"></i>Area</span><span class="tchip"><i style="background:#c4b5fd"></i>Decision</span><span class="tchip"><i style="background:#f87171"></i>Pitfall</span><span class="tchip"><i style="background:#4ade80"></i>Convention</span><span class="tchip"><i style="background:#facc15"></i>Task</span><span class="tchip"><i style="background:#67e8f9"></i>Fact</span><span class="tchip"><i style="background:#6b7280"></i>Files</span>
+            </div>
+            <canvas data-graph="g-project" role="img" aria-label="A graph of project notes such as Login flow, Auth API, Form validation and Dark mode, connected by links. Nodes light up while Claude reads, edits or learns."></canvas>
+            <div class="legend" aria-hidden="true"><span style="color:#67e8f9"><i></i>reading</span><span style="color:#4ade80"><i></i>editing</span><span style="color:#c4b5fd"><i></i>learning</span></div>
+          </div>
+        </div>
+        <script type="application/json" id="g-project">{
+          "nodes": [
+            {"id":"login","label":"Login flow","type":"area","big":true},
+            {"id":"val","label":"Form validation","type":"area"},
+            {"id":"auth","label":"Auth API","type":"area"},
+            {"id":"dark","label":"Dark mode","type":"area"},
+            {"id":"cookie","label":"Cookie, not localStorage","type":"decision"},
+            {"id":"vitest","label":"Use Vitest","type":"decision"},
+            {"id":"crlf","label":"CRLF breaks snapshots","type":"pitfall"},
+            {"id":"copy","label":"Error copy style","type":"convention"},
+            {"id":"tokens","label":"Design tokens","type":"convention"},
+            {"id":"reset","label":"Add password reset","type":"task"},
+            {"id":"tests","label":"Test setup","type":"fact"},
+            {"id":"f1","label":"src/pages/Login.tsx","type":"file"},
+            {"id":"f2","label":"src/lib/validate.ts","type":"file"},
+            {"id":"f3","label":"src/api/auth.ts","type":"file"},
+            {"id":"f4","label":"src/theme.css","type":"file"}
+          ],
+          "edges": [["login","val"],["login","auth"],["login","cookie"],["auth","cookie"],["val","copy"],["val","tests"],["tests","vitest"],["tests","crlf"],["dark","tokens"],["login","tokens"],["dark","copy"],["reset","login"],["reset","auth"],["login","f1"],["val","f2"],["auth","f3"],["dark","f4"],["tokens","f4"]],
+          "extra": [
+            {"id":"x1","label":"Rate limit on /login","type":"fact","link":"auth"},
+            {"id":"x2","label":"Keep forms accessible","type":"convention","link":"val"},
+            {"id":"x3","label":"Sessions expire after 7 days","type":"decision","link":"cookie"}
+          ]
+        }</script>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Plain files</p>
+            <h2>Notes you can read, edit and commit.</h2>
+            <p>The brain lives in <code>.vibedesk/brain</code> inside your project: one Markdown file per note, linked with <code>[[links]]</code>. Open the folder in Obsidian, edit a note by hand or version it with Git – or add it to <code>.gitignore</code> if it should stay private.</p>
+            <ul>
+              <li>Six kinds of notes: areas, decisions, pitfalls, conventions, tasks and facts.</li>
+              <li>Notes can point at files; if a file changes later, the note is marked for review.</li>
+            </ul>
+          </div>
+          <div class="win" aria-hidden="true">
+            <div class="win-bar"><b>.vibedesk/brain/Login flow.md</b></div>
+            <div class="win-body term" style="font-size:12.5px">
+              <div class="t-dim">---</div>
+              <div><span class="t-c">type:</span> module</div>
+              <div><span class="t-c">tags:</span> [auth, ui]</div>
+              <div><span class="t-c">files:</span> [src/pages/Login.tsx]</div>
+              <div class="t-dim">---</div>
+              <div>&nbsp;</div>
+              <div>The login page posts to <span class="t-y">[[Auth API]]</span> and shows</div>
+              <div>inline errors from <span class="t-y">[[Form validation]]</span>. The session</div>
+              <div>token lives in an httpOnly cookie, see</div>
+              <div><span class="t-y">[[Cookie, not localStorage]]</span>.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">How Claude uses it</p>
+            <h2>Every session starts where the last one stopped.</h2>
+            <p>Each session begins with a short overview of the brain and gets its own tools to search, read and extend it. The graph in VibeDesk lights up while that happens: notes Claude reads, files it edits, things it learns.</p>
+            <ul>
+              <li><b>Tends itself:</b> if Claude changed files in a turn but wrote nothing down, VibeDesk asks it to update the brain before finishing – no click needed. A small card shows which notes changed.</li>
+              <li>One switch – “Claude uses the brain” – turns it off per project.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/brain-graph.webp" width="1600" height="1014" alt="The VibeDesk brain window for shop-frontend with 10 notes: a graph of Login flow, Auth API, Form validation, Dark mode, Design tokens, Test setup and more, with type filters and the switch Claude uses the brain" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Brain window</figcaption>
+          </figure>
+        </div>
+
+        <div class="row">
+          <div class="row-text">
+            <p class="label">About you</p>
+            <h2>Claude gets to know how you work.</h2>
+            <p>Next to each project's brain there is a personal one: <b>About you</b>. Here Claude notes how you like to work, what you like and what you don't – and every new session, in every project, starts with it. The longer you use VibeDesk, the better Claude fits you.</p>
+            <ul>
+              <li>Stays on your PC only, never inside a project.</li>
+              <li>View and edit it in the brain window under “About you (all projects)”.</li>
+              <li>The button “Let Claude get to know me” writes the first notes; Vibe Wrapped shows how much Claude learned about you this week.</li>
+            </ul>
+          </div>
+          <div>
+            <div class="me-stage">
+              <canvas data-graph="g-me" role="img" aria-label="Example of a personal brain: notes like Small, focused commits, Asks before big refactors and Prefers plain explanations, linked to How I work"></canvas>
+              <div class="legend" aria-hidden="true"><span>Example notes</span></div>
+            </div>
+          </div>
+        </div>
+        <script type="application/json" id="g-me">{
+          "nodes": [
+            {"id":"me","label":"How I work","type":"area","big":true},
+            {"id":"a","label":"Small, focused commits","type":"convention"},
+            {"id":"b","label":"Ask before big refactors","type":"decision"},
+            {"id":"c","label":"Plain explanations","type":"fact"},
+            {"id":"d","label":"Tests before merging","type":"convention"},
+            {"id":"e","label":"Uses pnpm","type":"fact"},
+            {"id":"f","label":"No silent dependency updates","type":"pitfall"}
+          ],
+          "edges": [["me","a"],["me","b"],["me","c"],["me","d"],["me","e"],["b","f"],["a","d"]],
+          "extra": [{"id":"x","label":"Likes short summaries","type":"fact","link":"c"}]
+        }</script>
+      </div>
+    </section>
+
+    <section class="tight" style="padding-top:0;padding-bottom:0">
+      <div class="wrap pager">
+        <a href="../phone/"><span>← Previous</span><b>Phone companion</b></a>
+        <a class="next" href="../merge-studio/"><span>Next →</span><b>Merge Studio</b></a>
+      </div>
+    </section>
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../sessions/">Sessions</a></li><li><a href="../phone/">Phone companion</a></li><li><a href="../brain/">The brain</a></li><li><a href="../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../ambience/">Ambience & music</a></li><li><a href="../calm/">Calm by default</a></li><li><a href="../tools/">Tools</a></li><li><a href="../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

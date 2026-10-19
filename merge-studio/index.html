@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>Merge Studio – VibeDesk</title>
+  <meta name="description" content="Let Claude Code sessions work in parallel in their own Git worktrees, predict conflicts before they happen and merge safely with automatic checkpoints.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/merge-studio/">
+  <meta property="og:title" content="Merge Studio – VibeDesk">
+  <meta property="og:description" content="Let Claude Code sessions work in parallel in their own Git worktrees, predict conflicts before they happen and merge safely with automatic checkpoints.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/merge-studio.webp">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/merge-studio/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/site.css">
+  <script src="../assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../sessions/">Sessions</a>
+        <a href="../phone/">Phone</a>
+        <a href="../brain/">Brain</a>
+        <a href="../merge-studio/" aria-current="page">Merge Studio</a>
+        <a href="../ambience/">Ambience</a>
+        <a href="../calm/">Calm</a>
+        <a href="../tools/">Tools</a>
+        <a href="../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../brain/">Brain<small>Project memory</small></a>
+            <a href="../merge-studio/" aria-current="page">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../">VibeDesk</a><span>/</span><span>Merge Studio</span><span class="chip new" style="margin-left:6px">Beta</span></p>
+          <h1>Parallel sessions, merged safely.</h1>
+          <p class="lead">Let two or three Claude sessions work at the same time without stepping on each other. Each gets its own Git worktree; Merge Studio shows what they changed, predicts conflicts before anything is touched and always sets a checkpoint first.</p>
+          <div class="chips"><span class="chip">Git worktrees</span><span class="chip">Conflict prediction</span><span class="chip">Merge files or hunks</span><span class="chip">Automatic checkpoints</span></div>
+        </div>
+
+        <div class="stage">
+          <div class="stage-bar"><span>Illustration · two isolated sessions in shop-frontend</span><span class="live"><span class="dot g"></span>plays on its own</span></div>
+          <div class="stage-body merge-demo" data-demo="merge">
+            <div class="merge-svg"></div>
+            <div class="merge-log" aria-live="off"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section>
+      <div class="wrap">
+        <div class="row">
+          <div class="row-text">
+            <p class="label">Isolated sessions</p>
+            <h2>Every session gets its own folder.</h2>
+            <p>Start an <b>Isolated session</b> and Claude works in its own Git worktree on its own branch. Parallel sessions never get in each other's way until you decide to bring their work together.</p>
+            <ul>
+              <li>Worktrees live in <code>.vibedesk/worktrees/</code> on branches named <code>vd/…</code>; VibeDesk adds the folder to <code>.git/info/exclude</code> and leaves your <code>.gitignore</code> alone.</li>
+              <li>Session cards show branch, changed files, +/−, live status and a badge: ready, review or conflicts.</li>
+              <li>Merge Studio is in the More menu – and in the dock as soon as two sessions run in parallel.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/merge-studio.webp" width="1600" height="960" alt="Merge Studio in the Studio layout: cards for Main folder, dark-mode and login-validation with Conflicts badges, an overview table with branch, files, changes and status, recommended next steps and merge options" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · Merge Studio with two isolated sessions</figcaption>
+          </figure>
+        </div>
+
+        <div class="row flip">
+          <div class="row-text">
+            <p class="label">Before you merge</p>
+            <h2>See the conflict before it happens.</h2>
+            <p>Merge Studio runs <code>git merge-tree</code> against the target branch and between the sessions – even for changes that are not committed yet – without touching any file. It tells you where it would really clash.</p>
+            <ul>
+              <li>Compare one file side by side: session · current target · other session.</li>
+              <li>An AI summary lists risks and recommended next steps.</li>
+              <li>Run your tests inside the session's folder before anything is merged.</li>
+            </ul>
+          </div>
+          <figure class="fig">
+            <div class="shot"><img src="../img/merge-diff.webp" width="1600" height="960" alt="Merge Studio, tab File diff: changed together src/pages/Login.tsx with a warning, changed only in this session src/lib/validate.ts, and a side-by-side view of login-validation against main" loading="lazy" decoding="async"></div>
+            <figcaption>Real screenshot · File diff with a predicted overlap</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding-top:0">
+      <div class="wrap">
+        <div class="head left">
+          <p class="label">Merging</p>
+          <h2>Take everything, a file, or a single hunk.</h2>
+        </div>
+        <div class="grid6">
+          <div><h3>Whole branch</h3><p>Bring a session's complete work into the target branch.</p></div>
+          <div><h3>Selected files</h3><p>Tick the files you want – the rest stays in the session.</p></div>
+          <div><h3>Selected hunks</h3><p>Take single sections of a file, applied with a 3-way merge.</p></div>
+          <div><h3>Checkpoint first, always</h3><p>Before every merge VibeDesk saves a checkpoint as a Git ref under <code>refs/vibedesk/checkpoints</code> – not in your history. One click restores it.</p></div>
+          <div><h3>Your work is safe</h3><p>Uncommitted changes in the target are never overwritten, and every risky step asks first.</p></div>
+          <div><h3>Works in both layouts</h3><p>Desktop with floating windows or Studio with a sidebar – Merge Studio opens as a full page there.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tight" style="padding-top:0;padding-bottom:0">
+      <div class="wrap pager">
+        <a href="../brain/"><span>← Previous</span><b>The brain</b></a>
+        <a class="next" href="../ambience/"><span>Next →</span><b>Ambience & music</b></a>
+      </div>
+    </section>
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../sessions/">Sessions</a></li><li><a href="../phone/">Phone companion</a></li><li><a href="../brain/">The brain</a></li><li><a href="../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../ambience/">Ambience & music</a></li><li><a href="../calm/">Calm by default</a></li><li><a href="../tools/">Tools</a></li><li><a href="../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
