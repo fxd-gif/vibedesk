@@ -1,6 +1,7 @@
 // Farbschemata fürs Terminal. Hintergrund bleibt durchsichtig – das Glasfenster dahinter gibt den Ton an.
 import type { ITheme } from '@xterm/xterm'
 import { t } from '../../../shared/i18n'
+import type { CustomTheme } from '../../../shared/desk'
 
 const glass = {
   background: 'rgba(0,0,0,0)',
@@ -88,7 +89,12 @@ export const TERMINAL_THEMES: { id: string; label: string; theme: ITheme }[] = [
 /** Passend zur Szene: Wald → grün, Tokyo → Neon, sonst VibeDesk */
 const BY_SCENE: Record<string, string> = { forest: 'wald', tokyo: 'neon' }
 
-export function resolveTheme(id: string, scene: string): ITheme {
+export function resolveTheme(id: string, scene: string, custom?: CustomTheme | null): ITheme {
+  // eigenes Schema: auf VibeDesk aufbauen, nur die gesetzten Farben ersetzen (Glas-Hintergrund bleibt)
+  if (id === 'custom' && custom) {
+    const c = custom.colors
+    return { ...TERMINAL_THEMES[0].theme, ...c, ...(c.cursor ? { selectionBackground: c.cursor + '4d' } : {}) }
+  }
   const want = id === 'scene' ? (BY_SCENE[scene] ?? 'vibedesk') : id
   return (TERMINAL_THEMES.find((t) => t.id === want) ?? TERMINAL_THEMES[0]).theme
 }

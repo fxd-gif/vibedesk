@@ -275,7 +275,7 @@ app.whenReady().then(async () => {
           `Aufbau: ${s.layout}`,
           `Szene: ${s.scene} · Regen ${Math.round(s.rainIntensity * 100)} % · Unschärfe ${Math.round(s.blur * 100)} %`,
           `Lofi-Radio: ${s.musicOn ? `an (${Math.round(s.musicVolume * 100)} %)` : 'aus'} · Regengeräusch: ${s.rainSoundOn ? 'an' : 'aus'}`,
-          `Terminal-Farbschema: ${s.terminal?.theme ?? 'scene'}`,
+          `Terminal-Farbschema: ${s.terminal?.theme ?? 'scene'}${s.customTheme ? ` (eigenes vorhanden: „${s.customTheme.name}“)` : ''}`,
           `Sessions: ${names.length ? names.join(', ') : 'keine'}`
         ].join('\n')
       }

@@ -97,8 +97,25 @@ const DESK_TOOLS = [
   { name: 'desk_layout', description: 'Aufbau wechseln: desktop = freie Fenster mit Dock, studio = Seitenleiste mit Seiten.', inputSchema: { type: 'object', properties: { layout: { type: 'string', enum: ['desktop', 'studio'] } }, required: ['layout'] } },
   {
     name: 'desk_terminal_theme',
-    description: 'Farbschema der Terminals: scene (passend zur Szene), vibedesk, wald, neon, kontrast oder mono.',
-    inputSchema: { type: 'object', properties: { theme: { type: 'string', enum: ['scene', 'vibedesk', 'wald', 'neon', 'kontrast', 'mono'] } }, required: ['theme'] }
+    description: 'Farbschema der Terminals: scene (passend zur Szene), vibedesk, wald, neon, kontrast, mono oder custom (das zuletzt mit desk_custom_theme erzeugte).',
+    inputSchema: { type: 'object', properties: { theme: { type: 'string', enum: ['scene', 'vibedesk', 'wald', 'neon', 'kontrast', 'mono', 'custom'] } }, required: ['theme'] }
+  },
+  {
+    name: 'desk_custom_theme',
+    description:
+      'Erzeugt ein eigenes Farbschema für die Terminals und schaltet es ein (z. B. „Herbstfarben“, „Dracula-artig“). Farben als Hex #rrggbb. Der Hintergrund bleibt durchsichtig (Glas über der Regenszene), also helle, gut lesbare Vordergrundfarben wählen. Pflicht: foreground. Ein neues Schema ersetzt das vorige eigene.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'kurzer Name, z. B. Herbst' },
+        colors: {
+          type: 'object',
+          properties: Object.fromEntries(['foreground', 'cursor', 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'brightBlack', 'brightRed', 'brightGreen', 'brightYellow', 'brightBlue', 'brightMagenta', 'brightCyan', 'brightWhite'].map((k) => [k, { type: 'string', pattern: '^#[0-9a-fA-F]{6}$' }])),
+          required: ['foreground']
+        }
+      },
+      required: ['colors']
+    }
   },
   { name: 'desk_focus', description: 'Fokus-Timer (Pomodoro) steuern.', inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['start', 'pause', 'resume', 'stop'] } }, required: ['action'] } },
   {

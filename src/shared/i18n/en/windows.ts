@@ -334,6 +334,8 @@ const dict: Record<string, string> = {
   // Dev-Server per Klick
   'Dev-Server': 'Dev server',
   '{command} in einer Shell daneben starten – die Vorschau öffnet sich, sobald der Server läuft': 'Run {command} in a shell next to it – the preview opens as soon as the server is up',
+  // Eigenes Farbschema
+  'Eigenes: {name}': 'Custom: {name}',
 }
 
 export default dict

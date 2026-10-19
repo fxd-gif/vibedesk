@@ -43,6 +43,8 @@ export function runDeskCommand(c: DeskCommand): void {
     }
     case 'notify':
       return inform(c.title, c.body || undefined)
+    case 'customTheme':
+      return st.set({ customTheme: c.theme, terminal: { ...s.terminal, theme: 'custom' } })
   }
 }
 

@@ -54,7 +54,7 @@ function optionsFor(s: Settings | null): ITerminalOptions {
     lineHeight: t.lineHeight,
     cursorStyle: t.cursorStyle,
     cursorBlink: t.cursorBlink,
-    theme: resolveTheme(t.theme, s?.scene ?? '')
+    theme: resolveTheme(t.theme, s?.scene ?? '', s?.customTheme)
   }
 }
 

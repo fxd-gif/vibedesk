@@ -84,6 +84,7 @@ export function TermSettingsFields(): React.JSX.Element | null {
               {x.label}
             </option>
           ))}
+          {s.customTheme && <option value="custom">{t('Eigenes: {name}', { name: s.customTheme.name })}</option>}
         </select>
       </label>
       <label className="ts-row">

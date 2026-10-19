@@ -51,7 +51,7 @@ import type { GitCommit, GitState, GitTools } from './git'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { PlanLimits } from './limits'
 import type { DevScript } from './devScript'
-import type { DeskCommand } from './desk'
+import type { CustomTheme, DeskCommand } from './desk'
 import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget, TermChunk, TermQuery } from './companion'
 import type { PermissionAsk, PermissionDecision } from './permissions'
 import type { LangSetting } from './i18n'
@@ -255,6 +255,8 @@ export interface Settings {
   inspectorTabsOff: string[]
   /** Klick-Tour schon gesehen */
   tourDone: boolean
+  /** eigenes Terminal-Farbschema (z. B. von Claude über desk_custom_theme erzeugt) – gilt bei terminal.theme 'custom' */
+  customTheme: CustomTheme | null
 }
 
 export type Experience = '' | 'beginner' | 'pro'

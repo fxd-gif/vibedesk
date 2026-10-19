@@ -74,7 +74,8 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   autoUpdate: true,
   experience: '',
   inspectorTabsOff: [],
-  tourDone: false
+  tourDone: false,
+  customTheme: null
 })
 
 export class SettingsStore {

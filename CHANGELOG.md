@@ -7,6 +7,10 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Claude gestaltet dein Terminal**: Sag in einer Session „Mach mir ein Terminal-Theme in Herbstfarben“ (oder „wie Dracula“, „ruhiges Blau“ …), und Claude erzeugt ein eigenes Farbschema und schaltet es ein. Es steht danach auch in den Terminal-Einstellungen zur Auswahl („Eigenes: Herbst“). Der Hintergrund bleibt Glas über deiner Regenszene
+
 ## 1.7.0
 
 ### Neu

@@ -3,7 +3,15 @@
 import type { LayoutTheme, PanelId } from './types'
 
 export const DESK_SCENES = ['city', 'forest', 'tokyo'] as const
-export const DESK_THEMES = ['scene', 'vibedesk', 'wald', 'neon', 'kontrast', 'mono'] as const
+export const DESK_THEMES = ['scene', 'vibedesk', 'wald', 'neon', 'kontrast', 'mono', 'custom'] as const
+
+/** Farben, die ein eigenes Terminal-Farbschema setzen darf (Hintergrund bleibt durchsichtig – Glas) */
+export const THEME_KEYS = ['foreground', 'cursor', 'black', 'red', 'green', 'yellow', 'blue', 'magenta', 'cyan', 'white', 'brightBlack', 'brightRed', 'brightGreen', 'brightYellow', 'brightBlue', 'brightMagenta', 'brightCyan', 'brightWhite'] as const
+
+export interface CustomTheme {
+  name: string
+  colors: Partial<Record<(typeof THEME_KEYS)[number], string>>
+}
 export const DESK_WINDOWS: PanelId[] = ['projects', 'inspector', 'git', 'brain', 'merge', 'ambience', 'focus', 'prompts', 'skills', 'addons', 'companion', 'discord', 'lounge', 'streamer', 'settings']
 
 export type DeskCommand =
@@ -17,6 +25,7 @@ export type DeskCommand =
   | { cmd: 'theme'; theme: string }
   | { cmd: 'focus'; action: 'start' | 'pause' | 'resume' | 'stop' }
   | { cmd: 'notify'; title: string; body: string }
+  | { cmd: 'customTheme'; theme: CustomTheme }
 
 const num = (x: unknown, min: number, max: number): number | undefined => (typeof x === 'number' && Number.isFinite(x) ? Math.min(max, Math.max(min, x)) : undefined)
 const oneOf = <T extends string>(x: unknown, list: readonly T[]): T | undefined => (typeof x === 'string' && (list as readonly string[]).includes(x) ? (x as T) : undefined)
@@ -63,6 +72,13 @@ export function parseDeskCommand(tool: string, raw: unknown): DeskCommand | { er
       const action = oneOf(a.action, ['start', 'pause', 'resume', 'stop'] as const)
       return action ? { cmd: 'focus', action } : { error: 'action muss start, pause, resume oder stop sein.' }
     }
+    case 'desk_custom_theme': {
+      const c = a.colors && typeof a.colors === 'object' ? (a.colors as Record<string, unknown>) : {}
+      const colors: CustomTheme['colors'] = {}
+      for (const k of THEME_KEYS) if (typeof c[k] === 'string' && /^#[0-9a-f]{6}$/i.test(c[k] as string)) colors[k] = (c[k] as string).toLowerCase()
+      if (!colors.foreground) return { error: 'colors.foreground fehlt (Hex wie #e8e2d0). Erlaubt: ' + THEME_KEYS.join(', ') }
+      return { cmd: 'customTheme', theme: { name: text(a.name, 30) || 'Eigenes', colors } }
+    }
     case 'desk_notify': {
       const title = text(a.title, 80)
       return title ? { cmd: 'notify', title, body: text(a.body, 240) } : { error: 'title fehlt.' }
@@ -95,5 +111,7 @@ export function deskDone(c: DeskCommand): string {
       return `Fokus-Timer: ${c.action}.`
     case 'notify':
       return 'Karte angezeigt.'
+    case 'customTheme':
+      return `Eigenes Farbschema „${c.theme.name}“ gesetzt (${Object.keys(c.theme.colors).length} Farben).`
   }
 }
