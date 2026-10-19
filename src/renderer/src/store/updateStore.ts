@@ -4,6 +4,7 @@ import type { UpdateStatus } from '../../../shared/types'
 import { shouldAutoInstall } from './autoInstall'
 import { useEditor } from './editorStore'
 import { useSessions } from './sessionStore'
+import { useSettings } from './settingsStore'
 
 interface UpdateState {
   status: UpdateStatus
@@ -31,6 +32,8 @@ export function wireUpdate(): void {
   const onStatus = (status: UpdateStatus): void => {
     useUpdate.setState((s) => ({ status, dismissed: status.state === 'ready' && s.status.state !== 'ready' ? false : s.dismissed }))
     if (status.state !== 'ready' || useUpdate.getState().autoInstalling) return
+    // automatische Updates aus: nie von selbst neu starten
+    if (useSettings.getState().s?.autoUpdate === false) return
     const auto = shouldAutoInstall({
       sinceStartMs: Date.now() - startedAt,
       sessions: useSessions.getState().sessions.length,

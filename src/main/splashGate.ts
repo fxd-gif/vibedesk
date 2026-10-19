@@ -50,7 +50,8 @@ export function createSplashGate(onRelease: () => void): { feed(s: UpdateStatus)
     release,
     feed(s) {
       if (released) return
-      if (s.state === 'none' || s.state === 'error') release()
+      // automatische Updates aus: nicht aufs Laden warten
+      if (s.state === 'none' || s.state === 'error' || (s.state === 'available' && s.manual)) release()
       else if (s.state === 'available' || s.state === 'downloading') arm(SPLASH_STALL_MS)
       else if (s.state === 'ready') arm(SPLASH_READY_HOLD_MS)
     }

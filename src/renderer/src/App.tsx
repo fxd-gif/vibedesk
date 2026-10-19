@@ -62,6 +62,7 @@ import { useBrainUsed, wireBrainActivity } from './store/brainActivity'
 import { hasEdits } from './store/workflowReducer'
 import { wireCalm } from './desktop/calm'
 import { ZenBar } from './desktop/ZenBar'
+import { Tour } from './desktop/Tour'
 import { wireHints } from './store/hintStore'
 import { wirePermissions } from './store/permissionStore'
 import { wireCompanion } from './store/companionStore'
@@ -360,6 +361,7 @@ export default function App(): React.JSX.Element {
       <VibeWrapped />
       <SetupPrompt />
       <Onboarding />
+      <Tour />
       <InstallDialog />
       <AskToast />
       <ShareDialogs />

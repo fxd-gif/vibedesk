@@ -109,6 +109,7 @@ const api: VibedeskApi = {
     status: () => ipcRenderer.invoke('update:status'),
     version: () => ipcRenderer.invoke('update:version'),
     check: () => ipcRenderer.invoke('update:check'),
+    download: () => ipcRenderer.send('update:download'),
     install: () => ipcRenderer.send('update:install')
   },
   discord: {

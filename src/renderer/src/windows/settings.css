@@ -7,3 +7,8 @@
 .toolbox-card.on { opacity: 1; background: rgba(255, 255, 255, .06); }
 .toolbox-card > span { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .toolbox-card small { color: var(--text-dim); font-size: 11.5px; line-height: 1.35; }
+.toolbox-h { margin: 8px 0 -2px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); }
+.toolbox-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.toolbox-tab { display: flex; align-items: center; gap: 10px; padding: 7px 10px 7px 12px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255, 255, 255, .03); opacity: .62; font-size: 13px; }
+.toolbox-tab.on { opacity: 1; background: rgba(255, 255, 255, .06); }
+.toolbox .nset-row .field { width: 220px; flex: none; }

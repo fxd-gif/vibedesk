@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import type { PanelId } from '../../../shared/types'
-import { SIMPLE_OFF } from '../desktop/modules'
+import { experiencePreset, type Level } from '../desktop/experience'
+import { startTour } from '../desktop/Tour'
 import { useSettings } from '../store/settingsStore'
 import { centeredRect, useUi } from '../store/uiStore'
 import { PathInput } from './PathInput'
@@ -9,7 +9,7 @@ import iconUrl from '../assets/icon.png'
 import { t } from '../../../shared/i18n'
 
 // kurz halten: Szene, Musik und Discord kommen später als leise Tipps
-const STEPS = ['welcome', 'claude', 'folder', 'amount', 'done'] as const
+const STEPS = ['welcome', 'claude', 'folder', 'experience', 'done'] as const
 type Step = (typeof STEPS)[number]
 
 export function Onboarding(): React.JSX.Element | null {
@@ -32,15 +32,17 @@ export function Onboarding(): React.JSX.Element | null {
     if (step === 'folder' && dir.trim()) set({ projectsDir: dir.trim().replace(/[\\/]+$/, '') })
     setI((x) => Math.min(STEPS.length - 1, x + 1))
   }
-  const pick = (off: PanelId[]): void => {
-    set({ modulesOff: off })
+  const pick = (level: Level): void => {
+    set(experiencePreset(level))
     next()
   }
-  const finish = (newProject: boolean): void => {
+  const finish = (then: 'desktop' | 'project' | 'tour'): void => {
     setLeaving(true)
     setTimeout(() => {
       set({ onboarded: true })
-      if (newProject) useUi.getState().openWin('projects', centeredRect(520, 480))
+      if (then === 'project') useUi.getState().openWin('projects', centeredRect(520, 480))
+      // Dock und Startkarte brauchen einen Moment, bis sie stehen
+      if (then === 'tour') setTimeout(startTour, 450)
     }, 350)
   }
 
@@ -83,19 +85,20 @@ export function Onboarding(): React.JSX.Element | null {
           </>
         )}
 
-        {step === 'amount' && (
+        {step === 'experience' && (
           <>
-            <h2>{t('Wie viel willst du sehen?')}</h2>
-            <p>{t('Du kannst das jederzeit im Werkzeugkasten ändern.')}</p>
+            <h2>{t('Wie viel Erfahrung hast du mit Vibecoding?')}</h2>
+            <p>{t('Danach richten wir die Oberfläche ein. Alles bleibt einzeln an- und abschaltbar unter Einstellungen → Ansicht.')}</p>
             <div className="onb-choices">
-              <button className="onb-choice" onClick={() => pick(SIMPLE_OFF)} data-testid="onb-next">
-                <b>{t('Einfach')}</b>
-                <span>{t('Projekte, Sessions, Atmosphäre und die wichtigsten Werkzeuge. Mehr schaltest du später dazu.')}</span>
-                <small>{t('Empfohlen')}</small>
+              <button className="onb-choice" onClick={() => pick('beginner')} data-testid="onb-next">
+                <b>{t('Ich fange gerade an')}</b>
+                <span>{t('Ruhige Oberfläche mit Dock: Projekte, Sessions und Atmosphäre. Weitere Werkzeuge zeigen leise Tipps nach und nach.')}</span>
+                <small>{t('Empfohlen für den Einstieg')}</small>
               </button>
-              <button className="onb-choice" onClick={() => pick([])} data-testid="onb-all">
-                <b>{t('Alles')}</b>
-                <span>{t('Alle Werkzeuge von Anfang an – auch Addons, Handy-Begleiter, Discord, Lounge und Streamer-Modus.')}</span>
+              <button className="onb-choice" onClick={() => pick('pro')} data-testid="onb-pro">
+                <b>{t('Ich kenne mich aus')}</b>
+                <span>{t('Studio-Aufbau mit Seitenleiste und Statusleiste, alle Werkzeuge an – Merge Studio, Addons, Handy, Discord und mehr. Keine Tipps.')}</span>
+                <small>{t('Für Profis')}</small>
               </button>
             </div>
           </>
@@ -123,11 +126,14 @@ export function Onboarding(): React.JSX.Element | null {
                 <span>{t('Befehls-Palette: alle Fenster & Aktionen')}</span>
               </div>
             </div>
-            <div className="row" style={{ justifyContent: 'center', gap: 8 }}>
-              <button className="btn ghost big" onClick={() => finish(false)}>
+            <div className="row" style={{ justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn ghost big" onClick={() => finish('desktop')}>
                 {t('Zum Desktop')}
               </button>
-              <button className="btn primary big" onClick={() => finish(true)} data-testid="onb-finish">
+              <button className="btn big" onClick={() => finish('tour')} data-testid="onb-tour">
+                {t('Kurze Tour (1 Min.)')}
+              </button>
+              <button className="btn primary big" onClick={() => finish('project')} data-testid="onb-finish">
                 {t('Erstes Projekt anlegen')}
               </button>
             </div>
@@ -140,7 +146,7 @@ export function Onboarding(): React.JSX.Element | null {
         ))}
       </div>
       {step !== 'welcome' && step !== 'done' && (
-        <button className="onb-skip" onClick={() => finish(false)}>
+        <button className="onb-skip" onClick={() => finish('desktop')}>
           {t('Überspringen')}
         </button>
       )}

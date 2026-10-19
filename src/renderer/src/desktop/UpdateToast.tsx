@@ -18,6 +18,16 @@ export function UpdateToast(): React.JSX.Element | null {
           <i style={{ width: `${status.percent}%` }} />
         </div>
       )}
+      {status.state === 'available' && status.manual && (
+        <>
+          <button className="btn small primary" onClick={() => api.update.download()} data-testid="update-download">
+            {t('Laden')}
+          </button>
+          <button className="btn small ghost" onClick={dismiss}>
+            {t('Später')}
+          </button>
+        </>
+      )}
       {ready && !autoInstalling && (
         <>
           <button className="btn small primary" onClick={() => api.update.install()}>

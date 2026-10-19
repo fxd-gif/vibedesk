@@ -70,7 +70,11 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   hintsOn: true,
   hintsSeen: [],
   autoTidy: false,
-  dockFade: true
+  dockFade: true,
+  autoUpdate: true,
+  experience: '',
+  inspectorTabsOff: [],
+  tourDone: false
 })
 
 export class SettingsStore {

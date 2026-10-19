@@ -12,6 +12,8 @@ export interface UpdaterDisplay {
   checkNow?: boolean
   /** Läuft unmittelbar vor dem Installieren, z. B. um das Fensterchen zu zeigen */
   beforeInstall?: (version: string) => Promise<void>
+  /** Updates selbst laden? (Einstellung „Automatische Updates“) – false: nur melden */
+  auto?: () => boolean
 }
 
 export function setupUpdater(send: (s: UpdateStatus) => void, display: UpdaterDisplay = {}): void {
@@ -27,24 +29,45 @@ export function setupUpdater(send: (s: UpdateStatus) => void, display: UpdaterDi
   if (!app.isPackaged) {
     ipcMain.handle('update:check', () => set({ state: 'none' }))
     ipcMain.on('update:install', () => {})
+    ipcMain.on('update:download', () => {})
     return
   }
 
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
   autoUpdater.on('checking-for-update', () => set({ state: 'checking' }))
-  autoUpdater.on('update-available', (i) => set({ state: 'available', version: i.version }))
+  const auto = (): boolean => display.auto?.() ?? true
+  /** Download per Knopf läuft (bei automatischen Updates lädt electron-updater selbst) */
+  let downloading = false
+  autoUpdater.on('update-available', (i) => set(auto() || downloading ? { state: 'available', version: i.version } : { state: 'available', version: i.version, manual: true }))
   autoUpdater.on('update-not-available', () => set({ state: 'none' }))
   autoUpdater.on('download-progress', (p) => set({ state: 'downloading', percent: Math.round(p.percent), version: status.state === 'available' || status.state === 'downloading' ? status.version : '' }))
-  autoUpdater.on('update-downloaded', (i) => set({ state: 'ready', version: i.version }))
-  autoUpdater.on('error', (e) => set({ state: 'error', message: e?.message?.split('\n')[0] ?? t('Unbekannter Fehler') }))
+  autoUpdater.on('update-downloaded', (i) => {
+    downloading = false
+    set({ state: 'ready', version: i.version })
+  })
+  autoUpdater.on('error', (e) => {
+    downloading = false
+    set({ state: 'error', message: e?.message?.split('\n')[0] ?? t('Unbekannter Fehler') })
+  })
 
   const check = (): void => {
+    // während ein Download läuft, nicht dazwischenfunken
+    if (downloading) return
+    autoUpdater.autoDownload = auto()
     autoUpdater.checkForUpdates().catch(() => {
       /* Fehler kommt über das 'error'-Event */
     })
   }
   ipcMain.handle('update:check', () => check())
+  ipcMain.on('update:download', () => {
+    if (downloading || status.state !== 'available') return
+    downloading = true
+    set({ state: 'downloading', percent: 0, version: status.version })
+    autoUpdater.downloadUpdate().catch(() => {
+      downloading = false
+    })
+  })
   let installing = false
   ipcMain.on('update:install', async () => {
     if (installing) return

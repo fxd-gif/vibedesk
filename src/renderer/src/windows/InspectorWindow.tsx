@@ -4,6 +4,7 @@ import { useWorkflow } from '../store/workflowStore'
 import { StatsPanel } from './StatsPanel'
 import { AgentPanel, FeedPanel, StatusPanel, TodoPanel } from './WorkflowPanels'
 import { t } from '../../../shared/i18n'
+import { useSettings } from '../store/settingsStore'
 
 export const INSPECTOR_TABS = [
   { id: 'status', label: 'Status' },
@@ -58,13 +59,17 @@ function useCounts(): Partial<Record<InspectorTab, number>> {
 }
 
 export function InspectorWindow(): React.JSX.Element {
-  const tab = useInspector((s) => s.tab)
+  const off = useSettings((s) => s.s?.inspectorTabsOff ?? [])
+  const tabs = INSPECTOR_TABS.filter((x) => !off.includes(x.id))
+  const wanted = useInspector((s) => s.tab)
+  // ausgeblendeter Tab gewählt → erster sichtbarer
+  const tab = tabs.some((x) => x.id === wanted) ? wanted : (tabs[0]?.id ?? wanted)
   const setTab = useInspector((s) => s.setTab)
   const counts = useCounts()
   return (
     <div className="inspector">
       <div className="row tabs inspector-tabs">
-        {INSPECTOR_TABS.map((x) => (
+        {tabs.map((x) => (
           <button key={x.id} className={`tab${tab === x.id ? ' on' : ''}`} onClick={() => setTab(x.id)} data-testid={`inspector-${x.id}`}>
             {x.label}
             {!!counts[x.id] && <span className="tab-count">{counts[x.id]}</span>}

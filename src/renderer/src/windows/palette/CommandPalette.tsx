@@ -24,6 +24,7 @@ import { t } from '../../../../shared/i18n'
 import { moduleOn } from '../../desktop/modules'
 import { tidyNow, toggleZen } from '../../desktop/calm'
 import { openSettings } from '../SettingsWindow'
+import { startTour } from '../../desktop/Tour'
 
 interface Cmd {
   id: string
@@ -64,7 +65,7 @@ function buildCommands(projects: Project[]): Cmd[] {
     win('projects'),
     { id: 'win:editor', label: t('Editor'), group: t('Fenster'), icon: 'code', run: () => void openEditor() },
     win('inspector', t('Status · Feed · Todos · Agents · Stats')),
-    ...INSPECTOR_TABS.map(
+    ...INSPECTOR_TABS.filter((tab) => !(s?.inspectorTabsOff ?? []).includes(tab.id)).map(
       (tab): Cmd => ({ id: 'insp:' + tab.id, label: t('Session-Inspector: {tab}', { tab: tab.label }), group: t('Fenster'), icon: 'inspect', searchOnly: true, run: () => openInspector(tab.id) })
     ),
     win('git', t('Änderungen, Commits, Push & Pull, GitHub')),
@@ -98,6 +99,7 @@ function buildCommands(projects: Project[]): Cmd[] {
     { id: 'act:wrapped', label: t('Vibe Wrapped – deine Woche'), group: t('Aktionen'), icon: 'stats', hint: t('Rückblick als teilbares Bild'), run: () => void showWrapped() },
     { id: 'act:news', label: t('Was ist neu?'), group: t('Aktionen'), icon: 'spark', run: showWhatsNew },
     { id: 'act:update', label: t('Nach Updates suchen'), group: t('Aktionen'), icon: 'restart', run: () => void api.update.check() },
+    { id: 'act:tour', label: t('Rundgang starten'), group: t('Aktionen'), icon: 'spark', hint: t('Kurze Klick-Tour: wo was ist'), run: startTour },
     { id: 'act:zen', label: t('Zen-Modus'), group: t('Aktionen'), icon: 'eyeoff', hint: t('Strg+. · nur Claude und der Regen'), run: () => toggleZen() },
     { id: 'act:tidy', label: t('Aufräumen'), group: t('Aktionen'), icon: 'grid', hint: t('Übrige Fenster ins Dock, Rest anordnen'), run: tidyNow },
     { id: 'win:settings', label: t('Einstellungen'), group: t('Fenster'), icon: 'gear', hint: t('Sprache, Aufbau, Mitteilungen, Terminal'), run: () => openSettings() },

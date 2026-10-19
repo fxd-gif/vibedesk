@@ -5,7 +5,7 @@ import type { UpdateStatus } from '../../../shared/types'
 export function updateLabel(s: UpdateStatus): string | null {
   switch (s.state) {
     case 'available':
-      return t('Update {version} gefunden – wird geladen …', { version: s.version })
+      return s.manual ? t('Update {version} ist verfügbar', { version: s.version }) : t('Update {version} gefunden – wird geladen …', { version: s.version })
     case 'downloading':
       return t('Update {version} wird geladen … {percent} %', { version: s.version, percent: s.percent })
     case 'ready':

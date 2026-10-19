@@ -394,6 +394,7 @@ app.whenReady().then(async () => {
     },
     {
       checkNow: !!splash,
+      auto: () => settings.get().autoUpdate !== false,
       beforeInstall: async (version) => {
         // Fensterchen zeigen, Brücke für die Installer-Pause starten, dann erst beenden
         if (!splash?.open) splash = new SplashWindow()

@@ -64,7 +64,8 @@ export type DiscordStatus =
 
 export type UpdateStatus =
   | { state: 'idle' | 'checking' | 'none' }
-  | { state: 'available'; version: string }
+  /** manual = automatische Updates sind aus: erst auf Knopfdruck laden */
+  | { state: 'available'; version: string; manual?: boolean }
   | { state: 'downloading'; percent: number; version: string }
   | { state: 'ready'; version: string }
   | { state: 'error'; message: string }
@@ -243,7 +244,17 @@ export interface Settings {
   autoTidy: boolean
   /** Dock blendet sich ab, solange man im Terminal tippt */
   dockFade: boolean
+  /** Updates selbst laden und beim Start installieren (aus: nur Hinweis, Laden per Knopf) */
+  autoUpdate: boolean
+  /** Erfahrung aus dem Onboarding – bestimmt die Grundeinstellung ('' = noch nicht gefragt) */
+  experience: Experience
+  /** ausgeblendete Tabs im Session-Inspector */
+  inspectorTabsOff: string[]
+  /** Klick-Tour schon gesehen */
+  tourDone: boolean
 }
+
+export type Experience = '' | 'beginner' | 'pro'
 
 export type LayoutTheme = 'desktop' | 'studio'
 
@@ -493,6 +504,8 @@ export interface VibedeskApi {
     status(): Promise<UpdateStatus>
     version(): Promise<string>
     check(): Promise<void>
+    /** Update laden, wenn automatische Updates aus sind */
+    download(): void
     install(): void
   }
   discord: {

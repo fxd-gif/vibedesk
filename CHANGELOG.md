@@ -7,6 +7,13 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Anfänger oder Profi**: Der Einrichtungs-Rundgang fragt nach deiner Vibecoding-Erfahrung. Anfänger bekommen eine ruhige Oberfläche mit Dock und leisen Tipps, Profis den Studio-Aufbau mit Seitenleiste, Statusleiste und allen Werkzeugen. Alles bleibt einzeln an- und abschaltbar
+- **Klick-Tour**: Eine kurze Tour zeigt Schritt für Schritt, wo was ist und wie VibeDesk funktioniert. Startet am Ende der Einrichtung, jederzeit über die Befehlspalette („Rundgang starten“) oder in den Einstellungen
+- **Einstellungen → Ansicht**: Erfahrung, Aufbau, Werkzeugkasten und welche Tabs im Session-Inspector sichtbar sind, an einem Ort
+- **Automatische Updates abschaltbar** (Einstellungen → Updates): Dann meldet VibeDesk neue Versionen nur und lädt sie erst auf Knopfdruck. Dort siehst du auch die installierte Version und kannst selbst nach Updates suchen
+
 ## 1.3.0
 
 ### Neu
