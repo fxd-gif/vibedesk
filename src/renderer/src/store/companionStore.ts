@@ -129,7 +129,7 @@ export function wireCompanion(): void {
   useSettings.subscribe((st, prev) => {
     void sync()
     // Terminal am Handy an/aus → Handys sofort Bescheid geben
-    if (st.s?.companion?.terminal !== prev.s?.companion?.terminal) schedulePush()
+    if (st.s?.companion?.terminal !== prev.s?.companion?.terminal || st.s?.companion?.terminalKeys !== prev.s?.companion?.terminalKeys) schedulePush()
   })
   void sync()
 

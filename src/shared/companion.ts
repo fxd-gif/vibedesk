@@ -62,6 +62,8 @@ export interface CompanionState {
   shutdownAt: number | null
   /** ganzes Terminal abrufbar (/api/term) */
   terminal: boolean
+  /** Tasten erlaubt (/api/key) */
+  keys: boolean
 }
 
 /** Adresse der Handy-Seite samt QR-Code (SVG) – ohne Geheimnis, gekoppelt wird per Code */
@@ -90,6 +92,8 @@ export interface CompanionSettings {
   port: number
   /** ganzes Terminal samt Verlauf aufs Handy – nur, wenn ausdrücklich an */
   terminal?: boolean
+  /** ein paar Tasten vom Handy ins Terminal (Auswahlmenüs von Claude Code) – nur zusammen mit terminal */
+  terminalKeys?: boolean
   /** Internet-Link (Cloudflare-Tunnel): Handy von überall, ohne App – an, solange nicht ausdrücklich false */
   internet?: boolean
 }
@@ -161,6 +165,12 @@ export interface TermChunk {
   /** nichts Neues seit v */
   same?: boolean
 }
+
+/**
+ * Tasten, die das Handy schicken darf – genug für Claudes Auswahlmenüs („1. Yes / 2. No“), Abbrechen und Bestätigen.
+ * Bewusst ohne Umschalt+Tab (Modus „Änderungen automatisch annehmen“) und ohne freie Zeichen.
+ */
+export const TERM_KEYS: Record<string, string> = { esc: '\x1b', up: '\x1b[A', down: '\x1b[B', enter: '\r', '1': '1', '2': '2', '3': '3' }
 
 /** so viele Zeilen höchstens pro Antwort */
 export const TERM_MAX_LINES = 1500

@@ -16,6 +16,7 @@ import {
   polishInput,
   PROMPT_MAX,
   suggestInput,
+  TERM_KEYS,
   type AiContext,
   type CompanionSnapshot,
   type CompanionState,
@@ -45,6 +46,10 @@ export interface HubDeps {
   terminalOn?(): boolean
   /** Zeilen aus dem Terminal einer Session (über den Renderer) */
   readTerminal?(q: TermQuery): Promise<TermChunk | null>
+  /** Tasten vom Handy erlaubt? (zweite Einstellung, nur mit Terminal) */
+  keysOn?(): boolean
+  /** Rohdaten ins PTY einer Session */
+  writeSession?(sessionId: string, data: string): void
 }
 
 export type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string }
@@ -63,6 +68,7 @@ export class CompanionHub {
   private promptFast = new RateLimiter(1, 2000)
   private promptHour = new RateLimiter(60, 3600_000)
   private aiHour = new RateLimiter(40, 3600_000)
+  private keyLimit = new RateLimiter(12, 4000)
   private pushTimer: ReturnType<typeof setTimeout> | null = null
 
   constructor(private d: HubDeps) {}
@@ -103,8 +109,25 @@ export class CompanionHub {
       permissions: this.d.broker.list(),
       busy: { ...this.busy },
       shutdownAt: this.d.shutdownAt?.() ?? null,
-      terminal: this.terminalAllowed()
+      terminal: this.terminalAllowed(),
+      keys: this.keysAllowed()
     }
+  }
+
+  keysAllowed(): boolean {
+    return this.terminalAllowed() && !!this.d.keysOn?.() && !!this.d.writeSession
+  }
+
+  /** Eine Taste aus TERM_KEYS in die Session – gebremst, damit kein Dauerfeuer durchgeht */
+  key(body: { sessionId?: unknown; key?: unknown }): Result {
+    if (!this.keysAllowed()) return { ok: false, error: t('Tasten vom Handy sind am PC nicht erlaubt.') }
+    const session = typeof body.sessionId === 'string' ? this.snap.sessions.find((x) => x.id === body.sessionId) : undefined
+    if (!session) return { ok: false, error: t('Diese Session gibt es nicht mehr.') }
+    const seq = typeof body.key === 'string' && Object.hasOwn(TERM_KEYS, body.key) ? TERM_KEYS[body.key] : undefined
+    if (!seq) return { ok: false, error: t('Diese Taste gibt es nicht.') }
+    if (!this.keyLimit.allow(session.id)) return { ok: false, error: t('Langsam – kurz warten und nochmal.') }
+    this.d.writeSession!(session.id, seq)
+    return { ok: true }
   }
 
   terminalAllowed(): boolean {

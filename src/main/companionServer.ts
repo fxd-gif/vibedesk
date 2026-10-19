@@ -228,6 +228,8 @@ export class CompanionServer {
           return json(200, this.hub.answer(body.id, body.decision))
         case '/api/prompt':
           return void this.hub.prompt(body).then((r) => json(200, r), fail)
+        case '/api/key':
+          return json(200, this.hub.key(body))
         case '/api/suggest':
           return void this.hub.suggest(body.sessionId).then((r) => json(200, r), fail)
         case '/api/power':

@@ -7,6 +7,14 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Tasten am Handy**: Mit freigegebenem Terminal kannst du im Handy-Begleiter zusätzlich „Tasten vom Handy erlauben“. Dann steht unter dem Terminal eine Leiste mit Esc, ↑, ↓, 1, 2, 3 und Enter – genug, um Claudes Auswahlmenüs („1. Yes / 2. No“) vom Sofa aus zu beantworten oder Claude zu unterbrechen. Freie Eingaben gibt es dort bewusst nicht, und zu schnelles Tippen wird gebremst
+
+### Verbessert
+
+- Terminal am Handy: Wer unten mitliest, bleibt unten – auch wenn sich die Größe ändert (Tastenleiste, Handy drehen)
+
 ## 1.4.0
 
 ### Neu

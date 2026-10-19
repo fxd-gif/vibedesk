@@ -143,6 +143,11 @@ export function companionPage(nonce: string): string {
   .tstate { padding: 22px 6px; text-align: center; font: 13.5px -apple-system, 'Segoe UI', system-ui, sans-serif; color: var(--dim); }
   .tnew { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 5; flex: none; padding: 9px 16px; border-radius: 99px; font-size: 13px; background: rgba(20,24,34,.96); box-shadow: 0 8px 30px rgba(0,0,0,.5); }
   .tnew:active { transform: translateX(-50%) scale(.97); }
+  .tkeys { flex: none; display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); background: rgba(14,17,25,.96); }
+  .tkeys button { padding: 11px 0; border-radius: 11px; font: 600 14px ui-monospace, 'Cascadia Code', Consolas, monospace; }
+  .tkeys button.enter { background: rgba(159,184,255,.16); border-color: rgba(159,184,255,.45); }
+  .sheet.keys .tbody { padding-bottom: 14px; }
+  .sheet.keys .tnew { bottom: calc(78px + env(safe-area-inset-bottom)); }
   [hidden] { display: none !important; }
 </style></head>
 <body>
@@ -177,6 +182,7 @@ export function companionPage(nonce: string): string {
 <div class="sheet" id="sheet" hidden>
   <div class="sheet-head"><span class="dot" id="t-dot"></span><b id="t-name"></b><span class="st" id="t-st"></span><span class="sp"></span><button id="t-wrap">${t('Umbrechen')}</button><button class="x" id="t-close" aria-label="${t('Schließen')}">×</button></div>
   <div class="tbody" id="t-body"></div>
+  <div class="tkeys" id="t-keys" hidden><button data-k="esc">Esc</button><button data-k="up" aria-label="${t('Pfeil hoch')}">↑</button><button data-k="down" aria-label="${t('Pfeil runter')}">↓</button><button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="enter" data-k="enter" aria-label="Enter">⏎</button></div>
   <button class="tnew" id="t-new" hidden>↓ ${t('Neue Ausgabe')}</button>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -448,7 +454,18 @@ export function companionPage(nonce: string): string {
     $('t-name').textContent = s ? s.name : ${js(t('Session beendet'))};
     $('t-dot').className = 'dot ' + (s ? s.status : 'off');
     $('t-st').textContent = s ? (STATUS[s.status] || s.status) : '';
+    var keys = !!(state && state.keys && s);
+    $('t-keys').hidden = !keys;
+    $('sheet').classList.toggle('keys', keys);
   }
+  // Tasten fürs Auswahlmenü von Claude (nur wenn am PC erlaubt)
+  [].forEach.call($('t-keys').querySelectorAll('button'), function (b) {
+    b.onclick = function () {
+      if (!tm) return;
+      if (navigator.vibrate) try { navigator.vibrate(12); } catch (_) {}
+      api('/api/key', { sessionId: tm.sid, key: b.getAttribute('data-k') }).then(function (r) { if (!r.ok) toast(r.error || FAILED, true); });
+    };
+  });
   function tstate(text) { var b = $('t-body'); clear(b); if (tm) tm.rowEl = []; b.appendChild(el('div', 'tstate', text)); }
 
   // live: wartet am PC auf die nächste Änderung; older: ältere Zeilen vor der ersten geladenen
@@ -550,6 +567,10 @@ export function companionPage(nonce: string): string {
     tm.follow = b.scrollHeight - b.scrollTop - b.clientHeight < 40;
     if (tm.follow) $('t-new').hidden = true;
   }, { passive: true });
+  // Größe ändert sich (Tastenleiste, Drehen, Tastatur): wer unten mitliest, bleibt unten
+  if (window.ResizeObserver) new ResizeObserver(function () {
+    if (tm && tm.follow) { var b = $('t-body'); b.scrollTop = b.scrollHeight; }
+  }).observe($('t-body'));
   $('t-new').onclick = function () { var b = $('t-body'); b.scrollTop = b.scrollHeight; if (tm) tm.follow = true; $('t-new').hidden = true; };
 
   // ---------- PC ----------

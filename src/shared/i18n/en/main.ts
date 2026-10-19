@@ -301,6 +301,13 @@ const dict: Record<string, string> = {
   'Ganzes Terminal auf dem Handy': 'Whole terminal on the phone',
   'Live mit Farben und dem kompletten Verlauf – nur zum Mitlesen': 'Live with colors and the full history – read only',
   'Im Terminal kann alles stehen, was Claude liest – auch Passwörter oder Schlüssel. Nur einschalten, wenn nur deine eigenen Handys gekoppelt sind. Im Streamer-Modus bleibt Geschwärztes geschwärzt.': 'The terminal can show anything Claude reads – including passwords or keys. Only turn this on if only your own phones are paired. In streamer mode, redacted text stays redacted.',
+  // Handy: Tasten
+  'Tasten vom Handy sind am PC nicht erlaubt.': 'Keys from the phone aren’t allowed on the PC.',
+  'Diese Taste gibt es nicht.': 'This key doesn’t exist.',
+  'Pfeil hoch': 'Arrow up',
+  'Pfeil runter': 'Arrow down',
+  'Tasten vom Handy erlauben': 'Allow keys from the phone',
+  'Esc, ↑, ↓, 1–3 und Enter – genug für Claudes Auswahlmenüs. Keine freie Eingabe.': 'Esc, ↑, ↓, 1–3 and Enter – enough for Claude’s choice menus. No free typing.',
 }
 
 export default dict

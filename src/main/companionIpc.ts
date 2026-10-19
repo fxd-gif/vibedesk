@@ -33,6 +33,8 @@ export interface CompanionDeps {
   transcriptsDir: string
   /** userData/companion.json – gekoppelte Geräte (nur Hashes) */
   devicesFile: string
+  /** Rohdaten ins PTY einer Claude-Session (Tasten vom Handy) */
+  writeSession(id: string, data: string): void
 }
 
 export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): Promise<void> } {
@@ -99,7 +101,9 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     transcriptsDir: d.transcriptsDir,
     shutdownAt: () => power.shutdownAt,
     terminalOn,
-    readTerminal
+    readTerminal,
+    keysOn: () => terminalOn() && d.settings.get().companion?.terminalKeys === true,
+    writeSession: (id, data) => d.writeSession(id, data)
   })
   const server = new CompanionServer(auth, hub, power, (dev) => d.send('companion:devices', auth.list(), dev))
 

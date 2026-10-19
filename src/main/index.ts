@@ -256,6 +256,8 @@ app.whenReady().then(async () => {
     broker,
     send,
     claudeCmd: () => process.env.VIBEDESK_CLAUDE_CMD || 'claude',
+    // sessions entsteht weiter unten – aufgerufen wird erst, wenn das Handy eine Taste schickt
+    writeSession: (id, data) => sessions.write(id, data),
     tmpDir: join(app.getPath('temp'), 'vibedesk', 'companion'),
     // Claude Code legt Transkripte unter CLAUDE_CONFIG_DIR bzw. ~/.claude ab – nur dort darf gelesen werden
     transcriptsDir: join(process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude'), 'projects'),

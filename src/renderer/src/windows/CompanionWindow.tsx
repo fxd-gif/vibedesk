@@ -258,6 +258,13 @@ export function CompanionWindow(): React.JSX.Element {
           </span>
           <Toggle label={t('Ganzes Terminal auf dem Handy')} on={s.companion.terminal === true} onChange={(v) => set({ companion: { ...s.companion, terminal: v } })} />
         </div>
+        <div className="row between opt">
+          <span>
+            {t('Tasten vom Handy erlauben')}
+            <span className="dim small opt-hint">{t('Esc, ↑, ↓, 1–3 und Enter – genug für Claudes Auswahlmenüs. Keine freie Eingabe.')}</span>
+          </span>
+          <Toggle label={t('Tasten vom Handy erlauben')} on={s.companion.terminal === true && s.companion.terminalKeys === true} onChange={(v) => set({ companion: { ...s.companion, terminalKeys: v, terminal: v ? true : s.companion.terminal } })} />
+        </div>
         <div className="dim tiny">{t('Im Terminal kann alles stehen, was Claude liest – auch Passwörter oder Schlüssel. Nur einschalten, wenn nur deine eigenen Handys gekoppelt sind. Im Streamer-Modus bleibt Geschwärztes geschwärzt.')}</div>
       </section>
     </div>
