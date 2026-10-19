@@ -7,7 +7,7 @@ import { fmtClock } from '../store/focusStore'
 import { acceptInvite, buildPresence, inviteFocus, joinLounge, leaveLounge, randomCode, sendChat, sendReaction, useLounge, type LoungeMsg } from '../store/loungeStore'
 import { useSettings } from '../store/settingsStore'
 import { startImport } from '../store/shareStore'
-import { Toggle } from './AmbienceMenu'
+import { Toggle } from '../desktop/Toggle'
 import { locale, t } from '../../../shared/i18n'
 
 const PHASE = (p: 'work' | 'short' | 'long'): string => (p === 'work' ? t('Fokus') : p === 'short' ? t('Pause') : t('Lange Pause'))

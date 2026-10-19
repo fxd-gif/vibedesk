@@ -242,19 +242,7 @@ input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
   .feed-tool { min-width: 0; }
 }
 
-/* ---------- Atmosphäre-Menü ---------- */
-.amb-menu {
-  position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 1001;
-  width: 420px; max-height: calc(100vh - 140px); overflow: auto;
-  padding: 6px 18px 16px; border-radius: 18px;
-  background: rgba(14, 18, 26, 0.78); backdrop-filter: blur(30px) saturate(150%);
-  border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,.55);
-  animation: gwin-in 170ms cubic-bezier(0.2, 0.8, 0.2, 1);
-  display: flex; flex-direction: column;
-}
-.amb-menu section { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; }
-.amb-menu section + section { border-top: 1px solid var(--glass-border); }
-.amb-menu h4 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); display: flex; gap: 8px; align-items: center; }
+/* ---------- gemeinsame Bedienelemente (Schalter, Regler) ---------- */
 .row.between { justify-content: space-between; }
 .slider { display: grid; grid-template-columns: 90px 1fr; align-items: center; gap: 12px; color: var(--text-dim); }
 .toggle { width: 36px; height: 20px; border-radius: 999px; border: 0; background: rgba(255,255,255,.14); position: relative; cursor: pointer; transition: background 180ms; flex: 0 0 auto; }

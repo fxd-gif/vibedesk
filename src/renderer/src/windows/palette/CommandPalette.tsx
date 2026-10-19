@@ -48,7 +48,7 @@ function openInspector(tab: InspectorTab): void {
   openPanel('inspector')
 }
 
-function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
+function buildCommands(projects: Project[]): Cmd[] {
   const s = useSettings.getState().s
   const win = (id: PanelId, hint?: string): Cmd => {
     const d = panelDef(id)!
@@ -84,7 +84,6 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
     ...(s?.prompts.length ? [{ id: 'act:sharePrompts', label: t('Alle Prompts als Code teilen'), group: t('Teilen'), icon: 'share', searchOnly: true, run: () => sharePrompts(s.prompts) }] : []),
     { id: 'act:curtain', label: t('Vorhang zuziehen'), group: t('Aktionen'), icon: 'eyeoff', hint: t('Strg+Umschalt+H'), searchOnly: true, run: () => toggleCurtain(true) },
     { id: 'act:arrange', label: t('Fenster anordnen'), group: t('Aktionen'), icon: 'grid', run: () => useUi.getState().arrangeAll(kindOf) },
-    { id: 'act:ambience', label: t('Atmosphäre & Musik einstellen'), group: t('Aktionen'), icon: 'rain', run: onAmbience },
     ...(s ? [{ id: 'act:music', label: s.musicOn ? t('Lofi-Radio aus') : t('Lofi-Radio an'), group: t('Aktionen'), icon: 'music', run: () => useSettings.getState().set(toggleMusic(s)) }] : []),
     { id: 'act:fullscreen', label: t('Vollbild umschalten'), group: t('Aktionen'), icon: 'exit', hint: t('F11 · Esc halten'), run: () => api.app.toggleFullscreen() },
     { id: 'act:quick', label: t('Schnell-Prompt öffnen'), group: t('Aktionen'), icon: 'send', hint: t('Strg+Alt+Leertaste, auch in anderen Apps'), run: () => api.quick.open() },
@@ -95,12 +94,12 @@ function buildCommands(projects: Project[], onAmbience: () => void): Cmd[] {
   ]
 }
 
-export function CommandPalette({ onAmbience }: { onAmbience(): void }): React.JSX.Element | null {
+export function CommandPalette(): React.JSX.Element | null {
   const open = usePalette((s) => s.open)
-  return open ? <PaletteBox onAmbience={onAmbience} /> : null
+  return open ? <PaletteBox /> : null
 }
 
-function PaletteBox({ onAmbience }: { onAmbience(): void }): React.JSX.Element {
+function PaletteBox(): React.JSX.Element {
   const [q, setQ] = useState('')
   const [idx, setIdx] = useState(0)
   const [projects, setProjects] = useState<Project[]>([])
@@ -111,7 +110,7 @@ function PaletteBox({ onAmbience }: { onAmbience(): void }): React.JSX.Element {
     api.projects.list().then(setProjects)
   }, [])
 
-  const all = useMemo(() => buildCommands(projects, onAmbience), [projects, onAmbience])
+  const all = useMemo(() => buildCommands(projects), [projects])
   const items = useMemo(() => {
     // eingefügter Share-Code → direkt öffnen
     const code = findShareCode(q.replace(/\s+/g, ''))

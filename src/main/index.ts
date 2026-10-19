@@ -41,6 +41,7 @@ import type { SessionInfo } from '../shared/types'
 import { writeJsonAtomic } from './jsonFile'
 import { GitService } from './gitService'
 import { registerGitIpc } from './gitIpc'
+import { registerSpotifyIpc, SpotifyService } from './spotify'
 import { PermissionBroker } from './permissionBroker'
 import { setupCompanion } from './companionIpc'
 import { QuickPrompt, type QuickTarget } from './quickPrompt'
@@ -230,6 +231,7 @@ app.whenReady().then(async () => {
     emit: (ch, payload) => send(ch, payload)
   })
   registerBrainIpc(brain)
+  registerSpotifyIpc(new SpotifyService(join(userData, 'spotify.json')))
   registerGitIpc(
     new GitService({ claudeCmd: () => process.env.VIBEDESK_CLAUDE_CMD || 'claude', trash: (p) => shell.trashItem(p) }),
     projects,

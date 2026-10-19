@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react'
 import type { ShellKind, TerminalCursor, TerminalSettings } from '../../../shared/types'
 import { FONT_MAX, FONT_MIN } from '../../../shared/terminalInput'
 import { useSettings } from '../store/settingsStore'
-import { Toggle } from '../windows/AmbienceMenu'
+import { Toggle } from '../desktop/Toggle'
 import { TERMINAL_THEMES } from './themes'
 import { t } from '../../../shared/i18n'
 

@@ -116,6 +116,23 @@ const api: VibedeskApi = {
     appInfo: (clientId) => ipcRenderer.invoke('discord:appInfo', clientId),
     webhook: (kind, body) => ipcRenderer.invoke('discord:webhook', kind, body)
   },
+  spotify: {
+    status: () => ipcRenderer.invoke('spotify:status'),
+    connect: (clientId) => ipcRenderer.invoke('spotify:connect', clientId),
+    cancel: () => ipcRenderer.send('spotify:cancel'),
+    disconnect: () => ipcRenderer.invoke('spotify:disconnect'),
+    player: () => ipcRenderer.invoke('spotify:player'),
+    devices: () => ipcRenderer.invoke('spotify:devices'),
+    playlists: () => ipcRenderer.invoke('spotify:playlists'),
+    playlistTracks: (id) => ipcRenderer.invoke('spotify:playlistTracks', id),
+    liked: () => ipcRenderer.invoke('spotify:liked'),
+    queue: () => ipcRenderer.invoke('spotify:queue'),
+    search: (q) => ipcRenderer.invoke('spotify:search', q),
+    isLiked: (uri) => ipcRenderer.invoke('spotify:isLiked', uri),
+    setLiked: (uri, on) => ipcRenderer.invoke('spotify:setLiked', uri, on),
+    command: (c) => ipcRenderer.invoke('spotify:command', c),
+    openApp: () => ipcRenderer.send('spotify:openApp')
+  },
   stats: {
     history: () => ipcRenderer.invoke('stats:history')
   },

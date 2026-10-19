@@ -256,7 +256,25 @@ const dict: Record<string, string> = {
   'Webhook nicht gefunden – wurde er in Discord gelöscht?': 'Webhook not found – was it deleted in Discord?',
   'Discord bremst gerade – später nochmal.': 'Discord is rate-limiting – try again later.',
   'Discord antwortet mit Fehler {status}.': 'Discord responded with error {status}.',
-  'Discord ist nicht erreichbar.': 'Can’t reach Discord.'
+  'Discord ist nicht erreichbar.': 'Can’t reach Discord.',
+  // Spotify
+  'Die Client-ID besteht aus 32 Zeichen (0–9, a–f).': 'The client ID is 32 characters long (0–9, a–f).',
+  'Spotify ist verbunden. Du kannst dieses Fenster schließen.': 'Spotify is connected. You can close this window.',
+  'Verbinden hat nicht geklappt. Versuch es in VibeDesk noch einmal.': 'Connecting didn’t work. Try again in VibeDesk.',
+  'Zugriff in Spotify abgelehnt.': 'Access was denied in Spotify.',
+  'Spotify-Anmeldung fehlgeschlagen.': 'Spotify sign-in failed.',
+  'Zeit abgelaufen – die Anmeldung wurde nicht abgeschlossen.': 'Timed out – the sign-in wasn’t completed.',
+  'Port {port} ist belegt – schließ das Programm, das ihn nutzt.': 'Port {port} is in use – close the program that uses it.',
+  'Abgebrochen.': 'Cancelled.',
+  'Spotify kennt diese Client-ID nicht.': 'Spotify doesn’t know this client ID.',
+  'Spotify ist nicht verbunden.': 'Spotify isn’t connected.',
+  'Kein aktives Spotify-Gerät. Öffne Spotify auf dem PC oder Handy und wähle es hier unter „Gerät“ aus.': 'No active Spotify device. Open Spotify on your PC or phone and pick it here under “Device”.',
+  'Diese Steuerung braucht Spotify Premium.': 'This control needs Spotify Premium.',
+  'Spotify erlaubt das nicht. Steuerung braucht Premium, und dein Konto muss in deiner Spotify-App als Nutzer eingetragen sein.': 'Spotify doesn’t allow this. Control needs Premium, and your account must be added as a user in your Spotify app.',
+  'Spotify bremst gerade – kurz warten.': 'Spotify is rate-limiting – wait a moment.',
+  'Spotify-Anmeldung abgelaufen – bitte neu verbinden.': 'Spotify sign-in expired – please reconnect.',
+  'Spotify-Fehler ({status})': 'Spotify error ({status})',
+  'Unbekannter Spotify-Befehl': 'Unknown Spotify command',
 }
 
 export default dict

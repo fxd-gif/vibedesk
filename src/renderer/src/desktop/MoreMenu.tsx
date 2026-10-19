@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react'
 import type { PanelId } from '../../../shared/types'
 import { useSettings } from '../store/settingsStore'
-import { Toggle } from '../windows/AmbienceMenu'
+import { Toggle } from './Toggle'
 import { panelDef } from '../windows/panels'
 import { openPanel } from '../windows/palette/CommandPalette'
 import { Icon } from './icons'

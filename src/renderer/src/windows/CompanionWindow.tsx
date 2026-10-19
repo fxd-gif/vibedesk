@@ -6,7 +6,7 @@ import { confirm } from '../store/dialogStore'
 import { cancelPairing, revokeAllDevices, revokeDevice, startPairing, useCompanion } from '../store/companionStore'
 import { useSettings } from '../store/settingsStore'
 import { relTime } from '../util'
-import { Toggle } from './AmbienceMenu'
+import { Toggle } from '../desktop/Toggle'
 import { t } from '../../../shared/i18n'
 import './companion.css'
 

@@ -28,7 +28,7 @@ import { RainCanvas } from './ambience/RainCanvas'
 import { useSettings } from './store/settingsStore'
 import { ambienceAudio } from './ambience/audio'
 import { isMuted } from './ambience/toggles'
-import { AmbienceMenu } from './windows/AmbienceMenu'
+import { useSpotify } from './store/spotifyStore'
 import { useFocus, wireFocus } from './store/focusStore'
 import { phaseTotal, remaining } from './store/focusTimer'
 import { Ring, toneOf } from './windows/FocusPanel'
@@ -118,9 +118,8 @@ export default function App(): React.JSX.Element {
   // nur minutengenau – sonst würde die ganze App jede Sekunde neu rendern
   const focusMinutes = useFocus((s) => Math.ceil(remaining(s.state, s.now) / 60_000))
   const focusBanner = useFocus((s) => s.banner)
-  const [menu, setMenu] = useState(false)
   const paletteOpen = usePalette((s) => s.open)
-  const openAmbience = useCallback(() => setMenu(true), [])
+  const spotifyPlaying = useSpotify((s) => !!s.player?.playing)
   const [audioState, setAudioState] = useState({ musicOffline: false, musicPlaying: false })
 
   useEffect(() => ambienceAudio.onState(setAudioState), [])
@@ -267,14 +266,10 @@ export default function App(): React.JSX.Element {
           ],
           [
             {
-              id: 'ambience',
-              icon: 'rain',
+              ...panelItem('ambience'),
               label: settings?.musicOn && audioState.musicOffline ? t('Atmosphäre · Lofi-Radio offline') : t('Atmosphäre & Musik'),
-              hint: t('Szene, Regen und Lofi-Radio'),
-              active: menu,
               className: settings?.musicOn && audioState.musicOffline ? 'offline' : undefined,
-              badge: settings?.musicOn && !isMuted(settings.musicVolume) && !audioState.musicOffline ? <span className="dock-eq" aria-hidden><i /><i /><i /></span> : undefined,
-              onClick: () => setMenu((m) => !m)
+              badge: (settings?.musicOn && !isMuted(settings.musicVolume) && !audioState.musicOffline) || spotifyPlaying ? <span className="dock-eq" aria-hidden><i /><i /><i /></span> : undefined
             },
             (() => {
               const def = panelDef('focus')!
@@ -328,8 +323,7 @@ export default function App(): React.JSX.Element {
       />
       <LoungeFloaters />
       <StreamerPill onClick={() => openPanel('streamer')} />
-      <CommandPalette onAmbience={openAmbience} />
-      {menu && <AmbienceMenu offline={audioState.musicOffline} onClose={() => setMenu(false)} />}
+      <CommandPalette />
       <StartCard />
       <ToastStack />
       <NotifyPanel />

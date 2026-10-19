@@ -51,8 +51,9 @@ import type { GitCommit, GitState, GitTools } from './git'
 import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget } from './companion'
 import type { PermissionAsk, PermissionDecision } from './permissions'
 import type { LangSetting } from './i18n'
+import type { SpotifyCommand, SpotifyDevice, SpotifyPlayer, SpotifyPlaylist, SpotifyQueue, SpotifyStatus, SpotifyTrack } from './spotify'
 
-export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion'
+export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion' | 'ambience'
 
 export type DiscordStatus =
   | { state: 'off' }
@@ -225,6 +226,8 @@ export interface Settings {
   language: LangSetting
   /** Regen-Hintergrund sparsamer zeichnen: 'auto' nur im Akkubetrieb, 'on' immer, 'off' nie */
   energySaver: EnergySaver
+  /** Client-ID der eigenen Spotify-App (developer.spotify.com) – öffentlich, kein Geheimnis */
+  spotifyClientId: string
 }
 
 export type EnergySaver = 'auto' | 'on' | 'off'
@@ -480,6 +483,24 @@ export interface VibedeskApi {
   }
   stats: {
     history(): Promise<DayStats[]>
+  }
+  spotify: {
+    status(): Promise<SpotifyStatus>
+    /** öffnet den Spotify-Login im Browser und wartet auf die Rückmeldung */
+    connect(clientId: string): Promise<SpotifyStatus>
+    cancel(): void
+    disconnect(): Promise<void>
+    player(): Promise<SpotifyPlayer | null>
+    devices(): Promise<SpotifyDevice[]>
+    playlists(): Promise<SpotifyPlaylist[]>
+    playlistTracks(id: string): Promise<SpotifyTrack[]>
+    liked(): Promise<SpotifyTrack[]>
+    queue(): Promise<SpotifyQueue>
+    search(q: string): Promise<{ tracks: SpotifyTrack[]; playlists: SpotifyPlaylist[] }>
+    isLiked(uri: string): Promise<boolean>
+    setLiked(uri: string, on: boolean): Promise<void>
+    command(c: SpotifyCommand): Promise<void>
+    openApp(): void
   }
   power: {
     /** läuft der Rechner gerade im Akkubetrieb? */

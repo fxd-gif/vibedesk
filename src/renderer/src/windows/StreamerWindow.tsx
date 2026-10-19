@@ -9,7 +9,7 @@ import { useSessions } from '../store/sessionStore'
 import { useSettings } from '../store/settingsStore'
 import { acceptSuggestion, dropSuggestion, newOverlayToken, sortedQueue, toggleCurtain, useStreamer } from '../store/streamerStore'
 import { clearAllTerminals } from '../store/terminals'
-import { Toggle } from './AmbienceMenu'
+import { Toggle } from '../desktop/Toggle'
 import { t } from '../../../shared/i18n'
 
 function Opt({ label, hint, on, onChange }: { label: string; hint?: string; on: boolean; onChange(v: boolean): void }): React.JSX.Element {
