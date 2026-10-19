@@ -68,6 +68,10 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 - Resume earlier sessions with one click
 - Hit your usage limit? VibeDesk reads the reset time and tells Claude to carry on once the limit is free again
 - Rewind button: jump Claude's conversation and code back to an earlier step
+- **Plan card:** plans from plan mode show up as a readable card – "Let's go", or "Change …" to send Claude your feedback
+- **Plan limit at a glance** (Pro/Max): how much of the 5-hour and weekly limit is used, with a quiet heads-up at 75 % and 90 %
+- **Dev server in one click:** "▶ Dev server" starts your `dev` script (npm, pnpm, yarn or bun) in a shell next to Claude
+- **Claude can drive VibeDesk (MCP):** "sort my windows", "zen mode on", "tokyo scene with more rain" – Claude does it
 
 **Merge Studio (beta) – parallel sessions**
 - "Isolated session": Claude gets its own working folder (Git worktree) on its own branch, so parallel sessions never get in each other's way
@@ -99,6 +103,7 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 **Phone companion**
 - Open VibeDesk in your phone's browser: scan the QR code, pair with a 6-digit code from the PC screen
 - See sessions, Claude's latest output, plan progress and notifications; answer permission requests (the phone vibrates)
+- See what is happening: your last prompt and Claude's recent steps – and, if you allow it, the **whole terminal live** with colors and full history, plus a few keys (Esc, ↑, ↓, 1–3, Enter) for Claude's choice menus
 - Type a rough idea and Claude turns it into a clear prompt; when Claude is done, the phone suggests three next steps
 - Works in your Wi-Fi and, through a Cloudflare quick tunnel, from anywhere (can be switched off)
 

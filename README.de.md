@@ -68,6 +68,10 @@ In den Terminals läuft das echte Claude Code. VibeDesk legt den Blick darum: wa
 - Frühere Sessions mit einem Klick fortsetzen
 - Nutzungslimit erreicht? VibeDesk liest die Reset-Zeit und lässt Claude danach von selbst weitermachen
 - Zurückspulen: Gespräch und Code auf einen früheren Schritt zurücksetzen
+- **Plan-Karte:** Pläne aus dem Plan-Modus als lesbare Karte – „Los geht’s“ oder „Ändern …“ mit Rückmeldung an Claude
+- **Abo-Limit im Blick** (Pro/Max): wie viel vom 5-Stunden- und Wochenlimit verbraucht ist, leiser Hinweis bei 75 % und 90 %
+- **Dev-Server per Klick:** „▶ Dev-Server“ startet dein `dev`-Skript (npm, pnpm, yarn oder bun) in einer Shell neben Claude
+- **Claude bedient VibeDesk (MCP):** „Sortier meine Fenster“, „Zen-Modus an“, „Tokyo-Szene mit mehr Regen“ – Claude erledigt es
 
 **Merge Studio (Beta) – parallele Sessions**
 - „Isolierte Session“: Claude bekommt einen eigenen Arbeitsordner (Git-Worktree) auf eigenem Branch – parallele Sessions kommen sich nie in die Quere
@@ -99,6 +103,7 @@ In den Terminals läuft das echte Claude Code. VibeDesk legt den Blick darum: wa
 **Handy-Begleiter**
 - VibeDesk im Handy-Browser: QR-Code scannen, mit einem 6-stelligen Code vom PC-Bildschirm koppeln
 - Sessions, Claudes letzte Ausgabe, Plan-Fortschritt und Mitteilungen; Freigaben beantworten (das Handy vibriert)
+- Nachvollziehen, was passiert: dein letzter Auftrag und Claudes letzte Schritte – und, wenn du es erlaubst, das **ganze Terminal live** mit Farben und komplettem Verlauf, dazu ein paar Tasten (Esc, ↑, ↓, 1–3, Enter) für Claudes Auswahlmenüs
 - Idee eintippen, Claude formuliert daraus einen klaren Prompt; ist Claude fertig, schlägt das Handy drei nächste Schritte vor
 - Im WLAN und über einen Cloudflare-Quick-Tunnel auch von unterwegs (abschaltbar)
 
