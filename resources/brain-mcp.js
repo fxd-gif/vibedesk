@@ -117,6 +117,11 @@ const DESK_TOOLS = [
       required: ['colors']
     }
   },
+  {
+    name: 'desk_preview',
+    description: 'Öffnet die lokale App des Users im Vorschau-Fenster von VibeDesk, z. B. nachdem du den Dev-Server gestartet hast. Nur localhost/127.0.0.1.',
+    inputSchema: { type: 'object', properties: { url: { type: 'string', description: 'z. B. http://localhost:5173/' } }, required: ['url'] }
+  },
   { name: 'desk_focus', description: 'Fokus-Timer (Pomodoro) steuern.', inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['start', 'pause', 'resume', 'stop'] } }, required: ['action'] } },
   {
     name: 'desk_notify',

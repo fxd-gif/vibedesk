@@ -7,6 +7,10 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Claude zeigt dir deine App**: Über den VibeDesk-MCP kann Claude deine lokale App (localhost) direkt im Vorschau-Fenster öffnen, etwa nachdem es den Dev-Server gestartet hat. Fremde Seiten öffnet es dort bewusst nicht
+
 ## 1.8.0
 
 ### Neu

@@ -1,6 +1,7 @@
 // VibeDesk als MCP-Werkzeug: Claude kann den Desktop steuern (Fenster anordnen, Zen, Szene, Musik …).
 // Hier wird geprüft, was erlaubt ist – ausgeführt wird im Renderer.
 import type { LayoutTheme, PanelId } from './types'
+import { isLocalUrl } from './terminalInput'
 
 export const DESK_SCENES = ['city', 'forest', 'tokyo'] as const
 export const DESK_THEMES = ['scene', 'vibedesk', 'wald', 'neon', 'kontrast', 'mono', 'custom'] as const
@@ -26,6 +27,7 @@ export type DeskCommand =
   | { cmd: 'focus'; action: 'start' | 'pause' | 'resume' | 'stop' }
   | { cmd: 'notify'; title: string; body: string }
   | { cmd: 'customTheme'; theme: CustomTheme }
+  | { cmd: 'preview'; url: string }
 
 const num = (x: unknown, min: number, max: number): number | undefined => (typeof x === 'number' && Number.isFinite(x) ? Math.min(max, Math.max(min, x)) : undefined)
 const oneOf = <T extends string>(x: unknown, list: readonly T[]): T | undefined => (typeof x === 'string' && (list as readonly string[]).includes(x) ? (x as T) : undefined)
@@ -79,6 +81,11 @@ export function parseDeskCommand(tool: string, raw: unknown): DeskCommand | { er
       if (!colors.foreground) return { error: 'colors.foreground fehlt (Hex wie #e8e2d0). Erlaubt: ' + THEME_KEYS.join(', ') }
       return { cmd: 'customTheme', theme: { name: text(a.name, 30) || 'Eigenes', colors } }
     }
+    case 'desk_preview': {
+      const url = text(a.url, 500)
+      // nur die eigene App auf diesem PC – keine fremden Seiten im Vorschau-Fenster
+      return isLocalUrl(url) ? { cmd: 'preview', url } : { error: 'Nur lokale Adressen, z. B. http://localhost:5173/' }
+    }
     case 'desk_notify': {
       const title = text(a.title, 80)
       return title ? { cmd: 'notify', title, body: text(a.body, 240) } : { error: 'title fehlt.' }
@@ -111,6 +118,8 @@ export function deskDone(c: DeskCommand): string {
       return `Fokus-Timer: ${c.action}.`
     case 'notify':
       return 'Karte angezeigt.'
+    case 'preview':
+      return `Vorschau geöffnet: ${c.url}`
     case 'customTheme':
       return `Eigenes Farbschema „${c.theme.name}“ gesetzt (${Object.keys(c.theme.colors).length} Farben).`
   }

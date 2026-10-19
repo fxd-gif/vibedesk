@@ -8,6 +8,7 @@ import { inform } from './notifyStore'
 import { kindOf } from './sessionStore'
 import { useSettings } from './settingsStore'
 import { useUi } from './uiStore'
+import { usePreview } from './previewStore'
 
 export function runDeskCommand(c: DeskCommand): void {
   const st = useSettings.getState()
@@ -43,6 +44,8 @@ export function runDeskCommand(c: DeskCommand): void {
     }
     case 'notify':
       return inform(c.title, c.body || undefined)
+    case 'preview':
+      return usePreview.getState().openPreview(c.url)
     case 'customTheme':
       return st.set({ customTheme: c.theme, terminal: { ...s.terminal, theme: 'custom' } })
   }
