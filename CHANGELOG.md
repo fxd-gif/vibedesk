@@ -9,6 +9,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Neu
 
+- **Branches im Git-Fenster**: Ein Klick auf den Branch oben zeigt alle lokalen Branches zum Wechseln, und „Neuer Branch …“ legt einen an und wechselt gleich hinein. Nicht committete Änderungen nimmt git mit, solange sie nicht kollidieren – sonst erklärt VibeDesk, was im Weg ist
+
 - **Claude zeigt dir deine App**: Über den VibeDesk-MCP kann Claude deine lokale App (localhost) direkt im Vorschau-Fenster öffnen, etwa nachdem es den Dev-Server gestartet hat. Fremde Seiten öffnet es dort bewusst nicht
 
 ## 1.8.0

@@ -221,7 +221,13 @@ const dict: Record<string, string> = {
   'Bei GitHub anmelden?': 'Sign in to GitHub?',
   'GitHub braucht eine Anmeldung. Dein Browser öffnet sich, du gibst einen Code ein – fertig.':
     'GitHub needs you to sign in. Your browser opens, you enter a code – done.',
-  Anmelden: 'Sign in'
+  Anmelden: 'Sign in',
+  // Branch-Menü
+  'Ungültiger Branch-Name': 'Invalid branch name',
+  'Neuer Branch …': 'New branch …',
+  'Nicht committete Änderungen nimmt git zum neuen Branch mit, solange sie nicht kollidieren.': 'Git carries uncommitted changes over to the new branch as long as they don’t collide.',
+  'Branch anlegen fehlgeschlagen': 'Couldn’t create branch',
+  'Branch wechseln fehlgeschlagen': 'Couldn’t switch branch',
 }
 
 export default dict

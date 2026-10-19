@@ -582,6 +582,10 @@ export interface VibedeskApi {
     fetch(projectId: string): Promise<void>
     publish(projectId: string, name: string, priv: boolean): Promise<string>
     aiMessage(projectId: string): Promise<string>
+    /** lokale Branches */
+    branches(projectId: string): Promise<string[]>
+    /** Branch wechseln; create = neu anlegen */
+    switchBranch(projectId: string, name: string, create: boolean): Promise<void>
     openWeb(url: string): void
   }
   /** Merge Studio: parallele Sessions (Worktrees) vergleichen und sicher zusammenführen. Destruktives nur mit confirmed = true. */

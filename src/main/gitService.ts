@@ -3,7 +3,7 @@ import { t } from '../shared/i18n'
 import { execFile, spawn, type ChildProcess } from 'child_process'
 import fs from 'fs'
 import path from 'path'
-import { AUTH_MARK, LOG_FORMAT, addedFileDiff, cleanMessage, commitPrompt, parseLog, parseStatus, webUrl, type GitCommit, type GitState, type GitTools } from '../shared/git'
+import { AUTH_MARK, LOG_FORMAT, addedFileDiff, cleanMessage, commitPrompt, parseLog, parseStatus, webUrl, type GitCommit, type GitState, type GitTools, validBranchName } from '../shared/git'
 
 const MAX_OUT = 8 * 1024 * 1024
 const DIFF_MAX = 400_000
@@ -277,6 +277,23 @@ export class GitService {
     if (!/^[0-9a-f]{4,40}$/i.test(hash)) throw new Error(t('Ungültiger Commit'))
     const out = await this.git(cwd, ['-c', 'core.quotepath=off', 'show', '--no-color', '--no-ext-diff', '--format=%B%x00', hash])
     return out.length > DIFF_MAX ? out.slice(0, DIFF_MAX) + '\n\\ … ' + t('gekürzt') : out
+  }
+
+  /** lokale Branches, alphabetisch */
+  async branches(cwd: string): Promise<string[]> {
+    const out = await this.git(cwd, ['for-each-ref', '--format=%(refname:short)', 'refs/heads'])
+    return out
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b))
+  }
+
+  /** Branch wechseln oder (create) neu anlegen und wechseln – ungesicherte Änderungen nimmt git mit oder meldet einen Konflikt */
+  async switchBranch(cwd: string, name: string, create: boolean): Promise<void> {
+    if (!validBranchName(name)) throw new Error(t('Ungültiger Branch-Name'))
+    await this.git(cwd, ['check-ref-format', '--branch', name.trim()])
+    await this.git(cwd, create ? ['switch', '-c', name.trim()] : ['switch', name.trim()])
   }
 
   async init(cwd: string): Promise<void> {

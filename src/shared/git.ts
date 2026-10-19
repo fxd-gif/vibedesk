@@ -115,6 +115,24 @@ export function webUrl(remote: string | null): string | null {
   return null
 }
 
+/** Branch-Name, den wir an git weitergeben (zusätzlich prüft git check-ref-format) */
+export function validBranchName(name: string): boolean {
+  const n = name.trim()
+  return (
+    n.length > 0 &&
+    n.length <= 100 &&
+    /^[\w./-]+$/.test(n) &&
+    !n.startsWith('-') &&
+    !n.startsWith('/') &&
+    !n.endsWith('/') &&
+    !n.endsWith('.') &&
+    !n.endsWith('.lock') &&
+    !n.includes('..') &&
+    !n.includes('//') &&
+    n !== 'HEAD'
+  )
+}
+
 export const LOG_FORMAT = '%H%x1f%h%x1f%an%x1f%at%x1f%s%x1e'
 
 export function parseLog(out: string): GitCommit[] {

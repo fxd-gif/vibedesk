@@ -1,7 +1,7 @@
 // Git & GitHub: Änderungen ansehen, vormerken, committen (mit KI-Nachricht), Verlauf, Push/Pull, Anmeldung.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, errorText } from '../../api'
-import { isStaged, isUnstaged, letter, type GitCommit, type GitFile, type GitState, type GitStatus } from '../../../../shared/git'
+import { isStaged, isUnstaged, letter, validBranchName, type GitCommit, type GitFile, type GitState, type GitStatus } from '../../../../shared/git'
 import type { Project } from '../../../../shared/types'
 import { Icon } from '../../desktop/icons'
 import { activeProjectId } from '../../store/activeProject'
@@ -174,6 +174,59 @@ function FileRow({ f, staged, active, onSelect, onToggle, onDiscard }: { f: GitF
         </button>
       </span>
     </li>
+  )
+}
+
+/** Branch im Kopf: Klick zeigt die lokalen Branches zum Wechseln und „Neuer Branch …“ */
+function BranchMenu({ projectId, current, title, disabled, onSwitch }: { projectId: string; current: string; title: string; disabled: boolean; onSwitch(name: string, create: boolean): Promise<void> }): React.JSX.Element {
+  const [open, setOpen] = useState(false)
+  const [list, setList] = useState<string[]>([])
+  const [name, setName] = useState('')
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    void api.git.branches(projectId).then(setList, () => setList([]))
+    const away = (e: PointerEvent): void => {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener('pointerdown', away, true)
+    return () => window.removeEventListener('pointerdown', away, true)
+  }, [open, projectId])
+  const go = (n: string, create: boolean): void => {
+    setOpen(false)
+    setName('')
+    void onSwitch(n, create)
+  }
+  const valid = validBranchName(name) && !list.includes(name.trim())
+  return (
+    <div className="git-branch-wrap" ref={box}>
+      <button className="git-branch mono" title={title} disabled={disabled} onClick={() => setOpen((v) => !v)} data-testid="git-branch">
+        <Icon name="branch" size={13} /> {current} <span className="git-caret">▾</span>
+      </button>
+      {open && (
+        <div className="git-branch-menu" data-testid="git-branch-menu">
+          {list.map((b) => (
+            <button key={b} className={`git-branch-item mono${b === current ? ' on' : ''}`} disabled={b === current} onClick={() => go(b, false)} data-testid={`git-branch-${b}`}>
+              <span className="git-branch-check">{b === current ? '✓' : ''}</span>
+              {b}
+            </button>
+          ))}
+          <form
+            className="git-branch-new"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (valid) go(name.trim(), true)
+            }}
+          >
+            <input className="field small mono" placeholder={t('Neuer Branch …')} value={name} onChange={(e) => setName(e.target.value)} data-testid="git-branch-new" />
+            <button className="btn small primary" disabled={!valid} type="submit" data-testid="git-branch-create">
+              {t('Anlegen')}
+            </button>
+          </form>
+          <div className="dim tiny">{t('Nicht committete Änderungen nimmt git zum neuen Branch mit, solange sie nicht kollidieren.')}</div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -408,7 +461,7 @@ export function GitWindow(): React.JSX.Element {
   const [st, setSt] = useState<GitState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<'changes' | 'history'>('changes')
-  const [sync, setSync] = useState<null | 'pull' | 'push' | 'fetch' | 'publish'>(null)
+  const [sync, setSync] = useState<null | 'pull' | 'push' | 'fetch' | 'publish' | 'switch'>(null)
   const tools = useGitAuth((s) => s.tools)
   const busyRef = useRef(false)
 
@@ -510,9 +563,13 @@ export function GitWindow(): React.JSX.Element {
         </select>
         {repo && (
           <>
-            <span className="git-branch mono" title={repo.upstream ? t('verfolgt {upstream}', { upstream: repo.upstream }) : t('ohne Gegenstück auf dem Server')}>
-              <Icon name="agents" size={13} /> {repo.branch || 'main'}
-            </span>
+            <BranchMenu
+              projectId={projectId!}
+              current={repo.branch || 'main'}
+              title={repo.upstream ? t('verfolgt {upstream}', { upstream: repo.upstream }) : t('ohne Gegenstück auf dem Server')}
+              disabled={!!sync}
+              onSwitch={(name, create) => run('switch', create ? t('Branch anlegen fehlgeschlagen') : t('Branch wechseln fehlgeschlagen'), () => api.git.switchBranch(projectId!, name, create))}
+            />
             <div className="row tabs git-tabs">
               <button className={`tab${tab === 'changes' ? ' on' : ''}`} onClick={() => setTab('changes')}>
                 {t('Änderungen')}{repo.files.length > 0 && <span className="tab-count">{repo.files.length}</span>}
