@@ -50,6 +50,7 @@ import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { PlanLimits } from './limits'
+import type { DeskCommand } from './desk'
 import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget, TermChunk, TermQuery } from './companion'
 import type { PermissionAsk, PermissionDecision } from './permissions'
 import type { LangSetting } from './i18n'
@@ -462,6 +463,8 @@ export interface VibedeskApi {
     companionPower(cb: (action: 'shutdown' | 'sleep' | 'cancel', at: number | null) => void): Unsubscribe
     /** Neuer Stand von Main (z. B. Internet-Link ist da oder hat sich geändert) */
     companionStatus(cb: (s: CompanionStatus) => void): Unsubscribe
+    /** Claude steuert den Desktop über das MCP-Werkzeug desk_* */
+    deskCommand(cb: (c: DeskCommand) => void): Unsubscribe
     /** Neue Abo-Limits aus der Statuszeile von Claude Code */
     limits(cb: (l: PlanLimits) => void): Unsubscribe
     /** Handy will Terminal-Zeilen: lesen und mit companion.termDone(reqId, chunk) antworten */

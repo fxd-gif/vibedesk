@@ -73,6 +73,44 @@ const TOOLS = [
   }
 ]
 
+// Desktop steuern: Fenster, Zen, Atmosphäre, Musik … (VibeDesk als MCP)
+const DESK_TOOLS = [
+  { name: 'desk_state', description: 'Zeigt, wie VibeDesk gerade eingestellt ist: Aufbau, Szene, Regen, Musik, Farbschema, laufende Sessions. Nutze es, bevor du etwas am Desktop änderst.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'desk_arrange', description: 'Ordnet alle offenen Fenster in VibeDesk neu an (Terminals oben, Werkzeuge darunter). Für Bitten wie „sortier meine Fenster“.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'desk_tidy', description: 'Räumt auf: alle Werkzeug-Fenster außer dem obersten wandern ins Dock, der Rest wird angeordnet.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'desk_zen', description: 'Zen-Modus: nur das aktuelle Claude-Terminal und der Regen sind zu sehen. Ohne on wird umgeschaltet.', inputSchema: { type: 'object', properties: { on: { type: 'boolean' } } } },
+  {
+    name: 'desk_scene',
+    description: 'Atmosphäre hinter dem Desktop ändern: Szene (city = Stadt bei Nacht, forest = Wald, tokyo = Tokyo-Gasse), Regenstärke und Unschärfe (je 0 bis 1).',
+    inputSchema: { type: 'object', properties: { scene: { type: 'string', enum: ['city', 'forest', 'tokyo'] }, rain: { type: 'number', minimum: 0, maximum: 1 }, blur: { type: 'number', minimum: 0, maximum: 1 } } }
+  },
+  {
+    name: 'desk_music',
+    description: 'Musik und Regengeräusch: music = lofi (Lofi-Radio an) oder off, volume 0–100, rainSound an/aus.',
+    inputSchema: { type: 'object', properties: { music: { type: 'string', enum: ['lofi', 'off'] }, volume: { type: 'number', minimum: 0, maximum: 100 }, rainSound: { type: 'boolean' } } }
+  },
+  {
+    name: 'desk_open',
+    description: 'Öffnet ein VibeDesk-Fenster.',
+    inputSchema: { type: 'object', properties: { window: { type: 'string', enum: ['projects', 'inspector', 'git', 'brain', 'merge', 'ambience', 'focus', 'prompts', 'skills', 'addons', 'companion', 'discord', 'lounge', 'streamer', 'settings'] } }, required: ['window'] }
+  },
+  { name: 'desk_layout', description: 'Aufbau wechseln: desktop = freie Fenster mit Dock, studio = Seitenleiste mit Seiten.', inputSchema: { type: 'object', properties: { layout: { type: 'string', enum: ['desktop', 'studio'] } }, required: ['layout'] } },
+  {
+    name: 'desk_terminal_theme',
+    description: 'Farbschema der Terminals: scene (passend zur Szene), vibedesk, wald, neon, kontrast oder mono.',
+    inputSchema: { type: 'object', properties: { theme: { type: 'string', enum: ['scene', 'vibedesk', 'wald', 'neon', 'kontrast', 'mono'] } }, required: ['theme'] }
+  },
+  { name: 'desk_focus', description: 'Fokus-Timer (Pomodoro) steuern.', inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['start', 'pause', 'resume', 'stop'] } }, required: ['action'] } },
+  {
+    name: 'desk_notify',
+    description: 'Zeigt dem User in VibeDesk eine kurze Karte (z. B. „Build fertig“). Sparsam nutzen.',
+    inputSchema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' } }, required: ['title'] }
+  }
+]
+
+// Gehirn aus: nur die Desktop-Werkzeuge
+const ALL_TOOLS = process.env.VIBEDESK_BRAIN === '0' ? DESK_TOOLS : [...TOOLS, ...DESK_TOOLS]
+
 const UNREACHABLE = { text: 'VibeDesk ist nicht erreichbar – läuft die App noch?', isError: true }
 
 /** null = Verbindung abgelehnt oder Token falsch – dann lohnt ein zweiter Versuch mit frischem Endpunkt */
@@ -135,16 +173,18 @@ async function handle(msg) {
           protocolVersion: typeof params?.protocolVersion === 'string' ? params.protocolVersion : PROTOCOL,
           capabilities: { tools: {} },
           serverInfo: { name: 'vibedesk-brain', version: '1.0.0' },
-          instructions: 'Projektgedächtnis von VibeDesk: vor dem Erkunden suchen (brain_search, brain_related), Gelerntes festhalten (brain_write).'
+          instructions:
+            (process.env.VIBEDESK_BRAIN === '0' ? '' : 'Projektgedächtnis von VibeDesk: vor dem Erkunden suchen (brain_search, brain_related), Gelerntes festhalten (brain_write). ') +
+            'Den VibeDesk-Desktop steuern die desk_*-Werkzeuge (Fenster anordnen, Zen-Modus, Szene, Musik …), wenn der User darum bittet.'
         }
       })
     case 'ping':
       return send({ id, result: {} })
     case 'tools/list':
-      return send({ id, result: { tools: TOOLS } })
+      return send({ id, result: { tools: ALL_TOOLS } })
     case 'tools/call': {
       const name = params?.name
-      if (!TOOLS.some((t) => t.name === name)) return send({ id, error: { code: -32602, message: `Unbekanntes Werkzeug: ${name}` } })
+      if (!ALL_TOOLS.some((t) => t.name === name)) return send({ id, error: { code: -32602, message: `Unbekanntes Werkzeug: ${name}` } })
       const r = await callApp(name, params?.arguments)
       return send({ id, result: { content: [{ type: 'text', text: r.text }], isError: r.isError } })
     }

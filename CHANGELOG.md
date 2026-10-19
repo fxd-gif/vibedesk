@@ -7,6 +7,10 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **VibeDesk als Werkzeug für Claude (MCP)**: Claude kann den Desktop jetzt selbst bedienen. Sag einfach „Sortier meine Fenster“, „Mach den Zen-Modus an“, „Tokyo-Szene mit mehr Regen“, „Lofi leiser“, „Öffne das Git-Fenster“ oder „Wechsel in den Studio-Aufbau“, und Claude erledigt es. Dazu gehören Fenster anordnen und aufräumen, Zen-Modus, Szene, Regen und Unschärfe, Lofi-Radio und Regengeräusch, Fenster öffnen, Aufbau, Terminal-Farbschema, Fokus-Timer und eine kurze Karte für dich („Build fertig“). Claude kann vorher nachsehen, wie alles eingestellt ist. Funktioniert in jeder Session, auch wenn das Gehirn aus ist
+
 ## 1.6.0
 
 ### Neu

@@ -4,6 +4,7 @@ import type { BrainPulse } from '../shared/brain'
 import type { PermissionAsk } from '../shared/permissions'
 import type { CompanionDevice, CompanionStatus, PromptTarget, TermQuery } from '../shared/companion'
 import type { PlanLimits } from '../shared/limits'
+import type { DeskCommand } from '../shared/desk'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
   const h = (_e: unknown, ...args: unknown[]): void => cb(...(args as A))
@@ -86,6 +87,7 @@ const api: VibedeskApi = {
     companionStatus: (cb) => listen<[CompanionStatus]>('companion:status', cb),
     companionTerm: (cb) => listen<[string, TermQuery]>('companion:term', cb),
     limits: (cb) => listen<[PlanLimits]>('limits:update', cb),
+    deskCommand: (cb) => listen<[DeskCommand]>('desk:command', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),
     power: (cb) => listen<[boolean]>('power:battery', cb)
   },

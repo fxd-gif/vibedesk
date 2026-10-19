@@ -68,7 +68,7 @@ export function userStatusLine(files: { read(): string | null }[]): { command: s
 }
 
 /** MCP-Konfiguration für --mcp-config: startet den Gehirn-Server dieser Session */
-export function buildBrainMcpConfig(nodeExe: string, mcpPath: string, env: { sessionId: string; port: number; token: string; endpoint?: string }): object {
+export function buildBrainMcpConfig(nodeExe: string, mcpPath: string, env: { sessionId: string; port: number; token: string; endpoint?: string; brain?: boolean }): object {
   return {
     mcpServers: {
       [BRAIN_SERVER]: {
@@ -79,6 +79,8 @@ export function buildBrainMcpConfig(nodeExe: string, mcpPath: string, env: { ses
           VIBEDESK_SESSION_ID: env.sessionId,
           VIBEDESK_PORT: String(env.port),
           VIBEDESK_TOKEN: env.token,
+          // Gehirn aus: der Server bietet nur die Desktop-Werkzeuge an
+          VIBEDESK_BRAIN: env.brain === false ? '0' : '1',
           // aktueller Port + Token, falls VibeDesk neu startet, während die Session weiterläuft
           ...(env.endpoint ? { VIBEDESK_ENDPOINT: env.endpoint } : {})
         }

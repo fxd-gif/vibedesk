@@ -95,11 +95,13 @@ export class SessionManager {
     // Unsere Statuszeile ersetzt per --settings die eigene – darum die eigene finden und darin weiterlaufen lassen
     const own = this.o.statusLine ? userStatusLine(settingsFiles(cwd, this.o.statusLine.configDir)) : null
     const statusLine = this.o.statusLine ? { path: this.o.statusLine.path, padding: own?.padding } : undefined
-    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath, { brain, statusLine })))
+    // Der MCP-Server läuft immer (Desktop-Werkzeuge); die Gehirn-Werkzeuge nur, solange das Gehirn an ist
+    const mcp = !!this.o.brain
+    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath, { brain: mcp, statusLine })))
     let mcpFile: string | undefined
-    if (brain) {
+    if (mcp) {
       mcpFile = path.join(this.o.tmpDir, `session-${id}-mcp.json`)
-      fs.writeFileSync(mcpFile, JSON.stringify(buildBrainMcpConfig(this.o.nodeExe, this.o.brain!.mcpPath, { sessionId: id, port: this.o.port(), token: this.o.token, endpoint: this.o.endpointFile })))
+      fs.writeFileSync(mcpFile, JSON.stringify(buildBrainMcpConfig(this.o.nodeExe, this.o.brain!.mcpPath, { sessionId: id, port: this.o.port(), token: this.o.token, endpoint: this.o.endpointFile, brain })))
     }
 
     const env: Record<string, string> = {

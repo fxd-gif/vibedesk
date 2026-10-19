@@ -47,6 +47,7 @@ import { MergeService } from './mergeService'
 import { PermissionBroker } from './permissionBroker'
 import { setupCompanion } from './companionIpc'
 import { parseRateLimits, type PlanLimits } from '../shared/limits'
+import { deskDone, parseDeskCommand } from '../shared/desk'
 import { QuickPrompt, type QuickTarget } from './quickPrompt'
 import { VibeLog } from './vibeLog'
 import { captureCard } from './vibeCapture'
@@ -264,6 +265,27 @@ app.whenReady().then(async () => {
     transcriptsDir: join(process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude'), 'projects'),
     devicesFile: join(userData, 'companion.json')
   })
+  /** VibeDesk als MCP: desk_*-Werkzeuge steuern den Desktop (ausgeführt im Renderer) */
+  const deskTool = (tool: string, args: Record<string, unknown>): { text: string; isError?: boolean } => {
+    if (tool === 'desk_state') {
+      const s = settings.get()
+      const names = sessions.list().map((x) => x.name)
+      return {
+        text: [
+          `Aufbau: ${s.layout}`,
+          `Szene: ${s.scene} · Regen ${Math.round(s.rainIntensity * 100)} % · Unschärfe ${Math.round(s.blur * 100)} %`,
+          `Lofi-Radio: ${s.musicOn ? `an (${Math.round(s.musicVolume * 100)} %)` : 'aus'} · Regengeräusch: ${s.rainSoundOn ? 'an' : 'aus'}`,
+          `Terminal-Farbschema: ${s.terminal?.theme ?? 'scene'}`,
+          `Sessions: ${names.length ? names.join(', ') : 'keine'}`
+        ].join('\n')
+      }
+    }
+    const c = parseDeskCommand(tool, args)
+    if ('error' in c) return { text: c.error, isError: true }
+    send('desk:command', c)
+    return { text: deskDone(c) }
+  }
+
   /** zuletzt gemeldete Abo-Limits (für ein neu geladenes Fenster) */
   let planLimits: PlanLimits | null = null
   ipcMain.handle('limits:get', () => planLimits)
@@ -292,7 +314,7 @@ app.whenReady().then(async () => {
       if (tend) return tend
       if (e.name === 'SessionStart') return brain.sessionStartOutput(e.sessionId)
     },
-    (sid, tool, args, cwd) => brain.tool(sid, tool, args, cwd),
+    (sid, tool, args, cwd) => (tool.startsWith('desk_') ? deskTool(tool, args) : brain.tool(sid, tool, args, cwd)),
     (e) => broker.ask(e.sessionId, e.payload)
   )
   const port = await hookServer.start()
