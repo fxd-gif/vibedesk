@@ -6,7 +6,7 @@ import fs from 'fs'
 import os from 'os'
 import QRCode from 'qrcode'
 import { createRelay } from './relayTransport'
-import { companionUrl, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../shared/companion'
+import { cleanChunk, companionUrl, FEED_SHOWN, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget, type TermChunk, type TermQuery } from '../shared/companion'
 import { isDecision } from '../shared/permissions'
 import { defaultRunner } from './gitService'
 import { CompanionAuth } from './companionAuth'
@@ -17,6 +17,10 @@ import type { PermissionBroker } from './permissionBroker'
 import type { SettingsStore } from './settingsStore'
 
 const PROMPT_REPLY_MS = 30_000
+/** Renderer wartet bis zu 20 s auf Neues – etwas mehr Luft, dann gilt es als verloren */
+const TERM_REPLY_MS = 24_000
+/** gleichzeitig offene Terminal-Abfragen (Long-Polling) */
+const TERM_MAX_WAIT = 16
 const AI_TIMEOUT_MS = 90_000
 
 export interface CompanionDeps {
@@ -60,6 +64,24 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
       d.send('companion:prompt', reqId, target, text)
     })
 
+  const termWaiting = new Map<string, (c: TermChunk | null) => void>()
+  const terminalOn = (): boolean => d.settings.get().companion?.terminal === true
+  const readTerminal = (q: TermQuery): Promise<TermChunk | null> =>
+    new Promise((resolve) => {
+      if (termWaiting.size >= TERM_MAX_WAIT) return resolve(null)
+      const reqId = randomBytes(8).toString('hex')
+      const timer = setTimeout(() => {
+        termWaiting.delete(reqId)
+        resolve(null)
+      }, TERM_REPLY_MS)
+      termWaiting.set(reqId, (c) => {
+        clearTimeout(timer)
+        termWaiting.delete(reqId)
+        resolve(c)
+      })
+      d.send('companion:term', reqId, q)
+    })
+
   const auth = new CompanionAuth(d.devicesFile, () => d.send('companion:devices', auth.list()))
   const power = new PowerControl({
     run: defaultRunner,
@@ -75,7 +97,9 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
     sendPrompt,
     push: (s) => server.push(s),
     transcriptsDir: d.transcriptsDir,
-    shutdownAt: () => power.shutdownAt
+    shutdownAt: () => power.shutdownAt,
+    terminalOn,
+    readTerminal
   })
   const server = new CompanionServer(auth, hub, power, (dev) => d.send('companion:devices', auth.list(), dev))
 
@@ -139,6 +163,9 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
   })
   ipcMain.handle('companion:cancelShutdown', async () => (await power.act('cancel')).ok)
   ipcMain.on('companion:push', (_e, s: CompanionSnapshot) => hub.setSnapshot(cleanSnapshot(s)))
+  ipcMain.on('companion:termDone', (_e, reqId: unknown, chunk: unknown) => {
+    if (typeof reqId === 'string') termWaiting.get(reqId)?.(cleanChunk(chunk))
+  })
   ipcMain.on('companion:promptDone', (_e, reqId: unknown, ok: unknown) => {
     if (typeof reqId === 'string') waiting.get(reqId)?.(ok === true)
   })
@@ -165,8 +192,17 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
 function cleanSnapshot(x: unknown): CompanionSnapshot {
   const s = x && typeof x === 'object' ? (x as Partial<CompanionSnapshot>) : {}
   const out = emptySnapshot()
-  out.sessions = (Array.isArray(s.sessions) ? s.sessions : []).slice(0, 20)
+  out.sessions = (Array.isArray(s.sessions) ? s.sessions : []).slice(0, 20).map((x) => ({
+    ...x,
+    feed: (Array.isArray(x.feed) ? x.feed : []).slice(-FEED_SHOWN).map((f) => ({
+      tool: String(f?.tool ?? '').slice(0, 60),
+      target: String(f?.target ?? '').slice(0, 240),
+      result: f?.result === 'ok' || f?.result === 'fail' || f?.result === 'stopped' ? f.result : 'pending',
+      ts: Number(f?.ts) || 0
+    }))
+  }))
   out.projects = (Array.isArray(s.projects) ? s.projects : []).slice(0, 50)
   out.notices = (Array.isArray(s.notices) ? s.notices : []).slice(0, 20)
+  out.terminal = s.terminal === true
   return out
 }

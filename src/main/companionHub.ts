@@ -21,7 +21,9 @@ import {
   type CompanionState,
   type Digest,
   type PromptTarget,
-  type Suggestion
+  type Suggestion,
+  type TermChunk,
+  type TermQuery
 } from '../shared/companion'
 import type { PermissionBroker } from './permissionBroker'
 
@@ -39,6 +41,10 @@ export interface HubDeps {
   /** Ordner mit Claudes Transkripten – nur dort wird gelesen */
   transcriptsDir: string
   shutdownAt?(): number | null
+  /** ganzes Terminal fürs Handy freigegeben? (Einstellung am PC, wird bei jeder Abfrage geprüft) */
+  terminalOn?(): boolean
+  /** Zeilen aus dem Terminal einer Session (über den Renderer) */
+  readTerminal?(q: TermQuery): Promise<TermChunk | null>
 }
 
 export type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string }
@@ -90,14 +96,35 @@ export class CompanionHub {
       sessions: this.snap.sessions.map((s) => {
         const x = this.extra.get(s.id)
         const key = x ? this.suggestKey(x.digest, s.status) : ''
-        return { ...s, said: x?.digest.reply ?? '', suggestions: x?.suggestions?.key === key ? x.suggestions.list : null }
+        return { ...s, said: x?.digest.reply ?? '', asked: (x?.digest.prompt ?? '').slice(0, 600), suggestions: x?.suggestions?.key === key ? x.suggestions.list : null }
       }),
       projects: this.snap.projects,
       notices: this.snap.notices,
       permissions: this.d.broker.list(),
       busy: { ...this.busy },
-      shutdownAt: this.d.shutdownAt?.() ?? null
+      shutdownAt: this.d.shutdownAt?.() ?? null,
+      terminal: this.terminalAllowed()
     }
+  }
+
+  terminalAllowed(): boolean {
+    return !!this.snap.terminal && !!this.d.terminalOn?.() && !!this.d.readTerminal
+  }
+
+  /** Terminal-Zeilen fürs Handy – Werte aus der URL streng prüfen */
+  async terminal(raw: Record<string, string | null>): Promise<Result<{ chunk: TermChunk }>> {
+    if (!this.terminalAllowed()) return { ok: false, error: t('Das Terminal ist am PC nicht fürs Handy freigegeben.') }
+    const sessionId = raw.s ?? ''
+    if (!this.snap.sessions.some((x) => x.id === sessionId)) return { ok: false, error: t('Diese Session gibt es nicht mehr.') }
+    const int = (v: string | null, dflt: number): number => {
+      const n = Number(v)
+      return v !== null && v !== '' && Number.isInteger(n) && n >= 0 && n <= Number.MAX_SAFE_INTEGER ? n : dflt
+    }
+    const q: TermQuery = { sessionId, epoch: int(raw.e, 0), have: int(raw.h, 0), v: int(raw.v, 0), wait: raw.w === '1' }
+    if (raw.b !== null && raw.b !== undefined && raw.b !== '') q.before = int(raw.b, 0)
+    const chunk = await this.d.readTerminal!(q)
+    if (!chunk) return { ok: false, error: t('Das Terminal antwortet gerade nicht.') }
+    return { ok: true, chunk }
   }
 
   answer(id: unknown, decision: PermissionDecision): Result {

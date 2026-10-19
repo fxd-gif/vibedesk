@@ -202,6 +202,21 @@ export class CompanionServer {
       })
       return
     }
+    // Terminal-Zeilen (nur wenn am PC freigegeben) – wartet auf Neues, darum wie Long-Polling
+    if (req.method === 'GET' && url.pathname === '/api/term') {
+      if (!this.hub.terminalAllowed()) return json(403, { ok: false, error: t('Das Terminal ist am PC nicht fürs Handy freigegeben.') })
+      const p = url.searchParams
+      void this.hub
+        .terminal({ s: p.get('s'), e: p.get('e'), h: p.get('h'), v: p.get('v'), b: p.get('b'), w: p.get('w') })
+        .then((r) => {
+          if (req.destroyed) return
+          // in der Zwischenzeit abgemeldet?
+          if (!this.server || !this.auth.verify(this.token(req))) return json(401, { ok: false, error: t('Nicht gekoppelt') })
+          json(200, r)
+        })
+        .catch((e) => json(500, { ok: false, error: String(e) }))
+      return
+    }
     if (req.method !== 'POST') return json(405, { ok: false, error: t('Methode nicht erlaubt') })
 
     this.body(req, (body) => {

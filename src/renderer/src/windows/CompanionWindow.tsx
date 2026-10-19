@@ -248,6 +248,18 @@ export function CompanionWindow(): React.JSX.Element {
         </div>
         <div className="dim tiny">{t('Aus: Claude fragt wie gewohnt nur im Terminal. Die Karte hat auch „Im Terminal“, falls du dort antworten willst.')}</div>
       </section>
+
+      <section className="st-sec">
+        <h4>{t('Terminal')}</h4>
+        <div className="row between opt">
+          <span>
+            {t('Ganzes Terminal auf dem Handy')}
+            <span className="dim small opt-hint">{t('Live mit Farben und dem kompletten Verlauf – nur zum Mitlesen')}</span>
+          </span>
+          <Toggle label={t('Ganzes Terminal auf dem Handy')} on={s.companion.terminal === true} onChange={(v) => set({ companion: { ...s.companion, terminal: v } })} />
+        </div>
+        <div className="dim tiny">{t('Im Terminal kann alles stehen, was Claude liest – auch Passwörter oder Schlüssel. Nur einschalten, wenn nur deine eigenen Handys gekoppelt sind. Im Streamer-Modus bleibt Geschwärztes geschwärzt.')}</div>
+      </section>
     </div>
   )
 }

@@ -7,6 +7,24 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Ganzes Terminal auf dem Handy**: Im Fenster „Handy-Begleiter“ lässt sich unter „Terminal“ freigeben, dass das Handy das komplette Terminal einer Session sieht, live, mit Farben und dem ganzen Verlauf. Ältere Zeilen lädt ein Tipp nach. Wer oben im Verlauf liest, wird nicht nach unten gerissen, ein Knopf „Neue Ausgabe“ bringt einen zurück. Trennlinien bleiben Linien, lange Zeilen brechen um (abschaltbar). Standardmäßig aus, weil im Terminal auch Geheimnisse stehen können
+- **Am Handy sehen, was gerade passiert**: Jede Session zeigt deinen letzten Auftrag und die letzten Schritte von Claude („Ändert src/app.tsx“, „Befehl npm test“, …) mit Häkchen, Fehler-Kreuz und Zeit, statt nur „arbeitet“ oder „wartet“
+- **Zen-Modus** (<kbd>Strg</kbd> + <kbd>.</kbd> oder das Auge im Terminal-Kopf): Nur noch die aktuelle Session und der Regen. Andere Sessions stehen als kleine Pillen oben, das Dock kommt erst zurück, wenn die Maus an den unteren Rand fährt
+- **Werkzeugkasten**: Module wie Addons, Handy-Begleiter, Discord, Lounge oder Streamer-Modus lassen sich ausblenden. Sie verschwinden dann aus Dock, Mehr-Menü und Befehlspalette. Neue Nutzer wählen beim Start „Einfach“ oder „Alles“
+- **Einstellungen an einem Ort**: Ein eigenes Fenster mit Allgemein, Werkzeugkasten, Mitteilungen und Terminal. Im Mehr-Menü stehen nur noch Fenster
+- **Aufräumen**: Ein Befehl in der Palette räumt übrige Fenster ins Dock. Auf Wunsch wandern Fenster nach 15 Minuten ohne Benutzung von selbst dorthin
+- **Leise Tipps**: Statt still neue Symbole einzublenden, sagt VibeDesk einmal Bescheid, wenn etwas gerade passt, etwa Merge Studio bei zwei Sessions oder Git, sobald Claude Dateien geändert hat. Abschaltbar in den Einstellungen
+
+### Verbessert
+
+- Das Dock bleibt ruhiger: Git erscheint erst, wenn Claude Dateien geändert hat, das Gehirn erst, wenn Claude es benutzt, die Vorschau erst bei einem laufenden Dev-Server. Einmal erschienene Symbole bleiben stehen, damit nichts herumspringt
+- Das Dock blendet sich ab, während du im Terminal tippst
+- Mitteilungen: Es steht immer nur eine Karte da, der Rest wartet hinter „+n weitere“. Mehrere „fertig“-Meldungen werden zu einer gebündelt, und Wichtiges wie „wartet auf dich“ steht immer vorn
+- Statistik: Pro Session stehen nur Kontext und Kosten vorn, Cache-Werte, Antworten und Tool-Aufrufe liegen hinter „Details“
+- Der Einrichtungs-Rundgang ist kürzer. Szene, Musik und Discord kommen später als Tipp
+
 ## 1.2.0
 
 ### Neu

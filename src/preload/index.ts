@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { DiscordStatus, FileChange, HookEvent, SessionInfo, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
 import type { BrainPulse } from '../shared/brain'
 import type { PermissionAsk } from '../shared/permissions'
-import type { CompanionDevice, CompanionStatus, PromptTarget } from '../shared/companion'
+import type { CompanionDevice, CompanionStatus, PromptTarget, TermQuery } from '../shared/companion'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
   const h = (_e: unknown, ...args: unknown[]): void => cb(...(args as A))
@@ -83,6 +83,7 @@ const api: VibedeskApi = {
     companionDevices: (cb) => listen<[CompanionDevice[], CompanionDevice | undefined]>('companion:devices', cb),
     companionPower: (cb) => listen<['shutdown' | 'sleep' | 'cancel', number | null]>('companion:power', cb),
     companionStatus: (cb) => listen<[CompanionStatus]>('companion:status', cb),
+    companionTerm: (cb) => listen<[string, TermQuery]>('companion:term', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),
     power: (cb) => listen<[boolean]>('power:battery', cb)
   },
@@ -252,7 +253,8 @@ const api: VibedeskApi = {
     revokeAll: () => ipcRenderer.invoke('companion:revokeAll'),
     cancelShutdown: () => ipcRenderer.invoke('companion:cancelShutdown'),
     push: (s) => ipcRenderer.send('companion:push', s),
-    promptDone: (reqId, ok) => ipcRenderer.send('companion:promptDone', reqId, ok)
+    promptDone: (reqId, ok) => ipcRenderer.send('companion:promptDone', reqId, ok),
+    termDone: (reqId, chunk) => ipcRenderer.send('companion:termDone', reqId, chunk)
   },
   clipboard: {
     write: (text) => ipcRenderer.send('clipboard:write', String(text)),

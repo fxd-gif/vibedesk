@@ -18,10 +18,23 @@ export interface CompanionSnapshot {
     current: string
     todos: { done: number; total: number; active: string }
     lastActivity: number
+    /** die letzten Aktionen, neueste zuletzt – damit man am Handy nachvollziehen kann, was passiert */
+    feed?: FeedItem[]
   }[]
   projects: { id: string; name: string }[]
   notices: { title: string; body: string; kind: string; time: number }[]
+  /** ganzes Terminal am Handy erlaubt (Einstellung am PC) */
+  terminal?: boolean
 }
+
+export interface FeedItem {
+  tool: string
+  target: string
+  result: 'pending' | 'ok' | 'fail' | 'stopped'
+  ts: number
+}
+
+export const FEED_SHOWN = 12
 
 export interface Suggestion {
   title: string
@@ -31,6 +44,8 @@ export interface Suggestion {
 export type CompanionSessionView = CompanionSnapshot['sessions'][number] & {
   /** Claudes letzte Nachricht (gekürzt) */
   said: string
+  /** dein letzter Auftrag an Claude (gekürzt) */
+  asked: string
   /** Vorschläge, falls schon erzeugt (für den aktuellen Stand) */
   suggestions: Suggestion[] | null
 }
@@ -45,6 +60,8 @@ export interface CompanionState {
   busy: Record<string, 'polish' | 'suggest'>
   /** geplantes Herunterfahren (vom Handy ausgelöst) */
   shutdownAt: number | null
+  /** ganzes Terminal abrufbar (/api/term) */
+  terminal: boolean
 }
 
 /** Adresse der Handy-Seite samt QR-Code (SVG) – ohne Geheimnis, gekoppelt wird per Code */
@@ -71,6 +88,8 @@ export type CompanionStatus =
 export interface CompanionSettings {
   enabled: boolean
   port: number
+  /** ganzes Terminal samt Verlauf aufs Handy – nur, wenn ausdrücklich an */
+  terminal?: boolean
   /** Internet-Link (Cloudflare-Tunnel): Handy von überall, ohne App – an, solange nicht ausdrücklich false */
   internet?: boolean
 }
@@ -94,6 +113,92 @@ export type PowerAction = 'shutdown' | 'sleep' | 'cancel'
 export const SHUTDOWN_DELAY_S = 60
 
 export type PromptTarget = { sessionId: string } | { projectId: string }
+
+// ---------- Terminal am Handy ----------
+
+/** Ein Stück Text mit gleicher Optik. f/b = CSS-Farbe (fehlt = Standard), s = Bits: 1 fett, 2 kursiv, 4 unterstrichen, 8 blass */
+export interface TermRun {
+  t: string
+  f?: string
+  b?: string
+  s?: number
+}
+
+/** Eine Zeile des Terminal-Puffers; w = Fortsetzung der vorigen (weich umbrochen) */
+export interface TermLine {
+  r: TermRun[]
+  w?: 1
+}
+
+/**
+ * Anfrage vom Handy. Zeilen sind absolut nummeriert (auch nachdem alte Zeilen aus dem Verlauf gefallen sind).
+ * have = so viele Zeilen hat das Handy schon endgültig; before = ältere Zeilen vor dieser Nummer holen.
+ */
+export interface TermQuery {
+  sessionId: string
+  epoch: number
+  have: number
+  v: number
+  before?: number
+  /** auf die nächste Änderung warten (Long-Polling) */
+  wait: boolean
+}
+
+export interface TermChunk {
+  /** wechselt bei Größenänderung, Leeren oder Puffer-Wechsel – dann neu aufbauen */
+  epoch: number
+  /** zählt jede Änderung hoch */
+  v: number
+  cols: number
+  rows: number
+  /** älteste noch vorhandene Zeile */
+  first: number
+  /** Zeile hinter der letzten */
+  end: number
+  /** Nummer der ersten gelieferten Zeile */
+  start: number
+  lines: TermLine[]
+  /** nichts Neues seit v */
+  same?: boolean
+}
+
+/** so viele Zeilen höchstens pro Antwort */
+export const TERM_MAX_LINES = 1500
+/** beim Öffnen so viele Zeilen vom Ende */
+export const TERM_INITIAL = 400
+/** „Ältere Zeilen laden“ holt so viele */
+export const TERM_PAGE = 500
+
+/** Welche Zeilen gehören in die Antwort? Unten (rows) kann sich noch alles ändern, darüber nichts mehr. */
+export function termRange(q: Pick<TermQuery, 'have' | 'before'>, first: number, end: number, rows: number): { start: number; stop: number } {
+  if (q.before !== undefined) {
+    const stop = Math.max(first, Math.min(q.before, end))
+    return { start: Math.max(first, stop - TERM_PAGE), stop }
+  }
+  const live = Math.max(first, end - rows)
+  const start = Math.max(first, Math.min(q.have, live), end - TERM_MAX_LINES)
+  return { start, stop: end }
+}
+
+/** Antwort vom Renderer ins Netz: in Form bringen und begrenzen */
+export function cleanChunk(x: unknown): TermChunk | null {
+  if (!x || typeof x !== 'object') return null
+  const c = x as Partial<TermChunk>
+  const num = (n: unknown): number => (typeof n === 'number' && Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0)
+  const lines = (Array.isArray(c.lines) ? c.lines : []).slice(0, TERM_MAX_LINES).map((l): TermLine => {
+    const runs = (Array.isArray(l?.r) ? l.r : []).slice(0, 400).map((r): TermRun => {
+      const o: TermRun = { t: typeof r?.t === 'string' ? r.t.slice(0, 1000) : '' }
+      if (typeof r?.f === 'string' && /^#[0-9a-f]{6}$/i.test(r.f)) o.f = r.f
+      if (typeof r?.b === 'string' && /^#[0-9a-f]{6}$/i.test(r.b)) o.b = r.b
+      if (typeof r?.s === 'number' && r.s > 0) o.s = r.s & 15
+      return o
+    })
+    return l?.w ? { r: runs, w: 1 } : { r: runs }
+  })
+  const out: TermChunk = { epoch: num(c.epoch), v: num(c.v), cols: num(c.cols), rows: num(c.rows), first: num(c.first), end: num(c.end), start: num(c.start), lines }
+  if (c.same) out.same = true
+  return out
+}
 
 export const emptySnapshot = (): CompanionSnapshot => ({ sessions: [], projects: [], notices: [] })
 

@@ -2,13 +2,15 @@
 import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
-import { internetOn, type CompanionDevice, type CompanionPairing, type CompanionSettings, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../../../shared/companion'
+import { FEED_SHOWN, internetOn, type CompanionDevice, type CompanionPairing, type CompanionSettings, type CompanionSnapshot, type CompanionStatus, type PromptTarget } from '../../../shared/companion'
 import type { Project } from '../../../shared/types'
 import { inform, useNotify } from './notifyStore'
 import { promptProject, sendToSession } from './sessionPrompt'
 import { useSessions } from './sessionStore'
 import { useSettings } from './settingsStore'
 import { useWorkflow } from './workflowStore'
+import { readTerminal } from './companionTerm'
+import { getTerminal } from './terminals'
 
 interface CompanionUi {
   status: CompanionStatus
@@ -43,9 +45,11 @@ export function buildSnapshot(): CompanionSnapshot {
           total: todos.length,
           active: (todos.find((t) => t.status === 'in_progress')?.content ?? '').slice(0, 160)
         },
-        lastActivity: w?.lastActivity ?? 0
+        lastActivity: w?.lastActivity ?? 0,
+        feed: (w?.feed ?? []).slice(-FEED_SHOWN).map((f) => ({ tool: f.tool, target: f.target.slice(0, 240), result: f.result, ts: f.ts }))
       }
     }),
+    terminal: cfg()?.terminal === true,
     projects: projects.filter((p) => !p.missing).map((p) => ({ id: p.id, name: p.name })),
     notices: useNotify
       .getState()
@@ -122,7 +126,11 @@ export function wireCompanion(): void {
     }
     if (c.enabled) void loadProjects()
   }
-  useSettings.subscribe(() => void sync())
+  useSettings.subscribe((st, prev) => {
+    void sync()
+    // Terminal am Handy an/aus → Handys sofort Bescheid geben
+    if (st.s?.companion?.terminal !== prev.s?.companion?.terminal) schedulePush()
+  })
   void sync()
 
   useWorkflow.subscribe(schedulePush)
@@ -135,6 +143,14 @@ export function wireCompanion(): void {
   setInterval(() => on() && void loadProjects(), 60_000)
 
   api.on.companionPrompt((reqId, target, text) => void runPrompt(reqId, target, text))
+  // Terminal-Zeilen fürs Handy – nur, solange es am PC erlaubt ist (Main prüft das zusätzlich)
+  api.on.companionTerm((reqId, q) => {
+    if (cfg()?.terminal !== true) return api.companion.termDone(reqId, null)
+    void readTerminal(getTerminal(q.sessionId)?.term, q.sessionId, q).then(
+      (c) => api.companion.termDone(reqId, c),
+      () => api.companion.termDone(reqId, null)
+    )
+  })
 
   void api.companion.devices().then((devices) => useCompanion.setState({ devices }))
   api.on.companionDevices((devices, paired) => {

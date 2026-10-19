@@ -102,6 +102,47 @@ export function companionPage(nonce: string): string {
   .err { color: var(--bad); font-size: 13.5px; min-height: 1.2em; }
   .pc .down { color: var(--warn); font-weight: 600; }
   .link { background: none; border: 0; padding: 6px; color: var(--dim); font-size: 12.5px; font-weight: 500; text-decoration: underline; flex: none; }
+  .asked { margin-top: 10px; font-size: 13.5px; color: var(--dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
+  .asked b { color: var(--text); font-weight: 600; margin-right: 4px; }
+  .acts { margin-top: 12px; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+  .act { display: grid; grid-template-columns: 16px auto minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 9px 2px; margin: 0; border: 0; border-bottom: 1px solid rgba(255,255,255,.05); border-radius: 0; background: none; font-size: 13.5px; font-weight: 400; text-align: left; width: 100%; }
+  .act:active { transform: none; background: rgba(255,255,255,.04); }
+  .act .ic { width: 16px; height: 16px; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+  .act .ic.ok { color: var(--ok); }
+  .act .ic.fail { color: var(--bad); }
+  .act .ic.stopped { color: var(--dim); }
+  .act .ic.open::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--dim); }
+  .act .ic.pending::before { content: ''; width: 9px; height: 9px; border-radius: 50%; border: 2px solid var(--work); border-right-color: transparent; animation: spin .8s linear infinite; }
+  .act .tool { font-weight: 600; white-space: nowrap; }
+  .act .tgt { font: 12.5px ui-monospace, 'Cascadia Code', Consolas, monospace; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .act.open .tgt { white-space: pre-wrap; word-break: break-all; }
+  .act time { color: var(--dim); font-size: 11.5px; white-space: nowrap; }
+  .acts-more { display: block; margin: 6px auto 0; }
+  .term-open { margin-top: 12px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .term-open::before { content: '>_'; font: 700 12px ui-monospace, Consolas, monospace; color: var(--accent); }
+  .hint { margin-top: 10px; font-size: 12.5px; color: var(--dim); }
+  .sheet { position: fixed; inset: 0; z-index: 4; display: flex; flex-direction: column; background: #07090d; animation: rise .22s cubic-bezier(.2,.9,.3,1); }
+  @keyframes rise { from { transform: translateY(24px); opacity: 0; } }
+  .sheet-head { flex: none; display: flex; align-items: center; gap: 10px; padding: calc(10px + env(safe-area-inset-top)) 12px 10px; border-bottom: 1px solid var(--line); background: rgba(14,17,25,.96); }
+  .sheet-head b { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .sheet-head .st { font-size: 12.5px; color: var(--dim); white-space: nowrap; }
+  .sheet-head .sp { flex: 1; }
+  .sheet-head button { flex: none; padding: 7px 11px; font-size: 13px; border-radius: 10px; }
+  .sheet-head button.on { background: rgba(159,184,255,.16); border-color: rgba(159,184,255,.45); }
+  .sheet-head .x { width: 36px; height: 36px; padding: 0; font-size: 20px; line-height: 1; }
+  .tbody { flex: 1; overflow-y: auto; padding: 10px 12px calc(20px + env(safe-area-inset-bottom)); font: 11.5px/1.5 ui-monospace, 'Cascadia Code', Consolas, 'Courier New', monospace; color: #dfe6f3; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .tbody .row { display: block; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.5em; }
+  .tbody.nowrap { overflow-x: auto; }
+  .tbody.nowrap .row { white-space: pre; overflow-wrap: normal; width: max-content; min-width: 100%; }
+  .tbody .sep { height: 0; min-height: 0; border-top: 1px solid rgba(255,255,255,.14); margin: .7em 0; }
+  .tbody .fb { font-weight: 700; }
+  .tbody .fi { font-style: italic; }
+  .tbody .fu { text-decoration: underline; }
+  .tbody .fd { opacity: .6; }
+  .tbody .older { display: block; width: 100%; margin: 0 0 10px; padding: 9px; font: 500 13px -apple-system, 'Segoe UI', system-ui, sans-serif; color: var(--dim); }
+  .tstate { padding: 22px 6px; text-align: center; font: 13.5px -apple-system, 'Segoe UI', system-ui, sans-serif; color: var(--dim); }
+  .tnew { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 5; flex: none; padding: 9px 16px; border-radius: 99px; font-size: 13px; background: rgba(20,24,34,.96); box-shadow: 0 8px 30px rgba(0,0,0,.5); }
+  .tnew:active { transform: translateX(-50%) scale(.97); }
   [hidden] { display: none !important; }
 </style></head>
 <body>
@@ -133,6 +174,11 @@ export function companionPage(nonce: string): string {
   <textarea id="text" rows="2" placeholder="${t('Was soll Claude als Nächstes tun?')}"></textarea>
   <div class="row"><label class="switch"><input type="checkbox" id="polish" checked>✨ ${t('ausformulieren')}</label><span style="flex:1"></span><button class="primary send" id="send">${t('Senden')}</button></div>
 </div></div>
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-head"><span class="dot" id="t-dot"></span><b id="t-name"></b><span class="st" id="t-st"></span><span class="sp"></span><button id="t-wrap">${t('Umbrechen')}</button><button class="x" id="t-close" aria-label="${t('Schließen')}">×</button></div>
+  <div class="tbody" id="t-body"></div>
+  <button class="tnew" id="t-new" hidden>↓ ${t('Neue Ausgabe')}</button>
+</div>
 <div class="toast" id="toast" hidden></div>
 <script nonce="${nonce}">
 (function () {
@@ -167,6 +213,7 @@ export function companionPage(nonce: string): string {
     try { localStorage.removeItem(KEY); } catch (_) {}
     key = ''; state = null;
     if (ctrl) ctrl.abort();
+    if (tm) closeTerm();
     HIDE.forEach(function (id) { $(id).hidden = true; });
     $('pair').hidden = false; setConn('off', ${js(t('nicht gekoppelt'))});
   }
@@ -259,7 +306,9 @@ export function companionPage(nonce: string): string {
     h.appendChild(el('b', '', s.name));
     h.appendChild(el('span', 'st', STATUS[s.status] || s.status));
     c.appendChild(h);
-    if (s.status === 'working' && s.current) c.appendChild(el('div', 'cur', s.current));
+    if (s.asked) { var asked = el('div', 'asked'); asked.appendChild(el('b', '', ${js(t('Du:'))})); asked.appendChild(document.createTextNode(s.asked)); c.appendChild(asked); }
+    // ohne Aktionsliste wenigstens die laufende Aktion zeigen
+    if (s.status === 'working' && s.current && !(s.feed && s.feed.length)) c.appendChild(el('div', 'cur', s.current));
     if (s.todos && s.todos.total) {
       var bar = el('div', 'bar'); var fill = el('i'); fill.style.width = (s.todos.done / s.todos.total * 100) + '%'; bar.appendChild(fill); c.appendChild(bar);
       c.appendChild(el('div', 'step', fmt(${js(t('{done} von {total}'))}, { done: s.todos.done, total: s.todos.total }) + (s.todos.active ? ' · ' + s.todos.active : '')));
@@ -289,6 +338,12 @@ export function companionPage(nonce: string): string {
       sug.appendChild(more);
     }
     c.appendChild(sug);
+    renderActs(c, s);
+    if (state.terminal) {
+      var to = el('button', 'term-open', ${js(t('Terminal ansehen'))});
+      to.onclick = function () { openTerm(s.id); };
+      c.appendChild(to);
+    } else c.appendChild(el('div', 'hint', ${js(t('Ganzes Terminal sehen? Am PC im Fenster „Handy-Begleiter“ unter „Terminal“ einschalten.'))}));
     box.appendChild(c);
     // Ist Claude fertig oder wartet, gleich Vorschläge holen – einmal pro Stand
     if (!busy && !s.suggestions && (s.status === 'done' || s.status === 'waiting') && s.said && !hasAsk(s.id)) {
@@ -327,6 +382,176 @@ export function companionPage(nonce: string): string {
     $('composer').hidden = !sel.options.length;
   }
 
+  // ---------- Was gerade passiert ----------
+
+  var TOOLS = { Bash: ${js(t('Befehl'))}, Read: ${js(t('Liest'))}, Edit: ${js(t('Ändert'))}, MultiEdit: ${js(t('Ändert'))}, Write: ${js(t('Schreibt'))}, NotebookEdit: ${js(t('Ändert'))}, Grep: ${js(t('Sucht'))}, Glob: ${js(t('Sucht'))}, WebFetch: ${js(t('Lädt Webseite'))}, WebSearch: ${js(t('Sucht im Web'))}, Task: ${js(t('Agent'))}, Agent: ${js(t('Agent'))}, TodoWrite: ${js(t('Plan'))}, TaskCreate: ${js(t('Plan'))}, TaskUpdate: ${js(t('Plan'))} };
+  var ICON = { ok: '✓', fail: '✕', stopped: '■', pending: '' };
+  var actsOpen = {}, actOpen = {};
+  function toolName(n) { if (TOOLS[n]) return TOOLS[n]; var m = /^mcp__.+?__(.+)$/.exec(n); return m ? m[1] : n; }
+  function renderActs(card, s) {
+    var feed = (s.feed || []).slice().reverse();
+    if (!feed.length) return;
+    var all = actsOpen[s.id], list = all ? feed : feed.slice(0, 5);
+    var box = el('div', 'acts');
+    // nur die neueste offene Aktion läuft wirklich – und nur, solange Claude arbeitet
+    var live = s.status === 'working' ? feed.filter(function (f) { return f.result === 'pending'; })[0] : null;
+    list.forEach(function (f) {
+      var k = s.id + '|' + f.ts + '|' + f.tool + '|' + f.target;
+      var row = el('button', 'act' + (actOpen[k] ? ' open' : ''));
+      var res = f.result === 'pending' && f !== live ? 'open' : f.result;
+      row.appendChild(el('span', 'ic ' + res, ICON[res] || ''));
+      row.appendChild(el('span', 'tool', toolName(f.tool)));
+      row.appendChild(el('span', 'tgt', f.target || ''));
+      row.appendChild(el('time', '', f.ts ? ago(f.ts) : ''));
+      row.onclick = function () { actOpen[k] = !actOpen[k]; row.classList.toggle('open'); };
+      box.appendChild(row);
+    });
+    card.appendChild(box);
+    if (feed.length > 5) {
+      var more = el('button', 'link acts-more', all ? ${js(t('Weniger anzeigen'))} : fmt(${js(t('Alle {n} Schritte'))}, { n: feed.length }));
+      more.onclick = function () { actsOpen[s.id] = !all; render(); };
+      card.appendChild(more);
+    }
+  }
+
+  // ---------- Terminal (nur wenn am PC freigegeben) ----------
+
+  var KEEP = 6000, BIG = 999999999999;
+  var tm = null;
+  var wrap = true;
+  try { wrap = localStorage.getItem('vibedesk.wrap') !== '0'; } catch (_) {}
+  function fresh(sid) { return { sid: sid, epoch: 0, v: 0, base: 0, lines: [], first: 0, end: 0, rows: 0, done: 0, ctrl: null, follow: true, rowEl: [], olderBusy: false }; }
+
+  function openTerm(sid) {
+    closeTerm();
+    tm = fresh(sid);
+    $('sheet').hidden = false;
+    document.body.style.overflow = 'hidden';
+    setWrap(wrap);
+    headTerm();
+    tstate(${js(t('Lade Terminal …'))});
+    pull(tm, false);
+  }
+  function closeTerm() {
+    if (tm && tm.ctrl) tm.ctrl.abort();
+    tm = null;
+    $('sheet').hidden = true; $('t-new').hidden = true;
+    document.body.style.overflow = '';
+    clear($('t-body'));
+  }
+  $('t-close').onclick = function () { closeTerm(); };
+  $('t-wrap').onclick = function () { setWrap(!wrap); try { localStorage.setItem('vibedesk.wrap', wrap ? '1' : '0'); } catch (_) {} };
+  function setWrap(on) { wrap = on; $('t-body').classList.toggle('nowrap', !on); $('t-wrap').classList.toggle('on', on); }
+  function headTerm() {
+    if (!tm) return;
+    var s = sessionById(tm.sid);
+    $('t-name').textContent = s ? s.name : ${js(t('Session beendet'))};
+    $('t-dot').className = 'dot ' + (s ? s.status : 'off');
+    $('t-st').textContent = s ? (STATUS[s.status] || s.status) : '';
+  }
+  function tstate(text) { var b = $('t-body'); clear(b); if (tm) tm.rowEl = []; b.appendChild(el('div', 'tstate', text)); }
+
+  // live: wartet am PC auf die nächste Änderung; older: ältere Zeilen vor der ersten geladenen
+  function pull(t, older) {
+    if (tm !== t) return;
+    var url = '/api/term?s=' + encodeURIComponent(t.sid) + '&e=' + t.epoch + '&v=' + t.v + (older ? '&h=0&b=' + t.base : '&h=' + (t.epoch ? t.done + '&w=1' : BIG));
+    var ctrl = new AbortController();
+    if (!older) t.ctrl = ctrl;
+    fetch(url, { headers: { authorization: 'Bearer ' + key }, cache: 'no-store', signal: ctrl.signal }).then(function (r) {
+      if (r.status === 401) { closeTerm(); return unpaired(); }
+      if (r.status === 403) { closeTerm(); return toast(${js(t('Das Terminal ist am PC nicht mehr freigegeben.'))}, true); }
+      return r.json().then(function (j) {
+        if (tm !== t) return;
+        if (!j.ok) throw new Error(j.error || FAILED);
+        var opening = !t.epoch;
+        apply(t, j.chunk, older);
+        if (older) { t.olderBusy = false; return; }
+        // gleich beim Öffnen etwas Verlauf dazuholen
+        if (opening && t.base > t.first) { t.olderBusy = true; pull(t, true); }
+        pull(t, false);
+      });
+    }).catch(function (e) {
+      if (tm !== t || (e && e.name === 'AbortError')) return;
+      if (older) { t.olderBusy = false; paintOlder(t); return; }
+      if (!t.lines.length) tstate((e && e.message) || ${js(t('Keine Verbindung zu VibeDesk.'))});
+      setTimeout(function () { if (tm === t) pull(t, false); }, 2500);
+    });
+  }
+
+  function apply(t, c, older) {
+    if (c.same) return;
+    var from = 0, keepPos = false;
+    if (c.epoch !== t.epoch) { t.lines = c.lines; t.base = c.start; }
+    else if (older) {
+      if (c.start < t.base) { t.lines = c.lines.slice(0, t.base - c.start).concat(t.lines); t.base = c.start; keepPos = true; }
+    } else if (c.start < t.base || c.start > t.base + t.lines.length) { t.lines = c.lines; t.base = c.start; }
+    else { from = c.start - t.base; t.lines = t.lines.slice(0, from).concat(c.lines); }
+    if (t.lines.length > KEEP) { var cut = t.lines.length - KEEP; t.lines = t.lines.slice(cut); t.base += cut; from = 0; }
+    t.epoch = c.epoch; t.v = c.v; t.first = c.first; t.end = c.end; t.rows = c.rows;
+    t.done = Math.max(t.base, c.end - c.rows);
+    paint(t, from, keepPos);
+  }
+
+  function paintOlder(t) {
+    var body = $('t-body'), btn = body.querySelector('.older');
+    if (t.base > t.first) {
+      if (!btn) {
+        btn = el('button', 'older');
+        btn.onclick = function () { if (t.olderBusy) return; t.olderBusy = true; btn.textContent = ${js(t('Lade …'))}; pull(t, true); };
+        body.insertBefore(btn, body.firstChild);
+      }
+      btn.textContent = t.olderBusy ? ${js(t('Lade …'))} : ${js(t('Ältere Zeilen laden'))};
+    } else if (btn) body.removeChild(btn);
+  }
+
+  // Zeilen zeichnen: ab „from“ neu – weich umbrochene Pufferzeilen werden wieder eine Zeile
+  var SEP = /^[\\s─━═╌┄╍-]+$/;
+  function paint(t, from, keepPos) {
+    var body = $('t-body');
+    var atBottom = body.scrollHeight - body.scrollTop - body.clientHeight < 40;
+    var oldH = body.scrollHeight, oldTop = body.scrollTop;
+    while (from > 0 && t.lines[from] && t.lines[from].w) from--;
+    var anchor = from > 0 ? t.rowEl[from] : null;
+    if (!anchor) { clear(body); t.rowEl = []; from = 0; }
+    else {
+      while (anchor.nextSibling) body.removeChild(anchor.nextSibling);
+      body.removeChild(anchor);
+      t.rowEl.length = from;
+    }
+    var row = null, frag = document.createDocumentFragment();
+    for (var i = from; i < t.lines.length; i++) {
+      var L = t.lines[i];
+      if (!L.w || !row) { if (row) finishRow(row); row = el('div', 'row'); frag.appendChild(row); }
+      t.rowEl[i] = row;
+      for (var k = 0; k < L.r.length; k++) {
+        var r = L.r[k], sp = el('span', '', r.t);
+        if (r.f) sp.style.color = r.f;
+        if (r.b) sp.style.background = r.b;
+        if (r.s) sp.className = ((r.s & 1 ? 'fb ' : '') + (r.s & 2 ? 'fi ' : '') + (r.s & 4 ? 'fu ' : '') + (r.s & 8 ? 'fd' : '')).trim();
+        row.appendChild(sp);
+      }
+    }
+    if (row) finishRow(row);
+    body.appendChild(frag);
+    paintOlder(t);
+    if (!t.lines.length) { tstate(${js(t('Noch keine Ausgabe.'))}); return; }
+    if (keepPos) body.scrollTop = oldTop + (body.scrollHeight - oldH);
+    else if (t.follow || atBottom) { body.scrollTop = body.scrollHeight; t.follow = true; $('t-new').hidden = true; }
+    else $('t-new').hidden = false;
+  }
+  // Trennlinien aus ─── werden eine saubere Linie statt umbrochener Striche
+  function finishRow(row) {
+    var tx = row.textContent;
+    if (tx.length >= 10 && SEP.test(tx) && (tx.match(/[─━═╌┄╍]/g) || []).length >= 10) { clear(row); row.className = 'row sep'; }
+  }
+  $('t-body').addEventListener('scroll', function () {
+    if (!tm) return;
+    var b = $('t-body');
+    tm.follow = b.scrollHeight - b.scrollTop - b.clientHeight < 40;
+    if (tm.follow) $('t-new').hidden = true;
+  }, { passive: true });
+  $('t-new').onclick = function () { var b = $('t-body'); b.scrollTop = b.scrollHeight; if (tm) tm.follow = true; $('t-new').hidden = true; };
+
   // ---------- PC ----------
 
   var armedBtn = null;
@@ -359,6 +584,7 @@ export function companionPage(nonce: string): string {
   function render() {
     if (!state) return;
     renderAsks(); renderTabs(); renderSession(); renderNotes(); renderTarget(); renderPc();
+    if (tm) { if (!state.terminal) { closeTerm(); toast(${js(t('Das Terminal ist am PC nicht mehr freigegeben.'))}, true); } else headTerm(); }
   }
 
   // ---------- Senden ----------
@@ -440,7 +666,9 @@ export function companionPage(nonce: string): string {
     });
   }
   // Handys kappen Verbindungen im Standby – beim Zurückkommen sofort neu verbinden
-  document.addEventListener('visibilitychange', function () { if (!document.hidden) { connect(); render(); } });
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) { connect(); render(); if (tm) { if (tm.ctrl) tm.ctrl.abort(); pull(tm, false); } }
+  });
   setInterval(function () { if (state) renderNotes(); }, 30000);
   setInterval(function () { if (state && state.shutdownAt) renderPc(); }, 1000);
   connect();

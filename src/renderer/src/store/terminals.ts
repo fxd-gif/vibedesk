@@ -12,6 +12,7 @@ import { findFileLinks, isLocalUrl, keyAction, quotePaths, resolveLinkPath, zoom
 import { resolveTheme } from '../terminal/themes'
 import { useSettings } from './settingsStore'
 import { recordAttachments } from './attachStore'
+import { trackTerminal, untrackTerminal } from './companionTerm'
 
 export type TermKind = 'claude' | 'shell'
 
@@ -185,6 +186,8 @@ export function createTerminal(id: string, opts: { kind?: TermKind; cwd?: string
     return false
   })
   term.onData((d) => io(kind).write(id, d))
+  // fürs Handy: Änderungen zählen und Zeilen nummerieren – vor dem Wiederherstellen, damit nichts fehlt
+  if (kind === 'claude') trackTerminal(id, term, () => optionsFor(useSettings.getState().s).theme)
   term.onResize(({ cols, rows }) => io(kind).resize(id, cols, rows))
   // Verlauf von vor einem Neuladen des Fensters wiederherstellen (die Prozesse in Main laufen weiter)
   try {
@@ -246,6 +249,7 @@ export function getTerminal(id: string): Entry | undefined {
 }
 
 export function disposeTerminal(id: string): void {
+  untrackTerminal(id)
   entries.get(id)?.term.dispose()
   entries.delete(id)
   try {
