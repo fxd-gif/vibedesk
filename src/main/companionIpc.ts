@@ -6,6 +6,7 @@ import fs from 'fs'
 import os from 'os'
 import QRCode from 'qrcode'
 import { createRelay } from './relayTransport'
+import type { LimitWindow, PlanLimits } from '../shared/limits'
 import { cleanChunk, companionUrl, FEED_SHOWN, emptySnapshot, lanAddresses, type CompanionSnapshot, type CompanionStatus, type PromptTarget, type TermChunk, type TermQuery } from '../shared/companion'
 import { isDecision } from '../shared/permissions'
 import { defaultRunner } from './gitService'
@@ -192,6 +193,18 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
   }
 }
 
+function cleanLimits(x: unknown): PlanLimits | null {
+  if (!x || typeof x !== 'object') return null
+  const l = x as Partial<PlanLimits>
+  const win = (w: unknown): LimitWindow | undefined => {
+    const v = w as Partial<LimitWindow> | undefined
+    return v && Number.isFinite(v.pct) && Number.isFinite(v.resetsAt) ? { pct: Math.min(100, Math.max(0, Number(v.pct))), resetsAt: Number(v.resetsAt) } : undefined
+  }
+  const fiveHour = win(l.fiveHour)
+  const sevenDay = win(l.sevenDay)
+  return fiveHour || sevenDay ? { ...(fiveHour ? { fiveHour } : {}), ...(sevenDay ? { sevenDay } : {}), at: Number(l.at) || 0 } : null
+}
+
 /** Kommt aus dem eigenen Renderer, trotzdem in Form bringen – es geht ins Netz */
 function cleanSnapshot(x: unknown): CompanionSnapshot {
   const s = x && typeof x === 'object' ? (x as Partial<CompanionSnapshot>) : {}
@@ -208,5 +221,6 @@ function cleanSnapshot(x: unknown): CompanionSnapshot {
   out.projects = (Array.isArray(s.projects) ? s.projects : []).slice(0, 50)
   out.notices = (Array.isArray(s.notices) ? s.notices : []).slice(0, 20)
   out.terminal = s.terminal === true
+  out.limits = cleanLimits(s.limits)
   return out
 }

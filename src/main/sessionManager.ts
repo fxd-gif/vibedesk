@@ -5,7 +5,7 @@ import { randomUUID } from 'crypto'
 import { execFile, execFileSync } from 'child_process'
 import { claudeMissingMessage } from '../shared/setupHints'
 import type { Project, SessionInfo } from '../shared/types'
-import { buildBrainMcpConfig, buildHookSettings } from './hookSettings'
+import { buildBrainMcpConfig, buildHookSettings, userStatusLine } from './hookSettings'
 
 export interface PtyLike {
   onData(cb: (d: string) => void): void
@@ -34,6 +34,8 @@ export interface SessionManagerOptions {
   brain?: { mcpPath: string; enabled: () => boolean }
   /** Datei mit aktuellem Port + Token – Hooks und Gehirn finden darüber eine neu gestartete App */
   endpointFile?: string
+  /** VibeDesk-Statuszeile (Abo-Limits); die eigene Statuszeile des Nutzers läuft darin weiter */
+  statusLine?: { path: string; configDir: string }
 }
 
 interface Running {
@@ -90,7 +92,10 @@ export class SessionManager {
     fs.mkdirSync(this.o.tmpDir, { recursive: true })
     const settingsFile = path.join(this.o.tmpDir, `session-${id}.json`)
     const brain = !!this.o.brain?.enabled()
-    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath, { brain })))
+    // Unsere Statuszeile ersetzt per --settings die eigene – darum die eigene finden und darin weiterlaufen lassen
+    const own = this.o.statusLine ? userStatusLine(settingsFiles(cwd, this.o.statusLine.configDir)) : null
+    const statusLine = this.o.statusLine ? { path: this.o.statusLine.path, padding: own?.padding } : undefined
+    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath, { brain, statusLine })))
     let mcpFile: string | undefined
     if (brain) {
       mcpFile = path.join(this.o.tmpDir, `session-${id}-mcp.json`)
@@ -102,7 +107,8 @@ export class SessionManager {
       VIBEDESK_SESSION_ID: id,
       VIBEDESK_PORT: String(this.o.port()),
       VIBEDESK_TOKEN: this.o.token,
-      ...(this.o.endpointFile ? { VIBEDESK_ENDPOINT: this.o.endpointFile } : {})
+      ...(this.o.endpointFile ? { VIBEDESK_ENDPOINT: this.o.endpointFile } : {}),
+      ...(own ? { VIBEDESK_USER_STATUSLINE: own.command } : {})
     }
     delete env.ELECTRON_RUN_AS_NODE
     // Kein /s: der erste Token bleibt unquotiert, damit cmd die Anführungszeichen des Pfads stehen lässt
@@ -164,4 +170,16 @@ export class SessionManager {
     fs.rmSync(s.settingsFile, { force: true })
     if (s.mcpFile) fs.rmSync(s.mcpFile, { force: true })
   }
+}
+
+/** Claude-Code-Settings in Vorrang-Reihenfolge: Projekt lokal, Projekt, Nutzer */
+function settingsFiles(cwd: string, configDir: string): { read(): string | null }[] {
+  const read = (f: string) => (): string | null => {
+    try {
+      return fs.readFileSync(f, 'utf8')
+    } catch {
+      return null
+    }
+  }
+  return [path.join(cwd, '.claude', 'settings.local.json'), path.join(cwd, '.claude', 'settings.json'), path.join(configDir, 'settings.json')].map((f) => ({ read: read(f) }))
 }

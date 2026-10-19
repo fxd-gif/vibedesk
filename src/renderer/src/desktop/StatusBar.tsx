@@ -9,6 +9,7 @@ import { useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
 import { openPanel } from '../windows/palette/CommandPalette'
 import { Icon } from './icons'
+import { LimitChip } from '../terminal/TermStatus'
 import { t, tn } from '../../../shared/i18n'
 
 const POLL_MS = 5000
@@ -74,6 +75,7 @@ export function StatusBar(): React.JSX.Element {
           </button>
         </>
       )}
+      <LimitChip now={Date.now()} />
       <button className="stb-btn" onClick={() => openPanel('inspector')} title={tn(sessions.length, '{n} Session', '{n} Sessions')}>
         <span className={`dot ${lead}`} />
         {label}

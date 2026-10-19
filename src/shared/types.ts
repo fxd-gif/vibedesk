@@ -49,6 +49,7 @@ import type { WebhookPayload, WebhookSettings } from './webhook'
 import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
+import type { PlanLimits } from './limits'
 import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget, TermChunk, TermQuery } from './companion'
 import type { PermissionAsk, PermissionDecision } from './permissions'
 import type { LangSetting } from './i18n'
@@ -461,6 +462,8 @@ export interface VibedeskApi {
     companionPower(cb: (action: 'shutdown' | 'sleep' | 'cancel', at: number | null) => void): Unsubscribe
     /** Neuer Stand von Main (z. B. Internet-Link ist da oder hat sich geändert) */
     companionStatus(cb: (s: CompanionStatus) => void): Unsubscribe
+    /** Neue Abo-Limits aus der Statuszeile von Claude Code */
+    limits(cb: (l: PlanLimits) => void): Unsubscribe
     /** Handy will Terminal-Zeilen: lesen und mit companion.termDone(reqId, chunk) antworten */
     companionTerm(cb: (reqId: string, q: TermQuery) => void): Unsubscribe
     /** Schnell-Prompt (Strg+Alt+Leertaste): Text und gewählte Session (null = keine offen) */
@@ -499,6 +502,10 @@ export interface VibedeskApi {
     takePending(): Promise<string | null>
     getState(id: string): Promise<Record<string, StoredValue>>
     setState(id: string, data: Record<string, StoredValue>): Promise<void>
+  }
+  limits: {
+    /** zuletzt gemeldete Abo-Limits (null = noch keine bzw. kein Abo) */
+    get(): Promise<PlanLimits | null>
   }
   update: {
     status(): Promise<UpdateStatus>

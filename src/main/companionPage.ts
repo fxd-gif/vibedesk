@@ -148,6 +148,12 @@ export function companionPage(nonce: string): string {
   .tkeys button.enter { background: rgba(159,184,255,.16); border-color: rgba(159,184,255,.45); }
   .sheet.keys .tbody { padding-bottom: 14px; }
   .sheet.keys .tnew { bottom: calc(78px + env(safe-area-inset-bottom)); }
+  .limits { display: flex; gap: 14px; padding: 10px 14px; font-size: 13px; color: var(--dim); }
+  .limits .lim { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .limits .lim b { color: var(--text); font-weight: 600; }
+  .limits .lim .bar { margin-top: 0; }
+  .limits .lim.warn .bar i { background: var(--warn); }
+  .limits .lim.hot .bar i { background: var(--bad); }
   [hidden] { display: none !important; }
 </style></head>
 <body>
@@ -160,6 +166,7 @@ export function companionPage(nonce: string): string {
     <button class="primary" id="pair-btn">${t('Koppeln')}</button>
     <span class="err" id="pair-err"></span>
   </div>
+  <div class="card limits" id="limits" hidden></div>
   <div id="asks"></div>
   <div class="tabs" id="tabs"></div>
   <div id="session"></div>
@@ -214,7 +221,7 @@ export function companionPage(nonce: string): string {
       .catch(function () { return { ok: false, error: 'Keine Verbindung zu VibeDesk.' }; });
   }
 
-  var HIDE = ['composer', 'session', 'tabs', 'asks', 'empty', 'notes', 'notes-label', 'pc', 'pc-label', 'unpair-row'];
+  var HIDE = ['limits', 'composer', 'session', 'tabs', 'asks', 'empty', 'notes', 'notes-label', 'pc', 'pc-label', 'unpair-row'];
   function unpaired() {
     try { localStorage.removeItem(KEY); } catch (_) {}
     key = ''; state = null;
@@ -361,6 +368,25 @@ export function companionPage(nonce: string): string {
 
   function suggest(sid, quiet) {
     api('/api/suggest', { sessionId: sid }).then(function (r) { if (!r.ok && !quiet) toast(r.error || ${js(t('Keine Vorschläge.'))}, true); });
+  }
+
+  // Abo-Limits: nur, solange ein Fenster läuft
+  function renderLimits() {
+    var l = state.limits, box = $('limits'); clear(box);
+    var now = Date.now(), n = 0;
+    [['fiveHour', ${js(t('5 Stunden'))}], ['sevenDay', ${js(t('Woche'))}]].forEach(function (x) {
+      var w = l && l[x[0]];
+      if (!w || w.resetsAt <= now) return;
+      n++;
+      var pct = Math.round(w.pct), c = el('div', 'lim' + (pct >= 90 ? ' hot' : pct >= 75 ? ' warn' : ''));
+      var top = el('span', ''); top.appendChild(el('b', '', pct + ' %')); top.appendChild(document.createTextNode(' · ' + x[1]));
+      c.appendChild(top);
+      var bar = el('div', 'bar'), fill = el('i'); fill.style.width = Math.min(100, pct) + '%'; bar.appendChild(fill); c.appendChild(bar);
+      var d = new Date(w.resetsAt), same = new Date(now).toDateString() === d.toDateString();
+      c.appendChild(el('span', '', fmt(${js(t('zurück auf 0 um {time}'))}, { time: (same ? '' : d.toLocaleDateString(undefined, { weekday: 'short' }) + ' ') + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) })));
+      box.appendChild(c);
+    });
+    box.hidden = !n;
   }
 
   function renderNotes() {
@@ -604,7 +630,7 @@ export function companionPage(nonce: string): string {
 
   function render() {
     if (!state) return;
-    renderAsks(); renderTabs(); renderSession(); renderNotes(); renderTarget(); renderPc();
+    renderLimits(); renderAsks(); renderTabs(); renderSession(); renderNotes(); renderTarget(); renderPc();
     if (tm) { if (!state.terminal) { closeTerm(); toast(${js(t('Das Terminal ist am PC nicht mehr freigegeben.'))}, true); } else headTerm(); }
   }
 
@@ -690,7 +716,7 @@ export function companionPage(nonce: string): string {
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden) { connect(); render(); if (tm) { if (tm.ctrl) tm.ctrl.abort(); pull(tm, false); } }
   });
-  setInterval(function () { if (state) renderNotes(); }, 30000);
+  setInterval(function () { if (state) { renderNotes(); renderLimits(); } }, 30000);
   setInterval(function () { if (state && state.shutdownAt) renderPc(); }, 1000);
   connect();
 })();

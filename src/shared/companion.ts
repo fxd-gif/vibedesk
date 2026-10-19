@@ -2,6 +2,7 @@
 import { t } from './i18n'
 import type { PermissionAsk } from './permissions'
 import type { SessionStatus } from './types'
+import type { PlanLimits } from './limits'
 
 export const COMPANION_PORT = 17350
 export const PROMPT_MAX = 4000
@@ -25,6 +26,8 @@ export interface CompanionSnapshot {
   notices: { title: string; body: string; kind: string; time: number }[]
   /** ganzes Terminal am Handy erlaubt (Einstellung am PC) */
   terminal?: boolean
+  /** Abo-Limits, falls Claude Code sie meldet */
+  limits?: PlanLimits | null
 }
 
 export interface FeedItem {
@@ -64,6 +67,7 @@ export interface CompanionState {
   terminal: boolean
   /** Tasten erlaubt (/api/key) */
   keys: boolean
+  limits: PlanLimits | null
 }
 
 /** Adresse der Handy-Seite samt QR-Code (SVG) – ohne Geheimnis, gekoppelt wird per Code */

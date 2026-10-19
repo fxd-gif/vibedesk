@@ -110,7 +110,8 @@ export class CompanionHub {
       busy: { ...this.busy },
       shutdownAt: this.d.shutdownAt?.() ?? null,
       terminal: this.terminalAllowed(),
-      keys: this.keysAllowed()
+      keys: this.keysAllowed(),
+      limits: this.snap.limits ?? null
     }
   }
 

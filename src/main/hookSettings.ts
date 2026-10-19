@@ -29,8 +29,11 @@ export function hookCommand(nodeExe: string, scriptPath: string): string {
 
 export const BRAIN_SERVER = 'vibedesk-brain'
 
-/** Claude-Code-Settings, deren Hooks jedes Event an den VibeDesk-Forwarder geben. */
-export function buildHookSettings(nodeExe: string, forwarderPath: string, opts: { brain?: boolean } = {}): object {
+/**
+ * Claude-Code-Settings, deren Hooks jedes Event an den VibeDesk-Forwarder geben.
+ * statusLine: VibeDesk-Statuszeile (liest die Abo-Limits); padding der eigenen Statuszeile bleibt erhalten.
+ */
+export function buildHookSettings(nodeExe: string, forwarderPath: string, opts: { brain?: boolean; statusLine?: { path: string; padding?: number } } = {}): object {
   const hook = { type: 'command', command: hookCommand(nodeExe, forwarderPath), timeout: 5 }
   const hooks = Object.fromEntries(
     HOOK_EVENTS.map((e) => {
@@ -38,8 +41,30 @@ export function buildHookSettings(nodeExe: string, forwarderPath: string, opts: 
       return [e, [TOOL_EVENTS.has(e) ? { matcher: '*', hooks: [h] } : { hooks: [h] }]]
     })
   )
+  const statusLine = opts.statusLine
+    ? { statusLine: { type: 'command', command: hookCommand(nodeExe, opts.statusLine.path), ...(opts.statusLine.padding !== undefined ? { padding: opts.statusLine.padding } : {}) } }
+    : {}
   // Gehirn-Werkzeuge ohne Rückfrage – sie lesen und schreiben nur Notizen in .vibedesk/brain
-  return opts.brain ? { hooks, permissions: { allow: [`mcp__${BRAIN_SERVER}`] } } : { hooks }
+  return opts.brain ? { hooks, ...statusLine, permissions: { allow: [`mcp__${BRAIN_SERVER}`] } } : { hooks, ...statusLine }
+}
+
+/** Eigene Statuszeile aus den Claude-Code-Settings (Projekt lokal > Projekt > Nutzer) – nur der Typ „command“ */
+export function userStatusLine(files: { read(): string | null }[]): { command: string; padding?: number } | null {
+  for (const f of files) {
+    let j: unknown
+    try {
+      const raw = f.read()
+      if (!raw) continue
+      j = JSON.parse(raw)
+    } catch {
+      continue
+    }
+    const sl = (j as { statusLine?: { type?: unknown; command?: unknown; padding?: unknown } } | null)?.statusLine
+    if (!sl) continue
+    if (sl.type !== 'command' || typeof sl.command !== 'string' || !sl.command.trim()) return null
+    return { command: sl.command, ...(typeof sl.padding === 'number' ? { padding: sl.padding } : {}) }
+  }
+  return null
 }
 
 /** MCP-Konfiguration für --mcp-config: startet den Gehirn-Server dieser Session */

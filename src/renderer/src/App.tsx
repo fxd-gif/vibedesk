@@ -64,6 +64,7 @@ import { wireCalm } from './desktop/calm'
 import { ZenBar } from './desktop/ZenBar'
 import { Tour } from './desktop/Tour'
 import { wireHints } from './store/hintStore'
+import { wireLimits } from './store/limitStore'
 import { wirePermissions } from './store/permissionStore'
 import { wireCompanion } from './store/companionStore'
 import { t } from '../../shared/i18n'
@@ -181,6 +182,7 @@ export default function App(): React.JSX.Element {
     wireCompanion()
     wireCalm()
     wireHints()
+    wireLimits()
     useSettings.getState().load().then((s) => {
       const ui = useUi.getState()
       ui.initRects(s.windowRects)

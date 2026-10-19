@@ -46,6 +46,7 @@ import { registerMergeIpc } from './mergeIpc'
 import { MergeService } from './mergeService'
 import { PermissionBroker } from './permissionBroker'
 import { setupCompanion } from './companionIpc'
+import { parseRateLimits, type PlanLimits } from '../shared/limits'
 import { QuickPrompt, type QuickTarget } from './quickPrompt'
 import { VibeLog } from './vibeLog'
 import { captureCard } from './vibeCapture'
@@ -263,9 +264,21 @@ app.whenReady().then(async () => {
     transcriptsDir: join(process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude'), 'projects'),
     devicesFile: join(userData, 'companion.json')
   })
+  /** zuletzt gemeldete Abo-Limits (für ein neu geladenes Fenster) */
+  let planLimits: PlanLimits | null = null
+  ipcMain.handle('limits:get', () => planLimits)
   const hookServer = new HookServer(
     token,
     (e) => {
+      // Statuszeile: nur die Abo-Limits, kein echtes Hook-Ereignis
+      if (e.name === 'StatusLine') {
+        const l = parseRateLimits(e.payload.rate_limits)
+        if (l) {
+          planLimits = l
+          send('limits:update', l)
+        }
+        return
+      }
       // Gehirn-Autopflege: Claude macht nach diesem Stop noch kurz weiter – für Anzeige und Handy ist die Runde nicht fertig
       externals.observe(e)
       const tend = e.name === 'Stop' ? brain.stopOutput(e) : undefined
@@ -297,6 +310,7 @@ app.whenReady().then(async () => {
     token,
     maxSessions: () => settings.get().maxSessions,
     brain: { mcpPath: resource('brain-mcp.js'), enabled: () => settings.get().brainOn },
+    statusLine: { path: resource('statusline.js'), configDir: process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude') },
     endpointFile
   })
   const output = new OutputBatcher((id, d) => send('session:data', id, d))

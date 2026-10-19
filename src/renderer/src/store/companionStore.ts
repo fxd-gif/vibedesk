@@ -10,6 +10,7 @@ import { useSessions } from './sessionStore'
 import { useSettings } from './settingsStore'
 import { useWorkflow } from './workflowStore'
 import { readTerminal } from './companionTerm'
+import { useLimits } from './limitStore'
 import { getTerminal } from './terminals'
 
 interface CompanionUi {
@@ -50,6 +51,7 @@ export function buildSnapshot(): CompanionSnapshot {
       }
     }),
     terminal: cfg()?.terminal === true,
+    limits: useLimits.getState().limits,
     projects: projects.filter((p) => !p.missing).map((p) => ({ id: p.id, name: p.name })),
     notices: useNotify
       .getState()
@@ -139,6 +141,7 @@ export function wireCompanion(): void {
     if (on()) void loadProjects()
   })
   useNotify.subscribe((s, p) => s.log !== p.log && schedulePush())
+  useLimits.subscribe(schedulePush)
   // Projekte können auch woanders angelegt werden
   setInterval(() => on() && void loadProjects(), 60_000)
 

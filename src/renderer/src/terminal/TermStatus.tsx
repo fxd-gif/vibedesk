@@ -4,12 +4,28 @@ import { fmtDuration, fmtTokens, fmtUsd, modelLabel, useStats } from '../store/s
 import { api } from '../api'
 import { getTerminal } from '../store/terminals'
 import { t } from '../../../shared/i18n'
+import { limitLevel, liveWindow } from '../../../shared/limits'
+import { limitsTitle, useLimits } from '../store/limitStore'
 
 /** Doppel-Esc öffnet in Claude Code das Zurückspulen (Gespräch und Code auf einen früheren Stand) */
 function rewind(id: string): void {
   api.sessions.write(id, '\x1b')
   setTimeout(() => api.sessions.write(id, '\x1b'), 120)
   getTerminal(id)?.term.focus()
+}
+
+/** Abo-Limit (5 Stunden, sonst Woche) – erscheint erst, wenn Claude Code es meldet (nur Pro/Max) */
+export function LimitChip({ now }: { now: number }): React.JSX.Element | null {
+  const limits = useLimits((s) => s.limits)
+  const w = liveWindow(limits, 'fiveHour', now) ?? liveWindow(limits, 'sevenDay', now)
+  if (!w) return null
+  const level = limitLevel(w.pct)
+  return (
+    <span className={`ts-ctx ts-limit ${level === 'hot' ? 'hot' : level === 'warn' ? 'warm' : ''}`} title={limitsTitle(limits, now)} data-testid="limit-chip">
+      <i style={{ width: `${Math.round(w.pct)}%` }} />
+      <b>{t('Abo {n} %', { n: Math.round(w.pct) })}</b>
+    </span>
+  )
 }
 
 export function TermStatus({ sessionId, startedAt }: { sessionId: string; startedAt: number }): React.JSX.Element {
@@ -30,6 +46,7 @@ export function TermStatus({ sessionId, startedAt }: { sessionId: string; starte
           <b>{t('Kontext {n} %', { n: Math.round(ctx * 100) })}</b>
         </span>
       )}
+      <LimitChip now={now} />
       {st && st.costUsd > 0 && <span title={st.estimated ? t('geschätzt nach API-Preisen') : t('nach API-Preisen')}>{fmtUsd(st.costUsd)}</span>}
       <button className="ts-rewind" title={t('Zurückspulen: Claude zeigt seine bisherigen Schritte – wähl einen aus, um Gespräch und Code auf diesen Stand zurückzusetzen')} onClick={() => rewind(sessionId)} data-testid="term-rewind">
         ↶ {t('Zurückspulen')}

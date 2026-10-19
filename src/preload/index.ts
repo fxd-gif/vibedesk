@@ -3,6 +3,7 @@ import type { DiscordStatus, FileChange, HookEvent, SessionInfo, ToolId, Session
 import type { BrainPulse } from '../shared/brain'
 import type { PermissionAsk } from '../shared/permissions'
 import type { CompanionDevice, CompanionStatus, PromptTarget, TermQuery } from '../shared/companion'
+import type { PlanLimits } from '../shared/limits'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
   const h = (_e: unknown, ...args: unknown[]): void => cb(...(args as A))
@@ -84,6 +85,7 @@ const api: VibedeskApi = {
     companionPower: (cb) => listen<['shutdown' | 'sleep' | 'cancel', number | null]>('companion:power', cb),
     companionStatus: (cb) => listen<[CompanionStatus]>('companion:status', cb),
     companionTerm: (cb) => listen<[string, TermQuery]>('companion:term', cb),
+    limits: (cb) => listen<[PlanLimits]>('limits:update', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),
     power: (cb) => listen<[boolean]>('power:battery', cb)
   },
@@ -104,6 +106,9 @@ const api: VibedeskApi = {
     check: () => ipcRenderer.invoke('setup:check'),
     install: (tool) => ipcRenderer.invoke('setup:install', tool),
     openDownload: (tool) => ipcRenderer.send('setup:openDownload', tool)
+  },
+  limits: {
+    get: () => ipcRenderer.invoke('limits:get')
   },
   update: {
     status: () => ipcRenderer.invoke('update:status'),

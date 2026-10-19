@@ -119,7 +119,19 @@ const dict: Record<string, string> = {
   '< 0,01 $': '< $0.01',
   '{amount} $': '${amount}',
   '{m} Min.': '{m} min',
-  '{h} Std. {m} Min.': '{h} h {m} min'
+  '{h} Std. {m} Min.': '{h} h {m} min',
+  // Abo-Limits
+  '5 Stunden': '5 hours',
+  'Woche': 'Week',
+  'zurück auf 0 um {time}': 'back to 0 at {time}',
+  '5-Stunden-Limit': '5-hour limit',
+  'Wochenlimit': 'Weekly limit',
+  '{label}: {n} % · zurück auf 0 um {time}': '{label}: {n} % · back to 0 at {time}',
+  '{name} ist wieder frei': '{name} is free again',
+  'Claude kann wieder voll loslegen.': 'Claude can go full speed again.',
+  '{name}: {n} % verbraucht': '{name}: {n} % used',
+  'Setzt sich um {time} zurück.': 'Resets at {time}.',
+  'Abo {n} %': 'Plan {n} %',
 }
 
 export default dict

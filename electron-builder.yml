@@ -11,6 +11,8 @@ extraResources:
     to: hook-forwarder.js
   - from: resources/brain-mcp.js
     to: brain-mcp.js
+  - from: resources/statusline.js
+    to: statusline.js
   - from: resources/update-splash.ps1
     to: update-splash.ps1
 asarUnpack:
