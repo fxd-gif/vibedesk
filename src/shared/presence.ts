@@ -50,6 +50,14 @@ export interface PresenceVars {
   sessionStart: number | null
   focusEnd: number | null
   statusKey: StatusIconKey | ''
+  /** was Claude gerade tut („schreibt Code“) – siehe doingText */
+  doing: string
+  /** laufende Aufgabe aus Claudes Todo-Liste; im Privat-Modus leer */
+  task: string
+  /** erledigt/gesamt der Todo-Liste, z. B. „3/7“ */
+  progress: string
+  /** Tage am Stück mit Tokens */
+  streak: number
   /** Vibe-Lounge, falls beigetreten – id ist ein Hash, nie der Raumcode selbst */
   lounge: { id: string; size: number; max: number } | null
 }
@@ -105,7 +113,7 @@ export const DEFAULT_PRESENCE: PresenceConfig = {
   enabled: false,
   clientId: DEFAULT_CLIENT_ID,
   details: 'Vibecodet an {project}',
-  state: '{sessions} · {status}',
+  state: '{doing} || {task} · {progress} || {streak}',
   idleDetails: 'Hört Regen & Lofi',
   idleState: 'Bereitet sich vor …',
   largeImage: '',
@@ -124,13 +132,18 @@ export const DEFAULT_PRESENCE: PresenceConfig = {
 /** Vorlagen fürs Discord-Fenster – als Funktion, damit sie in der gewählten Sprache entstehen */
 export const presencePresets = (): { id: string; label: string; patch: Partial<PresenceConfig> }[] => [
   {
+    id: 'live',
+    label: t('Live'),
+    patch: { details: t('Vibecodet an {project}'), state: '{doing} || {task} · {progress} || {streak}', idleDetails: t('Hört Regen & Lofi'), idleState: t('Bereitet sich vor …') + ' || {streak}', timestamp: 'session', privacy: false }
+  },
+  {
     id: 'detailed',
     label: t('Detailliert'),
     patch: { details: t('Vibecodet an {project} · {model}'), state: t('{status} · Context {context}'), idleDetails: t('Hört Regen & Lofi'), idleState: t('Bereitet sich vor …'), timestamp: 'session', privacy: false }
   },
   { id: 'minimal', label: t('Minimal'), patch: { details: 'Vibecoding', state: '{status}', idleDetails: 'Vibecoding', idleState: t('Pause'), timestamp: 'app' } },
   { id: 'focus', label: t('Fokus'), patch: { details: '{focus} · {project}', state: t('Runde läuft – bitte nicht stören'), timestamp: 'focus' } },
-  { id: 'stats', label: t('Zahlen'), patch: { details: t('{tokens} Tokens heute'), state: '{sessions} · {cost}', timestamp: 'app' } },
+  { id: 'stats', label: t('Zahlen'), patch: { details: t('{tokens} Tokens heute'), state: '{sessions} · {cost} || {streak}', timestamp: 'app' } },
   { id: 'private', label: t('Privat'), patch: { details: t('Vibecodet an einem Projekt'), state: '{status}', privacy: true, timestamp: 'app' } }
 ]
 
@@ -152,6 +165,30 @@ export const PLACEHOLDERS: { key: keyof PresenceVars; readonly label: string }[]
     key: 'status',
     get label() {
       return t('Status')
+    }
+  },
+  {
+    key: 'doing',
+    get label() {
+      return t('Was Claude gerade tut')
+    }
+  },
+  {
+    key: 'task',
+    get label() {
+      return t('Aktuelle Aufgabe')
+    }
+  },
+  {
+    key: 'progress',
+    get label() {
+      return t('Aufgaben erledigt (3/7)')
+    }
+  },
+  {
+    key: 'streak',
+    get label() {
+      return t('Tage am Stück')
     }
   },
   {
@@ -213,9 +250,55 @@ export function fillTemplate(tpl: string, vars: Partial<PresenceVars>): string {
   const out = tpl.replace(/\{(\w+)\}/g, (m, k: string) => {
     const v = (vars as Record<string, unknown>)[k]
     if (k === 'sessions' && typeof v === 'number') return tn(v, '{n} Session', '{n} Sessions')
+    if (k === 'streak' && typeof v === 'number') return v > 1 ? tn(v, '🔥 {n} Tag am Stück', '🔥 {n} Tage am Stück') : ''
     return v === undefined || v === null ? (k in vars ? '' : m) : String(v)
   })
   return out.replace(/\s+/g, ' ').replace(DOUBLE, '$1').replace(LEAD, '').replace(TRAIL, '').trim()
+}
+
+/** So lange steht eine Variante, bevor die nächste kommt (Discord erlaubt 5 Updates pro 20 s) */
+export const ROTATE_MS = 20_000
+
+/** Varianten mit „||“ trennen – leere fallen weg, die übrigen wechseln sich ab */
+export function pickVariant(tpl: string, vars: Partial<PresenceVars>, now: number): string {
+  const all = tpl.split('||').map((x) => fillTemplate(x, vars)).filter(Boolean)
+  return all.length ? all[Math.floor(now / ROTATE_MS) % all.length] : ''
+}
+
+const WRITE_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
+const READ_TOOLS = new Set(['Read', 'Grep', 'Glob', 'LS', 'NotebookRead'])
+const RUN_TOOLS = new Set(['Bash', 'PowerShell', 'BashOutput', 'KillShell'])
+const WEB_TOOLS = new Set(['WebSearch', 'WebFetch'])
+const PLAN_TOOLS = new Set(['TodoWrite', 'TaskCreate', 'TaskUpdate', 'EnterPlanMode', 'ExitPlanMode'])
+
+/** Klartext für {doing}: was Claude in der aktiven Session gerade macht – nie Dateinamen oder Befehle. */
+export function doingText(o: { status: string; tool?: string; agents: number; tending?: boolean }): string {
+  if (o.status === 'waiting') return t('wartet auf dich')
+  if (o.status === 'done') return t('ist fertig')
+  if (o.status === 'error') return t('hängt an einem Fehler')
+  if (o.status !== 'working') return t('bereit')
+  if (o.tending) return t('pflegt das Gehirn')
+  if (o.agents > 0) return tn(o.agents, 'schickt {n} Agent los', 'schickt {n} Agents los')
+  const tool = o.tool ?? ''
+  if (WRITE_TOOLS.has(tool)) return t('schreibt Code')
+  if (READ_TOOLS.has(tool)) return t('liest Code')
+  if (RUN_TOOLS.has(tool)) return t('führt Befehle aus')
+  if (WEB_TOOLS.has(tool)) return t('recherchiert im Web')
+  if (PLAN_TOOLS.has(tool)) return t('plant die nächsten Schritte')
+  if (tool.startsWith('mcp__')) return t('nutzt Werkzeuge')
+  return t('denkt nach')
+}
+
+/** Tage am Stück mit Tokens; ein noch leeres Heute bricht die Serie nicht. Tage aufsteigend, das letzte ist heute. */
+export function streakDays(days: { tokens: number }[]): number {
+  let i = days.length - 1
+  if (i >= 0 && !days[i].tokens) i--
+  let n = 0
+  while (i >= 0 && days[i].tokens > 0) {
+    n++
+    i--
+  }
+  return n
 }
 
 /** Discord verlangt 2–128 Zeichen */
@@ -225,24 +308,25 @@ function fit(s: string): string | undefined {
   return s.length < 2 ? s.padEnd(2, '⠀') : s
 }
 
-export function renderPresence(cfg: PresenceConfig, vars: PresenceVars): Activity {
-  const v: PresenceVars = cfg.privacy ? { ...vars, project: vars.project ? t('einem geheimen Projekt') : '' } : vars
+export function renderPresence(cfg: PresenceConfig, vars: PresenceVars, now = Date.now()): Activity {
+  // Aufgaben-Texte verraten oft das Projekt – im Privat-Modus fallen sie weg
+  const v: PresenceVars = cfg.privacy ? { ...vars, project: vars.project ? t('einem geheimen Projekt') : '', task: '' } : vars
   const idle = vars.sessions === 0
   const a: Activity = {}
-  const details = fit(fillTemplate(idle ? cfg.idleDetails : cfg.details, v))
-  const state = fit(fillTemplate(idle ? cfg.idleState : cfg.state, v))
+  const details = fit(pickVariant(idle ? cfg.idleDetails : cfg.details, v, now))
+  const state = fit(pickVariant(idle ? cfg.idleState : cfg.state, v, now))
   if (details) a.details = details
   if (state) a.state = state
 
   const assets: NonNullable<Activity['assets']> = {}
   const large = cfg.largeImage.trim()
   if (large.toLowerCase() !== 'none') assets.large_image = large || DEFAULT_LARGE_IMAGE
-  const lt = fit(fillTemplate(cfg.largeText, v))
+  const lt = fit(pickVariant(cfg.largeText, v, now))
   if (lt) assets.large_text = lt
   const iconKey = cfg.statusIcons && !cfg.smallImage.trim() ? vars.statusKey : ''
   if (cfg.smallImage.trim()) assets.small_image = cfg.smallImage.trim()
   else if (iconKey) assets.small_image = statusIconUrl(iconKey)
-  const st = fit(fillTemplate(cfg.smallText, v)) ?? (iconKey ? fit(STATUS_ICON_TEXT[iconKey]) : undefined)
+  const st = fit(pickVariant(cfg.smallText, v, now)) ?? (iconKey ? fit(STATUS_ICON_TEXT[iconKey]) : undefined)
   if (st) assets.small_text = st
   if (Object.keys(assets).length) a.assets = assets
 

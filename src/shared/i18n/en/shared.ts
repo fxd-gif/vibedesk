@@ -167,7 +167,27 @@ const dict: Record<string, string> = {
   'Vibecodet an einem Projekt': 'Vibecoding on a project',
   'VibeDesk holen (kostenlos)': 'Get VibeDesk (free)',
   '{n} Session': '{n} session',
-  'einem geheimen Projekt': 'a secret project'
+  'einem geheimen Projekt': 'a secret project',
+  'Live': 'Live',
+  'Vibecodet an {project}': 'Vibecoding on {project}',
+  'Was Claude gerade tut': 'What Claude is doing',
+  'Aktuelle Aufgabe': 'Current task',
+  'Aufgaben erledigt (3/7)': 'Tasks done (3/7)',
+  'Tage am Stück': 'Days in a row',
+  '🔥 {n} Tag am Stück': '🔥 {n} day in a row',
+  '🔥 {n} Tage am Stück': '🔥 {n} days in a row',
+  'ist fertig': 'is done',
+  'hängt an einem Fehler': 'stuck on an error',
+  'pflegt das Gehirn': 'tending the brain',
+  'schickt {n} Agent los': 'sending out {n} agent',
+  'schickt {n} Agents los': 'sending out {n} agents',
+  'schreibt Code': 'writing code',
+  'liest Code': 'reading code',
+  'führt Befehle aus': 'running commands',
+  'recherchiert im Web': 'researching the web',
+  'plant die nächsten Schritte': 'planning next steps',
+  'nutzt Werkzeuge': 'using tools',
+  'denkt nach': 'thinking'
 }
 
 export default dict

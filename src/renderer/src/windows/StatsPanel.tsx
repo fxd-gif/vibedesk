@@ -10,7 +10,7 @@ const level = (p: number): string => (p >= 0.95 ? 'crit' : p >= 0.8 ? 'warn' : '
 export function StatsPanel(): React.JSX.Element {
   const sessions = useSessions((s) => s.sessions)
   const stats = useStats((s) => s.sessions)
-  const days = useStats((s) => s.days)
+  const days = useStats((s) => s.days).slice(-7) // Store hält 30 Tage für die Streak
   const wf = useWorkflow((s) => s.sessions)
   const [now, setNow] = useState(Date.now())
   useEffect(() => {

@@ -7,6 +7,11 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Discord zeigt live, was Claude gerade tut**: Deine Freunde sehen „schreibt Code“, „führt Befehle aus“, „recherchiert im Web“ oder „schickt 3 Agents los“, dazu die aktuelle Aufgabe aus Claudes Todo-Liste mit Fortschritt („Baut die Login-Seite · 3/7“) und deine Serie („🔥 5 Tage am Stück“). Dateinamen und Befehle verlassen nie deinen PC, im Privat- und Streamer-Modus fällt auch die Aufgabe weg. Die neuen Platzhalter heißen `{doing}`, `{task}`, `{progress}` und `{streak}`, die Vorlage „Live“ nutzt sie alle
+- **Wechselnde Zeilen in Discord**: Mehrere Varianten mit `||` trennen, und Discord wechselt alle 20 Sekunden zwischen ihnen. Leere Varianten werden übersprungen
+
 ## 1.1.0
 
 ### Neu

@@ -62,6 +62,7 @@ const dict: Record<string, string> = {
   'Dein Name': 'Your name',
   'Vorschau': 'Preview',
   'Spielt': 'Playing',
+  'Tipp: Mehrere Varianten mit || trennen – Discord wechselt alle 20 Sekunden, leere fallen weg.': 'Tip: separate several variants with || – Discord rotates every 20 seconds, empty ones are skipped.',
   '{n} von {max}': '{n} of {max}',
   'Das ist keine Discord-Webhook-URL (https://discord.com/api/webhooks/…).': "That's not a Discord webhook URL (https://discord.com/api/webhooks/…).",
   'Senden fehlgeschlagen.': 'Sending failed.',

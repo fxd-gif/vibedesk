@@ -2,7 +2,7 @@ import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import { SCENES } from '../ambience/sceneParams'
-import { renderPresence, type PresenceVars, type StatusIconKey } from '../../../shared/presence'
+import { doingText, renderPresence, streakDays, type PresenceVars, type StatusIconKey } from '../../../shared/presence'
 import { MAX_PEERS } from '../../../shared/lounge'
 import type { DiscordAppInfo, DiscordStatus } from '../../../shared/types'
 import { fmtClock, useFocus } from './focusStore'
@@ -43,8 +43,10 @@ export function collectVars(now = Date.now()): PresenceVars {
   const sessions = useSessions.getState().sessions
   const open = useUi.getState().open
   const topTerm = [...open].reverse().find((id) => id.startsWith('term:'))?.slice(5)
-  const active = sessions.find((s) => s.id === topTerm) ?? sessions[0]
-  const wf = active ? useWorkflow.getState().sessions[active.id] : undefined
+  const flows = useWorkflow.getState().sessions
+  // die gerade arbeitende Session ist spannender als die oberste
+  const active = sessions.find((s) => flows[s.id]?.status === 'working') ?? sessions.find((s) => s.id === topTerm) ?? sessions[0]
+  const wf = active ? flows[active.id] : undefined
   const st = active ? useStats.getState().sessions[active.id] : undefined
   const days = useStats.getState().days
   const today = days[days.length - 1]
@@ -53,6 +55,10 @@ export function collectVars(now = Date.now()): PresenceVars {
   const scene = settings?.scene ?? 'city'
   const statusKey: StatusIconKey | '' = focus.phase === 'work' ? 'focus' : focus.phase !== 'idle' ? 'break' : (wf?.status ?? '')
   const lounge = useLounge.getState()
+  const pending = wf ? [...wf.feed].reverse().find((f) => f.result === 'pending') : undefined
+  const todos = wf?.todos ?? []
+  const current = todos.find((x) => x.status === 'in_progress')
+  const task = (current?.activeForm || current?.content || '').trim()
   return {
     project: active?.name ?? '',
     sessions: sessions.length,
@@ -69,6 +75,10 @@ export function collectVars(now = Date.now()): PresenceVars {
     sessionStart: st?.startedAt ?? null,
     focusEnd: focus.endsAt,
     statusKey,
+    doing: active ? doingText({ status: wf?.status ?? 'idle', tool: pending?.tool, agents: wf?.agents.filter((x) => !x.done).length ?? 0, tending: wf?.tending }) : '',
+    task: task.length > 60 ? task.slice(0, 59) + '…' : task,
+    progress: todos.length ? `${todos.filter((x) => x.status === 'completed').length}/${todos.length}` : '',
+    streak: streakDays(days),
     lounge: lounge.state === 'joined' && lounge.room ? { id: hashId(lounge.room), size: Object.keys(lounge.peers).length + 1, max: MAX_PEERS } : null
   }
 }

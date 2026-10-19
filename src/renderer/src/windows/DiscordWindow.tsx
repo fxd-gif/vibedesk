@@ -30,7 +30,7 @@ function clockOf(ms: number): string {
 function Preview({ cfg }: { cfg: PresenceConfig }): React.JSX.Element {
   const now = useTick()
   const { status, app } = useDiscord()
-  const a = renderPresence(cfg, collectVars(now))
+  const a = renderPresence(cfg, collectVars(now), now)
   const img = (key?: string): string | null => {
     if (!key) return null
     if (/^https?:\/\//.test(key)) return key
@@ -295,6 +295,7 @@ export function DiscordWindow(): React.JSX.Element | null {
               </button>
             ))}
           </div>
+          <div className="dim tiny">{t('Tipp: Mehrere Varianten mit || trennen – Discord wechselt alle 20 Sekunden, leere fallen weg.')}</div>
         </section>
 
         <section>

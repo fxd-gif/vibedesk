@@ -180,7 +180,7 @@ app.whenReady().then(async () => {
   const token = randomBytes(24).toString('hex')
   const statsHistory = new StatsHistory(join(userData, 'stats.json'))
   const stats = new StatsService({ history: statsHistory, emit: (s) => send('stats:update', s) })
-  ipcMain.handle('stats:history', () => statsHistory.lastDays(7, localDate(Date.now())))
+  ipcMain.handle('stats:history', () => statsHistory.lastDays(30, localDate(Date.now())))
   // Energiesparen: Akku/Netz an den Renderer melden (Regen-Hintergrund drosselt im Akkubetrieb)
   ipcMain.handle('power:onBattery', () => powerMonitor.isOnBatteryPower())
   powerMonitor.on('on-battery', () => send('power:battery', true))
