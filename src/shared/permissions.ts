@@ -18,6 +18,13 @@ export interface PermissionAsk {
 }
 
 const DETAIL_MAX = 600
+/** Pläne zeigen wir ganz – nur sehr lange werden gekürzt */
+const PLAN_MAX = 12_000
+/** Rückmeldung zu einem Plan („Ändern …“) */
+export const FEEDBACK_MAX = 2000
+
+/** Claude legt im Plan-Modus einen Plan vor (Werkzeug ExitPlanMode) */
+export const isPlan = (tool: string): boolean => tool === 'ExitPlanMode'
 
 const obj = (x: unknown): Record<string, unknown> =>
   x && typeof x === 'object' && !Array.isArray(x) ? (x as Record<string, unknown>) : {}
@@ -48,6 +55,8 @@ export function describePermission(tool: string, input: unknown): { summary: str
     case 'Task':
     case 'Agent':
       return { summary: t('Agent starten'), detail: clip(str(i.description), 200) }
+    case 'ExitPlanMode':
+      return { summary: t('Plan ansehen und freigeben'), detail: clip(str(i.plan).trim(), PLAN_MAX) }
   }
   const mcp = /^mcp__([^_]+(?:_[^_]+)*)__(.+)$/.exec(tool)
   if (mcp) return { summary: t('Werkzeug „{tool}“ ({server})', { tool: mcp[2], server: mcp[1] }), detail: clip(JSON.stringify(i), 300) }
@@ -67,11 +76,12 @@ export function cleanSuggestions(x: unknown): unknown[] | null {
  * Antwort-Body für den Hook (landet über den Forwarder auf stdout). Leer = keine Entscheidung –
  * Claude Code fragt dann ganz normal im Terminal.
  */
-export function permissionReply(decision: PermissionDecision, suggestions: unknown[] | null): string {
+export function permissionReply(decision: PermissionDecision, suggestions: unknown[] | null, feedback?: string): string {
   if (decision === 'terminal') return ''
+  const note = (feedback ?? '').trim().slice(0, FEEDBACK_MAX)
   const d =
     decision === 'deny'
-      ? { behavior: 'deny', message: t('In VibeDesk abgelehnt. Frag nach, was stattdessen passieren soll.') }
+      ? { behavior: 'deny', message: note ? t('Rückmeldung aus VibeDesk – bitte so überarbeiten: {note}', { note }) : t('In VibeDesk abgelehnt. Frag nach, was stattdessen passieren soll.') }
       : decision === 'always' && suggestions
         ? { behavior: 'allow', updatedPermissions: suggestions }
         : { behavior: 'allow' }

@@ -225,7 +225,7 @@ export class CompanionServer {
       switch (url.pathname) {
         case '/api/permission':
           if (!isDecision(body.decision) || body.decision === 'terminal') return json(400, { ok: false, error: t('Ungültige Entscheidung') })
-          return json(200, this.hub.answer(body.id, body.decision))
+          return json(200, this.hub.answer(body.id, body.decision, body.feedback))
         case '/api/prompt':
           return void this.hub.prompt(body).then((r) => json(200, r), fail)
         case '/api/key':

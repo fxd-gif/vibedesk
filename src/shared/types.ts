@@ -629,7 +629,8 @@ export interface VibedeskApi {
   }
   permissions: {
     list(): Promise<PermissionAsk[]>
-    answer(id: string, decision: PermissionDecision): Promise<boolean>
+    /** feedback: Rückmeldung zu einem Plan („Ändern …“), geht bei deny an Claude */
+    answer(id: string, decision: PermissionDecision, feedback?: string): Promise<boolean>
   }
   companion: {
     /** internet = Internet-Link über Cloudflare (Handy von überall, ohne App) */

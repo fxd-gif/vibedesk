@@ -55,10 +55,11 @@ export class PermissionBroker {
     return { reply, cancel: () => this.finish(id, '') }
   }
 
-  answer(id: string, decision: PermissionDecision): boolean {
+  /** feedback: Text zu „Ändern …“ – geht bei „deny“ als Nachricht an Claude */
+  answer(id: string, decision: PermissionDecision, feedback?: string): boolean {
     const p = this.pending.get(id)
     if (!p) return false
-    this.finish(id, permissionReply(decision, p.suggestions))
+    this.finish(id, permissionReply(decision, p.suggestions, feedback))
     return true
   }
 

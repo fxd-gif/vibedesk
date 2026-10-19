@@ -176,7 +176,7 @@ export function setupCompanion(d: CompanionDeps): { hub: CompanionHub; stop(): P
   })
 
   ipcMain.handle('permissions:list', () => d.broker.list())
-  ipcMain.handle('permissions:answer', (_e, id: unknown, decision: unknown) => typeof id === 'string' && isDecision(decision) && d.broker.answer(id, decision))
+  ipcMain.handle('permissions:answer', (_e, id: unknown, decision: unknown, feedback: unknown) => typeof id === 'string' && isDecision(decision) && d.broker.answer(id, decision, typeof feedback === 'string' ? feedback : undefined))
 
   // Nach einem Standby (z. B. vom Handy) wieder wach halten
   powerMonitor.on('resume', () => {

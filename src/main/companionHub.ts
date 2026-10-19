@@ -151,8 +151,8 @@ export class CompanionHub {
     return { ok: true, chunk }
   }
 
-  answer(id: unknown, decision: PermissionDecision): Result {
-    if (typeof id !== 'string' || !this.d.broker.answer(id, decision)) return { ok: false, error: t('Diese Freigabe ist schon erledigt.') }
+  answer(id: unknown, decision: PermissionDecision, feedback?: unknown): Result {
+    if (typeof id !== 'string' || !this.d.broker.answer(id, decision, typeof feedback === 'string' ? feedback : undefined)) return { ok: false, error: t('Diese Freigabe ist schon erledigt.') }
     return { ok: true }
   }
 

@@ -154,6 +154,17 @@ export function companionPage(nonce: string): string {
   .limits .lim .bar { margin-top: 0; }
   .limits .lim.warn .bar i { background: var(--warn); }
   .limits .lim.hot .bar i { background: var(--bad); }
+  .ask.plan { border-color: rgba(159,184,255,.45); background: rgba(159,184,255,.06); }
+  .plan-md { margin-top: 10px; padding: 12px 14px; max-height: 52vh; overflow: auto; border-radius: 12px; background: rgba(0,0,0,.3); font-size: 14px; line-height: 1.5; word-break: break-word; }
+  .plan-md h4 { margin: 10px 0 6px; font-size: 15px; }
+  .plan-md h4:first-child { margin-top: 0; }
+  .plan-md p { margin: 0 0 8px; }
+  .plan-md ol, .plan-md ul { margin: 0 0 8px; padding-left: 22px; }
+  .plan-md li { margin: 3px 0; }
+  .plan-md code { font: 12.5px ui-monospace, 'Cascadia Code', Consolas, monospace; padding: 1px 5px; border-radius: 5px; background: rgba(255,255,255,.08); }
+  .plan-md pre { margin: 6px 0 8px; max-height: none; }
+  .plan-fb { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .plan-fb textarea { min-height: 84px; background: rgba(0,0,0,.3); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
   [hidden] { display: none !important; }
 </style></head>
 <body>
@@ -224,7 +235,7 @@ export function companionPage(nonce: string): string {
   var HIDE = ['limits', 'composer', 'session', 'tabs', 'asks', 'empty', 'notes', 'notes-label', 'pc', 'pc-label', 'unpair-row'];
   function unpaired() {
     try { localStorage.removeItem(KEY); } catch (_) {}
-    key = ''; state = null;
+    key = ''; state = null; asksKey = null;
     if (ctrl) ctrl.abort();
     if (tm) closeTerm();
     HIDE.forEach(function (id) { $(id).hidden = true; });
@@ -260,12 +271,21 @@ export function companionPage(nonce: string): string {
   function sessionById(id) { return state && state.sessions.filter(function (s) { return s.id === id; })[0]; }
   function projectName(sid) { var s = sessionById(sid); return s ? s.name : ''; }
 
+  var asksKey = null, planDrafts = {};
   function renderAsks() {
-    var box = $('asks'); clear(box);
+    var box = $('asks');
     var list = state.permissions || [];
+    // nur neu bauen, wenn sich die Freigaben ändern – sonst gingen Eingaben (Plan ändern) beim Tippen verloren
+    var key = list.map(function (a) { return a.id + ':' + projectName(a.sessionId); }).join('|');
+    if (key === asksKey) return;
+    asksKey = key;
+    // war ein Textfeld im Fokus, nach dem Neuaufbau dort weitermachen
+    var focused = document.activeElement && box.contains(document.activeElement) && document.activeElement.tagName === 'TEXTAREA';
+    clear(box);
     var fresh = false;
     list.forEach(function (a) {
       if (!seenAsks[a.id]) { seenAsks[a.id] = 1; fresh = true; }
+      if (a.tool === 'ExitPlanMode') return box.appendChild(planCard(a));
       var c = el('div', 'card ask');
       c.appendChild(el('div', 'proj', fmt(${js(t('Freigabe · {name}'))}, { name: projectName(a.sessionId) || 'Claude' })));
       c.appendChild(el('div', 'what', a.summary));
@@ -279,8 +299,72 @@ export function companionPage(nonce: string): string {
       c.appendChild(b);
       box.appendChild(c);
     });
+    if (focused) { var again = box.querySelector('.plan-fb:not([hidden]) textarea'); if (again) again.focus(); }
     if (fresh && navigator.vibrate) try { navigator.vibrate([60, 40, 60]); } catch (_) {}
     document.title = list.length ? '(' + list.length + ') VibeDesk' : 'VibeDesk';
+  }
+
+  // kleines, sicheres Markdown für Pläne: Überschriften, Listen, Code, **fett**, Code in Backticks – nur textContent, nie HTML
+  function inlineMd(parent, text) {
+    text.split(/(\\*\\*[^*\\n]+\\*\\*|\\x60[^\\x60\\n]+\\x60)/).forEach(function (part) {
+      if (/^\\*\\*[^*]+\\*\\*$/.test(part)) parent.appendChild(el('b', '', part.slice(2, -2)));
+      else if (/^\\x60[^\\x60]+\\x60$/.test(part)) parent.appendChild(el('code', '', part.slice(1, -1)));
+      else if (part) parent.appendChild(document.createTextNode(part));
+    });
+  }
+  function planMarkdown(text) {
+    var box = el('div', 'plan-md'), lines = text.split(/\\r?\\n/), list = null;
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i];
+      if (/^\\s*\\x60{3}/.test(l)) {
+        list = null;
+        var code = [];
+        while (++i < lines.length && !/^\\s*\\x60{3}/.test(lines[i])) code.push(lines[i]);
+        box.appendChild(el('pre', '', code.join('\\n')));
+        continue;
+      }
+      var h = /^#{1,6}\\s+(.*)$/.exec(l);
+      if (h) { list = null; var hd = el('h4'); inlineMd(hd, h[1]); box.appendChild(hd); continue; }
+      var li = /^\\s*([-*]|\\d+\\.)\\s+(.*)$/.exec(l);
+      if (li) {
+        var ordered = /\\d/.test(li[1]);
+        if (!list || list.tagName !== (ordered ? 'OL' : 'UL')) { list = el(ordered ? 'ol' : 'ul'); box.appendChild(list); }
+        var item = el('li'); inlineMd(item, li[2]); list.appendChild(item);
+        continue;
+      }
+      list = null;
+      if (l.trim()) { var para = el('p'); inlineMd(para, l); box.appendChild(para); }
+    }
+    return box;
+  }
+
+  // Plan aus dem Plan-Modus: ganz lesen, „Los geht’s“ oder „Ändern …“ mit Rückmeldung an Claude
+  function planCard(a) {
+    var c = el('div', 'card ask plan');
+    c.appendChild(el('div', 'proj', fmt(${js(t('Plan · {name}'))}, { name: projectName(a.sessionId) || 'Claude' })));
+    c.appendChild(el('div', 'what', ${js(t('Claude hat einen Plan'))}));
+    c.appendChild(planMarkdown(a.detail));
+    // Entwurf überlebt Neuaufbauten der Liste
+    var draft = planDrafts[a.id] || (planDrafts[a.id] = { open: false, text: '' });
+    var fb = el('div', 'plan-fb'); fb.hidden = !draft.open;
+    var ta = el('textarea'); ta.maxLength = 2000; ta.placeholder = ${js(t('Was soll anders sein?'))}; ta.value = draft.text;
+    ta.oninput = function () { draft.text = ta.value; };
+    var send = el('button', 'primary', ${js(t('An Claude schicken'))});
+    send.onclick = function () {
+      if (!ta.value.trim()) return toast(${js(t('Schreib kurz, was anders sein soll.'))}, true);
+      send.disabled = true;
+      api('/api/permission', { id: a.id, decision: 'deny', feedback: ta.value }).then(function (r) {
+        send.disabled = false;
+        if (!r.ok) toast(r.error || FAILED, true); else toast(${js(t('Rückmeldung an Claude geschickt'))});
+      });
+    };
+    fb.appendChild(ta); fb.appendChild(send);
+    var b = el('div', 'btns');
+    var go = el('button', 'okb', ${js(t('Los geht’s'))}); go.onclick = function () { decide(a.id, 'allow', go); };
+    var ch = el('button', '', ${js(t('Ändern …'))}); ch.onclick = function () { fb.hidden = !fb.hidden; draft.open = !fb.hidden; if (!fb.hidden) ta.focus(); };
+    b.appendChild(go); b.appendChild(ch);
+    c.appendChild(b); c.appendChild(fb);
+    return c;
   }
 
   function decide(id, decision, btn) {

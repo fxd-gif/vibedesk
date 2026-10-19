@@ -7,6 +7,10 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Plan-Karte**: Legt Claude im Plan-Modus einen Plan vor, erscheint er als lesbare Karte, mit Überschriften, Listen und Code statt Werkzeug-JSON. „Los geht’s“ gibt ihn frei, „Ändern …“ schickt Claude deine Rückmeldung („bitte ohne neue Abhängigkeiten“), und Claude überarbeitet den Plan. Am Handy genauso, dort bleibt dein angefangener Text auch stehen, wenn sich zwischendurch etwas aktualisiert
+
 ## 1.5.0
 
 ### Neu

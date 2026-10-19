@@ -6,7 +6,7 @@ import { retract } from './notifyStore'
 
 export const usePermissions = create<{ list: PermissionAsk[] }>(() => ({ list: [] }))
 
-export const answerPermission = (id: string, d: PermissionDecision): Promise<boolean> => api.permissions.answer(id, d)
+export const answerPermission = (id: string, d: PermissionDecision, feedback?: string): Promise<boolean> => api.permissions.answer(id, d, feedback)
 
 let wired = false
 export function wirePermissions(): void {

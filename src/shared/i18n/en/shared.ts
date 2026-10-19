@@ -187,7 +187,20 @@ const dict: Record<string, string> = {
   'recherchiert im Web': 'researching the web',
   'plant die nächsten Schritte': 'planning next steps',
   'nutzt Werkzeuge': 'using tools',
-  'denkt nach': 'thinking'
+  'denkt nach': 'thinking',
+  // Plan-Karte
+  'Plan · {name}': 'Plan · {name}',
+  'Claude hat einen Plan': 'Claude has a plan',
+  'Was soll anders sein?': 'What should be different?',
+  'An Claude schicken': 'Send to Claude',
+  'Schreib kurz, was anders sein soll.': 'Briefly write what should be different.',
+  'Rückmeldung an Claude geschickt': 'Feedback sent to Claude',
+  'Ändern …': 'Change …',
+  'Plan von {name}': 'Plan from {name}',
+  '{name} hat einen Plan': '{name} has a plan',
+  'Lies ihn in Ruhe – Claude legt erst los, wenn du zustimmst.': 'Take your time – Claude only starts once you agree.',
+  'Plan ansehen und freigeben': 'Review and approve the plan',
+  'Rückmeldung aus VibeDesk – bitte so überarbeiten: {note}': 'Feedback from VibeDesk – please revise like this: {note}',
 }
 
 export default dict

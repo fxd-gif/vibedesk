@@ -247,7 +247,7 @@ const api: VibedeskApi = {
   },
   permissions: {
     list: () => ipcRenderer.invoke('permissions:list'),
-    answer: (id, decision) => ipcRenderer.invoke('permissions:answer', id, decision)
+    answer: (id, decision, feedback) => ipcRenderer.invoke('permissions:answer', id, decision, feedback)
   },
   companion: {
     configure: (enabled, port, internet) => ipcRenderer.invoke('companion:configure', enabled, port, internet),
