@@ -1,6 +1,6 @@
 {
   "name": "vibedesk",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "A calm, immersive Windows desktop for Claude Code: rain on the window, lofi radio and all your sessions at a glance",
   "main": "./out/main/index.js",
   "author": "fxd-gif",
