@@ -145,6 +145,10 @@
             <p class="label">Usage limit</p>
             <h2>Hit the limit at night, continue at the reset.</h2>
             <p>When Claude reports “You've hit your session limit · resets …”, VibeDesk reads the reset time. A chip in the title bar shows when it continues, and once the limit is free again VibeDesk tells Claude to pick up exactly where it left off. One click on the chip cancels it; you can switch it off in the terminal settings.</p>
+            <ul>
+              <li>With Claude Pro or Max the status line under the terminal shows how much of the <b>5-hour limit</b> is used – hover for the weekly limit and when both reset. Also in the Studio status bar and on your phone.</li>
+              <li>A quiet hint at 75&nbsp;% and 90&nbsp;%, and a note when a full limit is free again. The numbers come straight from Claude Code.</li>
+            </ul>
           </div>
           <div class="win limit" data-demo="limit" aria-hidden="true">
             <div class="win-bar"><span class="dot b"></span><b>shop-frontend</b><span class="win-st">· done</span><span class="pill warn">⏰ continues at 00:00 ✕</span></div>
@@ -159,6 +163,22 @@
 
         <div class="row flip">
           <div class="row-text">
+            <p class="label">Plan mode</p>
+            <h2>Read the plan, then say go.</h2>
+            <p>When Claude presents a plan in plan mode, it appears as a readable card – headings, lists and code instead of tool JSON. <b>Let’s go</b> approves it; <b>Change …</b> sends Claude your feedback (“please no new dependencies”) and Claude revises the plan. The same card works on your phone.</p>
+          </div>
+          <div class="win" aria-hidden="true">
+            <div class="win-bar"><span class="dot y"></span><b>shop-frontend</b><span class="win-st">· plan ready</span></div>
+            <div class="win-body" style="display:grid;gap:10px;font-size:14px">
+              <b style="font-size:16px">Login page with validation</b>
+              <div style="color:var(--ink-2)">1. Add <code>validate()</code> in <code>src/lib/validate.ts</code><br>2. Show inline errors in <code>Login.tsx</code><br>3. Cover both with Vitest</div>
+              <div class="approve-btns" style="justify-content:flex-start"><button type="button" tabindex="-1" class="primary">Let’s go</button><button type="button" tabindex="-1">Change …</button></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="row-text">
             <p class="label">Watchdog</p>
             <h2>Someone keeps an eye on the long runs.</h2>
             <p>VibeDesk speaks up when a session shows no sign of life for six minutes, fails at the same command three times in a row, or its context is 85&nbsp;% full – each time with a fitting next step. The same messages reach your phone.</p>
@@ -170,7 +190,7 @@
           </div>
         </div>
 
-        <div class="row">
+        <div class="row flip">
           <div class="row-text">
             <p class="label">Inspector</p>
             <h2>Know what every agent is doing.</h2>
@@ -186,7 +206,7 @@
           </figure>
         </div>
 
-        <div class="row flip">
+        <div class="row">
           <div class="row-text">
             <p class="label">Two layouts</p>
             <h2>Floating windows or a calm studio.</h2>

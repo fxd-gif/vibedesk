@@ -601,7 +601,7 @@
         n.y += n.vy * k
         const m = 30
         n.x = Math.max(m, Math.min(W - m, n.x))
-        n.y = Math.max(m, Math.min(H - m - 10, n.y))
+        n.y = Math.max(small() ? 84 : 52, Math.min(H - (small() ? 64 : 48), n.y))
         n.glow = Math.max(0, n.glow - dt / 1800)
         if (n.born < 1) n.born = Math.min(1, n.born + dt / 600)
         if (n.glow <= 0) n.state = null
@@ -692,7 +692,8 @@
           ctx.globalAlpha = dim * n.born * (n.type === 'file' ? 0.8 : 1)
           ctx.fillStyle = n.type === 'file' ? '#8b93a3' : '#dfe3ea'
           if (n.type === 'file') ctx.font = `400 ${fs - 1}px "JetBrains Mono", monospace`
-          ctx.fillText(n.label, n.x, n.y + r + fs + 3)
+          const half = ctx.measureText(n.label).width / 2 + 4
+          ctx.fillText(n.label, Math.max(half, Math.min(W - half, n.x)), n.y + r + fs + 3)
           if (n.type === 'file') ctx.font = `500 ${fs}px Geist, system-ui, sans-serif`
         }
         ctx.globalAlpha = 1
@@ -1271,6 +1272,44 @@
         await ctx.wait(3000)
       },
       still
+    )
+  }
+
+  // ---------- Calm: Claude bedient den Desktop (MCP) ----------
+  const mc = $('[data-demo="mcp"]')
+  if (mc) {
+    const term = termWriter($('.mcp-term', mc))
+    const rainC = $('canvas.rain', mc)
+    const typeLine = async (ctx, text) => {
+      const l = term.add('<span class="t-b">&gt;</span> ')
+      for (let k = 1; k <= text.length; k++) {
+        l.innerHTML = '<span class="t-b">&gt;</span> ' + text.slice(0, k)
+        await ctx.wait(40)
+      }
+    }
+    sequence(
+      mc,
+      async (ctx) => {
+        term.clear()
+        mc.classList.remove('sorted', 'tokyo')
+        rainC && rainC.setDensity && rainC.setDensity(0.6)
+        await ctx.wait(800)
+        await typeLine(ctx, 'sort my windows')
+        await ctx.wait(500)
+        term.add('<span class="t-g">●</span> <span class="t-dim">VibeDesk · arranging windows</span>')
+        mc.classList.add('sorted')
+        await ctx.wait(1600)
+        await typeLine(ctx, 'tokyo scene with more rain')
+        await ctx.wait(500)
+        term.add('<span class="t-g">●</span> <span class="t-dim">VibeDesk · scene Tokyo alley, rain up</span>')
+        mc.classList.add('tokyo')
+        rainC && rainC.setDensity && rainC.setDensity(2)
+        await ctx.wait(3200)
+      },
+      () => {
+        mc.classList.add('sorted')
+        term.add('<span class="t-b">&gt;</span> sort my windows').classList.add('in')
+      }
     )
   }
 
