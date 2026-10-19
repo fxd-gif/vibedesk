@@ -10,6 +10,7 @@ import { decodeShare, encodeShare, fileBytes, toSharedFile } from '../shared/sha
 import { fetchGithubCandidates } from './github'
 import { listClaudeSessions } from './claudeHistory'
 import { saveShot } from './shots'
+import { pickDevScript } from '../shared/devScript'
 import type { SkillTarget } from '../shared/types'
 
 export interface IpcDeps {
@@ -109,6 +110,17 @@ export function registerSessionIpc(d: SessionIpcDeps): void {
   })
   ipcMain.handle('sessions:stop', (_e, id: string) => d.sessions.stop(id))
   ipcMain.handle('sessions:list', () => d.sessions.list())
+  // Dev-Server per Klick: Skript aus package.json im Ordner der Session (auch Worktrees)
+  ipcMain.handle('sessions:devScript', (_e, id: unknown) => {
+    const s = d.sessions.list().find((x) => x.id === id)
+    if (!s) return null
+    try {
+      const pkg = JSON.parse(fs.readFileSync(path.join(s.cwd, 'package.json'), 'utf8'))
+      return pickDevScript(pkg, fs.readdirSync(s.cwd))
+    } catch {
+      return null
+    }
+  })
   ipcMain.on('sessions:write', (_e, id: string, data: string) => d.sessions.write(id, data))
   ipcMain.on('sessions:resize', (_e, id: string, cols: number, rows: number) => d.sessions.resize(id, cols, rows))
 }

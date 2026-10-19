@@ -331,6 +331,9 @@ const dict: Record<string, string> = {
   'Neue Versionen im Hintergrund laden und beim nächsten Start installieren. Aus: VibeDesk sagt nur Bescheid, geladen wird erst auf Knopfdruck.': 'Download new versions in the background and install them on the next start. Off: VibeDesk only lets you know, and downloads when you click.',
   'Installiert: v{version}': 'Installed: v{version}',
   'Jetzt suchen': 'Check now',
+  // Dev-Server per Klick
+  'Dev-Server': 'Dev server',
+  '{command} in einer Shell daneben starten – die Vorschau öffnet sich, sobald der Server läuft': 'Run {command} in a shell next to it – the preview opens as soon as the server is up',
 }
 
 export default dict

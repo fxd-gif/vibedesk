@@ -43,6 +43,7 @@ const api: VibedeskApi = {
     start: (projectId, resumeId, cwd) => ipcRenderer.invoke('sessions:start', projectId, resumeId, cwd),
     stop: (id) => ipcRenderer.invoke('sessions:stop', id),
     write: (id, data) => ipcRenderer.send('sessions:write', id, data),
+    devScript: (id) => ipcRenderer.invoke('sessions:devScript', id),
     resize: (id, cols, rows) => ipcRenderer.send('sessions:resize', id, cols, rows),
     list: () => ipcRenderer.invoke('sessions:list'),
     externals: () => ipcRenderer.invoke('sessions:externals')

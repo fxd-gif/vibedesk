@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { api } from '../api'
 import '@xterm/xterm/css/xterm.css'
 import { GlassWindow } from '../desktop/GlassWindow'
 import { Icon } from '../desktop/icons'
@@ -15,6 +16,7 @@ import { shortUrl, usePreview } from '../store/previewStore'
 import { TermPane } from '../terminal/TermPane'
 import { TermSettings } from '../terminal/TermSettings'
 import { toggleZen } from '../desktop/calm'
+import type { DevScript } from '../../../shared/devScript'
 import { TermStatus } from '../terminal/TermStatus'
 import { QueueChip, TermQueue } from './TermQueue'
 import { AttachButton, TermAttach } from './TermAttach'
@@ -65,6 +67,15 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
   const exitCode = useSessions((s) => s.exited[session.id])
   const isTop = useUi((s) => s.open[s.open.length - 1] === id)
   const zenMe = useUi((s) => s.zen === id)
+  const [dev, setDev] = useState<DevScript | null>(null)
+  useEffect(() => {
+    let alive = true
+    void api.sessions.devScript(session.id).then((d) => alive && setDev(d))
+    return () => {
+      alive = false
+    }
+    // nach jeder Runde neu prüfen – Claude legt package.json oft erst während der Session an
+  }, [session.id, status !== 'working'])
   const urls = usePreview((s) => s.urls[session.id])
   const shell = useShells((s) => attachedShell(s.shells, session.id))
   const shellExit = useShells((s) => (shell ? s.exited[shell.id] : undefined))
@@ -85,6 +96,15 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
       return
     if (shell) await useShells.getState().close(shell.id)
     useSessions.getState().close(session.id)
+  }
+
+  /** Dev-Server in der Shell daneben starten – die Vorschau erkennt die URL dann von selbst */
+  const startDev = async (): Promise<void> => {
+    if (!dev) return
+    const open = shell ?? (await useShells.getState().open(session.projectId, session.id))
+    if (!open) return
+    setActive('shell')
+    api.shells.write(open.id, dev.shellCommand + '\r')
   }
 
   const toggleShell = async (): Promise<void> => {
@@ -117,6 +137,11 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
               ▸ {shortUrl(u)}
             </button>
           ))}
+          {dev && !urls?.length && (
+            <button className="url-chip dev-chip" title={t('{command} in einer Shell daneben starten – die Vorschau öffnet sich, sobald der Server läuft', { command: dev.command })} onClick={() => void startDev()} data-testid="dev-chip">
+              ▶ {t('Dev-Server')}
+            </button>
+          )}
           <QueueChip sessionId={session.id} open={queueOpen} onToggle={() => togglePanel('queue')} />
           {resumeAt && (
             <button className="resume-chip" title={t('Claude hat das Nutzungslimit erreicht. Danach geht es von selbst weiter – klicken zum Abbrechen.')} onClick={() => cancelResume(session.id)} data-testid="resume-chip">

@@ -50,6 +50,7 @@ import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { PlanLimits } from './limits'
+import type { DevScript } from './devScript'
 import type { DeskCommand } from './desk'
 import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget, TermChunk, TermQuery } from './companion'
 import type { PermissionAsk, PermissionDecision } from './permissions'
@@ -409,6 +410,8 @@ export interface VibedeskApi {
   sessions: {
     /** cwd: Worktree im Projekt (Merge Studio) statt des Projektordners */
     start(projectId: string, resumeId?: string, cwd?: string): Promise<SessionInfo>
+    /** Dev-Server-Skript aus package.json im Ordner der Session (null = keins) */
+    devScript(id: string): Promise<DevScript | null>
     stop(id: string): Promise<void>
     write(id: string, data: string): void
     resize(id: string, cols: number, rows: number): void

@@ -7,6 +7,7 @@ import { sendToSession } from './sessionPrompt'
 import { termWin, useSessions } from './sessionStore'
 import { useSettings } from './settingsStore'
 import { useWorkflow } from './workflowStore'
+import { useShells } from './shellStore'
 
 export const previewWin = (key: string): string => `preview:${key}`
 
@@ -52,10 +53,12 @@ export function wirePreview(): void {
     const r = detectLocalUrls(data, carry[id] ?? '')
     carry[id] = r.carry
     if (!r.urls.length) return
-    if (chips)
+    // Shell neben einer Session (z. B. Dev-Server per Klick) → Chip bei der Session
+    const owner = chips ? id : useShells.getState().shells.find((x) => x.id === id)?.attachedTo
+    if (owner)
       usePreview.setState((s) => {
-        const list = [...r.urls, ...(s.urls[id] ?? []).filter((u) => !r.urls.includes(u))].slice(0, 4)
-        return { urls: { ...s.urls, [id]: list } }
+        const list = [...r.urls, ...(s.urls[owner] ?? []).filter((u) => !r.urls.includes(u))].slice(0, 4)
+        return { urls: { ...s.urls, [owner]: list } }
       })
     const enabled = useSettings.getState().s?.previewAutoOpen ?? true
     const set = (seen[id] ??= new Set())

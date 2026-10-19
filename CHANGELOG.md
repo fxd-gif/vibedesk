@@ -9,6 +9,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Neu
 
+- **Dev-Server per Klick**: Hat dein Projekt ein `dev`-Skript in der `package.json` (auch wenn Claude es gerade erst angelegt hat), steht im Terminal-Kopf „▶ Dev-Server“. Ein Klick startet ihn in einer Shell daneben, mit dem passenden Paketmanager (npm, pnpm, yarn oder bun), und die Adresse erscheint wie gewohnt als Vorschau-Chip. Funktioniert auch, wenn Windows PowerShell-Skripte gesperrt sind
+
 - **VibeDesk als Werkzeug für Claude (MCP)**: Claude kann den Desktop jetzt selbst bedienen. Sag einfach „Sortier meine Fenster“, „Mach den Zen-Modus an“, „Tokyo-Szene mit mehr Regen“, „Lofi leiser“, „Öffne das Git-Fenster“ oder „Wechsel in den Studio-Aufbau“, und Claude erledigt es. Dazu gehören Fenster anordnen und aufräumen, Zen-Modus, Szene, Regen und Unschärfe, Lofi-Radio und Regengeräusch, Fenster öffnen, Aufbau, Terminal-Farbschema, Fokus-Timer und eine kurze Karte für dich („Build fertig“). Claude kann vorher nachsehen, wie alles eingestellt ist. Funktioniert in jeder Session, auch wenn das Gehirn aus ist
 
 ## 1.6.0
