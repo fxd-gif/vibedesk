@@ -7,6 +7,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+## 1.5.0
+
 ### Neu
 
 - **Abo-Limit im Blick**: Mit Claude Pro oder Max zeigt die Statuszeile unter dem Terminal, wie viel vom 5-Stunden-Limit verbraucht ist (Maus drüber: auch das Wochenlimit und wann beides wieder bei 0 ist). Bei 75 % und 90 % kommt ein leiser Hinweis, und sobald ein volles Limit wieder frei ist, sagt VibeDesk Bescheid. Auch in der Studio-Statusleiste und am Handy. Die Werte kommen direkt von Claude Code. Eine eigene Statuszeile, die du in Claude Code eingerichtet hast, läuft weiter wie gewohnt
