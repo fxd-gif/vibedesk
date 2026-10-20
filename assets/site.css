@@ -758,3 +758,4 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .yt-play:hover .yt-btn svg { transform: scale(1.08); }
 .yt-btn svg { transition: transform .15s ease; filter: drop-shadow(0 6px 16px rgba(0,0,0,.5)); }
 .yt-note { margin-top: 10px; text-align: center; font-size: 13px; color: var(--ink-2); }
+.nx-planned { color: #f5c542 !important; }

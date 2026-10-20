@@ -101,13 +101,18 @@
         }
       })
       .catch(() => {})
-    // Offene Wünsche, sortiert nach 👍 (öffentliche GitHub-API, ohne Anmeldung)
-    fetch('https://api.github.com/search/issues?q=repo:fxd-gif/vibedesk+is:issue+is:open+label:enhancement+-label:planned&sort=reactions-%2B1&order=desc&per_page=5')
+    // Offene Wünsche, sortiert nach 👍. Bewusst die Issues-API statt der Suche: die Suche indiziert neue Issues erst verzögert.
+    fetch('https://api.github.com/repos/fxd-gif/vibedesk/issues?labels=enhancement&state=open&per_page=100')
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((j) => {
-        if (!j.items || !j.items.length) return
-        $('[data-next-wishes]').innerHTML = j.items
-          .map((i) => `<li><a href="${esc(i.html_url)}"><span class="nx-votes">👍 ${i.reactions ? i.reactions['+1'] : 0}</span><b>${esc(i.title)}</b></a></li>`)
+      .then((list) => {
+        const votes = (i) => (i.reactions ? i.reactions['+1'] : 0)
+        const items = list.filter((i) => !i.pull_request).sort((a, b) => votes(b) - votes(a) || a.number - b.number).slice(0, 6)
+        if (!items.length) return
+        $('[data-next-wishes]').innerHTML = items
+          .map((i) => {
+            const planned = i.labels.some((l) => l.name === 'planned')
+            return `<li><a href="${esc(i.html_url)}"><span class="nx-votes">👍 ${votes(i)}</span><b>${esc(i.title)}</b></a>${planned ? '<small class="nx-planned">planned for the next release</small>' : ''}</li>`
+          })
           .join('')
       })
       .catch(() => {})
