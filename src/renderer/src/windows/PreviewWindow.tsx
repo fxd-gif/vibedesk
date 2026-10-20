@@ -28,7 +28,7 @@ function PickComposer({ pick, onSend, onCancel }: { pick: PickedElement; onSend(
       <div className="dim small mono pv-sel" title={pick.selector}>
         {pick.selector}
       </div>
-      {pick.text && <div className="small pv-text">„{pick.text.slice(0, 120)}“</div>}
+      {pick.text && <div className="small pv-text">{t('„{text}“', { text: pick.text.slice(0, 120) })}</div>}
       <textarea
         className="field small"
         autoFocus

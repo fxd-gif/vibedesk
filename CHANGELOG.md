@@ -7,6 +7,10 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Verbessert
+
+- **Eingabefelder gut lesbar**: In mehrzeiligen Feldern (etwa „Zeig drauf“ in der Vorschau oder „Ändern …“ an der Plan-Karte) war der eingetippte Text fast unsichtbar – jetzt hat er dieselbe helle Farbe wie überall. Auf Englisch stehen dort außerdem englische Anführungszeichen
+
 ## 1.9.0
 
 ### Neu

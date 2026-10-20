@@ -28,7 +28,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 input, textarea, .xterm { user-select: text; }
-button, input, select { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 :focus { outline: none; }
 :focus-visible { outline: 1.5px solid rgba(159, 184, 255, 0.6); outline-offset: 2px; border-radius: 6px; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }

@@ -171,6 +171,7 @@ const dict: Record<string, string> = {
   'Keine Claude-Session offen – starte zuerst eine': 'No Claude session open – start one first',
   'Was soll Claude daran ändern? z. B. „größer und in Grün“': 'What should Claude change about it? e.g. “bigger and green”',
   'An Claude': 'Send to Claude',
+  '„{text}“': '“{text}”',
   'Seite nicht erreichbar': 'Page not reachable',
   Vorschau: 'Preview',
   Zurück: 'Back',
