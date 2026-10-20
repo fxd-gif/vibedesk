@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>Get a Windows notification when Claude Code is waiting for you – VibeDesk</title>
+  <meta name="description" content="Use Claude Code hooks to beep or show a Windows toast when Claude needs permission or has finished – with the project name, step by step.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/guides/claude-code-notifications-windows/">
+  <meta property="og:title" content="Get a Windows notification when Claude Code is waiting for you">
+  <meta property="og:description" content="Use Claude Code hooks to beep or show a Windows toast when Claude needs permission or has finished – with the project name, step by step.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="VibeDesk: which Claude is waiting for you? Dock with session dots and a permission card.">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/guides/claude-code-notifications-windows/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script src="../../assets/site.js" defer></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Get a Windows notification when Claude Code is waiting for you","description":"Use Claude Code hooks to beep or show a Windows toast when Claude needs permission or has finished – with the project name, step by step.","datePublished":"2026-10-20","author":{"@type":"Person","name":"fxd-gif"},"image":"https://fxd-gif.github.io/vibedesk/img/og.jpg","mainEntityOfPage":"https://fxd-gif.github.io/vibedesk/guides/claude-code-notifications-windows/"}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../../"><img src="../../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../../sessions/">Sessions</a>
+        <a href="../../phone/">Phone</a>
+        <a href="../../brain/">Brain</a>
+        <a href="../../merge-studio/">Merge Studio</a>
+        <a href="../../ambience/">Ambience</a>
+        <a href="../../calm/">Calm</a>
+        <a href="../../tools/">Tools</a>
+        <a href="../../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../../brain/">Brain<small>Project memory</small></a>
+            <a href="../../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../../">VibeDesk</a><span>/</span><span>Guides</span></p>
+          <h1>Get a Windows notification when Claude Code is waiting for you</h1>
+          <p class="lead">Claude asks for permission, you are in another window, and nothing happens for twenty minutes. Three ways to make Windows tell you – from a simple beep to a real toast.</p>
+        </div>
+      </div>
+    </div>
+
+    <section style="padding-top:0">
+      <div class="wrap prose">
+        <p class="prose-meta">Updated 20 October 2026 · 5 min read</p>
+
+        <h2>The idea: Claude Code hooks</h2>
+        <p>Claude Code can run a command of your choice at certain moments. Two of these <b>hooks</b> matter here:</p>
+        <ul>
+          <li><code>Notification</code> – Claude needs you: a permission request, or it has been idle waiting for input.</li>
+          <li><code>Stop</code> – Claude has finished its answer.</li>
+        </ul>
+        <p>Hooks live in <code>%USERPROFILE%\.claude\settings.json</code> (for all projects) or in <code>.claude\settings.json</code> inside one project. If the file already exists, merge the <code>"hooks"</code> part into it instead of replacing the file.</p>
+
+        <h2>1. The quick one: a beep</h2>
+        <p>No installation needed. Windows PowerShell can play a tone:</p>
+        <pre><code>{
+  "hooks": {
+    "Notification": [
+      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -Command \"[console]::beep(880,250)\"" } ] }
+    ]
+  }
+}</code></pre>
+        <p>Restart your Claude sessions so they pick up the new settings. Next time Claude asks for permission, you will hear it.</p>
+
+        <h2>2. A real toast notification</h2>
+        <p>A beep is easy to miss with headphones on. A toast shows up in the corner and stays in the notification center. The free PowerShell module <b>BurntToast</b> makes this a one-liner. Install it once:</p>
+        <pre><code>Install-Module BurntToast -Scope CurrentUser</code></pre>
+        <p>Then use it in the hook:</p>
+        <pre><code>{
+  "hooks": {
+    "Notification": [
+      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -Command \"New-BurntToastNotification -Text 'Claude Code', 'Claude is waiting for you'\"" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -Command \"New-BurntToastNotification -Text 'Claude Code', 'Done'\"" } ] }
+    ]
+  }
+}</code></pre>
+        <p class="prose-note">If nothing appears, check that Focus Assist / Do not disturb is off and that PowerShell is allowed to show notifications in Settings → System → Notifications.</p>
+
+        <h2>3. Which session is it?</h2>
+        <p>With one session, a toast is enough. With three, the next question is <i>which</i> one is waiting. The hook receives details as JSON on standard input, including the working directory (<code>cwd</code>), so you can put the project name into the toast. Save this as <code>%USERPROFILE%\.claude\notify.ps1</code>:</p>
+        <pre><code>$data = [Console]::In.ReadToEnd() | ConvertFrom-Json
+$project = Split-Path $data.cwd -Leaf
+New-BurntToastNotification -Text "Claude Code - $project", $data.message</code></pre>
+        <p>and point the hook at it:</p>
+        <pre><code>"command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:/Users/YOU/.claude/notify.ps1"</code></pre>
+        <p class="prose-note">Replace <code>YOU</code> with your Windows user name. Forward slashes and the escaped quotes in these examples work whether the hook runs through cmd or Git Bash.</p>
+
+        <h2>4. Away from the PC?</h2>
+        <p>Toasts only help when you are at the desk. For a phone notification, people usually point the hook at a push service such as ntfy or Pushover with a small <code>curl</code> call. That works, but you still have to walk back to the PC to actually answer the prompt.</p>
+
+        <h2>5. Or let a desktop do it: VibeDesk</h2>
+        <p>Full disclosure: this site belongs to VibeDesk, a free and open-source app that does all of the above without editing JSON. It runs the real Claude Code CLI and adds:</p>
+        <ul>
+          <li><b>A status dot per session</b> – yellow means waiting for you, so you see <i>which</i> session at a glance.</li>
+          <li><b>Permission requests as cards</b> with Allow, Always and Deny – answered in one click.</li>
+          <li><b>Your phone as a remote</b>: it buzzes and you can approve from there, paired with a 6-digit code on your local network.</li>
+        </ul>
+        <p>See it in the <a href="https://www.youtube.com/watch?v=SLLYiK34I88">5-minute tour</a>, read about the <a href="../../phone/">phone companion</a>, or the guide on <a href="../claude-code-multiple-sessions-windows/">running several sessions at once</a>.</p>
+
+        <h2>Checklist</h2>
+        <ul class="check">
+          <li>A <code>Notification</code> hook in <code>%USERPROFILE%\.claude\settings.json</code>.</li>
+          <li>Beep for a start, BurntToast for a real toast.</li>
+          <li>Project name in the toast once you run more than one session.</li>
+          <li>Restart sessions after changing settings.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../../"><img src="../../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../../sessions/">Sessions</a></li><li><a href="../../phone/">Phone companion</a></li><li><a href="../../brain/">The brain</a></li><li><a href="../../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../../ambience/">Ambience & music</a></li><li><a href="../../calm/">Calm by default</a></li><li><a href="../../tools/">Tools</a></li><li><a href="../../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li><li><a href="../../guides/claude-code-multiple-sessions-windows/">Guide: parallel sessions</a></li><li><a href="../../guides/claude-code-notifications-windows/">Guide: notifications</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
