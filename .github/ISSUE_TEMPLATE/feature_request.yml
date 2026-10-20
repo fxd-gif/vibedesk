@@ -4,7 +4,9 @@ labels: [enhancement]
 body:
   - type: markdown
     attributes:
-      value: German or English, both are fine.
+      value: |
+        German or English, both are fine.
+        Wishes with the most 👍 move into the next release – see the countdown on https://fxd-gif.github.io/vibedesk/#next
   - type: textarea
     id: problem
     attributes:
