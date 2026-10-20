@@ -33,7 +33,8 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 
 - **See every Claude Code session at a glance:** which one is working, which one waits for you, which one is done – and answer permission requests as cards, on your PC or your phone.
 - **Let sessions work in parallel, then merge safely.** Merge Studio gives each session its own worktree, predicts conflicts and always sets a checkpoint first.
-- **Made for Windows.** Most Claude Code desktops are macOS-only. VibeDesk is built and tested on Windows 10/11, from the terminals to the installer.
+- **Walk away without losing time.** Approve from your phone, and after a usage limit Claude picks up again on its own.
+- **Claude remembers and helps run the desk.** A per-project brain (Markdown, Obsidian-compatible) via MCP, and Claude can sort your windows or switch to Zen mode on request.
 - **A calm place to sit.** Rain on the window, lofi or Spotify, a focus timer – and a desktop that stays quiet until you need more.
 
 <p align="center"><img src=".github/assets/hero.gif" width="800" alt="Every Claude Code session gets a dot in the dock: green means working, yellow means waiting for you, blue means done" /></p>
