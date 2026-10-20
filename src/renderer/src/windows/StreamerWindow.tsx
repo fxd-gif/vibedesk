@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api'
 import { Icon } from '../desktop/icons'
-import { OVERLAY_WIDGETS, overlayUrl } from '../../../shared/overlay'
+import { INFO_COMMAND, lookOf, OVERLAY_WIDGETS, overlayUrl, type OverlayLook } from '../../../shared/overlay'
 import { normalizeChannel, validChannel } from '../../../shared/twitch'
 import type { StreamerSettings } from '../../../shared/types'
 import { choose, confirm } from '../store/dialogStore'
@@ -11,6 +11,24 @@ import { acceptSuggestion, dropSuggestion, newOverlayToken, sortedQueue, toggleC
 import { clearAllTerminals } from '../store/terminals'
 import { Toggle } from '../desktop/Toggle'
 import { t } from '../../../shared/i18n'
+
+/** Auswahl als Chip-Reihe – ruhiger als Dropdowns */
+function Pick<T extends string | number>({ label, value, options, onChange }: { label: string; value: T; options: { v: T; l: string }[]; onChange(v: T): void }): React.JSX.Element {
+  return (
+    <div className="row between opt">
+      <span>{label}</span>
+      <div className="row chips">
+        {options.map((o) => (
+          <button key={String(o.v)} className={`chip${o.v === value ? ' on' : ''}`} onClick={() => onChange(o.v)}>
+            {o.l}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const ACCENTS = ['#9fb8ff', '#c4b5fd', '#f9a8d4', '#fca5a5', '#fcd34d', '#86efac', '#67e8f9']
 
 function Opt({ label, hint, on, onChange }: { label: string; hint?: string; on: boolean; onChange(v: boolean): void }): React.JSX.Element {
   return (
@@ -31,13 +49,16 @@ export function StreamerWindow(): React.JSX.Element {
   const twitch = useStreamer((x) => x.twitch)
   const queue = useStreamer((x) => x.queue)
   const sessions = useSessions((x) => x.sessions)
-  const [widgets, setWidgets] = useState<string[]>(OVERLAY_WIDGETS.map((w) => w.id))
   const [showUrl, setShowUrl] = useState(false)
   const [copied, setCopied] = useState(false)
   const [channel, setChannel] = useState(s?.streamer.twitchChannel ?? '')
   if (!s) return <></>
   const c = s.streamer
   const patch = (p: Partial<StreamerSettings>): void => set({ streamer: { ...c, ...p } })
+  const widgets = c.overlayWidgets ?? OVERLAY_WIDGETS.map((w) => w.id)
+  const setWidgets = (w: string[]): void => patch({ overlayWidgets: w })
+  const look = lookOf(c.overlayLook, c.overlayCredit)
+  const patchLook = (p: Partial<OverlayLook>): void => patch({ overlayLook: { ...look, ...p } })
 
   const toggle = async (on: boolean): Promise<void> => {
     if (on && sessions.length) {
@@ -53,7 +74,7 @@ export function StreamerWindow(): React.JSX.Element {
     patch({ enabled: on })
   }
 
-  const url = overlayUrl(c.overlayPort, c.overlayToken, widgets, c.overlayCredit !== false)
+  const url = overlayUrl(c.overlayPort, c.overlayToken, widgets, look)
   const shownUrl = showUrl ? url : url.replace(c.overlayToken, '•'.repeat(12))
   const twitchText =
     twitch.state === 'connected' ? t('verbunden mit #{channel}', { channel: twitch.channel }) : twitch.state === 'connecting' ? t('verbinde …') : twitch.state === 'error' ? twitch.message : t('aus')
@@ -118,11 +139,86 @@ export function StreamerWindow(): React.JSX.Element {
           >
             {copied ? t('Kopiert ✓') : t('Kopieren')}
           </button>
+          <button className="btn small ghost" disabled={!overlay.running || !widgets.length} onClick={() => api.openExternal(url)} title={t('Öffnet das Overlay im Browser – so siehst du, wie es aussieht')}>
+            {t('Ansehen')}
+          </button>
         </div>
-        <div className="dim tiny">{t('Tipp: &align=right setzt das Overlay nach rechts, &scale=1.5 macht es größer. Die URL nie im Stream zeigen.')}</div>
+        <div className="dim tiny">{t('Änderungen am Aussehen ändern die URL – danach in OBS neu einfügen. Die URL nie im Stream zeigen.')}</div>
+      </section>
+
+      <section className="st-sec">
+        <h4>{t('Aussehen des Overlays')}</h4>
+        <Pick
+          label={t('Position')}
+          value={look.pos}
+          onChange={(v) => patchLook({ pos: v })}
+          options={[
+            { v: 'tl', l: t('↖ oben links') },
+            { v: 'tr', l: t('↗ oben rechts') },
+            { v: 'bl', l: t('↙ unten links') },
+            { v: 'br', l: t('↘ unten rechts') }
+          ]}
+        />
+        <Pick
+          label={t('Größe')}
+          value={look.scale}
+          onChange={(v) => patchLook({ scale: v })}
+          options={[0.75, 1, 1.25, 1.5, 2].map((v) => ({ v, l: `${Math.round(v * 100)} %` }))}
+        />
+        <Pick
+          label={t('Breite')}
+          value={look.width}
+          onChange={(v) => patchLook({ width: v })}
+          options={[
+            { v: 300, l: t('schmal') },
+            { v: 380, l: t('normal') },
+            { v: 480, l: t('breit') }
+          ]}
+        />
+        <Pick
+          label={t('Stil')}
+          value={look.theme}
+          onChange={(v) => patchLook({ theme: v })}
+          options={[
+            { v: 'glass', l: t('Dunkles Glas') },
+            { v: 'light', l: t('Hell') },
+            { v: 'clear', l: t('Nur Text') }
+          ]}
+        />
+        {look.theme !== 'clear' && (
+          <Pick
+            label={t('Hintergrund')}
+            value={look.bg}
+            onChange={(v) => patchLook({ bg: v })}
+            options={[
+              { v: 40, l: t('zart') },
+              { v: 78, l: t('normal') },
+              { v: 95, l: t('kräftig') }
+            ]}
+          />
+        )}
+        <div className="row between opt">
+          <span>{t('Akzentfarbe')}</span>
+          <div className="row chips">
+            {ACCENTS.map((a) => (
+              <button key={a} className={`chip swatch${look.accent === a ? ' on' : ''}`} style={{ background: a, width: 22, height: 22, padding: 0, borderRadius: 99 }} title={a} aria-label={a} onClick={() => patchLook({ accent: a })} />
+            ))}
+            <input type="color" value={look.accent} title={t('Eigene Farbe')} aria-label={t('Eigene Farbe')} onChange={(e) => patchLook({ accent: e.target.value })} style={{ width: 26, height: 22, border: 0, padding: 0, background: 'none' }} />
+          </div>
+        </div>
+        <Pick
+          label={t('VibeDesk-Hinweis')}
+          value={look.credit}
+          onChange={(v) => patchLook({ credit: v })}
+          options={[
+            { v: 'badge', l: t('Plakette') },
+            { v: 'line', l: t('Zeile darunter') },
+            { v: 'off', l: t('aus') }
+          ]}
+        />
+        <div className="dim tiny">{t('Die Plakette ist ein kleines „VibeDesk“ in der Statuskarte – kein Wasserzeichen über dem Bild. So finden Zuschauer heraus, womit du arbeitest.')}</div>
         <Opt label={t('Kosten im Overlay zeigen')} on={c.overlayCost} onChange={(v) => patch({ overlayCost: v })} />
         <Opt label={t('Bash-Befehle im Overlay zeigen')} hint={t('sonst nur „Bash“')} on={c.overlayBash} onChange={(v) => patch({ overlayBash: v })} />
-        <Opt label={t('„made with VibeDesk“ unter dem Overlay')} hint={t('eine kleine Zeile – so finden Zuschauer VibeDesk')} on={c.overlayCredit !== false} onChange={(v) => patch({ overlayCredit: v })} />
         <div className="row">
           <span className="small">Port</span>
           <input
@@ -170,6 +266,12 @@ export function StreamerWindow(): React.JSX.Element {
         </div>
         {channel && !validChannel(normalizeChannel(channel)) && <div className="warn small">{t('Ungültiger Kanalname.')}</div>}
         <Opt label={t('Nur Mods, VIPs und Subs')} on={c.chatModsOnly} onChange={(v) => patch({ chatModsOnly: v })} />
+        <Opt
+          label={t('{cmd} zeigt eine Info-Karte', { cmd: INFO_COMMAND })}
+          hint={t('Fragt jemand „was ist das für eine IDE?“, tippt er {cmd} – das Overlay zeigt 20 Sekunden lang, womit du codest.', { cmd: INFO_COMMAND })}
+          on={c.infoCommand !== false}
+          onChange={(v) => patch({ infoCommand: v })}
+        />
         {queue.length > 0 && (
           <>
             <div className="warnbox small">{t('Lies jeden Vorschlag, bevor du ihn abschickst – Chat kann versuchen, Claude zu Unsinn zu überreden (z. B. Dateien löschen oder Secrets ausgeben).')}</div>

@@ -3,7 +3,7 @@ import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import { createStreamRedactor, redact } from '../../../shared/redact'
-import type { OverlayState } from '../../../shared/overlay'
+import { INFO_COMMAND, INFO_COOLDOWN_MS, type OverlayState } from '../../../shared/overlay'
 import { addSuggestion, normalizeChannel, parseIrcLine, sortSuggestions, validChannel, type Suggestion } from '../../../shared/twitch'
 import { bracketedPaste } from '../../../shared/paste'
 import type { OverlayStatus, StreamerSettings } from '../../../shared/types'
@@ -27,6 +27,8 @@ interface StreamerState {
   twitch: TwitchState
   queue: Suggestion[]
   shoutout: { by: string; text: string; ts: number } | null
+  /** wann zuletzt jemand !vibedesk geschrieben hat */
+  info: number | null
 }
 
 export const useStreamer = create<StreamerState>(() => ({
@@ -35,7 +37,8 @@ export const useStreamer = create<StreamerState>(() => ({
   curtain: false,
   twitch: { state: 'off' },
   queue: [],
-  shoutout: null
+  shoutout: null,
+  info: null
 }))
 
 const cfg = (): StreamerSettings | undefined => useSettings.getState().s?.streamer
@@ -105,7 +108,7 @@ export function buildOverlay(): OverlayState {
   const target = (tool: string, t: string): string => (tool === 'Bash' && !c?.overlayBash ? '' : shortTarget(redactText(t)))
   const feed = (w?.feed ?? []).slice(-5).reverse()
   const pending = [...(w?.feed ?? [])].reverse().find((f) => f.result === 'pending')
-  const { shoutout, queue } = useStreamer.getState()
+  const { shoutout, queue, info } = useStreamer.getState()
   return {
     status: active ? (w?.status ?? 'idle') : 'none',
     statusText: active ? (w?.status === 'working' ? t('Claude arbeitet') : t('Claude {status}', { status: STATUS_TEXT[w?.status ?? 'idle'] })) : t('Gleich geht’s los'),
@@ -120,7 +123,8 @@ export function buildOverlay(): OverlayState {
     cost: c?.overlayCost && today ? fmtUsd(today.costUsd) : '',
     shoutout,
     suggestions: queue.length,
-    lounge: Object.keys(useLounge.getState().peers).length
+    lounge: Object.keys(useLounge.getState().peers).length,
+    info: c?.infoCommand === false ? null : info
   }
 }
 
@@ -175,6 +179,12 @@ function connectTwitch(channel: string): void {
       } else if (r.type === 'msg') {
         const c = cfg()
         if (!c) continue
+        // !vibedesk: kurz zeigen, womit gestreamt wird – mit Abklingzeit, damit Chat es nicht zuspammt
+        if (c.infoCommand !== false && r.msg.text.trim().toLowerCase() === INFO_COMMAND) {
+          const now = Date.now()
+          if (now - (useStreamer.getState().info ?? 0) > INFO_COOLDOWN_MS) useStreamer.setState({ info: now })
+          continue
+        }
         const q = addSuggestion(useStreamer.getState().queue, r.msg, Date.now(), { command: c.chatCommand, modsOnly: c.chatModsOnly, cooldownMs: 60_000, max: 30 }, cooldowns, () => crypto.randomUUID())
         if (q !== useStreamer.getState().queue) useStreamer.setState({ queue: q })
       }
@@ -249,7 +259,7 @@ export function wireStreamer(): void {
   useStats.subscribe(schedulePush)
   useLounge.subscribe((s, p) => s.peers !== p.peers && schedulePush())
   useFocus.subscribe((s, p) => s.state !== p.state && schedulePush())
-  useStreamer.subscribe((s, p) => s.queue !== p.queue && schedulePush())
+  useStreamer.subscribe((s, p) => (s.queue !== p.queue || s.info !== p.info) && schedulePush())
   setInterval(schedulePush, 5000)
 
   // Strg+Umschalt+H: Vorhang – verdeckt sofort alles (auch als „Gleich zurück“-Bildschirm)

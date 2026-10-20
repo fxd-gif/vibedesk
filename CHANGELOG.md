@@ -7,6 +7,12 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Neu
+
+- **Streamer-Overlay anpassen:** Position (alle vier Ecken), Größe, Breite, Stil (dunkles Glas, hell, nur Text), Hintergrund und Akzentfarbe. Die Auswahl der Bausteine bleibt jetzt gespeichert, und „Ansehen“ öffnet das Overlay im Browser.
+- **Dezenter VibeDesk-Hinweis statt Wasserzeichen:** eine kleine Plakette in der Statuskarte (oder wie bisher eine Zeile darunter, oder aus).
+- **`!vibedesk` im Twitch-Chat** zeigt 20 Sekunden lang eine Info-Karte, womit du codest (abschaltbar, mit Abklingzeit).
+
 ### Verbessert
 
 - **Eingabefelder gut lesbar**: In mehrzeiligen Feldern (etwa „Zeig drauf“ in der Vorschau oder „Ändern …“ an der Plan-Karte) war der eingetippte Text fast unsichtbar – jetzt hat er dieselbe helle Farbe wie überall. Auf Englisch stehen dort außerdem englische Anführungszeichen, und der Hinweis beim Hineinziehen einer Datei ins Terminal ist jetzt übersetzt

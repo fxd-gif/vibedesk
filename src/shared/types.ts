@@ -44,7 +44,7 @@ export interface WindowRect {
 import type { Activity, PresenceConfig } from './presence'
 import type { AddonManifest, AddonPackage } from './addonFormat'
 import type { BlocklyProgram } from './addonBlocks'
-import type { OverlayState } from './overlay'
+import type { OverlayLook, OverlayState } from './overlay'
 import type { WebhookPayload, WebhookSettings } from './webhook'
 import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
@@ -311,8 +311,14 @@ export interface StreamerSettings {
   overlayCost: boolean
   /** Bash-Befehle im Overlay zeigen (sonst nur „Befehl“) */
   overlayBash: boolean
-  /** kleine Zeile „made with VibeDesk“ unter dem Overlay; fehlt das Feld (alte Settings), gilt an */
+  /** alt: kleine Zeile „made with VibeDesk“; false wird zu overlayLook.credit = 'off' */
   overlayCredit?: boolean
+  /** Aussehen des Overlays (Position, Größe, Design, Farbe …); fehlt es, gilt DEFAULT_LOOK */
+  overlayLook?: Partial<OverlayLook>
+  /** gewählte Overlay-Bausteine; fehlt es, sind alle an */
+  overlayWidgets?: string[]
+  /** !vibedesk im Twitch-Chat zeigt kurz eine Info-Karte im Overlay; fehlt es, gilt an */
+  infoCommand?: boolean
   overlayPort: number
   overlayToken: string
   twitchChannel: string

@@ -1,5 +1,6 @@
 // OBS-Browserquelle: transparente Seite mit Live-Status. Daten nur per textContent einsetzen – nie als HTML.
 import { getLang, t } from '../shared/i18n'
+import { INFO_SHOW_MS } from '../shared/overlay'
 
 /** Text sicher als JS-Literal ins Skript einsetzen */
 const js = (s: string): string => JSON.stringify(s).replace(/</g, '\\u003c')
@@ -8,13 +9,23 @@ export function overlayPage(nonce: string): string {
   return `<!doctype html>
 <html lang="${getLang()}"><head><meta charset="utf-8"><title>VibeDesk Overlay</title>
 <style>
-  :root { --bg: rgba(12,15,22,.78); --line: rgba(255,255,255,.1); --text: #e7ecf5; --dim: rgba(231,236,245,.6); --accent: #9fb8ff; }
+  :root { --bgc: 12,15,22; --bga: .78; --line: rgba(255,255,255,.1); --text: #e7ecf5; --strong: #fff; --dim: rgba(231,236,245,.6); --accent: #9fb8ff; --accent2: #c4b5fd; }
+  body.theme-light { --bgc: 255,255,255; --line: rgba(0,0,0,.08); --text: #161b26; --strong: #000; --dim: rgba(22,27,38,.62); }
   html, body { margin: 0; background: transparent; color: var(--text); font: 15px/1.4 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
   #root { position: fixed; bottom: 24px; left: 24px; display: flex; flex-direction: column; gap: 10px; width: 380px; transform-origin: bottom left; }
-  body.right #root { left: auto; right: 24px; transform-origin: bottom right; }
-  .card { background: var(--bg); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35); backdrop-filter: blur(14px); }
-  .card[hidden] { display: none; }
+  body.pos-br #root { left: auto; right: 24px; transform-origin: bottom right; }
+  body.pos-tl #root { bottom: auto; top: 24px; flex-direction: column-reverse; transform-origin: top left; }
+  body.pos-tr #root { bottom: auto; top: 24px; left: auto; right: 24px; flex-direction: column-reverse; transform-origin: top right; }
+  .card { background: rgba(var(--bgc), var(--bga)); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; box-shadow: 0 12px 40px rgba(0,0,0,.35); backdrop-filter: blur(14px); }
+  .card[hidden], [hidden] { display: none !important; }
+  body.theme-clear .card { background: none; border-color: transparent; box-shadow: none; backdrop-filter: none; }
+  body.theme-clear { text-shadow: 0 1px 3px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.6); }
   .head { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+  #s-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .brand { margin-left: auto; flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--dim); }
+  .brand i, .info-name i { width: 8px; height: 8px; border-radius: 2px; background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+  .info-name { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 700; }
+  .info-name i { width: 12px; height: 12px; border-radius: 3px; }
   .dot { width: 10px; height: 10px; border-radius: 50%; background: #8b93a7; flex: none; }
   .dot.working { background: #60a5fa; box-shadow: 0 0 0 0 rgba(96,165,250,.6); animation: pulse 1.6s infinite; }
   .dot.waiting { background: #facc15; }
@@ -25,30 +36,31 @@ export function overlayPage(nonce: string): string {
   .mono { font-family: 'Cascadia Code', Consolas, monospace; font-size: 12.5px; }
   .label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; display: flex; justify-content: space-between; }
   .bar { height: 5px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; margin-bottom: 8px; }
-  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), #c4b5fd); transition: width .4s; }
+  .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width .4s; }
   ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
   li { display: flex; gap: 8px; align-items: baseline; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   li span:last-child { overflow: hidden; text-overflow: ellipsis; }
   li.completed { color: var(--dim); text-decoration: line-through; }
-  li.in_progress { color: #fff; font-weight: 600; }
+  li.in_progress { color: var(--strong); font-weight: 600; }
   .ok { color: #4ade80; } .fail { color: #f87171; } .pending { color: var(--accent); } .stopped { color: var(--dim); }
   .big { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
   .row { display: flex; gap: 18px; }
   .row > div { flex: 1; }
-  .shout { border-color: rgba(196,181,253,.5); animation: pop .5s cubic-bezier(.2,.9,.3,1.3); }
-  .shout b { color: #c4b5fd; }
+  .shout { border-color: var(--accent2); animation: pop .5s cubic-bezier(.2,.9,.3,1.3); }
+  .shout b { color: var(--accent2); }
   @keyframes pop { from { transform: translateY(14px) scale(.96); opacity: 0; } }
   .off { opacity: .55; }
   .credit { font-size: 11px; color: var(--dim); padding-left: 4px; letter-spacing: .02em; text-shadow: 0 1px 6px rgba(0,0,0,.6); }
 </style></head>
 <body>
 <div id="root">
+  <div class="card" id="w-info" hidden><div class="label"><span>${t('Womit hier gecodet wird')}</span></div><div class="info-name"><i></i>VibeDesk</div><div class="sub">${t('Die ruhige Vibe-Coding-IDE für Claude Code · kostenlos & Open Source')}</div><div class="sub mono">fxd-gif.github.io/vibedesk</div></div>
   <div class="card" id="w-chat" hidden><div class="label"><span>${t('Chat-Vorschlag übernommen')}</span></div><div><b id="sh-by"></b> <span id="sh-text"></span></div></div>
   <div class="card" id="w-focus" hidden><div class="label"><span id="fo-label">${t('Fokus')}</span></div><div class="big" id="fo-left"></div></div>
   <div class="card" id="w-todos" hidden><div class="label"><span>Plan</span><span id="td-count"></span></div><div class="bar"><i id="td-bar"></i></div><ul id="td-list"></ul></div>
   <div class="card" id="w-feed" hidden><div class="label"><span>Live</span></div><ul id="fd-list" class="mono"></ul></div>
   <div class="card" id="w-stats" hidden><div class="row"><div><div class="label">Session</div><div class="big" id="st-time">–</div></div><div><div class="label">Tokens</div><div class="big" id="st-tokens">–</div></div><div id="st-cost-box"><div class="label">${t('Kosten')}</div><div class="big" id="st-cost">–</div></div></div></div>
-  <div class="card" id="w-status" hidden><div class="head"><span class="dot" id="s-dot"></span><span id="s-text">${t('Verbinde …')}</span></div><div class="sub mono" id="s-current"></div></div>
+  <div class="card" id="w-status" hidden><div class="head"><span class="dot" id="s-dot"></span><span id="s-text">${t('Verbinde …')}</span><span class="brand" id="brand"><i></i>VibeDesk</span></div><div class="sub mono" id="s-current"></div></div>
   <div class="credit" id="credit">made with VibeDesk · fxd-gif.github.io/vibedesk</div>
 </div>
 <script nonce="${nonce}">
@@ -57,10 +69,25 @@ export function overlayPage(nonce: string): string {
   var all = ['status', 'todos', 'feed', 'focus', 'stats', 'chat'];
   var want = (q.get('w') || all.join(',')).split(',').filter(function (w) { return all.indexOf(w) >= 0; });
   var scale = Math.min(3, Math.max(0.5, parseFloat(q.get('scale') || '1') || 1));
-  if (q.get('align') === 'right') document.body.classList.add('right');
-  if (q.get('credit') === '0') document.getElementById('credit').hidden = true;
   var root = document.getElementById('root');
+  var css = document.documentElement.style;
   root.style.transform = 'scale(' + scale + ')';
+  // align=right ist die alte Schreibweise von pos=br
+  var pos = q.get('pos') || (q.get('align') === 'right' ? 'br' : 'bl');
+  document.body.classList.add('pos-' + (['bl', 'br', 'tl', 'tr'].indexOf(pos) >= 0 ? pos : 'bl'));
+  var theme = q.get('theme');
+  if (theme === 'light' || theme === 'clear') document.body.classList.add('theme-' + theme);
+  var accent = q.get('accent') || '';
+  if (/^[0-9a-fA-F]{6}$/.test(accent)) { css.setProperty('--accent', '#' + accent); css.setProperty('--accent2', '#' + accent); }
+  var width = parseInt(q.get('width') || '', 10);
+  if (width >= 260 && width <= 560) root.style.width = width + 'px';
+  var bg = parseInt(q.get('bg') || '', 10);
+  if (bg >= 0 && bg <= 100) css.setProperty('--bga', String(bg / 100));
+  // credit=0 ist die alte Schreibweise von credit=off
+  var credit = q.get('credit') || 'badge';
+  document.getElementById('credit').hidden = credit !== 'line';
+  document.getElementById('brand').hidden = credit !== 'badge';
+  var INFO_MS = ${INFO_SHOW_MS};
   var $ = function (id) { return document.getElementById(id); };
   var state = null;
   var PH = { work: ${js(t('Fokus'))}, short: ${js(t('Kurze Pause'))}, long: ${js(t('Lange Pause'))} };
@@ -102,6 +129,7 @@ export function overlayPage(nonce: string): string {
     show('feed', feed.length > 0);
     list($('fd-list'), feed, function (f) { return li('', MARK[f.result], f.result, f.tool + (f.target ? ' · ' + f.target : '')); });
 
+    $('w-info').hidden = !(s.info && Date.now() - s.info < INFO_MS);
     show('chat', !!s.shoutout && Date.now() - s.shoutout.ts < 25000);
     if (s.shoutout) { $('sh-by').textContent = '@' + s.shoutout.by; $('sh-text').textContent = QUOTE.replace('{text}', function () { return s.shoutout.text; }); }
 
@@ -123,10 +151,12 @@ export function overlayPage(nonce: string): string {
     } else show('focus', false);
     $('st-time').textContent = s.sessionStart ? clock(Date.now() - s.sessionStart) : '–';
     if (s.shoutout && Date.now() - s.shoutout.ts > 25000) show('chat', false);
+    if (s.info && Date.now() - s.info > INFO_MS) $('w-info').hidden = true;
   }
   setInterval(tick, 1000);
 
   var last = '';
+  var lastInfo = 0;
   function connect() {
     var es = new EventSource('/events?token=' + encodeURIComponent(q.get('token') || ''));
     es.onmessage = function (e) {
@@ -134,6 +164,8 @@ export function overlayPage(nonce: string): string {
       if (state && state.focus) { focusBase = state.focus.leftMs; focusAt = Date.now(); }
       var key = state && state.shoutout ? state.shoutout.ts : '';
       if (key && key !== last) { last = key; var c = $('w-chat'); c.classList.remove('shout'); void c.offsetWidth; c.classList.add('shout'); }
+      var ik = state && state.info ? state.info : 0;
+      if (ik && ik !== lastInfo) { lastInfo = ik; var n = $('w-info'); n.classList.remove('shout'); void n.offsetWidth; n.classList.add('shout'); }
       root.classList.remove('off');
       render();
     };
