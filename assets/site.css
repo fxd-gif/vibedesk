@@ -759,3 +759,18 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .yt-btn svg { transition: transform .15s ease; filter: drop-shadow(0 6px 16px rgba(0,0,0,.5)); }
 .yt-note { margin-top: 10px; text-align: center; font-size: 13px; color: var(--ink-2); }
 .nx-planned { color: #f5c542 !important; }
+
+/* ---------- Ratgeber-Artikel ---------- */
+.prose { max-width: 760px; margin: 0 auto; }
+.prose-meta { color: var(--ink-2); font-size: 14px; margin-bottom: 8px; }
+.prose h2 { margin-top: 44px; font-size: clamp(24px, 3vw, 30px); font-weight: 600; letter-spacing: -0.02em; }
+.prose p, .prose li { margin-top: 14px; color: var(--ink-2); font-size: 17px; line-height: 1.7; }
+.prose p b, .prose li b { color: var(--ink); }
+.prose a { color: var(--accent); }
+.prose ul { padding-left: 20px; }
+.prose pre { margin-top: 16px; padding: 16px 18px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--card); overflow-x: auto; }
+.prose pre code { font-family: var(--mono); font-size: 14px; line-height: 1.6; color: var(--ink); white-space: pre; }
+.prose :not(pre) > code { font-family: var(--mono); font-size: .9em; padding: 1px 6px; border-radius: 6px; background: rgba(255,255,255,.06); color: var(--ink); }
+.prose .prose-note { font-size: 14px; }
+.prose .check { list-style: none; padding-left: 0; }
+.prose .check li::before { content: "✓ "; color: #4ade80; }

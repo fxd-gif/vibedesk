@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>How to run several Claude Code sessions at once on Windows – VibeDesk</title>
+  <meta name="description" content="Windows Terminal tabs, git worktrees and a notification hook: how to run several Claude Code sessions side by side on Windows and always know which one is waiting for you.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/guides/claude-code-multiple-sessions-windows/">
+  <meta property="og:title" content="How to run several Claude Code sessions at once on Windows">
+  <meta property="og:description" content="Windows Terminal tabs, git worktrees and a notification hook: how to run several Claude Code sessions side by side on Windows and always know which one is waiting for you.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="VibeDesk: which Claude is waiting for you? Dock with session dots and a permission card.">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/guides/claude-code-multiple-sessions-windows/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script src="../../assets/site.js" defer></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How to run several Claude Code sessions at once on Windows","description":"Windows Terminal tabs, git worktrees and a notification hook: how to run several Claude Code sessions side by side on Windows and always know which one is waiting for you.","datePublished":"2026-10-20","author":{"@type":"Person","name":"fxd-gif"},"image":"https://fxd-gif.github.io/vibedesk/img/og.jpg","mainEntityOfPage":"https://fxd-gif.github.io/vibedesk/guides/claude-code-multiple-sessions-windows/"}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../../"><img src="../../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../../sessions/">Sessions</a>
+        <a href="../../phone/">Phone</a>
+        <a href="../../brain/">Brain</a>
+        <a href="../../merge-studio/">Merge Studio</a>
+        <a href="../../ambience/">Ambience</a>
+        <a href="../../calm/">Calm</a>
+        <a href="../../tools/">Tools</a>
+        <a href="../../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../../brain/">Brain<small>Project memory</small></a>
+            <a href="../../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../../">VibeDesk</a><span>/</span><span>Guides</span></p>
+          <h1>How to run several Claude Code sessions at once on Windows</h1>
+          <p class="lead">Frontend in one terminal, API in another, a side project in a third. Here is how to set that up with what Windows already has – and how to always know which session is waiting for you.</p>
+        </div>
+      </div>
+    </div>
+
+    <section style="padding-top:0">
+      <div class="wrap prose">
+        <p class="prose-meta">Updated 20 October 2026 · 6 min read</p>
+
+        <h2>Why more than one session?</h2>
+        <p>Claude Code works best when it can focus on one task in one folder. As soon as you work on two things – a frontend and its API, or a bug fix next to a new feature – it is faster to give each its own session than to keep switching context in one. The catch: you now have to watch several terminals, and a session that is waiting for a <i>yes</i> just sits there until you notice.</p>
+
+        <h2>1. Windows Terminal: one tab per project</h2>
+        <p>Windows Terminal is installed on Windows 11 and free on Windows 10. Open a tab per project and start Claude there:</p>
+        <pre><code>wt -d C:\Projects\shop-frontend cmd /k claude ; nt -d C:\Projects\api-server cmd /k claude</code></pre>
+        <p class="prose-note">Run it from the Run dialog (<kbd>Win</kbd> + <kbd>R</kbd>) or cmd. In PowerShell, escape the separator as <code>`;</code>.</p>
+        <p>That opens two tabs, each already in its folder with Claude running. Two tips:</p>
+        <ul>
+          <li><b>Name your tabs</b> (right-click → Rename tab) so you can tell them apart at a glance.</li>
+          <li><b>Split panes</b> with <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>+</kbd> if you want to see two sessions side by side.</li>
+        </ul>
+
+        <h2>2. Same repo? Use a git worktree per session</h2>
+        <p>Two sessions editing the same folder will step on each other's changes. Git worktrees give each session its own copy of the repo on its own branch:</p>
+        <pre><code>git worktree add ..\shop-login feature/login
+git worktree add ..\shop-cart  feature/cart</code></pre>
+        <p>Start one Claude session in each folder. When both are done, merge the branches as usual and remove the worktrees with <code>git worktree remove ..\shop-login</code>.</p>
+
+        <h2>3. Know when a session waits for you</h2>
+        <p>This is the part that costs the most time: a session asks for permission, you are looking at another tab, and nothing happens for fifteen minutes. Claude Code has <b>hooks</b> for exactly this. A <code>Notification</code> hook runs whenever Claude needs your attention. Add this to <code>%USERPROFILE%\.claude\settings.json</code> to hear a short beep:</p>
+        <pre><code>{
+  "hooks": {
+    "Notification": [
+      { "hooks": [ { "type": "command", "command": "powershell -NoProfile -Command [console]::beep(880,250)" } ] }
+    ]
+  }
+}</code></pre>
+        <p>A beep tells you <i>that</i> something waits, not <i>which</i> session. With tab names you can usually find it quickly; with four or more sessions it gets harder.</p>
+
+        <h2>4. Keep an eye on your limits</h2>
+        <p>Several sessions on a Pro or Max plan use up your five-hour window faster. Keep long, expensive tasks in one session and give the others smaller jobs. If you hit the limit, the message tells you when it resets – a good moment for a break rather than a reason to babysit the terminal.</p>
+
+        <h2>5. Or let a desktop do the watching: VibeDesk</h2>
+        <p>Full disclosure: this site belongs to VibeDesk, a free and open-source app built for exactly this setup. It runs the real Claude Code CLI and adds the overview around it:</p>
+        <ul>
+          <li><b>One dot per session</b> in the dock – green working, yellow waiting for you, blue done.</li>
+          <li><b>Permission requests as cards</b> – Allow, Always or Deny in one click, also from your phone.</li>
+          <li><b>Merge Studio</b> gives parallel sessions their own worktrees and predicts conflicts before you merge.</li>
+          <li><b>After a usage limit</b> it reads the reset time and lets Claude continue on its own.</li>
+        </ul>
+        <p>See it in the <a href="https://www.youtube.com/watch?v=SLLYiK34I88">5-minute tour</a> or read more about <a href="../../sessions/">sessions and approvals</a>.</p>
+
+        <h2>Checklist</h2>
+        <ul class="check">
+          <li>One terminal tab (or pane) per project, named.</li>
+          <li>Same repo? One git worktree per session.</li>
+          <li>A <code>Notification</code> hook so a waiting session gets your attention.</li>
+          <li>Big tasks in one session, small ones in the others.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://github.com/fxd-gif/vibedesk/releases/latest"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../../"><img src="../../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../../sessions/">Sessions</a></li><li><a href="../../phone/">Phone companion</a></li><li><a href="../../brain/">The brain</a></li><li><a href="../../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../../ambience/">Ambience & music</a></li><li><a href="../../calm/">Calm by default</a></li><li><a href="../../tools/">Tools</a></li><li><a href="../../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://github.com/fxd-gif/vibedesk/releases/latest">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li><li><a href="../../guides/claude-code-multiple-sessions-windows/">Guide: parallel sessions</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
