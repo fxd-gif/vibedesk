@@ -17,7 +17,6 @@ Rain on the window, lofi in your ears, and every Claude Code session on one Wind
 
 <br/><br/>
 
-<!-- hero.gif: once .github/assets/hero.gif exists, change the src below to .github/assets/hero.gif -->
 <img src=".github/assets/hero.jpg" alt="VibeDesk in Zen mode: one Claude Code session in front of a rainy window, the other sessions as small pills at the top" />
 
 </div>
@@ -35,6 +34,8 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 - **See every Claude Code session at a glance:** which one is working, which one waits for you, which one is done – and answer permission requests as cards, on your PC or your phone.
 - **Let sessions work in parallel, then merge safely.** Merge Studio gives each session its own worktree, predicts conflicts and always sets a checkpoint first.
 - **A calm place to sit.** Rain on the window, lofi or Spotify, a focus timer – and a desktop that stays quiet until you need more.
+
+<p align="center"><img src=".github/assets/hero.gif" width="800" alt="Every Claude Code session gets a dot in the dock: green means working, yellow means waiting for you, blue means done" /></p>
 
 ## Features
 
