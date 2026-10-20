@@ -13,7 +13,7 @@ Rain on the window, lofi in your ears, and every Claude Code session on one Wind
 [![License: MIT](https://img.shields.io/badge/license-MIT-4ade80?style=flat-square)](LICENSE)
 ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0b0f17?style=flat-square&logo=windows&logoColor=white)
 
-<a href="https://github.com/fxd-gif/vibedesk/releases/latest"><b>Download for Windows</b></a>
+<a href="https://github.com/fxd-gif/vibedesk/releases/latest"><b>Download for Windows</b></a> · <a href="https://www.youtube.com/watch?v=SLLYiK34I88">▶ 5-minute tour</a>
 
 <br/><br/>
 
@@ -250,6 +250,19 @@ VibeDesk is free and open source (MIT). You only need your own Claude subscripti
 
 **Is the interface available in English?**
 Yes. VibeDesk follows your Windows language (German or English). Switch it in the More menu under "Sprache · Language".
+
+## Next release: VibeDesk 2.0
+
+We ship one bigger, tested release at a time instead of many small ones. **VibeDesk 2.0 lands on Sunday, 1 November 2026** – countdown and plan on the [website](https://fxd-gif.github.io/vibedesk/#next).
+
+Planned (👍 the ones you want most):
+
+- [Session wrap-up: summary, commit and brain update when a session ends](https://github.com/fxd-gif/vibedesk/issues/1)
+- [Pull requests from the Git window](https://github.com/fxd-gif/vibedesk/issues/2)
+- [Tray status: see every session's dot while VibeDesk is minimized](https://github.com/fxd-gif/vibedesk/issues/3)
+- [Budget per project](https://github.com/fxd-gif/vibedesk/issues/4)
+
+Missing something? [Wish for a feature](https://github.com/fxd-gif/vibedesk/issues/new?template=feature_request.yml) – the wishes with the most 👍 move into the next release.
 
 ## Feedback and support
 
