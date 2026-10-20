@@ -80,6 +80,12 @@
         }
         tick()
         setInterval(tick, 1000)
+        const pill = $('[data-next-pill]')
+        const days = Math.floor((at - Date.now()) / 86400000)
+        if (pill && at > Date.now()) {
+          pill.textContent = days > 0 ? `VibeDesk ${n.version} in ${days} day${days === 1 ? "" : "s"} →` : `VibeDesk ${n.version} lands today →`
+          pill.hidden = false
+        }
       })
       .catch(() => {})
     // Offene Wünsche, sortiert nach 👍 (öffentliche GitHub-API, ohne Anmeldung)
