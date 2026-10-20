@@ -55,6 +55,45 @@
       .catch(() => {})
   }
 
+  // ---------- Next release: countdown, planned features, most wanted wishes ----------
+  const nextCount = $('[data-next-count]')
+  if (nextCount) {
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+    const issueUrl = (n) => 'https://github.com/fxd-gif/vibedesk/issues/' + n
+    fetch('next.json')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((n) => {
+        const at = new Date(n.date)
+        $('[data-next-version]').textContent = n.version
+        $('[data-next-date]').textContent = at.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
+        $('[data-next-features]').innerHTML = n.features
+          .map((f) => `<li><a href="${issueUrl(f.issue)}"><b>${esc(f.title)}</b></a><small>${esc(f.text)}</small></li>`)
+          .join('')
+        const cell = (k) => nextCount.querySelector(`[data-cd="${k}"]`)
+        const tick = () => {
+          const left = Math.max(0, at - Date.now())
+          const s = Math.floor(left / 1000)
+          cell('d').textContent = Math.floor(s / 86400)
+          cell('h').textContent = String(Math.floor(s / 3600) % 24).padStart(2, '0')
+          cell('m').textContent = String(Math.floor(s / 60) % 60).padStart(2, '0')
+          cell('s').textContent = String(s % 60).padStart(2, '0')
+        }
+        tick()
+        setInterval(tick, 1000)
+      })
+      .catch(() => {})
+    // Offene Wünsche, sortiert nach 👍 (öffentliche GitHub-API, ohne Anmeldung)
+    fetch('https://api.github.com/search/issues?q=repo:fxd-gif/vibedesk+is:issue+is:open+label:enhancement+-label:planned&sort=reactions-%2B1&order=desc&per_page=5')
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((j) => {
+        if (!j.items || !j.items.length) return
+        $('[data-next-wishes]').innerHTML = j.items
+          .map((i) => `<li><a href="${esc(i.html_url)}"><span class="nx-votes">👍 ${i.reactions ? i.reactions['+1'] : 0}</span><b>${esc(i.title)}</b></a></li>`)
+          .join('')
+      })
+      .catch(() => {})
+  }
+
   // ---------- Visibility helpers ----------
   /** Calls cb(true|false) when the element enters/leaves the viewport */
   function watch(el, cb, margin = '80px') {

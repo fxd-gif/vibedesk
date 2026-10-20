@@ -1,0 +1,11 @@
+{
+  "version": "2.0",
+  "date": "2026-11-01T17:00:00Z",
+  "milestone": "https://github.com/fxd-gif/vibedesk/milestone/1",
+  "features": [
+    { "title": "Session wrap-up", "text": "When Claude finishes, get a short summary, a suggested commit and the key decisions saved to the brain.", "issue": 1 },
+    { "title": "Pull requests from the Git window", "text": "Branch, push and open a PR without leaving VibeDesk – Claude writes the description.", "issue": 2 },
+    { "title": "Tray status", "text": "See which session is waiting for you even while VibeDesk is minimized.", "issue": 3 },
+    { "title": "Budget per project", "text": "A quiet heads-up at 75 % and 100 % of the token or cost budget you set.", "issue": 4 }
+  ]
+}
