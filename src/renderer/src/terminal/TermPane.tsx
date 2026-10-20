@@ -71,6 +71,7 @@ export function TermPane({ id, testId, focused, label }: { id: string; testId?: 
   return (
     <div
       className={`term-pane${dragging ? ' drop' : ''}`}
+      data-drop={t('Loslassen fügt den Pfad ein')}
       onContextMenu={(e) => {
         // wie im Windows Terminal: Rechtsklick kopiert die Markierung, ohne Markierung fügt er ein
         e.preventDefault()

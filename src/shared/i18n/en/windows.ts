@@ -172,6 +172,7 @@ const dict: Record<string, string> = {
   'Was soll Claude daran ändern? z. B. „größer und in Grün“': 'What should Claude change about it? e.g. “bigger and green”',
   'An Claude': 'Send to Claude',
   '„{text}“': '“{text}”',
+  'Loslassen fügt den Pfad ein': 'Drop to insert the path',
   'Seite nicht erreichbar': 'Page not reachable',
   Vorschau: 'Preview',
   Zurück: 'Back',

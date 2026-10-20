@@ -569,7 +569,7 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
 .term-pane { position: absolute; inset: 0; }
 .term-panes.split .term-pane { top: 18px; }
 .term-pane-label { position: absolute; top: -18px; left: 0; font-size: 10.5px; letter-spacing: .02em; color: var(--text-dim); }
-.term-pane.drop::after { content: 'Loslassen fügt den Pfad ein'; position: absolute; inset: 0; display: grid; place-items: center; border: 1px dashed rgba(159, 184, 255, .55); border-radius: 10px; background: rgba(20, 26, 44, .55); color: #c7d4ff; font-size: 13px; pointer-events: none; }
+.term-pane.drop::after { content: attr(data-drop); position: absolute; inset: 0; display: grid; place-items: center; border: 1px dashed rgba(159, 184, 255, .55); border-radius: 10px; background: rgba(20, 26, 44, .55); color: #c7d4ff; font-size: 13px; pointer-events: none; }
 .term-search { position: absolute; top: 6px; right: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 5px 6px 5px 10px; border-radius: 10px; background: rgba(12, 15, 22, .94); border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0, 0, 0, .4); }
 .term-search .field { width: 180px; }
 .term-search-count { min-width: 74px; text-align: right; font-variant-numeric: tabular-nums; }

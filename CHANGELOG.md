@@ -9,7 +9,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Verbessert
 
-- **Eingabefelder gut lesbar**: In mehrzeiligen Feldern (etwa „Zeig drauf“ in der Vorschau oder „Ändern …“ an der Plan-Karte) war der eingetippte Text fast unsichtbar – jetzt hat er dieselbe helle Farbe wie überall. Auf Englisch stehen dort außerdem englische Anführungszeichen
+- **Eingabefelder gut lesbar**: In mehrzeiligen Feldern (etwa „Zeig drauf“ in der Vorschau oder „Ändern …“ an der Plan-Karte) war der eingetippte Text fast unsichtbar – jetzt hat er dieselbe helle Farbe wie überall. Auf Englisch stehen dort außerdem englische Anführungszeichen, und der Hinweis beim Hineinziehen einer Datei ins Terminal ist jetzt übersetzt
 
 ## 1.9.0
 
