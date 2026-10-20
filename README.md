@@ -18,7 +18,7 @@ Rain on the window, lofi in your ears, and every Claude Code session on one Wind
 <br/><br/>
 
 <!-- hero.gif: once .github/assets/hero.gif exists, change the src below to .github/assets/hero.gif -->
-<img src=".github/assets/hero.jpg" alt="VibeDesk: one Claude Code session in front of a rainy window, with a small dock" />
+<img src=".github/assets/hero.jpg" alt="VibeDesk in Zen mode: one Claude Code session in front of a rainy window, the other sessions as small pills at the top" />
 
 </div>
 

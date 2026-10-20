@@ -18,7 +18,7 @@ Regen an der Scheibe, Lofi im Ohr – und alle Claude-Code-Sessions auf einem Wi
 <br/><br/>
 
 <!-- hero.gif: sobald .github/assets/hero.gif existiert, src unten auf .github/assets/hero.gif ändern -->
-<img src=".github/assets/hero.jpg" alt="VibeDesk: eine Claude-Code-Session vor einer verregneten Scheibe, darunter ein kleines Dock" />
+<img src=".github/assets/hero-de.jpg" alt="VibeDesk: eine Claude-Code-Session vor einer verregneten Scheibe, darunter ein kleines Dock" />
 
 </div>
 
@@ -124,8 +124,8 @@ In den Terminals läuft das echte Claude Code. VibeDesk legt den Blick darum: wa
 
 <table>
   <tr>
-    <td><img src=".github/assets/focus.jpg" alt="Fokus-Timer vor der Tokio-Szene" /></td>
-    <td><img src=".github/assets/welcome.jpg" alt="Willkommens-Rundgang" /></td>
+    <td><img src=".github/assets/focus-de.jpg" alt="Fokus-Timer vor der Tokio-Szene" /></td>
+    <td><img src=".github/assets/welcome-de.jpg" alt="Willkommens-Rundgang" /></td>
   </tr>
 </table>
 
