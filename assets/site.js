@@ -55,6 +55,19 @@
       .catch(() => {})
   }
 
+  // ---------- YouTube erst nach Klick laden (youtube-nocookie, kein Tracking vorher) ----------
+  for (const box of document.querySelectorAll('[data-yt]')) {
+    const btn = box.querySelector('.yt-play')
+    btn.addEventListener('click', () => {
+      const f = document.createElement('iframe')
+      f.src = `https://www.youtube-nocookie.com/embed/${box.dataset.yt}?autoplay=1&rel=0`
+      f.title = btn.getAttribute('aria-label') || 'YouTube video'
+      f.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen'
+      f.allowFullscreen = true
+      btn.replaceWith(f)
+    })
+  }
+
   // ---------- Next release: countdown, planned features, most wanted wishes ----------
   const nextCount = $('[data-next-count]')
   if (nextCount) {
