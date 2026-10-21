@@ -12,6 +12,7 @@ Rain on the window, lofi in your ears, and every Claude Code session on one Wind
 [![Release](https://img.shields.io/github/v/release/fxd-gif/vibedesk?style=flat-square&color=9fb8ff&label=release)](https://github.com/fxd-gif/vibedesk/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-4ade80?style=flat-square)](LICENSE)
 ![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0b0f17?style=flat-square&logo=windows&logoColor=white)
+[![M8ven Score](https://m8ven.ai/badge/mcp/fxd-gif-vibedesk-nx57jc?v=33057809218db5425ec5d15bc9cbb2b6)](https://m8ven.ai/mcp/fxd-gif-vibedesk-nx57jc?s=readme)
 
 <a href="https://github.com/fxd-gif/vibedesk/releases/latest"><b>Download for Windows</b></a> · <a href="https://www.youtube.com/watch?v=SLLYiK34I88">▶ 5-minute tour</a>
 
