@@ -132,6 +132,10 @@ const dict: Record<string, string> = {
   '{name}: {n} % verbraucht': '{name}: {n} % used',
   'Setzt sich um {time} zurück.': 'Resets at {time}.',
   'Abo {n} %': 'Plan {n} %',
+
+  // Session-Abschluss
+  'Claude hat eine Datei geändert.': 'Claude changed one file.',
+  'Claude hat {n} Dateien geändert.': 'Claude changed {n} files.',
 }
 
 export default dict

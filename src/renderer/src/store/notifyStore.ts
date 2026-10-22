@@ -1,5 +1,5 @@
 // Benachrichtigungszentrale: Verlauf, Karten unten rechts und Windows-Benachrichtigungen an einem Ort.
-import { t } from '../../../shared/i18n'
+import { t, tn } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import type { NoticeKind, SessionStatus } from '../../../shared/types'
@@ -9,6 +9,7 @@ import { termWin, useSessions } from './sessionStore'
 import { useSettings } from './settingsStore'
 import { useUi } from './uiStore'
 import { useWorkflow } from './workflowStore'
+import { openWrapUp, useWrapUp } from './wrapUpStore'
 
 export interface NoticeAction {
   label: string
@@ -151,7 +152,20 @@ function onStatus(id: string, before: SessionStatus | undefined, now: SessionSta
       sessionOnTop(id)
     )
   } else if (now === 'done' && before === 'working') {
-    notify({ kind: 'done', key: `done:${id}`, title: t('{name} ist fertig', { name }), body: t('Claude hat die Aufgabe abgeschlossen.'), actions: [open], onOpen: () => showSession(id) }, sessionOnTop(id))
+    // Runde mit Änderungen: Abschluss (Zusammenfassung, Commit) gleich auf der Karte anbieten
+    const files = useWrapUp.getState().turns[id]?.files.length ?? 0
+    const wrap = files > 0 && useSettings.getState().s?.wrapUp !== false
+    notify(
+      {
+        kind: 'done',
+        key: `done:${id}`,
+        title: t('{name} ist fertig', { name }),
+        body: wrap ? tn(files, 'Claude hat eine Datei geändert.', 'Claude hat {n} Dateien geändert.') : t('Claude hat die Aufgabe abgeschlossen.'),
+        actions: wrap ? [{ label: t('Abschluss'), primary: true, run: () => openWrapUp(id) }, { ...open, primary: false }] : [open],
+        onOpen: () => showSession(id)
+      },
+      sessionOnTop(id)
+    )
   } else if (now === 'error') {
     // beim bewussten Schließen verschwindet die Session gleich – dann nichts melden
     setTimeout(() => {

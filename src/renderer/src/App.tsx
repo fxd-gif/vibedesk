@@ -59,6 +59,8 @@ import { MoreMenu } from './desktop/MoreMenu'
 import { dockPlan, earned, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
 import { useBrainUsed, wireBrainActivity } from './store/brainActivity'
+import { wireWrapUp } from './store/wrapUpStore'
+import { WrapUpDialog } from './windows/WrapUpDialog'
 import { hasEdits } from './store/workflowReducer'
 import { wireCalm } from './desktop/calm'
 import { ZenBar } from './desktop/ZenBar'
@@ -179,6 +181,7 @@ export default function App(): React.JSX.Element {
     wireQueue()
     wireQuick()
     wireBrainActivity()
+    wireWrapUp()
     wirePermissions()
     wireCompanion()
     wireCalm()
@@ -369,6 +372,7 @@ export default function App(): React.JSX.Element {
       <InstallDialog />
       <AskToast />
       <ShareDialogs />
+      <WrapUpDialog />
       <DialogHost />
       <About />
       <Curtain />

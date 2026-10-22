@@ -4,6 +4,7 @@ import { execFile, spawn, type ChildProcess } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import { AUTH_MARK, LOG_FORMAT, addedFileDiff, cleanMessage, commitPrompt, parseLog, parseStatus, webUrl, type GitCommit, type GitState, type GitTools, validBranchName } from '../shared/git'
+import { parseNumstat, type WrapChanges, type WrapFile } from '../shared/wrapUp'
 
 const MAX_OUT = 8 * 1024 * 1024
 const DIFF_MAX = 400_000
@@ -256,6 +257,31 @@ export class GitService {
       if (this.d.trash) await this.d.trash(abs)
       else fs.rmSync(abs, { force: true, recursive: true })
     }
+  }
+
+  /** Alles, was „Alles committen“ mitnehmen würde – mit Zeilenzahlen (Session-Abschluss) */
+  async changes(cwd: string): Promise<WrapChanges> {
+    const st = await this.status(cwd)
+    if (!st.repo) return { repo: false }
+    const numstat = parseNumstat(st.unborn ? '' : await this.git(cwd, ['-c', 'core.quotepath=off', 'diff', 'HEAD', '--numstat', '-z', '--no-renames']))
+    const files: WrapFile[] = st.files.map((f) => {
+      const n = numstat.get(f.path)
+      if (n) return { path: f.path, ...n, untracked: f.untracked }
+      // neue Datei: Zeilen selbst zählen (kleine Textdateien)
+      let add: number | null = null
+      try {
+        const abs = path.join(cwd, safeRel(cwd, f.path))
+        const size = fs.statSync(abs).size
+        if (size <= FILE_MAX) {
+          const buf = fs.readFileSync(abs)
+          if (!buf.includes(0)) add = buf.length ? buf.toString('utf8').split('\n').length - (buf[buf.length - 1] === 10 ? 1 : 0) : 0
+        }
+      } catch {
+        // gelöscht oder gesperrt – ohne Zahl
+      }
+      return { path: f.path, add, del: f.untracked ? 0 : null, untracked: f.untracked }
+    })
+    return { repo: true, branch: st.branch, files }
   }
 
   async commit(cwd: string, message: string, all: boolean): Promise<string> {

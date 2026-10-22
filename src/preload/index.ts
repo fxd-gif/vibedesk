@@ -178,6 +178,12 @@ const api: VibedeskApi = {
     aiMessage: (id) => ipcRenderer.invoke('git:aiMessage', id),
     openWeb: (url) => ipcRenderer.send('git:openWeb', url)
   },
+  wrapUp: {
+    summary: (transcript) => ipcRenderer.invoke('wrapup:summary', transcript),
+    changes: (id) => ipcRenderer.invoke('wrapup:changes', id),
+    aiMessage: (id) => ipcRenderer.invoke('wrapup:aiMessage', id),
+    commit: (id, message) => ipcRenderer.invoke('wrapup:commit', id, message)
+  },
   merge: {
     overview: (id) => ipcRenderer.invoke('merge:overview', id),
     fileDiff: (id, wt, file) => ipcRenderer.invoke('merge:fileDiff', id, wt, file),

@@ -72,6 +72,9 @@ function General(): React.JSX.Element | null {
       <Row label={t('Fenster automatisch aufräumen')} hint={t('Nach 15 Minuten ohne Benutzung wandern Fenster ins Dock')}>
         <Toggle on={!!s.autoTidy} onChange={(v) => set({ autoTidy: v })} label={t('Fenster automatisch aufräumen')} />
       </Row>
+      <Row label={t('Abschluss nach jeder Runde')} hint={t('Hat Claude Dateien geändert, bietet die Fertig-Karte Zusammenfassung und Commit an')}>
+        <Toggle on={s.wrapUp ?? true} onChange={(v) => set({ wrapUp: v })} label={t('Abschluss nach jeder Runde')} />
+      </Row>
       <Row label={t('Tipps zeigen')} hint={t('Ab und zu ein leiser Hinweis auf etwas, das gerade passt')}>
         <Toggle on={s.hintsOn ?? true} onChange={(v) => set({ hintsOn: v })} label={t('Tipps zeigen')} />
       </Row>

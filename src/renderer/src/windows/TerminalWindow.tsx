@@ -22,6 +22,7 @@ import { QueueChip, TermQueue } from './TermQueue'
 import { AttachButton, TermAttach } from './TermAttach'
 import { cancelResume, fmtTime, useResume } from '../store/resumeStore'
 import { t } from '../../../shared/i18n'
+import { canWrapUp, openWrapUp, useWrapUp } from '../store/wrapUpStore'
 
 type WfStatus = 'idle' | 'working' | 'waiting' | 'done' | 'error'
 
@@ -64,6 +65,10 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
   const id = termWin(session.id)
   const status = useWorkflow((s) => s.sessions[session.id]?.status ?? 'idle')
   const tending = useWorkflow((s) => !!s.sessions[session.id]?.tending && s.sessions[session.id]?.status === 'working')
+  // Abschluss erst, wenn Claude fertig ist – nicht mitten in der Arbeit
+  const wrapReady = useWrapUp((s) => canWrapUp(s.turns[session.id]))
+  const wrapOn = useSettings((s) => s.s?.wrapUp !== false)
+  const wrap = wrapReady && wrapOn && status !== 'working'
   const exitCode = useSessions((s) => s.exited[session.id])
   const isTop = useUi((s) => s.open[s.open.length - 1] === id)
   const zenMe = useUi((s) => s.zen === id)
@@ -140,6 +145,11 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
           {dev && !urls?.length && (
             <button className="url-chip dev-chip" title={t('{command} in einer Shell daneben starten – die Vorschau öffnet sich, sobald der Server läuft', { command: dev.command })} onClick={() => void startDev()} data-testid="dev-chip">
               ▶ {t('Dev-Server')}
+            </button>
+          )}
+          {wrap && (
+            <button className="url-chip wrap-chip" title={t('Zusammenfassung, Änderungen und Commit dieser Runde')} onClick={() => openWrapUp(session.id)} data-testid="wrap-chip">
+              ✓ {t('Abschluss')}
             </button>
           )}
           <QueueChip sessionId={session.id} open={queueOpen} onToggle={() => togglePanel('queue')} />

@@ -48,6 +48,7 @@ import type { OverlayLook, OverlayState } from './overlay'
 import type { WebhookPayload, WebhookSettings } from './webhook'
 import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
+import type { WrapChanges } from './wrapUp'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { PlanLimits } from './limits'
 import type { DevScript } from './devScript'
@@ -247,6 +248,8 @@ export interface Settings {
   autoTidy: boolean
   /** Dock blendet sich ab, solange man im Terminal tippt */
   dockFade: boolean
+  /** Session-Abschluss: hat Claude in einer Runde Dateien geändert, bietet die Fertig-Karte Zusammenfassung und Commit an */
+  wrapUp: boolean
   /** Updates selbst laden und beim Start installieren (aus: nur Hinweis, Laden per Knopf) */
   autoUpdate: boolean
   /** Erfahrung aus dem Onboarding – bestimmt die Grundeinstellung ('' = noch nicht gefragt) */
@@ -593,6 +596,15 @@ export interface VibedeskApi {
     /** Branch wechseln; create = neu anlegen */
     switchBranch(projectId: string, name: string, create: boolean): Promise<void>
     openWeb(url: string): void
+  }
+  /** Session-Abschluss – immer im Arbeitsordner der Session (auch Worktrees) */
+  wrapUp: {
+    /** letzte Antwort von Claude aus dem Protokoll (nur Claudes Projekte-Ordner), sonst '' */
+    summary(transcriptPath: string): Promise<string>
+    changes(sessionId: string): Promise<WrapChanges>
+    aiMessage(sessionId: string): Promise<string>
+    /** nimmt alle Änderungen mit; liefert den kurzen Hash */
+    commit(sessionId: string, message: string): Promise<string>
   }
   /** Merge Studio: parallele Sessions (Worktrees) vergleichen und sicher zusammenführen. Destruktives nur mit confirmed = true. */
   merge: {

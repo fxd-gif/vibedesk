@@ -338,6 +338,35 @@ const dict: Record<string, string> = {
   '{command} in einer Shell daneben starten – die Vorschau öffnet sich, sobald der Server läuft': 'Run {command} in a shell next to it – the preview opens as soon as the server is up',
   // Eigenes Farbschema
   'Eigenes: {name}': 'Custom: {name}',
+
+  // Session-Abschluss
+  'Abschluss': 'Wrap-up',
+  'Abschluss nach jeder Runde': 'Wrap-up after every turn',
+  'Hat Claude Dateien geändert, bietet die Fertig-Karte Zusammenfassung und Commit an': 'When Claude changed files, the “done” card offers a summary and a commit',
+  'Zusammenfassung, Änderungen und Commit dieser Runde': 'Summary, changes and commit for this turn',
+  'Commit {hash} erstellt': 'Commit {hash} created',
+  'Git-Fenster': 'Git window',
+  'Abschluss: {name}': 'Wrap-up: {name}',
+  'Was Claude gemacht hat': 'What Claude did',
+  'Keine Zusammenfassung gefunden – die letzte Antwort steht im Terminal.': 'No summary found – the last answer is in the terminal.',
+  'Zum Terminal': 'Go to terminal',
+  'Lädt …': 'Loading …',
+  'Dieser Ordner ist kein Git-Repository – im Git-Fenster kannst du eins anlegen.': 'This folder isn’t a Git repository – you can create one in the Git window.',
+  'Alles ist schon committet.': 'Everything is already committed.',
+  'nicht aus dieser Runde': 'not from this turn',
+  '… und {n} weitere': '… and {n} more',
+  'Nichts Neues festgehalten – die nächste Session startet mit dem bisherigen Wissen.': 'Nothing new noted – the next session starts with what’s already known.',
+  'Neu vorschlagen': 'Suggest again',
+  'Claude schreibt die Nachricht …': 'Claude is writing the message …',
+  'Was hat sich geändert?': 'What changed?',
+  'Im Git-Fenster': 'In Git window',
+  'Committet …': 'Committing …',
+  'eine davon nicht aus dieser Runde': 'one of them not from this turn',
+  '{n} davon nicht aus dieser Runde': '{n} of them not from this turn',
+  'Eine Notiz festgehalten:': 'Noted one thing:',
+  '{n} Notizen festgehalten:': 'Noted {n} things:',
+  'Datei committen': 'Commit file',
+  '{n} Dateien committen': 'Commit {n} files',
 }
 
 export default dict

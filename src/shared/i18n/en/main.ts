@@ -308,6 +308,9 @@ const dict: Record<string, string> = {
   'Pfeil runter': 'Arrow down',
   'Tasten vom Handy erlauben': 'Allow keys from the phone',
   'Esc, ↑, ↓, 1–3 und Enter – genug für Claudes Auswahlmenüs. Keine freie Eingabe.': 'Esc, ↑, ↓, 1–3 and Enter – enough for Claude’s choice menus. No free typing.',
+
+  // Session-Abschluss
+  'Diese Session läuft nicht mehr.': 'This session is no longer running.',
 }
 
 export default dict

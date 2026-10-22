@@ -9,6 +9,8 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Neu
 
+- **Session-Abschluss:** Hat Claude in einer Runde Dateien geändert, bietet die Karte „… ist fertig“ (und der Knopf „✓ Abschluss“ im Terminal-Kopf) einen Abschluss an: Claudes Zusammenfassung, alle geänderten Dateien mit Zeilenzahlen (Fremdes aus anderen Runden ist markiert), was ins Gehirn kam, und eine Commit-Nachricht, die Claude vorschlägt. Ein Klick committet alles – auch in Merge-Studio-Worktrees. Abschaltbar unter Einstellungen → Ruhe
+
 - **Streamer-Overlay anpassen:** Position (alle vier Ecken), Größe, Breite, Stil (dunkles Glas, hell, nur Text), Hintergrund und Akzentfarbe. Die Auswahl der Bausteine bleibt jetzt gespeichert, und „Ansehen“ öffnet das Overlay im Browser.
 - **Dezenter VibeDesk-Hinweis statt Wasserzeichen:** eine kleine Plakette in der Statuskarte (oder wie bisher eine Zeile darunter, oder aus).
 - **`!vibedesk` im Twitch-Chat** zeigt 20 Sekunden lang eine Info-Karte, womit du codest (abschaltbar, mit Abklingzeit).

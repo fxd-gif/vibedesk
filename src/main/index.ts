@@ -41,6 +41,7 @@ import type { SessionInfo } from '../shared/types'
 import { writeJsonAtomic } from './jsonFile'
 import { GitService } from './gitService'
 import { registerGitIpc } from './gitIpc'
+import { registerWrapUpIpc } from './wrapUpIpc'
 import { registerSpotifyIpc, SpotifyService } from './spotify'
 import { registerMergeIpc } from './mergeIpc'
 import { MergeService } from './mergeService'
@@ -344,7 +345,9 @@ app.whenReady().then(async () => {
     broker.dropSession(id)
     send('session:exit', id, code)
   })
-  registerSessionIpc({ sessions, projects, claudeProjectsDir: join(process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude'), 'projects') })
+  const claudeProjectsDir = join(process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude'), 'projects')
+  registerSessionIpc({ sessions, projects, claudeProjectsDir })
+  registerWrapUpIpc({ sessions, git: gitService, claudeProjectsDir })
   // Eigene Shells neben Claude – gleiche Bündelung der Ausgabe, eigene Kanäle
   const shells = new ShellManager({ spawn: (file, args, o) => pty.spawn(file, args, { name: 'xterm-256color', ...o }), kind: () => settings.get().terminal.shell })
   const shellOutput = new OutputBatcher((id, d) => send('shell:data', id, d))
