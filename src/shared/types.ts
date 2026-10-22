@@ -49,6 +49,7 @@ import type { WebhookPayload, WebhookSettings } from './webhook'
 import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
 import type { WrapChanges } from './wrapUp'
+import type { LivingScene, LivingStatus } from './living'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { PlanLimits } from './limits'
 import type { DevScript } from './devScript'
@@ -479,6 +480,9 @@ export interface VibedeskApi {
     companionStatus(cb: (s: CompanionStatus) => void): Unsubscribe
     /** Claude steuert den Desktop über das MCP-Werkzeug desk_* */
     deskCommand(cb: (c: DeskCommand) => void): Unsubscribe
+    livingChanged(cb: (list: LivingScene[]) => void): Unsubscribe
+    /** Main bittet um einen Schnappschuss der laufenden lebenden Szene */
+    livingSnapshot(cb: (req: string) => void): Unsubscribe
     /** Neue Abo-Limits aus der Statuszeile von Claude Code */
     limits(cb: (l: PlanLimits) => void): Unsubscribe
     /** Handy will Terminal-Zeilen: lesen und mit companion.termDone(reqId, chunk) antworten */
@@ -596,6 +600,13 @@ export interface VibedeskApi {
     /** Branch wechseln; create = neu anlegen */
     switchBranch(projectId: string, name: string, create: boolean): Promise<void>
     openWeb(url: string): void
+  }
+  /** Lebende Szenen (interaktive Hintergründe, die Claude als Skript schreibt) */
+  living: {
+    list(): Promise<LivingScene[]>
+    delete(id: string): Promise<boolean>
+    status(s: LivingStatus): void
+    snapshotResult(req: string, data: string | null, error?: string): void
   }
   /** Session-Abschluss – immer im Arbeitsordner der Session (auch Worktrees) */
   wrapUp: {

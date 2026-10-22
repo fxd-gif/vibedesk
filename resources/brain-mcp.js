@@ -124,6 +124,38 @@ const DESK_TOOLS = [
   },
   { name: 'desk_focus', description: 'Fokus-Timer (Pomodoro) steuern.', inputSchema: { type: 'object', properties: { action: { type: 'string', enum: ['start', 'pause', 'resume', 'stop'] } }, required: ['action'] } },
   {
+    name: 'desk_scene_create',
+    description: [
+      'Lebende Szene erschaffen oder ändern: ein interaktiver Hintergrund hinter allen Fenstern, z. B. Schnee, der wirklich auf dem Hausdach im Bild liegen bleibt, Glühwürmchen, die der Maus folgen, Regen mit Spritzern, Gewitter auf Klick. Du schreibst ein kurzes JavaScript gegen die globale vd-API; es läuft abgeschottet (kein Netz, kein DOM außer dem Canvas). Danach wird die Szene eingeschaltet; Skriptfehler bekommst du zurück.',
+      'Bild: image = "current" (das eigene Hintergrundbild des Users, Pfad steht in desk_state), ein Pfad zu einem Bild auf dem PC, oder weglassen (beim Ändern bleibt es). LIES DAS BILD VORHER (Read), um Dächer, Fenster, Laternen zu finden. Positionen im Bild gibst du als Anteile [nx, ny] von 0 bis 1 an (0,0 = oben links), das Bild füllt den Schirm wie CSS cover.',
+      'API: vd.background({dim:0..1, blur:px, top, bottom}) · vd.surface([[nx,ny],…], {snow:true, maxDepth:18}) Fläche von links nach rechts (Dachkante, Fensterbank – Schnee/Blätter bleiben darauf liegen, Regen spritzt) · await vd.autoSurfaces({threshold:0.12}) findet Kanten vor ruhigem Himmel selbst · vd.debugSurfaces(true) zeigt Flächen farbig (zum Prüfen).',
+      'Effekte (alle Optionen optional): vd.snow({amount:1, size:1, speed:1, wind:0, settle:true, ground:true, maxDepth:18, start:0.5, melt:0}) – start = wie viel schon liegt (0..1) – Maus pustet Flocken weg, Ziehen mit gedrückter Maus wischt Schnee vom Dach · vd.rain({amount, speed, wind:0.15, splash:true, mouse:"umbrella"}) · vd.fireflies({count:40, color, region:[x0,y0,x1,y1], followMouse:0.35}) · vd.leaves({count, colors:[…], shape:"leaf"|"petal", settle:true}) · vd.embers({at:[nx,ny], spread, count, color}) · vd.fog({density:0.35, color, region}) · vd.stars({count, region, twinkle, shooting:true}) · vd.lightning({every:14, flash:0.55, onClick:false}) · vd.glow({at:[nx,ny], radius:0.06, color, flicker:0.25}).',
+      'Eigenes: vd.onFrame((ctx, dt, t) => {…}) zeichnet nach den Effekten (Canvas 2D, CSS-Pixel), vd.onBefore(fn) davor · vd.on("click"|"move"|"down"|"up", (x, y) => {}) · vd.mouse {x,y,vx,vy,down,active} · vd.px(nx,ny) → {x,y} Pixel, vd.norm(x,y) · vd.width/height/time · vd.wind (global, −1..1) · vd.noise(x,y,z), vd.rand(a,b), vd.lerp, vd.clamp.',
+      'Beispiel Schnee auf dem Dach: vd.background({dim:0.15}); vd.surface([[0.18,0.42],[0.40,0.27],[0.62,0.42]]); vd.surface([[0.25,0.61],[0.33,0.61]], {maxDepth:8}); vd.snow({amount:1.2}); vd.glow({at:[0.29,0.55], color:"rgba(255,190,110,0.7)"})',
+      'Danach mit desk_scene_snapshot ansehen und nachbessern (id angeben, um zu ändern statt neu anzulegen). Ruhig und stimmungsvoll bleiben – es ist ein Hintergrund zum Arbeiten.'
+    ].join('\n'),
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'kurzer Name, z. B. „Winterhaus“ (Pflicht bei neuen Szenen)' },
+        code: { type: 'string', description: 'JavaScript gegen die vd-API' },
+        image: { type: 'string', description: '"current", Pfad zu einem Bild, "none" (kein Bild) oder weglassen' },
+        id: { type: 'string', description: 'id einer bestehenden Szene, um sie zu ändern' },
+        activate: { type: 'boolean', description: 'Standard true: gleich einschalten' }
+      },
+      required: ['code']
+    }
+  },
+  {
+    name: 'desk_scene_snapshot',
+    description: 'Schnappschuss der laufenden lebenden Szene als Bild (ohne die Fenster davor) – so prüfst du, ob Schnee wirklich auf dem Dach liegt, Lichter an der richtigen Stelle sitzen usw. wait = Sekunden warten (z. B. 8, damit sich Schnee sammelt).',
+    inputSchema: { type: 'object', properties: { wait: { type: 'number', minimum: 0, maximum: 30 } } }
+  },
+  { name: 'desk_scene_list', description: 'Listet die lebenden Szenen (id, Name, Bildgröße) und welche gerade läuft.', inputSchema: { type: 'object', properties: {} } },
+  { name: 'desk_scene_code', description: 'Liefert das Skript einer lebenden Szene, um es zu ändern.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+  { name: 'desk_scene_show', description: 'Schaltet eine gespeicherte lebende Szene ein.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+  { name: 'desk_scene_delete', description: 'Löscht eine lebende Szene.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+  {
     name: 'desk_notify',
     description: 'Zeigt dem User in VibeDesk eine kurze Karte (z. B. „Build fertig“). Sparsam nutzen.',
     inputSchema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' } }, required: ['title'] }
@@ -136,6 +168,9 @@ const ALL_TOOLS = process.env.VIBEDESK_BRAIN === '0' ? DESK_TOOLS : [...TOOLS, .
 const UNREACHABLE = { text: 'VibeDesk ist nicht erreichbar – läuft die App noch?', isError: true }
 
 /** null = Verbindung abgelehnt oder Token falsch – dann lohnt ein zweiter Versuch mit frischem Endpunkt */
+/** Szenen warten auf die Rückmeldung bzw. ein paar Sekunden für den Schnappschuss */
+const timeoutFor = (tool) => (tool.startsWith('desk_scene_') ? 60000 : 10000)
+
 function post(ep, tool, args) {
   return new Promise((resolve) => {
     // cwd: Kennt eine neu gestartete App die Session nicht, findet sie das Projekt über den Ordner
@@ -146,7 +181,7 @@ function post(ep, tool, args) {
         port: ep.port,
         path: '/brain',
         method: 'POST',
-        timeout: 10000,
+        timeout: timeoutFor(tool),
         headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body), 'x-vibedesk-token': ep.token }
       },
       (res) => {
@@ -157,7 +192,8 @@ function post(ep, tool, args) {
           if (res.statusCode === 403) return resolve(null)
           try {
             const r = JSON.parse(data)
-            resolve({ text: String(r.text ?? ''), isError: !!r.isError })
+            const image = r.image && typeof r.image.data === 'string' && typeof r.image.mimeType === 'string' ? r.image : null
+            resolve({ text: String(r.text ?? ''), isError: !!r.isError, image })
           } catch {
             resolve({ text: `VibeDesk antwortete unerwartet (HTTP ${res.statusCode}).`, isError: true })
           }
@@ -197,7 +233,7 @@ async function handle(msg) {
           serverInfo: { name: 'vibedesk-brain', version: '1.0.0' },
           instructions:
             (process.env.VIBEDESK_BRAIN === '0' ? '' : 'Projektgedächtnis von VibeDesk: vor dem Erkunden suchen (brain_search, brain_related), Gelerntes festhalten (brain_write). ') +
-            'Den VibeDesk-Desktop steuern die desk_*-Werkzeuge (Fenster anordnen, Zen-Modus, Szene, Musik …), wenn der User darum bittet.'
+            'Den VibeDesk-Desktop steuern die desk_*-Werkzeuge (Fenster anordnen, Zen-Modus, Szene, Musik …), wenn der User darum bittet. Interaktive Hintergründe (z. B. Schnee, der auf dem Dach im eigenen Bild liegen bleibt) baust du mit desk_scene_create und prüfst sie mit desk_scene_snapshot.'
         }
       })
     case 'ping':
@@ -208,7 +244,9 @@ async function handle(msg) {
       const name = params?.name
       if (!ALL_TOOLS.some((t) => t.name === name)) return send({ id, error: { code: -32602, message: `Unbekanntes Werkzeug: ${name}` } })
       const r = await callApp(name, params?.arguments)
-      return send({ id, result: { content: [{ type: 'text', text: r.text }], isError: r.isError } })
+      const content = [{ type: 'text', text: r.text }]
+      if (r.image) content.push({ type: 'image', data: r.image.data, mimeType: r.image.mimeType })
+      return send({ id, result: { content, isError: r.isError } })
     }
     default:
       return send({ id, error: { code: -32601, message: `Methode nicht unterstützt: ${method}` } })

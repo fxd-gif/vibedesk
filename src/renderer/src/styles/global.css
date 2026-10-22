@@ -39,3 +39,5 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .app { position: fixed; inset: 0; }
 .ambience-fallback { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 20%, #1a2233 0%, #07090d 70%); }
 .rain-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+/* lebende Szene: bekommt die Maus per postMessage, Klicks gehen an den Desktop */
+.living-scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border: 0; pointer-events: none; background: #0b0d12; }

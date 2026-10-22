@@ -6,7 +6,7 @@ import { api } from '../api'
 import { useSettings } from '../store/settingsStore'
 
 /** Akkubetrieb aus dem Main-Prozess (Electron powerMonitor) – zuverlässiger als navigator.getBattery */
-function useOnBattery(): boolean {
+export function useOnBattery(): boolean {
   const [onBattery, setOnBattery] = useState(false)
   useEffect(() => {
     let alive = true

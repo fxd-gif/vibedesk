@@ -153,3 +153,4 @@
   .sp-nav { display: none; }
   .sp-content { overflow: visible; }
 }
+.amb-living-thumb { display: grid; place-items: center; width: 64px; height: 36px; border-radius: 7px; flex: 0 0 auto; background: linear-gradient(135deg, rgba(120,150,255,.25), rgba(255,180,120,.2)); font-size: 15px; }

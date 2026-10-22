@@ -9,7 +9,13 @@ const MAX_BODY = 1024 * 1024
 export type HookReply = string | void | undefined
 
 /** Werkzeug-Aufruf des Gehirn-MCP-Servers */
-export type BrainHandler = (sessionId: string, tool: string, args: Record<string, unknown>, cwd?: string) => { text: string; isError?: boolean }
+export interface BrainResult {
+  text: string
+  isError?: boolean
+  /** Bild für Claude (z. B. Schnappschuss einer Szene), base64 */
+  image?: { data: string; mimeType: string }
+}
+export type BrainHandler = (sessionId: string, tool: string, args: Record<string, unknown>, cwd?: string) => BrainResult | Promise<BrainResult>
 
 /** Freigabe-Anfrage: wartet auf eine Antwort ('' = keine Entscheidung); cancel, wenn der Hook vorher aufgibt */
 export type PermissionHandler = (e: HookEvent) => { reply: Promise<string>; cancel(): void }
@@ -82,7 +88,7 @@ export class HookServer {
       } catch {
         return reply(400)
       }
-      if (req.url === '/brain') return this.brain(body, reply)
+      if (req.url === '/brain') return void this.brain(body, reply)
       if (typeof body?.sessionId !== 'string' || typeof body.payload !== 'object' || body.payload === null) return reply(400)
       const payload = body.payload as Record<string, unknown>
       const name = typeof payload.hook_event_name === 'string' ? payload.hook_event_name : 'unknown'
@@ -121,13 +127,13 @@ export class HookServer {
     ask.reply.then(answer, () => answer(''))
   }
 
-  private brain(body: Record<string, unknown>, reply: (code: number, body?: string, type?: string) => void): void {
+  private async brain(body: Record<string, unknown>, reply: (code: number, body?: string, type?: string) => void): Promise<void> {
     const { sessionId, tool, args, cwd } = (body ?? {}) as { sessionId?: unknown; tool?: unknown; args?: unknown; cwd?: unknown }
     if (typeof sessionId !== 'string' || typeof tool !== 'string') return reply(400)
     const a = args && typeof args === 'object' && !Array.isArray(args) ? (args as Record<string, unknown>) : {}
-    let r: { text: string; isError?: boolean }
+    let r: BrainResult
     try {
-      r = this.onBrain!(sessionId, tool, a, typeof cwd === 'string' && cwd.length < 1024 ? cwd : undefined)
+      r = await this.onBrain!(sessionId, tool, a, typeof cwd === 'string' && cwd.length < 1024 ? cwd : undefined)
     } catch (err) {
       r = { text: err instanceof Error ? err.message : String(err), isError: true }
     }

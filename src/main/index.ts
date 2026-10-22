@@ -4,6 +4,8 @@ import { errorLogFile, installErrorLog, logError, registerErrorIpc } from './err
 import '../shared/i18n/en'
 import { resolveLang, setLang, t } from '../shared/i18n'
 import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
+import { LivingStore } from './livingScenes'
+import { createLivingTools } from './livingTools'
 import { ADDON_SCHEME, addonPathFromArgv, AddonStore } from './addonStore'
 import { registerAddonIpc } from './addonIpc'
 import { sniffAsset } from '../shared/addonValidate'
@@ -28,7 +30,7 @@ import { claudeOnPath, claudeVersion } from './sessionManager'
 import { ipcMain, powerMonitor } from 'electron'
 import { randomBytes } from 'crypto'
 import * as pty from '@lydell/node-pty'
-import { HookServer } from './hookServer'
+import { HookServer, type BrainResult } from './hookServer'
 import { SessionManager } from './sessionManager'
 import { OutputBatcher } from './outputBatcher'
 import { OverlayServer } from './overlayServer'
@@ -161,7 +163,10 @@ app.whenReady().then(async () => {
   )
   registerCoreIpc({ win: () => mainWindow, projects, settings })
   const scenesDir = join(userData, 'scenes')
+  const living = new LivingStore(join(userData, 'living'), app.isPackaged ? join(process.resourcesPath, 'living-runtime.js') : join(app.getAppPath(), 'resources', 'living-runtime.js'))
   protocol.handle(SCENE_SCHEME, async (req) => {
+    // lebende Szene: Seite, Laufzeit, Skript und Bild – mit eigener, strenger CSP
+    if (new URL(req.url).host === 'living') return living.serve(req.url)
     const f = sceneFile(scenesDir, req.url)
     if (!f) return new Response('not found', { status: 404 })
     const res = await net.fetch(pathToFileURL(f).toString())
@@ -267,14 +272,27 @@ app.whenReady().then(async () => {
     devicesFile: join(userData, 'companion.json')
   })
   /** VibeDesk als MCP: desk_*-Werkzeuge steuern den Desktop (ausgeführt im Renderer) */
-  const deskTool = (tool: string, args: Record<string, unknown>): { text: string; isError?: boolean } => {
+  const customImageFile = (): string | null => {
+    const sc = settings.get().scene
+    if (!sc.startsWith('custom:')) return null
+    const f = sceneFile(scenesDir, sc.slice(7))
+    return f && fs.existsSync(f) ? f : null
+  }
+  const livingTool = createLivingTools({ store: living, send, scene: () => settings.get().scene, currentImageFile: customImageFile })
+  const deskTool = async (tool: string, args: Record<string, unknown>): Promise<BrainResult> => {
+    const lt = await livingTool(tool, args)
+    if (lt) return lt
     if (tool === 'desk_state') {
       const s = settings.get()
       const names = sessions.list().map((x) => x.name)
+      const img = customImageFile()
+      const livingList = living.list()
       return {
         text: [
           `Aufbau: ${s.layout}`,
           `Szene: ${s.scene} · Regen ${Math.round(s.rainIntensity * 100)} % · Unschärfe ${Math.round(s.blur * 100)} %`,
+          ...(img ? [`Eigenes Hintergrundbild (zum Ansehen lesen; für desk_scene_create image: "current"): ${img}`] : []),
+          `Lebende Szenen: ${livingList.length ? livingList.map((x) => `${x.id} („${x.name}“)`).join(', ') : 'keine'}`,
           `Lofi-Radio: ${s.musicOn ? `an (${Math.round(s.musicVolume * 100)} %)` : 'aus'} · Regengeräusch: ${s.rainSoundOn ? 'an' : 'aus'}`,
           `Terminal-Farbschema: ${s.terminal?.theme ?? 'scene'}${s.customTheme ? ` (eigenes vorhanden: „${s.customTheme.name}“)` : ''}`,
           `Sessions: ${names.length ? names.join(', ') : 'keine'}`

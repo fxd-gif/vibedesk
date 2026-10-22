@@ -5,6 +5,7 @@ import type { PermissionAsk } from '../shared/permissions'
 import type { CompanionDevice, CompanionStatus, PromptTarget, TermQuery } from '../shared/companion'
 import type { PlanLimits } from '../shared/limits'
 import type { DeskCommand } from '../shared/desk'
+import type { LivingScene } from '../shared/living'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
   const h = (_e: unknown, ...args: unknown[]): void => cb(...(args as A))
@@ -89,6 +90,8 @@ const api: VibedeskApi = {
     companionTerm: (cb) => listen<[string, TermQuery]>('companion:term', cb),
     limits: (cb) => listen<[PlanLimits]>('limits:update', cb),
     deskCommand: (cb) => listen<[DeskCommand]>('desk:command', cb),
+    livingChanged: (cb) => listen<[LivingScene[]]>('living:changed', cb),
+    livingSnapshot: (cb) => listen<[string]>('living:snapshot', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),
     power: (cb) => listen<[boolean]>('power:battery', cb)
   },
@@ -177,6 +180,12 @@ const api: VibedeskApi = {
     publish: (id, name, priv) => ipcRenderer.invoke('git:publish', id, name, priv),
     aiMessage: (id) => ipcRenderer.invoke('git:aiMessage', id),
     openWeb: (url) => ipcRenderer.send('git:openWeb', url)
+  },
+  living: {
+    list: () => ipcRenderer.invoke('living:list'),
+    delete: (id) => ipcRenderer.invoke('living:delete', id),
+    status: (s) => ipcRenderer.send('living:status', s),
+    snapshotResult: (req, data, error) => ipcRenderer.send('living:snapshotResult', req, data, error)
   },
   wrapUp: {
     summary: (transcript) => ipcRenderer.invoke('wrapup:summary', transcript),

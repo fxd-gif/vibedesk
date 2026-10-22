@@ -367,6 +367,21 @@ const dict: Record<string, string> = {
   '{n} Notizen festgehalten:': 'Noted {n} things:',
   'Datei committen': 'Commit file',
   '{n} Dateien committen': 'Commit {n} files',
+  // lebende Szenen
+  'Lebende Szenen': 'Living scenes',
+  'Claude kann interaktive Hintergründe bauen – zum Beispiel Schnee, der auf dem Dach in deinem Bild liegen bleibt, oder Glühwürmchen, die deiner Maus folgen.':
+    'Claude can build interactive backgrounds – for example snow that settles on the roof in your picture, or fireflies that follow your mouse.',
+  'Mit Claude gestalten …': 'Design with Claude …',
+  'Lebende Szene mit Claude gestalten': 'Design a living scene with Claude',
+  'Was soll sich im Hintergrund bewegen? Claude schreibt die Szene, sieht sie sich an und bessert nach.': 'What should move in the background? Claude writes the scene, looks at it and refines it.',
+  'z. B. Schnee, der auf dem Dach liegen bleibt': 'e.g. snow that settles on the roof',
+  'Kein Projekt offen': 'No project open',
+  'Öffne zuerst ein Projekt – Claude gestaltet die Szene in dessen Session.': 'Open a project first – Claude designs the scene in its session.',
+  'Gestalte mit dem VibeDesk-Werkzeug desk_scene_create eine lebende Szene für meinen Hintergrund: {wish}.': 'Use the VibeDesk tool desk_scene_create to design a living scene for my background: {wish}.',
+  'Nimm mein aktuelles Hintergrundbild (image: "current") und sieh es dir vorher an – den Pfad nennt desk_state.': 'Use my current background image (image: "current") and look at it first – desk_state gives the path.',
+  'Prüfe das Ergebnis mit desk_scene_snapshot und bessere nach, bis es gut aussieht.': 'Check the result with desk_scene_snapshot and refine it until it looks good.',
+  'Szene „{name}“ löschen?': 'Delete scene “{name}”?',
+  'Die Szene „{name}“ hat einen Fehler': 'The scene “{name}” has an error',
 }
 
 export default dict

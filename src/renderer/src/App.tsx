@@ -60,6 +60,8 @@ import { dockPlan, earned, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
 import { useBrainUsed, wireBrainActivity } from './store/brainActivity'
 import { wireWrapUp } from './store/wrapUpStore'
+import { LivingSceneView, useLiving, wireLiving } from './ambience/LivingScene'
+import { isLivingScene, livingId } from '../../shared/living'
 import { WrapUpDialog } from './windows/WrapUpDialog'
 import { hasEdits } from './store/workflowReducer'
 import { wireCalm } from './desktop/calm'
@@ -124,6 +126,7 @@ export default function App(): React.JSX.Element {
   const sessions = useSessions((s) => s.sessions)
   const shells = useShells((s) => s.shells)
   const settings = useSettings((s) => s.s)
+  const livingList = useLiving((s) => s.list)
   const previews = usePreview((s) => s.open)
   const focusPhase = useFocus((s) => s.state.phase)
   // nur minutengenau – sonst würde die ganze App jede Sekunde neu rendern
@@ -182,6 +185,7 @@ export default function App(): React.JSX.Element {
     wireQuick()
     wireBrainActivity()
     wireWrapUp()
+    wireLiving()
     wirePermissions()
     wireCompanion()
     wireCalm()
@@ -258,18 +262,22 @@ export default function App(): React.JSX.Element {
 
   // Aufbau-Theme: Desktop (Dock) oder Studio (Seitenleiste + Statusleiste) – beide bekommen dieselben Gruppen
   const studio = settings?.layout === 'studio'
+  // lebende Szene (von Claude geschrieben) statt Regen – fehlt sie, bleibt der Regen
+  const livingScene = settings && isLivingScene(settings.scene) ? livingList.find((x) => x.id === livingId(settings.scene)) : undefined
   const Nav = studio ? Sidebar : Dock
 
   return (
     <div className={`app${zen ? ' zen' : ''}`} data-layout={studio ? 'studio' : 'desktop'}>
-      {settings && (
+      {settings && livingScene ? (
+        <LivingSceneView scene={livingScene} />
+      ) : settings ? (
         <RainCanvas
-          scene={settings.scene}
+          scene={isLivingScene(settings.scene) ? 'city' : settings.scene}
           customImage={settings.scene.startsWith('custom:') ? settings.scene.slice(7) : undefined}
           intensity={settings.rainIntensity}
           blur={settings.blur}
         />
-      )}
+      ) : null}
       {/* Feste DOM-Reihenfolge: Umsortieren beim Fokussieren würde Klicks verschlucken; Ebenen nur per z-index */}
       {PANELS.filter((p) => open.includes(p.id)).map((def) => {
         const id = def.id

@@ -16,6 +16,11 @@ import { LofiPane } from './LofiPane'
 import { sceneThumb, Slider } from './parts'
 import type { EnergySaver } from '../../../../shared/types'
 import { t } from '../../../../shared/i18n'
+import { useLiving } from '../../ambience/LivingScene'
+import { LIVING_PREFIX } from '../../../../shared/living'
+import { confirm, prompt } from '../../store/dialogStore'
+import { activeProjectId } from '../../store/activeProject'
+import { promptProject } from '../../store/sessionPrompt'
 import './ambience.css'
 
 export type MusicSource = 'spotify' | 'lofi'
@@ -154,6 +159,8 @@ function AtmosphereSide({ source }: { source: MusicSource }): React.JSX.Element 
         </div>
       </section>
 
+      <LivingSection />
+
       <section>
         <h4>{t('Regen')}</h4>
         <Slider label={t('Stärke')} value={s.rainIntensity} onChange={(v) => set({ rainIntensity: v })} />
@@ -228,5 +235,72 @@ function AtmosphereSide({ source }: { source: MusicSource }): React.JSX.Element 
         )}
       </footer>
     </aside>
+  )
+}
+
+/** Lebende Szenen: von Claude geschriebene, interaktive Hintergründe – auswählen, löschen, neue gestalten lassen */
+function LivingSection(): React.JSX.Element | null {
+  const s = useSettings((x) => x.s)
+  const set = useSettings((x) => x.set)
+  const list = useLiving((x) => x.list)
+  if (!s) return null
+
+  const design = async (): Promise<void> => {
+    const wish = await prompt({
+      title: t('Lebende Szene mit Claude gestalten'),
+      message: t('Was soll sich im Hintergrund bewegen? Claude schreibt die Szene, sieht sie sich an und bessert nach.'),
+      placeholder: t('z. B. Schnee, der auf dem Dach liegen bleibt'),
+      confirmLabel: t('An Claude schicken')
+    })
+    if (!wish) return
+    const projects = await api.projects.list()
+    const pid = activeProjectId(projects)
+    if (!pid) return alert(t('Kein Projekt offen'), t('Öffne zuerst ein Projekt – Claude gestaltet die Szene in dessen Session.'))
+    const img = s.scene.startsWith('custom:')
+    const text = [
+      t('Gestalte mit dem VibeDesk-Werkzeug desk_scene_create eine lebende Szene für meinen Hintergrund: {wish}.', { wish }),
+      img ? t('Nimm mein aktuelles Hintergrundbild (image: "current") und sieh es dir vorher an – den Pfad nennt desk_state.') : '',
+      t('Prüfe das Ergebnis mit desk_scene_snapshot und bessere nach, bis es gut aussieht.')
+    ]
+      .filter(Boolean)
+      .join(' ')
+    await promptProject(pid, text)
+  }
+
+  return (
+    <section>
+      <div className="row between">
+        <h4>{t('Lebende Szenen')}</h4>
+        <button className="btn small ghost" onClick={() => void design()} data-testid="living-design">
+          ✨ {t('Mit Claude gestalten …')}
+        </button>
+      </div>
+      {!list.length ? (
+        <p className="dim small">{t('Claude kann interaktive Hintergründe bauen – zum Beispiel Schnee, der auf dem Dach in deinem Bild liegen bleibt, oder Glühwürmchen, die deiner Maus folgen.')}</p>
+      ) : (
+        <div className="amb-scenes">
+          {list.map((sc) => {
+            const id = LIVING_PREFIX + sc.id
+            return (
+              <div key={sc.id} className={`amb-scene${s.scene === id ? ' on' : ''}`} data-testid={`living-${sc.id}`}>
+                <button onClick={() => set({ scene: id })}>
+                  {sc.image ? <img src={`vibedesk-scene://living/${encodeURIComponent(sc.id)}/image?rev=${sc.rev}`} alt="" /> : <span className="amb-living-thumb">✨</span>}
+                  <span>{sc.name}</span>
+                </button>
+                <button
+                  className="amb-scene-x"
+                  title={t('Löschen')}
+                  onClick={async () => {
+                    if (await confirm({ title: t('Szene „{name}“ löschen?', { name: sc.name }), confirmLabel: t('Löschen'), danger: true })) void api.living.delete(sc.id)
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
   )
 }
