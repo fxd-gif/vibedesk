@@ -3,7 +3,7 @@ import { t } from '../shared/i18n'
 import { execFile, spawn, type ChildProcess } from 'child_process'
 import fs from 'fs'
 import path from 'path'
-import { AUTH_MARK, LOG_FORMAT, addedFileDiff, cleanMessage, commitPrompt, parseLog, parseStatus, webUrl, type GitCommit, type GitState, type GitTools, validBranchName } from '../shared/git'
+import { AUTH_MARK, LOG_FORMAT, addedFileDiff, cleanMessage, commitPrompt, parseLog, parseStatus, webUrl, type GitCommit, type GitState, type GitTools, validBranchName, parsePr, prBranchName, prPrompt, stripAiNotes, type PrDraft, type PrInfo } from '../shared/git'
 import { parseNumstat, type WrapChanges, type WrapFile } from '../shared/wrapUp'
 
 const MAX_OUT = 8 * 1024 * 1024
@@ -349,6 +349,94 @@ export class GitService {
       throw new Error(/gh auth login|not logged in/i.test(r.stderr) || AUTH_RE.test(r.stderr) ? AUTH_MARK + msg : msg)
     }
     return webUrl((await this.run(await this.need('git'), ['remote', 'get-url', 'origin'], { cwd })).stdout.trim()) ?? ''
+  }
+
+  // ---------- Pull Requests ----------
+
+  /** Standard-Branch des Servers: origin/HEAD, sonst gh, sonst main */
+  private async baseBranch(cwd: string): Promise<string> {
+    const git = await this.need('git')
+    const r = await this.run(git, ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], { cwd })
+    if (r.code === 0 && r.stdout.trim().startsWith('origin/')) return r.stdout.trim().slice(7)
+    const gh = await this.bin('gh')
+    if (gh) {
+      const v = await this.run(gh, ['repo', 'view', '--json', 'defaultBranchRef', '-q', '.defaultBranchRef.name'], { cwd, timeout: 30_000 })
+      if (v.code === 0 && validBranchName(v.stdout.trim())) return v.stdout.trim()
+    }
+    return 'main'
+  }
+
+  async prInfo(cwd: string): Promise<PrInfo> {
+    const st = await this.status(cwd)
+    if (!st.repo) throw new Error(t('Kein Git-Repository'))
+    if (!st.remoteUrl || !/github\.com/i.test(st.remoteUrl)) throw new Error(t('Pull Requests gehen nur mit einem GitHub-Repository.'))
+    const base = await this.baseBranch(cwd)
+    const branch = st.branch || base
+    const git = await this.need('git')
+    const range = (await this.run(git, ['rev-parse', '--verify', '-q', `origin/${base}`], { cwd })).code === 0 ? `origin/${base}..HEAD` : 'HEAD'
+    const log = await this.run(git, ['log', '--format=%s', '-n', '50', range], { cwd })
+    const commits = log.code === 0 ? log.stdout.split('\n').filter(Boolean) : []
+    const gh = await this.bin('gh')
+    let existing: PrInfo['existing'] = null
+    if (gh && branch !== base) {
+      const v = await this.run(gh, ['pr', 'view', branch, '--json', 'url,title,state'], { cwd, timeout: 30_000 })
+      if (v.code === 0) {
+        try {
+          const j = JSON.parse(v.stdout) as { url?: string; title?: string; state?: string }
+          if (j.state === 'OPEN' && typeof j.url === 'string') existing = { url: j.url, title: String(j.title ?? '') }
+        } catch {
+          // keine Angaben
+        }
+      }
+    }
+    return { base, branch, onBase: branch === base, commits, existing, dirty: st.files.length, gh: gh ? 'ok' : 'missing' }
+  }
+
+  /** Titel und Beschreibung von Claude Code aus Commits und Diff gegenüber dem Ziel-Branch */
+  async aiPr(cwd: string): Promise<PrDraft> {
+    const info = await this.prInfo(cwd)
+    if (!info.commits.length) throw new Error(t('Es gibt noch keine Commits für einen Pull Request.'))
+    const range = `origin/${info.base}...HEAD`
+    const diff = await this.git(cwd, ['diff', range, '--no-color', '--no-ext-diff']).catch(() => '')
+    const stat = await this.git(cwd, ['diff', range, '--stat']).catch(() => '')
+    const cmd = this.d.claudeCmd?.() ?? 'claude'
+    const r = await this.run('cmd.exe', ['/d', '/c', cmd, '-p', 'Write the pull request as instructed in the input.', '--model', 'haiku', '--output-format', 'text'], {
+      cwd,
+      input: prPrompt(diff, info.commits, stat),
+      timeout: 120_000
+    })
+    if (r.code !== 0) {
+      if (/is not recognized|nicht als interner|ENOENT/i.test(r.stderr)) throw new Error(t('Claude Code wurde nicht gefunden.'))
+      throw new Error(r.stderr.trim().split('\n').slice(-3).join('\n') || t('Claude hat keine Nachricht geliefert.'))
+    }
+    const pr = parsePr(r.stdout)
+    if (!pr.title) throw new Error(t('Claude hat keine Nachricht geliefert.'))
+    return pr
+  }
+
+  /** Branch (falls auf dem Ziel-Branch), pushen, PR anlegen → URL */
+  async createPr(cwd: string, o: { title: string; body: string; branch?: string; draft: boolean }): Promise<string> {
+    const title = o.title.replace(/[\r\n]+/g, ' ').trim().slice(0, 250)
+    if (!title) throw new Error(t('Der Pull Request braucht einen Titel.'))
+    const gh = await this.need('gh')
+    const info = await this.prInfo(cwd)
+    if (info.existing) return info.existing.url
+    if (!info.commits.length) throw new Error(t('Es gibt noch keine Commits für einen Pull Request.'))
+    let branch = info.branch
+    if (info.onBase) {
+      branch = (o.branch ?? '').trim() || prBranchName(title)
+      if (!validBranchName(branch)) throw new Error(t('Ungültiger Branch-Name'))
+      await this.git(cwd, ['switch', '-c', branch])
+    }
+    await this.git(cwd, ['push', '-q', '-u', 'origin', 'HEAD'], undefined, 120_000)
+    const args = ['pr', 'create', '--base', info.base, '--head', branch, '--title', title, '--body-file', '-']
+    if (o.draft) args.push('--draft')
+    const r = await this.run(gh, args, { cwd, input: stripAiNotes(o.body), timeout: 120_000 })
+    if (r.code !== 0) {
+      const msg = cleanGitError(r.stderr || r.stdout) || t('Pull Request konnte nicht angelegt werden')
+      throw new Error(/gh auth login|not logged in/i.test(r.stderr) || AUTH_RE.test(r.stderr) ? AUTH_MARK + msg : msg)
+    }
+    return /https:\/\/\S+/.exec(r.stdout)?.[0] ?? ''
   }
 
   /** Commit-Nachricht von Claude Code (claude -p) – nutzt das Abo, kein API-Key nötig */

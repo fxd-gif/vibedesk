@@ -9,6 +9,7 @@ import { alert, confirm, useDialog } from '../../store/dialogStore'
 import { inform } from '../../store/notifyStore'
 import { relTime } from '../../util'
 import { DiffView } from './DiffView'
+import { ensureGh, PrPanel } from './PrPanel'
 import { cancelLogin, githubLogin, installTool, refreshTools, useGitAuth, withAuth } from './gitAuth'
 import { t } from '../../../../shared/i18n'
 import './git.css'
@@ -462,6 +463,7 @@ export function GitWindow(): React.JSX.Element {
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<'changes' | 'history'>('changes')
   const [sync, setSync] = useState<null | 'pull' | 'push' | 'fetch' | 'publish' | 'switch'>(null)
+  const [pr, setPr] = useState(false)
   const tools = useGitAuth((s) => s.tools)
   const busyRef = useRef(false)
 
@@ -516,11 +518,7 @@ export function GitWindow(): React.JSX.Element {
     if (!r.ok || !projectId) return
     if (s.unborn) return void alert(t('Noch kein Commit'), t('Committe zuerst deine Dateien – dann kann VibeDesk sie hochladen.'))
     await run('publish', t('Veröffentlichen fehlgeschlagen'), async () => {
-      const tl = useGitAuth.getState().tools ?? (await refreshTools())
-      if (tl.gh !== 'loggedIn') {
-        if (tl.gh === 'missing' && !(await installTool('gh'))) return
-        if (!(await githubLogin())) return
-      }
+      if (!(await ensureGh())) return
       const url = await api.git.publish(projectId, r.value, !r.checked)
       inform(t('Auf GitHub veröffentlicht'), url, url ? [{ label: t('Öffnen'), primary: true, run: () => api.git.openWeb(url) }] : undefined)
     })
@@ -598,6 +596,11 @@ export function GitWindow(): React.JSX.Element {
             >
               {sync === 'push' ? <span className="spin" /> : '↑'} Push{repo.ahead ? ` ${repo.ahead}` : ''}
             </button>
+            {/github\.com/i.test(repo.remoteUrl) && !repo.unborn && (
+              <button className="btn small" disabled={!!sync} onClick={() => setPr(true)} title={t('Branch pushen und auf GitHub einen Pull Request öffnen')} data-testid="git-pr">
+                <Icon name="merge" size={13} /> {t('Pull Request')}
+              </button>
+            )}
             {repo.webUrl && (
               <button className="btn small ghost" title={repo.webUrl} onClick={() => api.git.openWeb(repo.webUrl!)}>
                 <Icon name="external" size={13} />
@@ -615,6 +618,16 @@ export function GitWindow(): React.JSX.Element {
       <InstallLog />
       <div className="git-body-wrap">{body}</div>
       <LoginOverlay />
+      {pr && projectId && (
+        <PrPanel
+          projectId={projectId}
+          onClose={() => setPr(false)}
+          onDone={() => {
+            setPr(false)
+            void reload()
+          }}
+        />
+      )}
     </div>
   )
 }

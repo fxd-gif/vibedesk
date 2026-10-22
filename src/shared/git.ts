@@ -238,3 +238,86 @@ export function cleanMessage(raw: string): string {
   if (/^["'„].*["'“]$/s.test(s) && !s.slice(1, -1).includes('"')) s = s.slice(1, -1).trim()
   return s.replace(/\n{3,}/g, '\n\n')
 }
+
+// ---------- Pull Requests ----------
+
+export interface PrInfo {
+  /** Ziel-Branch (Standard-Branch auf GitHub) */
+  base: string
+  branch: string
+  /** auf dem Ziel-Branch – für den PR wird ein neuer Branch angelegt */
+  onBase: boolean
+  /** Commits, die in den PR kommen (neueste zuerst) */
+  commits: string[]
+  /** gibt es für den Branch schon einen offenen PR? */
+  existing: { url: string; title: string } | null
+  /** nicht committete Änderungen kommen nicht mit */
+  dirty: number
+  gh: 'missing' | 'ok'
+}
+
+export interface PrDraft {
+  title: string
+  body: string
+}
+
+export function prPrompt(diff: string, commits: string[], stat: string): string {
+  const cut = diff.length > AI_DIFF_MAX ? diff.slice(0, AI_DIFF_MAX) + '\n… ' + t('(gekürzt)') : diff
+  return [
+    t('Schreibe Titel und Beschreibung für einen GitHub-Pull-Request mit den Änderungen unten.'),
+    t('Regeln:'),
+    t('- Sprache wie in den Commits. Erste Zeile: der Titel, höchstens 72 Zeichen, kein Punkt am Ende.'),
+    t('- Danach eine Leerzeile und die Beschreibung in Markdown: kurz, worum es geht und warum, dann „## Änderungen“ mit 2–6 Stichpunkten.'),
+    t('- Keine Hinweise auf KI, Claude oder Werkzeuge, mit denen der Text entstand.'),
+    t('- Gib NUR Titel und Beschreibung aus: kein Codeblock drumherum, keine Einleitung.'),
+    '',
+    t('## Commits'),
+    commits.length ? commits.map((s) => '- ' + s).join('\n') : t('(noch keine)'),
+    '',
+    t('## Übersicht'),
+    stat.trim() || t('(keine)'),
+    '',
+    '## Diff',
+    cut
+  ].join('\n')
+}
+
+/** Zeilen, die verraten, womit der Text geschrieben wurde – gehören nicht in öffentliche PRs */
+const AI_LINE = /(generated with|erstellt mit|geschrieben mit).*(claude|ai\b|ki\b)|claude\.com\/claude-code|co-authored-by:.*(claude|anthropic)|🤖/i
+
+export function stripAiNotes(s: string): string {
+  return s
+    .split('\n')
+    .filter((l) => !AI_LINE.test(l))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
+/** Antwort von Claude → Titel (erste Zeile) und Beschreibung (Rest) */
+export function parsePr(raw: string): PrDraft {
+  const s = stripAiNotes(cleanMessage(raw))
+  const lines = s.split('\n')
+  const title = (lines.shift() ?? '').replace(/^#+\s*/, '').replace(/^(titel|title):\s*/i, '').trim().slice(0, 200)
+  const body = lines.join('\n').replace(/^(beschreibung|description):\s*\n?/i, '').trim()
+  return { title, body }
+}
+
+/** Vorschlag für einen Branch-Namen aus dem Titel: „feat: Dark Mode für Einstellungen“ → „feat/dark-mode-fuer-einstellungen“ */
+export function prBranchName(title: string): string {
+  const m = /^(\w+)(?:\([^)]*\))?!?:\s*(.*)$/.exec(title.trim())
+  const kind = m && /^(feat|fix|docs|refactor|chore|test|perf|style|build|ci)$/i.test(m[1]) ? m[1].toLowerCase() : 'change'
+  const slug = (m ? m[2] : title)
+    .toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+    .replace(/-+$/, '')
+  return `${kind}/${slug || 'update'}`
+}
+

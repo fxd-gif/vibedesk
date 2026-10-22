@@ -201,6 +201,13 @@ const dict: Record<string, string> = {
   'Lies ihn in Ruhe – Claude legt erst los, wenn du zustimmst.': 'Take your time – Claude only starts once you agree.',
   'Plan ansehen und freigeben': 'Review and approve the plan',
   'Rückmeldung aus VibeDesk – bitte so überarbeiten: {note}': 'Feedback from VibeDesk – please revise like this: {note}',
+  // Pull-Request-Prompt
+  'Schreibe Titel und Beschreibung für einen GitHub-Pull-Request mit den Änderungen unten.': 'Write the title and description for a GitHub pull request with the changes below.',
+  '- Sprache wie in den Commits. Erste Zeile: der Titel, höchstens 72 Zeichen, kein Punkt am Ende.': '- Same language as the commits. First line: the title, at most 72 characters, no full stop.',
+  '- Danach eine Leerzeile und die Beschreibung in Markdown: kurz, worum es geht und warum, dann „## Änderungen“ mit 2–6 Stichpunkten.': '- Then a blank line and the description in Markdown: briefly what it is about and why, then “## Changes” with 2–6 bullet points.',
+  '- Keine Hinweise auf KI, Claude oder Werkzeuge, mit denen der Text entstand.': '- No mention of AI, Claude or the tools used to write the text.',
+  '- Gib NUR Titel und Beschreibung aus: kein Codeblock drumherum, keine Einleitung.': '- Output ONLY title and description: no surrounding code block, no preamble.',
+  '## Commits': '## Commits',
 }
 
 export default dict

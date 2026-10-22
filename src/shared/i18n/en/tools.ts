@@ -228,6 +228,27 @@ const dict: Record<string, string> = {
   'Nicht committete Änderungen nimmt git zum neuen Branch mit, solange sie nicht kollidieren.': 'Git carries uncommitted changes over to the new branch as long as they don’t collide.',
   'Branch anlegen fehlgeschlagen': 'Couldn’t create branch',
   'Branch wechseln fehlgeschlagen': 'Couldn’t switch branch',
+  // Pull Request
+  'Pull Request': 'Pull request',
+  'Branch pushen und auf GitHub einen Pull Request öffnen': 'Push the branch and open a pull request on GitHub',
+  'Pull Request öffnen': 'Open pull request',
+  'Pull Request geöffnet': 'Pull request opened',
+  'Pull Request fehlgeschlagen': 'Pull request failed',
+  'Pull Request konnte nicht angelegt werden': 'Could not create the pull request',
+  'Pull Requests gehen nur mit einem GitHub-Repository.': 'Pull requests only work with a GitHub repository.',
+  'Der Pull Request braucht einen Titel.': 'The pull request needs a title.',
+  'Es gibt noch keine Commits für einen Pull Request.': 'There are no commits for a pull request yet.',
+  'Als Entwurf': 'As draft',
+  'Auf GitHub ansehen': 'View on GitHub',
+  'Auf „{branch}“ gibt es noch keine Commits, die nicht schon auf „{base}“ sind.': '“{branch}” has no commits that aren’t already on “{base}”.',
+  'Beschreibung (Markdown)': 'Description (Markdown)',
+  'Erlaubt sind Buchstaben, Ziffern, „-“, „_“, „.“ und „/“.': 'Allowed are letters, digits, “-”, “_”, “.” and “/”.',
+  'Für „{branch}“ ist schon ein Pull Request offen:': 'A pull request for “{branch}” is already open:',
+  'Kein Vorschlag von Claude': 'No suggestion from Claude',
+  'Neue Commits landen nach einem Push automatisch darin.': 'New commits end up in it automatically after a push.',
+  'Neuer Branch': 'New branch',
+  'Neu vorschlagen': 'Suggest again',
+  '{n} nicht committete Änderungen kommen nicht mit.': '{n} uncommitted changes are not included.',
 }
 
 export default dict

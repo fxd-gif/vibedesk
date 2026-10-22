@@ -50,6 +50,11 @@ export function registerGitIpc(git: GitService, projects: ProjectStore, win: () 
   ipcMain.handle('git:fetch', (_e, id) => git.fetch(cwd(id)))
   ipcMain.handle('git:publish', (_e, id, name, priv) => git.publish(cwd(id), String(name ?? ''), !!priv))
   ipcMain.handle('git:aiMessage', (_e, id) => git.aiMessage(cwd(id)))
+  ipcMain.handle('git:prInfo', (_e, id) => git.prInfo(cwd(id)))
+  ipcMain.handle('git:aiPr', (_e, id) => git.aiPr(cwd(id)))
+  ipcMain.handle('git:createPr', (_e, id, o: { title?: unknown; body?: unknown; branch?: unknown; draft?: unknown }) =>
+    git.createPr(cwd(id), { title: String(o?.title ?? ''), body: String(o?.body ?? '').slice(0, 60_000), branch: typeof o?.branch === 'string' ? o.branch : undefined, draft: !!o?.draft })
+  )
   ipcMain.on('git:openWeb', (_e, url: unknown) => {
     if (typeof url === 'string' && /^https:\/\//.test(url)) void shell.openExternal(url)
   })

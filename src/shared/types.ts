@@ -51,6 +51,7 @@ import type { GitCommit, GitState, GitTools } from './git'
 import type { WrapChanges } from './wrapUp'
 import type { TraySession } from './tray'
 import type { Budget, BudgetAlert, BudgetUse } from './budget'
+import type { PrDraft, PrInfo } from './git'
 import type { LivingScene, LivingStatus } from './living'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { PlanLimits } from './limits'
@@ -607,6 +608,12 @@ export interface VibedeskApi {
     fetch(projectId: string): Promise<void>
     publish(projectId: string, name: string, priv: boolean): Promise<string>
     aiMessage(projectId: string): Promise<string>
+    /** Stand für einen Pull Request (Ziel-Branch, Commits, vorhandener PR) */
+    prInfo(projectId: string): Promise<PrInfo>
+    /** Claude schreibt Titel und Beschreibung */
+    aiPr(projectId: string): Promise<PrDraft>
+    /** Branch anlegen (falls nötig), pushen, PR öffnen → URL */
+    createPr(projectId: string, o: { title: string; body: string; branch?: string; draft: boolean }): Promise<string>
     /** lokale Branches */
     branches(projectId: string): Promise<string[]>
     /** Branch wechseln; create = neu anlegen */

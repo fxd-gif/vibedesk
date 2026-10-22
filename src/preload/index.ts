@@ -183,6 +183,9 @@ const api: VibedeskApi = {
     fetch: (id) => ipcRenderer.invoke('git:fetch', id),
     publish: (id, name, priv) => ipcRenderer.invoke('git:publish', id, name, priv),
     aiMessage: (id) => ipcRenderer.invoke('git:aiMessage', id),
+    prInfo: (id) => ipcRenderer.invoke('git:prInfo', id),
+    aiPr: (id) => ipcRenderer.invoke('git:aiPr', id),
+    createPr: (id, o) => ipcRenderer.invoke('git:createPr', id, o),
     openWeb: (url) => ipcRenderer.send('git:openWeb', url)
   },
   living: {

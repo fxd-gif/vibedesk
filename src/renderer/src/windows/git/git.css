@@ -85,3 +85,13 @@ button.git-branch:hover:not(:disabled) { background: rgba(255,255,255,.1); }
 .git-branch-new { display: flex; gap: 6px; margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--glass-border); }
 .git-branch-new input { flex: 1; min-width: 0; }
 .git-branch-menu .tiny { padding: 4px 4px 2px; }
+
+/* Pull Request */
+.git-pr-wrap { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; background: rgba(7,9,13,.55); backdrop-filter: blur(2px); }
+.git-pr { width: min(620px, calc(100% - 32px)); max-height: calc(100% - 32px); overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 14px; border: 1px solid var(--glass-border); background: var(--glass, rgba(20,24,32,.96)); box-shadow: 0 20px 60px rgba(0,0,0,.45); }
+.git-pr-route { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.git-pr-route label { gap: 6px; }
+.git-pr-route input { width: 260px; }
+.git-pr-body { min-height: 200px; resize: vertical; font-size: 12.5px; line-height: 1.5; }
+.git-pr-existing { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.git-pr-existing p { margin: 0; }
