@@ -6,6 +6,7 @@ import { resolveLang, setLang, t } from '../shared/i18n'
 import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
 import { LivingStore } from './livingScenes'
 import { createLivingTools } from './livingTools'
+import { TrayService } from './trayService'
 import { ADDON_SCHEME, addonPathFromArgv, AddonStore } from './addonStore'
 import { registerAddonIpc } from './addonIpc'
 import { sniffAsset } from '../shared/addonValidate'
@@ -137,6 +138,13 @@ const send = (ch: string, ...args: unknown[]): void => {
 }
 
 let gate: ReturnType<typeof createSplashGate> | null = null
+let tray: TrayService | null = null
+/** echtes Beenden (Tray-Menü, Update) – sonst versteckt Schließen das Fenster, wenn so eingestellt */
+let quitting = false
+app.on('before-quit', () => {
+  quitting = true
+  tray?.stop()
+})
 
 app.whenReady().then(async () => {
   if (!primary) return
@@ -256,6 +264,7 @@ app.whenReady().then(async () => {
     enabled: () => settings.get().approvalsOn,
     emit: (list) => {
       send('permissions:list', list)
+      tray?.setAsks(list)
       companion.hub.touch()
     }
   })
@@ -464,6 +473,33 @@ app.whenReady().then(async () => {
     }
   )
   mainWindow = createWindow()
+  // Tray: Stand aller Sessions im Infobereich; Schließen kann VibeDesk dorthin verstecken
+  const showMain = (sessionId?: string): void => {
+    const w = mainWindow
+    if (!w || w.isDestroyed()) return
+    if (w.isMinimized()) w.restore()
+    w.show()
+    w.focus()
+    if (sessionId) send('tray:focus', sessionId)
+  }
+  tray = new TrayService({
+    iconFile: app.isPackaged ? join(process.resourcesPath, 'icon.png') : join(app.getAppPath(), 'resources', 'icon.png'),
+    win: () => mainWindow,
+    show: showMain,
+    answer: (id, decision) => broker.answer(id, decision),
+    quit: () => app.quit()
+  })
+  ipcMain.on('tray:sessions', (_e, list: unknown) => {
+    if (!tray) return
+    if (settings.get().trayOn === false) tray.stop()
+    else tray.start()
+    tray.setSessions(list)
+  })
+  mainWindow.on('close', (e) => {
+    if (quitting || !settings.get().trayOnClose || settings.get().trayOn === false) return
+    e.preventDefault()
+    mainWindow?.hide()
+  })
   if (splash) {
     const win = mainWindow
     let ready = false

@@ -92,6 +92,7 @@ const api: VibedeskApi = {
     deskCommand: (cb) => listen<[DeskCommand]>('desk:command', cb),
     livingChanged: (cb) => listen<[LivingScene[]]>('living:changed', cb),
     livingSnapshot: (cb) => listen<[string]>('living:snapshot', cb),
+    trayFocus: (cb) => listen<[string]>('tray:focus', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),
     power: (cb) => listen<[boolean]>('power:battery', cb)
   },
@@ -186,6 +187,9 @@ const api: VibedeskApi = {
     delete: (id) => ipcRenderer.invoke('living:delete', id),
     status: (s) => ipcRenderer.send('living:status', s),
     snapshotResult: (req, data, error) => ipcRenderer.send('living:snapshotResult', req, data, error)
+  },
+  tray: {
+    sessions: (list) => ipcRenderer.send('tray:sessions', list)
   },
   wrapUp: {
     summary: (transcript) => ipcRenderer.invoke('wrapup:summary', transcript),

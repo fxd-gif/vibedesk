@@ -17,6 +17,8 @@ extraResources:
     to: update-splash.ps1
   - from: resources/living-runtime.js
     to: living-runtime.js
+  - from: resources/icon.png
+    to: icon.png
 asarUnpack:
   - "**/node_modules/@lydell/**"
 win:

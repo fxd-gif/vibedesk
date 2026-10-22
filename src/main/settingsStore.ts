@@ -72,6 +72,8 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   autoTidy: false,
   dockFade: true,
   wrapUp: true,
+  trayOn: true,
+  trayOnClose: false,
   autoUpdate: true,
   experience: '',
   inspectorTabsOff: [],

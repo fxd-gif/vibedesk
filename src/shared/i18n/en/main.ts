@@ -311,6 +311,21 @@ const dict: Record<string, string> = {
 
   // Session-Abschluss
   'Diese Session läuft nicht mehr.': 'This session is no longer running.',
+  // Tray
+  '{n} Freigaben offen': '{n} approvals open',
+  '{n} wartet auf dich': '{n} waiting for you',
+  '{n} arbeitet': '{n} working',
+  '{n} fertig': '{n} done',
+  'Immer erlauben': 'Always allow',
+  'In VibeDesk ansehen': 'Show in VibeDesk',
+  'Keine Sessions offen': 'No sessions open',
+  'VibeDesk zeigen': 'Show VibeDesk',
+  Beenden: 'Quit',
+  // Einstellungen → Ruhe
+  'Symbol im Infobereich': 'Tray icon',
+  'Ein farbiger Punkt zeigt, ob eine Session auf dich wartet – auch wenn VibeDesk im Hintergrund ist': 'A coloured dot shows whether a session is waiting for you – even when VibeDesk is in the background',
+  'Beim Schließen im Infobereich weiterlaufen': 'Keep running in the tray when closed',
+  'Alt+F4 versteckt VibeDesk nur, die Sessions arbeiten weiter': 'Alt+F4 only hides VibeDesk, the sessions keep working',
 }
 
 export default dict

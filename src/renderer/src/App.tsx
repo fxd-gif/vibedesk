@@ -60,6 +60,7 @@ import { dockPlan, earned, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
 import { useBrainUsed, wireBrainActivity } from './store/brainActivity'
 import { wireWrapUp } from './store/wrapUpStore'
+import { wireTray } from './store/trayStore'
 import { LivingSceneView, useLiving, wireLiving } from './ambience/LivingScene'
 import { isLivingScene, livingId } from '../../shared/living'
 import { WrapUpDialog } from './windows/WrapUpDialog'
@@ -186,6 +187,7 @@ export default function App(): React.JSX.Element {
     wireBrainActivity()
     wireWrapUp()
     wireLiving()
+    wireTray()
     wirePermissions()
     wireCompanion()
     wireCalm()

@@ -75,6 +75,14 @@ function General(): React.JSX.Element | null {
       <Row label={t('Abschluss nach jeder Runde')} hint={t('Hat Claude Dateien geändert, bietet die Fertig-Karte Zusammenfassung und Commit an')}>
         <Toggle on={s.wrapUp ?? true} onChange={(v) => set({ wrapUp: v })} label={t('Abschluss nach jeder Runde')} />
       </Row>
+      <Row label={t('Symbol im Infobereich')} hint={t('Ein farbiger Punkt zeigt, ob eine Session auf dich wartet – auch wenn VibeDesk im Hintergrund ist')}>
+        <Toggle on={s.trayOn ?? true} onChange={(v) => set({ trayOn: v })} label={t('Symbol im Infobereich')} />
+      </Row>
+      {(s.trayOn ?? true) && (
+        <Row label={t('Beim Schließen im Infobereich weiterlaufen')} hint={t('Alt+F4 versteckt VibeDesk nur, die Sessions arbeiten weiter')}>
+          <Toggle on={!!s.trayOnClose} onChange={(v) => set({ trayOnClose: v })} label={t('Beim Schließen im Infobereich weiterlaufen')} />
+        </Row>
+      )}
       <Row label={t('Tipps zeigen')} hint={t('Ab und zu ein leiser Hinweis auf etwas, das gerade passt')}>
         <Toggle on={s.hintsOn ?? true} onChange={(v) => set({ hintsOn: v })} label={t('Tipps zeigen')} />
       </Row>
