@@ -7,6 +7,8 @@ import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
 import { LivingStore } from './livingScenes'
 import { createLivingTools } from './livingTools'
 import { TrayService } from './trayService'
+import { BudgetService } from './budgetService'
+import { cleanBudget } from '../shared/budget'
 import { ADDON_SCHEME, addonPathFromArgv, AddonStore } from './addonStore'
 import { registerAddonIpc } from './addonIpc'
 import { sniffAsset } from '../shared/addonValidate'
@@ -198,7 +200,33 @@ app.whenReady().then(async () => {
 
   const token = randomBytes(24).toString('hex')
   const statsHistory = new StatsHistory(join(userData, 'stats.json'))
-  const stats = new StatsService({ history: statsHistory, emit: (s) => send('stats:update', s) })
+  // Budget pro Projekt: Verbrauch je Session dem Projekt zuschreiben, bei 75 %/100 % Bescheid geben
+  const budget = new BudgetService({
+    file: join(userData, 'budget.json'),
+    budgets: () => settings.get().budgets ?? {},
+    alert: (a) => send('budget:alert', a),
+    changed: (list) => send('budget:usage', list),
+    today: () => localDate(Date.now())
+  })
+  const stats = new StatsService({
+    history: statsHistory,
+    emit: (s) => send('stats:update', s),
+    spent: (sessionId, tokens, cost) => {
+      const p = sessions.list().find((x) => x.id === sessionId)?.projectId
+      if (p) budget.add(p, tokens, cost)
+    }
+  })
+  ipcMain.handle('budget:all', () => budget.all())
+  ipcMain.handle('budget:set', (_e, projectId: unknown, raw: unknown) => {
+    if (typeof projectId !== 'string' || !projectId) return budget.all()
+    const next = { ...(settings.get().budgets ?? {}) }
+    const b = cleanBudget(raw)
+    if (b) next[projectId] = b
+    else delete next[projectId]
+    settings.set({ budgets: next })
+    budget.reset(projectId)
+    return budget.all()
+  })
   ipcMain.handle('stats:history', () => statsHistory.lastDays(30, localDate(Date.now())))
   // Energiesparen: Akku/Netz an den Renderer melden (Regen-Hintergrund drosselt im Akkubetrieb)
   ipcMain.handle('power:onBattery', () => powerMonitor.isOnBatteryPower())

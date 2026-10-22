@@ -382,6 +382,21 @@ const dict: Record<string, string> = {
   'Prüfe das Ergebnis mit desk_scene_snapshot und bessere nach, bis es gut aussieht.': 'Check the result with desk_scene_snapshot and refine it until it looks good.',
   'Szene „{name}“ löschen?': 'Delete scene “{name}”?',
   'Die Szene „{name}“ hat einen Fehler': 'The scene “{name}” has an error',
+  // Budget pro Projekt
+  'Budget für {name} festlegen …': 'Set a budget for {name} …',
+  'Budget {name}': 'Budget {name}',
+  'Budget ändern': 'Change budget',
+  'Claude arbeitet weiter – du entscheidest.': 'Claude keeps working – your call.',
+  Einheit: 'Unit',
+  'Tsd. Tokens': 'k tokens',
+  Zeitraum: 'Period',
+  'diese Woche': 'this week',
+  heute: 'today',
+  'pro Tag': 'per day',
+  'pro Woche': 'per week',
+  '{name}: 75 % vom Budget': '{name}: 75 % of budget',
+  '{name}: Budget erreicht': '{name}: budget reached',
+  '{used} von {amount} {period}': '{used} of {amount} {period}',
 }
 
 export default dict

@@ -683,3 +683,9 @@ html[data-typing] .dock:not(:hover) { opacity: .28; }
 .tour-bubble p { margin: 0; color: var(--text-dim); font-size: 13px; line-height: 1.55; }
 .tour-count { font-size: 11px; letter-spacing: .06em; color: var(--text-dim); }
 .tour-btns { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+/* Budget pro Projekt (Stats-Tab) */
+.budget { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,.03); }
+.budget-edit { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--glass-border); background: rgba(255,255,255,.03); }
+.budget-edit .field { width: auto; min-width: 0; }
+.budget-edit input.field { width: 72px; }
+.budget-add { align-self: flex-start; }

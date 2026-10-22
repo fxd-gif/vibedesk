@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { DiscordStatus, FileChange, HookEvent, SessionInfo, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
+import type { BudgetAlert, BudgetUse } from '../shared/budget'
 import type { BrainPulse } from '../shared/brain'
 import type { PermissionAsk } from '../shared/permissions'
 import type { CompanionDevice, CompanionStatus, PromptTarget, TermQuery } from '../shared/companion'
@@ -93,6 +94,8 @@ const api: VibedeskApi = {
     livingChanged: (cb) => listen<[LivingScene[]]>('living:changed', cb),
     livingSnapshot: (cb) => listen<[string]>('living:snapshot', cb),
     trayFocus: (cb) => listen<[string]>('tray:focus', cb),
+    budgetUsage: (cb) => listen<[BudgetUse[]]>('budget:usage', cb),
+    budgetAlert: (cb) => listen<[BudgetAlert]>('budget:alert', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),
     power: (cb) => listen<[boolean]>('power:battery', cb)
   },
@@ -187,6 +190,10 @@ const api: VibedeskApi = {
     delete: (id) => ipcRenderer.invoke('living:delete', id),
     status: (s) => ipcRenderer.send('living:status', s),
     snapshotResult: (req, data, error) => ipcRenderer.send('living:snapshotResult', req, data, error)
+  },
+  budget: {
+    all: () => ipcRenderer.invoke('budget:all'),
+    set: (id, b) => ipcRenderer.invoke('budget:set', id, b)
   },
   tray: {
     sessions: (list) => ipcRenderer.send('tray:sessions', list)

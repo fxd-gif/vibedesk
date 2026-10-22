@@ -50,6 +50,7 @@ import type { BrainPulse, BrainView, NoteDetail } from './brain'
 import type { GitCommit, GitState, GitTools } from './git'
 import type { WrapChanges } from './wrapUp'
 import type { TraySession } from './tray'
+import type { Budget, BudgetAlert, BudgetUse } from './budget'
 import type { LivingScene, LivingStatus } from './living'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { PlanLimits } from './limits'
@@ -256,6 +257,8 @@ export interface Settings {
   trayOn: boolean
   /** Schließen versteckt VibeDesk im Infobereich, Sessions laufen weiter */
   trayOnClose: boolean
+  /** Budget pro Projekt (projectId → Budget) – nur Warnungen, kein Stopp */
+  budgets: Record<string, Budget>
   /** Updates selbst laden und beim Start installieren (aus: nur Hinweis, Laden per Knopf) */
   autoUpdate: boolean
   /** Erfahrung aus dem Onboarding – bestimmt die Grundeinstellung ('' = noch nicht gefragt) */
@@ -490,6 +493,8 @@ export interface VibedeskApi {
     livingSnapshot(cb: (req: string) => void): Unsubscribe
     /** Klick im Tray-Menü auf eine Session */
     trayFocus(cb: (sessionId: string) => void): Unsubscribe
+    budgetUsage(cb: (list: BudgetUse[]) => void): Unsubscribe
+    budgetAlert(cb: (a: BudgetAlert) => void): Unsubscribe
     /** Neue Abo-Limits aus der Statuszeile von Claude Code */
     limits(cb: (l: PlanLimits) => void): Unsubscribe
     /** Handy will Terminal-Zeilen: lesen und mit companion.termDone(reqId, chunk) antworten */
@@ -614,6 +619,12 @@ export interface VibedeskApi {
     delete(id: string): Promise<boolean>
     status(s: LivingStatus): void
     snapshotResult(req: string, data: string | null, error?: string): void
+  }
+  /** Budget pro Projekt */
+  budget: {
+    all(): Promise<BudgetUse[]>
+    /** null = Budget entfernen */
+    set(projectId: string, budget: Budget | null): Promise<BudgetUse[]>
   }
   /** Tray-Symbol: Stand aller Sessions */
   tray: {

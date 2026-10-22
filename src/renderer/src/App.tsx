@@ -61,6 +61,7 @@ import { useAddons } from './store/addonStore'
 import { useBrainUsed, wireBrainActivity } from './store/brainActivity'
 import { wireWrapUp } from './store/wrapUpStore'
 import { wireTray } from './store/trayStore'
+import { wireBudget } from './store/budgetStore'
 import { LivingSceneView, useLiving, wireLiving } from './ambience/LivingScene'
 import { isLivingScene, livingId } from '../../shared/living'
 import { WrapUpDialog } from './windows/WrapUpDialog'
@@ -188,6 +189,7 @@ export default function App(): React.JSX.Element {
     wireWrapUp()
     wireLiving()
     wireTray()
+    wireBudget()
     wirePermissions()
     wireCompanion()
     wireCalm()

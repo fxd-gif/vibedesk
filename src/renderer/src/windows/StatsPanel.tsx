@@ -4,6 +4,7 @@ import { fmtDuration, fmtTokens, fmtUsd, modelLabel, useStats } from '../store/s
 import { useWorkflow } from '../store/workflowStore'
 import { showWrapped } from '../wrapped/VibeWrapped'
 import { t } from '../../../shared/i18n'
+import { BudgetCard } from './BudgetCard'
 
 const level = (p: number): string => (p >= 0.95 ? 'crit' : p >= 0.8 ? 'warn' : 'ok')
 
@@ -21,6 +22,8 @@ export function StatsPanel(): React.JSX.Element {
   }, [])
 
   const today = days[days.length - 1]
+  // ein Budget pro Projekt – auch wenn mehrere Sessions daran arbeiten
+  const projects = [...new Map(sessions.filter((s) => !s.external).map((s) => [s.projectId, s.name])).entries()]
   const maxDay = Math.max(1, ...days.map((d) => d.tokens))
 
   return (
@@ -40,6 +43,10 @@ export function StatsPanel(): React.JSX.Element {
           ))}
         </div>
       </section>
+
+      {projects.map(([id, name]) => (
+        <BudgetCard key={id} projectId={id} name={name} />
+      ))}
 
       {!sessions.length && <div className="panel-empty">{t('Starte eine Session – Tokens, Context und Kosten erscheinen hier live.')}</div>}
 

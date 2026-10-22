@@ -62,7 +62,7 @@ export class StatsService {
   private now: () => number
   private throttleMs: number
 
-  constructor(private o: { history: StatsHistory; emit(s: SessionStats): void; now?: () => number; throttleMs?: number }) {
+  constructor(private o: { history: StatsHistory; emit(s: SessionStats): void; now?: () => number; throttleMs?: number; /** neuer Verbrauch einer Session (fürs Budget pro Projekt) */ spent?(sessionId: string, tokens: number, cost: number): void }) {
     this.now = o.now ?? Date.now
     this.throttleMs = o.throttleMs ?? 750
   }
@@ -130,6 +130,7 @@ export class StatsService {
     const f = { tokens: counted(t.fresh.total), cacheRead: t.fresh.total.cacheRead, cost: costUsd(t.fresh.model ?? t.agg.model, t.fresh.total).usd }
     if (f.tokens > t.recorded.tokens || f.cacheRead > t.recorded.cacheRead) {
       this.o.history.add(localDate(this.now()), f.tokens - t.recorded.tokens, f.cacheRead - t.recorded.cacheRead, f.cost - t.recorded.cost)
+      this.o.spent?.(sessionId, f.tokens - t.recorded.tokens, f.cost - t.recorded.cost)
       t.recorded = f
     }
     // Wurde das Protokoll inzwischen gewechselt, keinen veralteten Stand mehr melden (beendete Sessions schon)
