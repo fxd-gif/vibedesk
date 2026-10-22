@@ -80,7 +80,7 @@
         $('[data-next-version]').textContent = n.version
         $('[data-next-date]').textContent = at.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })
         $('[data-next-features]').innerHTML = n.features
-          .map((f) => `<li><a href="${issueUrl(f.issue)}"><b>${esc(f.title)}</b></a><small>${esc(f.text)}</small></li>`)
+          .map((f) => `<li>${f.issue ? `<a href="${issueUrl(f.issue)}"><b>${esc(f.title)}</b></a>` : `<b>${esc(f.title)}</b>`}<small>${esc(f.text)}</small></li>`)
           .join('')
         const cell = (k) => nextCount.querySelector(`[data-cd="${k}"]`)
         const tick = () => {
