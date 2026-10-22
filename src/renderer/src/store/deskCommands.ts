@@ -5,7 +5,9 @@ import { tidyNow, toggleZen } from '../desktop/calm'
 import { openPanel } from '../windows/palette/CommandPalette'
 import { useFocus } from './focusStore'
 import { inform } from './notifyStore'
-import { kindOf } from './sessionStore'
+import { kindOf, useSessions } from './sessionStore'
+import { sendToSession } from './sessionPrompt'
+import { t } from '../../../shared/i18n'
 import { useSettings } from './settingsStore'
 import { useUi } from './uiStore'
 import { usePreview } from './previewStore'
@@ -56,4 +58,11 @@ export function wireDeskCommands(): void {
   if (wired) return
   wired = true
   api.on.deskCommand(runDeskCommand)
+  // Claude schickt einer anderen Session einen Auftrag (desk_session_send)
+  api.on.deskSessionPrompt((id, text, from) => {
+    const to = useSessions.getState().sessions.find((s) => s.id === id)
+    if (!to) return
+    sendToSession(id, text, false)
+    inform(t('{from} → {to}', { from, to: to.name }), text.length > 140 ? text.slice(0, 139) + '…' : text)
+  })
 }

@@ -494,6 +494,8 @@ export interface VibedeskApi {
     livingSnapshot(cb: (req: string) => void): Unsubscribe
     /** Klick im Tray-Menü auf eine Session */
     trayFocus(cb: (sessionId: string) => void): Unsubscribe
+    /** Claude schickt einer anderen Session einen Auftrag */
+    deskSessionPrompt(cb: (sessionId: string, text: string, from: string) => void): Unsubscribe
     budgetUsage(cb: (list: BudgetUse[]) => void): Unsubscribe
     budgetAlert(cb: (a: BudgetAlert) => void): Unsubscribe
     /** Neue Abo-Limits aus der Statuszeile von Claude Code */

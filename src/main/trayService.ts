@@ -50,6 +50,11 @@ export class TrayService {
     if (w && !w.isDestroyed()) w.setOverlayIcon(null, '')
   }
 
+  /** letzter Stand vom Renderer – auch wenn das Symbol aus ist */
+  list(): TraySession[] {
+    return this.sessions
+  }
+
   setSessions(list: unknown): void {
     this.sessions = cleanTrayList(list)
     this.render()

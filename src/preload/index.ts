@@ -94,6 +94,7 @@ const api: VibedeskApi = {
     livingChanged: (cb) => listen<[LivingScene[]]>('living:changed', cb),
     livingSnapshot: (cb) => listen<[string]>('living:snapshot', cb),
     trayFocus: (cb) => listen<[string]>('tray:focus', cb),
+    deskSessionPrompt: (cb) => listen<[string, string, string]>('desk:sessionPrompt', cb),
     budgetUsage: (cb) => listen<[BudgetUse[]]>('budget:usage', cb),
     budgetAlert: (cb) => listen<[BudgetAlert]>('budget:alert', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),

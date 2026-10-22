@@ -159,6 +159,32 @@ const DESK_TOOLS = [
     name: 'desk_notify',
     description: 'Zeigt dem User in VibeDesk eine kurze Karte (z. B. „Build fertig“). Sparsam nutzen.',
     inputSchema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' } }, required: ['title'] }
+  },
+  { name: 'desk_sessions', description: 'Listet alle Claude-Sessions in VibeDesk: Name, Status (arbeitet, wartet auf den User, fertig …), Projekt, Ordner und id. Markiert, welche du selbst bist.', inputSchema: { type: 'object', properties: {} } },
+  {
+    name: 'desk_session_send',
+    description:
+      'Schickt einer ANDEREN Claude-Session in VibeDesk einen Auftrag, als hätte der User ihn getippt – z. B. „Schreib Tests für die neue API“ an die Session im Backend-Projekt. Nur nutzen, wenn der User mehrere Sessions zusammenarbeiten lassen will. Formuliere vollständig, die andere Session kennt deinen Kontext nicht. Arbeitet sie gerade, kommt der Auftrag danach dran.',
+    inputSchema: { type: 'object', properties: { session: { type: 'string', description: 'id oder Name aus desk_sessions' }, prompt: { type: 'string' } }, required: ['session', 'prompt'] }
+  },
+  { name: 'desk_usage', description: 'Verbrauch: Tokens und geschätzte Kosten heute und in den letzten 7 Tagen, Abo-Limits (5-Stunden-Fenster, Woche) und Budgets der Projekte.', inputSchema: { type: 'object', properties: {} } },
+  {
+    name: 'desk_budget',
+    description: 'Setzt das Budget für das Projekt dieser Session (VibeDesk warnt bei 75 % und 100 %, hält aber nichts an) oder entfernt es mit remove: true.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        amount: { type: 'number', description: 'Dollar bei unit "usd", Tokens bei unit "tokens"' },
+        unit: { type: 'string', enum: ['usd', 'tokens'] },
+        period: { type: 'string', enum: ['day', 'week'] },
+        remove: { type: 'boolean' }
+      }
+    }
+  },
+  {
+    name: 'desk_remind',
+    description: 'Erinnert den User nach einigen Minuten mit einer Karte in VibeDesk, z. B. „Deploy prüfen“ in 30 Minuten.',
+    inputSchema: { type: 'object', properties: { minutes: { type: 'number', minimum: 1, maximum: 1440 }, text: { type: 'string' } }, required: ['minutes', 'text'] }
   }
 ]
 
@@ -233,7 +259,7 @@ async function handle(msg) {
           serverInfo: { name: 'vibedesk-brain', version: '1.0.0' },
           instructions:
             (process.env.VIBEDESK_BRAIN === '0' ? '' : 'Projektgedächtnis von VibeDesk: vor dem Erkunden suchen (brain_search, brain_related), Gelerntes festhalten (brain_write). ') +
-            'Den VibeDesk-Desktop steuern die desk_*-Werkzeuge (Fenster anordnen, Zen-Modus, Szene, Musik …), wenn der User darum bittet. Interaktive Hintergründe (z. B. Schnee, der auf dem Dach im eigenen Bild liegen bleibt) baust du mit desk_scene_create und prüfst sie mit desk_scene_snapshot.'
+            'Den VibeDesk-Desktop steuern die desk_*-Werkzeuge (Fenster anordnen, Zen-Modus, Szene, Musik …), wenn der User darum bittet. Interaktive Hintergründe (z. B. Schnee, der auf dem Dach im eigenen Bild liegen bleibt) baust du mit desk_scene_create und prüfst sie mit desk_scene_snapshot. Andere Sessions siehst du mit desk_sessions und gibst ihnen mit desk_session_send Aufträge; Verbrauch und Budget liefert desk_usage.'
         }
       })
     case 'ping':

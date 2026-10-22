@@ -8,6 +8,7 @@ import { LivingStore } from './livingScenes'
 import { createLivingTools } from './livingTools'
 import { TrayService } from './trayService'
 import { BudgetService } from './budgetService'
+import { createDeskSessionTools } from './deskSessionTools'
 import { cleanBudget } from '../shared/budget'
 import { ADDON_SCHEME, addonPathFromArgv, AddonStore } from './addonStore'
 import { registerAddonIpc } from './addonIpc'
@@ -53,7 +54,7 @@ import { MergeService } from './mergeService'
 import { PermissionBroker } from './permissionBroker'
 import { setupCompanion } from './companionIpc'
 import { parseRateLimits, type PlanLimits } from '../shared/limits'
-import { deskDone, parseDeskCommand } from '../shared/desk'
+import { deskDone, parseDeskCommand, type DeskCommand } from '../shared/desk'
 import { QuickPrompt, type QuickTarget } from './quickPrompt'
 import { VibeLog } from './vibeLog'
 import { captureCard } from './vibeCapture'
@@ -216,8 +217,7 @@ app.whenReady().then(async () => {
       if (p) budget.add(p, tokens, cost)
     }
   })
-  ipcMain.handle('budget:all', () => budget.all())
-  ipcMain.handle('budget:set', (_e, projectId: unknown, raw: unknown) => {
+  const setBudget = (projectId: unknown, raw: unknown): ReturnType<typeof budget.all> => {
     if (typeof projectId !== 'string' || !projectId) return budget.all()
     const next = { ...(settings.get().budgets ?? {}) }
     const b = cleanBudget(raw)
@@ -226,7 +226,9 @@ app.whenReady().then(async () => {
     settings.set({ budgets: next })
     budget.reset(projectId)
     return budget.all()
-  })
+  }
+  ipcMain.handle('budget:all', () => budget.all())
+  ipcMain.handle('budget:set', (_e, projectId: unknown, raw: unknown) => setBudget(projectId, raw))
   ipcMain.handle('stats:history', () => statsHistory.lastDays(30, localDate(Date.now())))
   // Energiesparen: Akku/Netz an den Renderer melden (Regen-Hintergrund drosselt im Akkubetrieb)
   ipcMain.handle('power:onBattery', () => powerMonitor.isOnBatteryPower())
@@ -316,9 +318,22 @@ app.whenReady().then(async () => {
     return f && fs.existsSync(f) ? f : null
   }
   const livingTool = createLivingTools({ store: living, send, scene: () => settings.get().scene, currentImageFile: customImageFile })
-  const deskTool = async (tool: string, args: Record<string, unknown>): Promise<BrainResult> => {
+  const sessionTool = createDeskSessionTools({
+    sessions: () => sessions.list(),
+    states: () => tray?.list() ?? [],
+    projectName: (id) => projects.get(id)?.name ?? id,
+    prompt: (id, text, from) => send('desk:sessionPrompt', id, text, from),
+    days: (n) => statsHistory.lastDays(n, localDate(Date.now())),
+    limits: () => planLimits,
+    budgets: () => budget.all(),
+    setBudget,
+    notify: (title, body) => send('desk:command', { cmd: 'notify', title, body } satisfies DeskCommand)
+  })
+  const deskTool = async (tool: string, args: Record<string, unknown>, sid: string): Promise<BrainResult> => {
     const lt = await livingTool(tool, args)
     if (lt) return lt
+    const st = sessionTool(tool, args, sid)
+    if (st) return st
     if (tool === 'desk_state') {
       const s = settings.get()
       const names = sessions.list().map((x) => x.name)
@@ -370,7 +385,7 @@ app.whenReady().then(async () => {
       if (tend) return tend
       if (e.name === 'SessionStart') return brain.sessionStartOutput(e.sessionId)
     },
-    (sid, tool, args, cwd) => (tool.startsWith('desk_') ? deskTool(tool, args) : brain.tool(sid, tool, args, cwd)),
+    (sid, tool, args, cwd) => (tool.startsWith('desk_') ? deskTool(tool, args, sid) : brain.tool(sid, tool, args, cwd)),
     (e) => broker.ask(e.sessionId, e.payload)
   )
   const port = await hookServer.start()
