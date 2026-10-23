@@ -101,7 +101,8 @@
 /* ---------- Status-Punkte ---------- */
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.3); flex: 0 0 auto; }
 .dot.working { background: var(--green); box-shadow: 0 0 8px var(--green); }
-.dot.waiting { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); animation: pulse 1.4s ease-in-out infinite; }
+/* steps(): Endlos-Animationen nur in wenigen Stufen – siehe Hinweis bei .gwin.claude-working */
+.dot.waiting { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); animation: pulse 1.4s steps(4) infinite; }
 .dot.done { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
 .dot.error { background: var(--red); box-shadow: 0 0 8px var(--red); }
 .dock-btn .dot { position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; }
@@ -360,7 +361,7 @@ textarea.field { resize: vertical; line-height: 1.5; user-select: text; }
 .rounds { display: flex; gap: 6px; }
 .rounds i { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.15); }
 .rounds i.done { background: var(--accent); }
-.rounds i.now { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 1.6s ease-in-out infinite; }
+.rounds i.now { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 1.6s steps(4) infinite; }
 .steppers { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 18px; width: 100%; padding-top: 6px; border-top: 1px solid var(--glass-border); }
 .stepper { display: flex; align-items: center; gap: 6px; }
 .stepper span { flex: 1; color: var(--text-dim); }
@@ -493,7 +494,7 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
 
 /* ── Dock: Musik-Equalizer am Atmosphäre-Icon ───────── */
 .dock-eq { position: absolute; top: 7px; right: 7px; display: flex; align-items: flex-end; gap: 1.5px; height: 8px; }
-.dock-eq i { width: 2px; background: var(--accent); border-radius: 1px; animation: eq 1s ease-in-out infinite; }
+.dock-eq i { width: 2px; background: var(--accent); border-radius: 1px; animation: eq 1s steps(3) infinite; }
 .dock-eq i:nth-child(2) { animation-delay: -.35s; }
 .dock-eq i:nth-child(3) { animation-delay: -.7s; }
 @keyframes eq { 0%, 100% { height: 2px; } 50% { height: 8px; } }
@@ -610,10 +611,13 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 2px 7px; border-radi
 .ts-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ts-row .field { width: 178px; }
 .ts-row .row { gap: 8px; align-items: center; }
-/* Claude arbeitet: dezenter, atmender Rand */
+/* Claude arbeitet: dezenter, atmender Rand.
+   Jede flüssige Endlos-Animation zwingt den Compositor auf 60 Bilder/s – und jedes Bild rechnet die großen
+   backdrop-filter-Unschärfen neu (der Regen selbst läuft nur mit 15–30). Auf Onboard-Grafik ruckelt das sichtbar.
+   steps() lässt den Rand in wenigen Stufen atmen, dazwischen entsteht kein neues Bild. */
 .gwin.claude-working { border-color: rgba(159, 184, 255, .38); box-shadow: 0 0 0 1px rgba(159, 184, 255, .18), 0 0 28px rgba(124, 156, 255, .16), 0 30px 80px rgba(0, 0, 0, .5); }
 @media (prefers-reduced-motion: no-preference) {
-  .gwin.claude-working { animation: claude-glow 2.8s ease-in-out infinite; }
+  .gwin.claude-working { animation: claude-glow 2.8s steps(5) infinite; }
 }
 @keyframes claude-glow { 50% { box-shadow: 0 0 0 1px rgba(159, 184, 255, .3), 0 0 40px rgba(124, 156, 255, .26), 0 30px 80px rgba(0, 0, 0, .5); } }
 

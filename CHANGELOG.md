@@ -22,6 +22,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Verbessert
 
+- **Flüssiger, während Claude arbeitet oder wartet:** Der leuchtende Rand am arbeitenden Terminal, der gelbe Warte-Punkt und der Musik-Equalizer haben VibeDesk bisher dauerhaft auf 60 Bilder pro Sekunde gezwungen, und jedes Bild hat die Glas-Unschärfe neu berechnet. Vor allem auf Laptops mit Onboard-Grafik hat das spürbar geruckelt. Jetzt bewegen sie sich in wenigen ruhigen Stufen, und die Bildrate bleibt stabil
 - **Eingabefelder gut lesbar**: In mehrzeiligen Feldern (etwa „Zeig drauf“ in der Vorschau oder „Ändern …“ an der Plan-Karte) war der eingetippte Text fast unsichtbar – jetzt hat er dieselbe helle Farbe wie überall. Auf Englisch stehen dort außerdem englische Anführungszeichen, und der Hinweis beim Hineinziehen einer Datei ins Terminal ist jetzt übersetzt
 
 ## 1.9.0
