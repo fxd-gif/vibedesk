@@ -775,3 +775,18 @@ input[type="range"] { width: 100%; accent-color: var(--accent); }
 .prose .prose-note { font-size: 14px; }
 .prose .check { list-style: none; padding-left: 0; }
 .prose .check li::before { content: "✓ "; color: #4ade80; }
+
+/* Download-Seite */
+.dl-page { padding-top: 120px; }
+.dl-page h1 { font-size: clamp(32px, 5vw, 52px); }
+.dl-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; }
+.dl-meta { text-align: center; margin-top: 12px; font-size: 13px; color: var(--ink-2); }
+.dl-steps { max-width: 720px; margin: 48px auto 0; padding: 0; list-style: none; counter-reset: dl; display: grid; gap: 14px; }
+.dl-steps li { counter-increment: dl; position: relative; padding: 20px 22px 20px 64px; border: 1px solid var(--line-2); border-radius: 14px; }
+.dl-steps li::before { content: counter(dl); position: absolute; left: 22px; top: 20px; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 600; background: var(--line-2); }
+.dl-steps h2, .dl-verify h2 { font-size: 18px; margin: 0 0 6px; }
+.dl-steps p, .dl-verify p { margin: 0; color: var(--ink-2); line-height: 1.6; }
+.dl-verify { max-width: 720px; margin: 40px auto 0; }
+.dl-verify pre { margin: 10px 0; overflow-x: auto; }
+.dl-verify p + p { margin-top: 10px; }
+.dl-sha code { word-break: break-all; }

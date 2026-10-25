@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>Claude Code GUI for Windows: your options compared – VibeDesk</title>
+  <meta name="description" content="Terminal, Windows Terminal tabs, the VS Code extension, the Claude desktop app and VibeDesk: an honest look at graphical ways to use Claude Code on Windows – and what each one leaves out.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/guides/claude-code-gui-windows/">
+  <meta property="og:title" content="Claude Code GUI for Windows: your options compared">
+  <meta property="og:description" content="Terminal, Windows Terminal tabs, the VS Code extension, the Claude desktop app and VibeDesk: an honest look at graphical ways to use Claude Code on Windows – and what each one leaves out.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="VibeDesk: which Claude is waiting for you? Dock with session dots and a permission card.">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/guides/claude-code-gui-windows/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script src="../../assets/site.js" defer></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","headline":"Claude Code GUI for Windows: your options compared","description":"Terminal, Windows Terminal tabs, the VS Code extension, the Claude desktop app and VibeDesk: an honest look at graphical ways to use Claude Code on Windows – and what each one leaves out.","datePublished":"2026-10-25","dateModified":"2026-10-25","author":{"@type":"Person","name":"fxd-gif"},"image":"https://fxd-gif.github.io/vibedesk/img/og.jpg","mainEntityOfPage":"https://fxd-gif.github.io/vibedesk/guides/claude-code-gui-windows/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is there an official GUI for Claude Code on Windows?","acceptedAnswer":{"@type":"Answer","text":"Yes. The Claude desktop app has a Code tab that runs Claude Code with a graphical interface. There are installers for Windows on x64 and ARM64, and it needs a Pro, Max, Team or Enterprise plan. Inside VS Code (and Cursor) there is also the official Claude Code extension."}},{"@type":"Question","name":"Do I need WSL to use Claude Code on Windows?","acceptedAnswer":{"@type":"Answer","text":"No. Claude Code runs natively on Windows 10 (1809 or later) and Windows 11. Git for Windows is optional: with it, Claude uses Git Bash for shell commands, without it, PowerShell. WSL is only needed if you want Linux toolchains or sandboxing."}},{"@type":"Question","name":"Does a Claude Code GUI cost extra?","acceptedAnswer":{"@type":"Answer","text":"Claude Code itself needs a Pro, Max, Team, Enterprise or Console account. The desktop app's Code tab comes with a paid Claude plan, the VS Code extension is free to install, and VibeDesk is free and open source under the MIT license. Usage is always billed by Anthropic through your own plan."}},{"@type":"Question","name":"Can I mix the terminal and a GUI?","acceptedAnswer":{"@type":"Answer","text":"Yes. The desktop app reads the same settings files as the CLI, the VS Code extension can switch to terminal mode, and VibeDesk runs the CLI itself. Your CLAUDE.md files and settings come along wherever you open a project."}}]}]}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../../"><img src="../../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../../sessions/">Sessions</a>
+        <a href="../../phone/">Phone</a>
+        <a href="../../brain/">Brain</a>
+        <a href="../../merge-studio/">Merge Studio</a>
+        <a href="../../ambience/">Ambience</a>
+        <a href="../../calm/">Calm</a>
+        <a href="../../tools/">Tools</a>
+        <a href="../../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../../brain/">Brain<small>Project memory</small></a>
+            <a href="../../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://fxd-gif.github.io/vibedesk/download/?start=1">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../../">VibeDesk</a><span>/</span><span>Guides</span></p>
+          <h1>Claude Code GUI for Windows: your options compared</h1>
+          <p class="lead">Claude Code is a command-line tool. That is its strength – and the reason many Windows users look for a window around it. An honest look at five common setups, what each one is good at and what it leaves out.</p>
+        </div>
+      </div>
+    </div>
+
+    <section style="padding-top:0">
+      <div class="wrap prose">
+        <p class="prose-meta">Updated 25 October 2026 · 8 min read</p>
+
+        <h2>Two kinds of “GUI”</h2>
+        <p>When people search for a Claude Code GUI, they usually mean one of two things:</p>
+        <ul>
+          <li><b>A chat-style app instead of the terminal</b> – you type in a prompt box, review changes as diffs and click buttons. The Claude desktop app and the VS Code extension work this way.</li>
+          <li><b>The real terminal with a desktop around it</b> – Claude Code runs exactly as in PowerShell, and the app adds the overview: which session is working, which one waits, approvals in one click. That is what VibeDesk does.</li>
+        </ul>
+        <p>Both run the same Claude Code underneath and use your own Claude account. The question is mostly how you like to work.</p>
+
+        <h2>1. The plain terminal</h2>
+        <p>The starting point for everyone. Claude Code runs natively on Windows 10 (1809 or later) and Windows 11 – no WSL needed. Install it from PowerShell:</p>
+        <pre><code>irm https://claude.ai/install.ps1 | iex</code></pre>
+        <p>Then open a terminal in your project folder and run <code>claude</code>. <a href="https://git-scm.com/downloads/win">Git for Windows</a> is optional: with it, Claude runs shell commands through Git Bash, without it through PowerShell.</p>
+        <ul>
+          <li><b>Good at:</b> everything works first here – every flag, every slash command, scripting with <code>claude -p</code>. Nothing between you and the tool.</li>
+          <li><b>Leaves out:</b> any overview. A permission prompt only gets answered when you look at that window, and there is no notification unless you add a hook – see <a href="../claude-code-notifications-windows/">Windows notifications for Claude Code</a>.</li>
+        </ul>
+
+        <h2>2. Windows Terminal: tabs and panes</h2>
+        <p>The free Windows Terminal turns the plain terminal into something you can organize: one tab per project, renamed so you can tell them apart, split panes to watch two sessions side by side. The guide on <a href="../claude-code-multiple-sessions-windows/">running several sessions at once</a> has the commands, including git worktrees so two sessions do not edit the same folder.</p>
+        <ul>
+          <li><b>Good at:</b> zero extra software, fast, keyboard-friendly.</li>
+          <li><b>Leaves out:</b> a shared status. With four tabs, finding the one that is waiting for a <i>yes</i> is still up to you.</li>
+        </ul>
+
+        <h2>3. The VS Code extension</h2>
+        <p>Anthropic's <a href="https://code.claude.com/docs/en/vs-code">Claude Code extension</a> adds a graphical panel to VS Code (version 1.94 or later), and it can be installed in Cursor too. You review and edit Claude's plans before accepting them, see proposed edits as inline diffs, @-mention files with line ranges and open several conversations in tabs or windows. A subscription or a Console account works.</p>
+        <ul>
+          <li><b>Good at:</b> staying in your editor. If VS Code is open all day anyway, this is the most natural GUI.</li>
+          <li><b>Leaves out:</b> life outside the editor. It lives in the VS Code window – when you are in the browser or on the sofa, it is out of sight like any other window.</li>
+        </ul>
+
+        <h2>4. The Claude desktop app (Code tab)</h2>
+        <p>The official GUI. The Claude desktop app has a <b>Code</b> tab that runs Claude Code without a terminal, with installers for Windows on x64 and ARM64. It brings Claude Code along, so you do not need Node.js or the CLI for it. Among other things you get parallel sessions in a sidebar – optionally each in its own git worktree – a diff view where you can comment on single lines, an integrated terminal, a browser pane that shows your running app, and permission modes from Manual to Plan and Auto.</p>
+        <ul>
+          <li><b>Good at:</b> a polished, chat-style experience straight from Anthropic, with diffs and preview built in.</li>
+          <li><b>Leaves out:</b> a few terminal habits. Per the docs, <kbd>Shift</kbd> + <kbd>Tab</kbd> does not cycle permission modes, the <code>dontAsk</code> mode is CLI-only, and the app does not read PowerShell profiles, so <code>PATH</code> changes belong in the Windows environment variables. It needs a Pro, Max, Team or Enterprise plan.</li>
+        </ul>
+        <p class="prose-note">Details and the current feature list: <a href="https://code.claude.com/docs/en/desktop">Claude Code Desktop docs</a>.</p>
+
+        <h2>5. VibeDesk: the real CLI with a desktop around it</h2>
+        <p>Full disclosure: this site belongs to VibeDesk, a free and open-source app (MIT) for Windows 10 and 11. It takes the other route: each session is the real <code>claude</code> in a real terminal, so slash commands, your settings, your <code>CLAUDE.md</code> and even your own status line keep working as you know them. Around it, VibeDesk adds what the terminal lacks:</p>
+        <div class="shot" style="margin-top:24px"><img src="../../img/approval.webp" width="1600" height="960" alt="VibeDesk: a Claude Code terminal for shop-frontend waiting for permission, an approval card with In terminal, Deny, Always and Allow, and the dock at the bottom" loading="lazy" decoding="async"></div>
+        <ul>
+          <li><b>A status dot per session</b> – green working, yellow waiting for you, blue done – so you see at a glance which one needs you.</li>
+          <li><b>Permission requests as cards</b> with Allow, Always and Deny, and the same card on your phone. How that works: <a href="../claude-code-approve-from-phone/">approve Claude Code permissions from your phone</a>.</li>
+          <li><b>Tools around the terminal:</b> a code editor, a Git &amp; GitHub window with diffs and commit messages written by Claude, a live preview of your dev server, and Merge Studio (beta) for parallel sessions in their own worktrees.</li>
+          <li><b>Plans and limits:</b> plans from plan mode as a readable card, the 5-hour limit in the status line on Pro and Max, and Claude picks up on its own once the limit resets.</li>
+          <li><b>Easy start:</b> on first launch it checks for Node.js and Claude Code and offers to install them. English and German.</li>
+          <li><b>Hands off your settings:</b> sessions get VibeDesk's hooks from a temporary settings file passed with <code>--settings</code>; your <code>settings.json</code> stays as it is.</li>
+        </ul>
+        <p>Coming in 2.0 on November 1: a status dot in the Windows notification area with approvals in its menu, a wrap-up card with a suggested commit message after a round that changed files, budgets per project and pull requests from the Git window.</p>
+        <ul>
+          <li><b>Leaves out:</b> it is Windows-only and runs everything on your PC – there are no cloud sessions. And at its heart it is still the terminal: if you would rather never see one, the desktop app is closer to what you want.</li>
+        </ul>
+        <div class="shot" style="margin-top:24px"><img src="../../img/studio.webp" width="1600" height="960" alt="Studio layout: sidebar with Commands, Projects, sessions and tools, the terminal as a full page, and a status bar at the bottom" loading="lazy" decoding="async"></div>
+        <p>See it in the <a href="https://www.youtube.com/watch?v=SLLYiK34I88">5-minute tour</a> or read about <a href="../../sessions/">sessions and approvals</a> and the <a href="../../tools/">tools</a>.</p>
+
+        <h2>Which one should you pick?</h2>
+        <ul>
+          <li><b>One session at a time, happy in the terminal:</b> stay there and add a notification hook.</li>
+          <li><b>Your day happens in VS Code or Cursor:</b> the extension.</li>
+          <li><b>You want the official chat-style app and have a paid plan:</b> the desktop app's Code tab.</li>
+          <li><b>Several sessions at once, the real CLI, approvals on your phone:</b> VibeDesk.</li>
+        </ul>
+        <p>None of these lock you in. They all run Claude Code with your account, so you can try two side by side on the same project.</p>
+
+        <h2>Checklist</h2>
+        <ul class="check">
+          <li>Claude Code installed natively – no WSL needed.</li>
+          <li>Git for Windows if you want Claude to use Bash.</li>
+          <li>Decide: chat-style app, or real terminal with an overview.</li>
+          <li>Whatever you pick: know when a session is waiting for you.</li>
+        </ul>
+
+        <h2>Questions</h2>
+        <div class="faq" style="margin-top:20px">
+          <details><summary>Is there an official GUI for Claude Code on Windows?</summary><p>Yes. The Claude desktop app has a Code tab that runs Claude Code with a graphical interface. There are installers for Windows on x64 and ARM64, and it needs a Pro, Max, Team or Enterprise plan. Inside VS Code (and Cursor) there is also the official Claude Code extension.</p></details>
+          <details><summary>Do I need WSL to use Claude Code on Windows?</summary><p>No. Claude Code runs natively on Windows 10 (1809 or later) and Windows 11. Git for Windows is optional: with it, Claude uses Git Bash for shell commands, without it, PowerShell. WSL is only needed if you want Linux toolchains or sandboxing.</p></details>
+          <details><summary>Does a Claude Code GUI cost extra?</summary><p>Claude Code itself needs a Pro, Max, Team, Enterprise or Console account. The desktop app's Code tab comes with a paid Claude plan, the VS Code extension is free to install, and VibeDesk is free and open source under the MIT license. Usage is always billed by Anthropic through your own plan.</p></details>
+          <details><summary>Can I mix the terminal and a GUI?</summary><p>Yes. The desktop app reads the same settings files as the CLI, the VS Code extension can switch to terminal mode, and VibeDesk runs the CLI itself. Your <code>CLAUDE.md</code> files and settings come along wherever you open a project.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../../"><img src="../../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../../sessions/">Sessions</a></li><li><a href="../../phone/">Phone companion</a></li><li><a href="../../brain/">The brain</a></li><li><a href="../../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../../ambience/">Ambience & music</a></li><li><a href="../../calm/">Calm by default</a></li><li><a href="../../tools/">Tools</a></li><li><a href="../../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://fxd-gif.github.io/vibedesk/download/">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li><li><a href="../../guides/claude-code-multiple-sessions-windows/">Guide: parallel sessions</a></li><li><a href="../../guides/claude-code-notifications-windows/">Guide: notifications</a></li><li><a href="../../guides/claude-code-approve-from-phone/">Guide: approve from phone</a></li><li><a href="../../guides/claude-code-gui-windows/">Guide: Claude Code GUIs</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07090d">
+  <title>How to approve Claude Code permissions from your phone – VibeDesk</title>
+  <meta name="description" content="Answer Claude Code permission prompts from your phone: Remote Control, a push via ntfy, the PermissionRequest hook – and a one-tap card with VibeDesk on Windows.">
+  <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/guides/claude-code-approve-from-phone/">
+  <meta property="og:title" content="How to approve Claude Code permissions from your phone">
+  <meta property="og:description" content="Answer Claude Code permission prompts from your phone: Remote Control, a push via ntfy, the PermissionRequest hook – and a one-tap card with VibeDesk on Windows.">
+  <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="VibeDesk: which Claude is waiting for you? Dock with session dots and a permission card.">
+  <meta property="og:url" content="https://fxd-gif.github.io/vibedesk/guides/claude-code-approve-from-phone/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="VibeDesk">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="../../img/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/site.css">
+  <script src="../../assets/site.js" defer></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article","headline":"How to approve Claude Code permissions from your phone","description":"Answer Claude Code permission prompts from your phone: Remote Control, a push via ntfy, the PermissionRequest hook – and a one-tap card with VibeDesk on Windows.","datePublished":"2026-10-25","dateModified":"2026-10-25","author":{"@type":"Person","name":"fxd-gif"},"image":"https://fxd-gif.github.io/vibedesk/img/og.jpg","mainEntityOfPage":"https://fxd-gif.github.io/vibedesk/guides/claude-code-approve-from-phone/"},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I approve Claude Code permissions from my phone without extra tools?","acceptedAnswer":{"@type":"Answer","text":"Yes, with Remote Control. Start Claude Code with claude --remote-control (or type /remote-control in a running session) and open the session in the Claude app or at claude.ai/code. It needs a Pro, Max, Team or Enterprise plan; API keys are not supported, and the session on your PC has to keep running."}},{"@type":"Question","name":"Which Claude Code hook can answer a permission prompt?","acceptedAnswer":{"@type":"Answer","text":"The PermissionRequest hook. It runs when Claude Code is about to ask you and can reply with a decision – allow or deny – as JSON on standard output. The Notification hook with the permission_prompt matcher can only tell you that Claude is waiting."}},{"@type":"Question","name":"What happens if I do not answer on my phone?","acceptedAnswer":{"@type":"Answer","text":"If a PermissionRequest hook prints no decision, Claude Code shows its normal prompt in the terminal, so you can still answer at the PC. Command hooks time out after 600 seconds by default."}},{"@type":"Question","name":"Is it safe to approve commands from a phone?","acceptedAnswer":{"@type":"Answer","text":"It is as safe as the channel in between. Read the command before you tap Allow, keep a public push topic long and random, and self-host the push server if commands may contain secrets. VibeDesk pairs each phone with a one-time 6-digit code from the PC screen and stores only a hash of the phone's key."}}]}]}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="../../"><img src="../../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features">
+        <a href="../../sessions/">Sessions</a>
+        <a href="../../phone/">Phone</a>
+        <a href="../../brain/">Brain</a>
+        <a href="../../merge-studio/">Merge Studio</a>
+        <a href="../../ambience/">Ambience</a>
+        <a href="../../calm/">Calm</a>
+        <a href="../../tools/">Tools</a>
+        <a href="../../social/">Social</a>
+      </nav>
+      <div class="nav-end">
+        <details class="menu">
+          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
+          <nav class="menu-panel" aria-label="Features">
+            <a href="../../">Overview<small>Start page</small></a>
+            <hr>
+            <a href="../../sessions/">Sessions<small>Status, approvals, queue</small></a>
+            <a href="../../phone/">Phone<small>Companion in the browser</small></a>
+            <a href="../../brain/">Brain<small>Project memory</small></a>
+            <a href="../../merge-studio/">Merge Studio<small>Parallel sessions</small></a>
+            <a href="../../ambience/">Ambience<small>Rain, lofi, Spotify</small></a>
+            <a href="../../calm/">Calm<small>Zen mode, toolbox, dock</small></a>
+            <a href="../../tools/">Tools<small>Editor, preview, Git, addons</small></a>
+            <a href="../../social/">Social<small>Discord, lounge, streaming</small></a>
+            <hr>
+            <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+          </nav>
+        </details>
+        <a class="btn btn-light btn-sm dl" href="https://fxd-gif.github.io/vibedesk/download/?start=1">Download</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="sky page-hero">
+      <canvas class="rain" aria-hidden="true"></canvas>
+      <div class="glow soft" aria-hidden="true"></div>
+      <div class="wrap">
+        <div class="copy">
+          <p class="label crumbs"><a href="../../">VibeDesk</a><span>/</span><span>Guides</span></p>
+          <h1>How to approve Claude Code permissions from your phone</h1>
+          <p class="lead">Claude stops and asks “Run npm test?” – and you are on the sofa. What Claude Code offers out of the box, how the PermissionRequest hook works if you want to build your own, and the one-tap way on Windows.</p>
+        </div>
+      </div>
+    </div>
+
+    <section style="padding-top:0">
+      <div class="wrap prose">
+        <p class="prose-meta">Updated 25 October 2026 · 7 min read</p>
+
+        <h2>What happens when Claude asks</h2>
+        <p>Before a tool call that is not allowed yet – a shell command, a file edit, a web fetch – Claude Code pauses and shows a prompt in the terminal. Nothing moves until someone answers. Two <b>hooks</b> fire around that moment, and they do different jobs:</p>
+        <ul>
+          <li><code>Notification</code> with the matcher <code>permission_prompt</code> runs once the prompt has waited about six seconds. It can <i>tell</i> you, but not answer.</li>
+          <li><code>PermissionRequest</code> runs when Claude Code is about to ask. It can <i>answer</i>: whatever decision the hook prints on standard output is used instead of the terminal prompt.</li>
+        </ul>
+        <p>So there are two ways to involve your phone: get notified and walk back to the PC, or carry the decision to the phone and back. Here are both, from built-in to do-it-yourself.</p>
+
+        <h2>1. Built in: Remote Control</h2>
+        <p>Claude Code can connect a session running on your PC to <a href="https://claude.ai/code">claude.ai/code</a> and the Claude app for iOS and Android. Start a session with it switched on:</p>
+        <pre><code>claude --remote-control</code></pre>
+        <p>or type <code>/remote-control</code> (short: <code>/rc</code>) in a session that is already running. Scan the QR code with your phone, and the session opens in the Claude app. Claude keeps running on your PC the whole time; the phone is just another window into it, and permission prompts wait there until you answer.</p>
+        <p>For a buzz when Claude needs you, run <code>/config</code> and switch on <b>Push when actions required</b>.</p>
+        <p class="prose-note">Remote Control needs a Pro, Max, Team or Enterprise plan and a claude.ai login – API keys are not supported. On Team and Enterprise an owner has to enable it first. If you close the terminal, the session goes offline. Details in the <a href="https://code.claude.com/docs/en/remote-control">official docs</a>.</p>
+
+        <h2>2. Just get told: a push via ntfy</h2>
+        <p>If all you want is a ping on your phone, the free service <b>ntfy</b> is the quickest route. Install the ntfy app, subscribe to a topic with a long, random name, and add this to <code>%USERPROFILE%\.claude\settings.json</code>:</p>
+        <pre><code>{
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [ { "type": "command", "command": "curl.exe -s -d \"Claude Code needs your permission\" https://ntfy.sh/YOUR-LONG-RANDOM-TOPIC" } ]
+      }
+    ]
+  }
+}</code></pre>
+        <p><code>curl.exe</code> ships with Windows 10 and 11. Writing it with <code>.exe</code> matters: in Windows PowerShell, plain <code>curl</code> is a different command. Restart your Claude sessions so they pick up the hook.</p>
+        <p class="prose-note">On the public ntfy.sh server anyone who knows the topic name can read it – so pick a name nobody guesses and do not put secrets in the message. You still have to go to the PC to answer. Want the project name in the message? The <a href="../claude-code-notifications-windows/">notifications guide</a> shows how to read it from the hook input.</p>
+
+        <h2>3. Answer from the phone: the PermissionRequest hook</h2>
+        <p>To actually decide on the phone, a <code>PermissionRequest</code> hook has to carry the question there and the answer back. The hook gets the request as JSON on standard input – the parts that matter:</p>
+        <pre><code>{
+  "hook_event_name": "PermissionRequest",
+  "cwd": "C:\\Projects\\shop-frontend",
+  "tool_name": "Bash",
+  "tool_input": { "command": "npm test" },
+  "permission_suggestions": [ … ]
+}</code></pre>
+        <p>To allow, the hook prints this on standard output and exits:</p>
+        <pre><code>{ "hookSpecificOutput": { "hookEventName": "PermissionRequest", "decision": { "behavior": "allow" } } }</code></pre>
+        <p>To deny, use <code>"behavior": "deny"</code> and add a <code>"message"</code> – Claude reads it and can adjust its plan. Returning the <code>permission_suggestions</code> as <code>"updatedPermissions"</code> works like “don't ask again” in the terminal. If the hook prints nothing, Claude Code simply shows its usual prompt.</p>
+        <p>The tricky part is the round trip in between: the hook has to send the request to your phone, wait for a tap and return the result – and command hooks time out after 600 seconds by default. Open-source projects such as <a href="https://github.com/yuuichieguchi/claude-remote-approver">claude-remote-approver</a> do this with ntfy notifications that have Approve and Deny buttons and fall back to the terminal prompt when nobody answers.</p>
+        <p class="prose-note">Whatever goes through a hosted push service passes through someone else's server, including the command text. For anything sensitive, self-host the push server or keep the round trip inside your own network.</p>
+
+        <h2>4. Fewer prompts in the first place</h2>
+        <p>The best prompt is the one you never get. Commands you always allow can go into the allow list, in the same <code>settings.json</code>:</p>
+        <pre><code>{
+  "permissions": {
+    "allow": [ "Bash(npm test)", "Bash(npm run lint)" ]
+  }
+}</code></pre>
+        <p>Keep the list short and specific. Anything that deletes, pushes or installs is worth a look on the phone.</p>
+
+        <h2>5. Or one tap: VibeDesk</h2>
+        <p>Full disclosure: this site belongs to VibeDesk, a free and open-source desktop for Claude Code on Windows. It runs the real Claude Code CLI and builds exactly this round trip on the <code>PermissionRequest</code> hook – without editing JSON:</p>
+        <div class="shot" style="margin-top:24px"><img src="../../img/approval.webp" width="1600" height="960" alt="A Claude Code terminal waiting for permission and the approval card: shop-frontend needs your permission, Run command, npm test, with In terminal, Deny, Always and Allow" loading="lazy" decoding="async"></div>
+        <ul>
+          <li><b>A card instead of a prompt.</b> When Claude asks, a card shows what it wants to do – “Run command: <code>npm test</code>” – with <b>Allow</b>, <b>Always</b> and <b>Deny</b>, on the PC and on your phone at the same time. The phone vibrates.</li>
+          <li><b>Always</b> appears when Claude Code suggests a rule for the request and saves that rule, like the terminal's own option. <b>Deny</b> tells Claude to ask what you want instead.</li>
+          <li><b>The terminal still works.</b> Answer there and the card disappears. “In terminal” on the desktop card hands the question back to the normal prompt, and after about ten minutes without an answer Claude asks there anyway.</li>
+          <li><b>Plans, too.</b> A plan from plan mode arrives as a readable card with <b>Let's go</b> or <b>Change …</b> plus your feedback.</li>
+          <li><b>Pairing with a 6-digit code.</b> Switch on the phone companion, scan the QR code and enter the one-time code from the PC screen. It is valid for five minutes and allows five tries. Each phone gets its own key, the PC stores only a hash of it, and you can sign out phones one by one.</li>
+          <li><b>Wi-Fi or mobile data, no app.</b> The phone opens VibeDesk in the browser. A Cloudflare quick tunnel is on by default so it works away from home too, and you can switch it off.</li>
+          <li><b>Your settings stay yours.</b> The hook comes from a temporary settings file that VibeDesk passes to each session it starts with <code>--settings</code>. Your own <code>settings.json</code> is not touched, and because it is a plain hook it works with an API key as well as a subscription.</li>
+        </ul>
+        <p>Coming in 2.0 on November 1: open approvals can also be answered right from the VibeDesk icon in the Windows notification area.</p>
+        <p>See the <a href="../../phone/">phone companion</a> and <a href="../../sessions/">sessions and approvals</a> pages, or the <a href="https://www.youtube.com/watch?v=SLLYiK34I88">5-minute tour</a>. Running several sessions? Read <a href="../claude-code-multiple-sessions-windows/">how to run several Claude Code sessions at once</a>. Still choosing a setup? See the <a href="../claude-code-gui-windows/">overview of Claude Code GUIs for Windows</a>.</p>
+
+        <h2>Checklist</h2>
+        <ul class="check">
+          <li>On a Pro or Max plan: try <code>claude --remote-control</code> first.</li>
+          <li>Just a ping: a <code>Notification</code> hook with <code>permission_prompt</code> and ntfy.</li>
+          <li>Decide on the phone: a <code>PermissionRequest</code> hook that prints <code>allow</code> or <code>deny</code>.</li>
+          <li>Safe, frequent commands in the allow list.</li>
+          <li>Read the command before you tap Allow.</li>
+        </ul>
+
+        <h2>Questions</h2>
+        <div class="faq" style="margin-top:20px">
+          <details><summary>Can I approve Claude Code permissions from my phone without extra tools?</summary><p>Yes, with Remote Control. Start Claude Code with <code>claude --remote-control</code> (or type <code>/remote-control</code> in a running session) and open the session in the Claude app or at claude.ai/code. It needs a Pro, Max, Team or Enterprise plan; API keys are not supported, and the session on your PC has to keep running.</p></details>
+          <details><summary>Which Claude Code hook can answer a permission prompt?</summary><p>The <code>PermissionRequest</code> hook. It runs when Claude Code is about to ask you and can reply with a decision – allow or deny – as JSON on standard output. The <code>Notification</code> hook with the <code>permission_prompt</code> matcher can only tell you that Claude is waiting.</p></details>
+          <details><summary>What happens if I do not answer on my phone?</summary><p>If a <code>PermissionRequest</code> hook prints no decision, Claude Code shows its normal prompt in the terminal, so you can still answer at the PC. Command hooks time out after 600 seconds by default.</p></details>
+          <details><summary>Is it safe to approve commands from a phone?</summary><p>It is as safe as the channel in between. Read the command before you tap Allow, keep a public push topic long and random, and self-host the push server if commands may contain secrets. VibeDesk pairs each phone with a one-time 6-digit code from the PC screen and stores only a hash of the phone's key.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="tight">
+      <div class="wrap">
+        <div class="cta">
+          <h2>Let Claude work.<br>Step in when it counts.</h2>
+          <p>Free for Windows 10 and 11.</p>
+          <div class="hero-actions">
+            <a class="btn btn-light" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap foot">
+      <div class="foot-brand">
+        <a class="brand" href="../../"><img src="../../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
+        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h2>Features</h2><ul><li><a href="../../sessions/">Sessions</a></li><li><a href="../../phone/">Phone companion</a></li><li><a href="../../brain/">The brain</a></li><li><a href="../../merge-studio/">Merge Studio</a></li></ul></div>
+        <div><h2>&nbsp;</h2><ul><li><a href="../../ambience/">Ambience & music</a></li><li><a href="../../calm/">Calm by default</a></li><li><a href="../../tools/">Tools</a></li><li><a href="../../social/">Social & streaming</a></li></ul></div>
+        <div><h2>Project</h2><ul><li><a href="https://fxd-gif.github.io/vibedesk/download/">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li><li><a href="../../guides/claude-code-multiple-sessions-windows/">Guide: parallel sessions</a></li><li><a href="../../guides/claude-code-notifications-windows/">Guide: notifications</a></li><li><a href="../../guides/claude-code-approve-from-phone/">Guide: approve from phone</a></li><li><a href="../../guides/claude-code-gui-windows/">Guide: Claude Code GUIs</a></li></ul></div>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
