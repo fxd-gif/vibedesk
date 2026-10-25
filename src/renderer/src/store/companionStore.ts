@@ -47,6 +47,7 @@ export function buildSnapshot(): CompanionSnapshot {
           active: (todos.find((t) => t.status === 'in_progress')?.content ?? '').slice(0, 160)
         },
         lastActivity: w?.lastActivity ?? 0,
+        waitingSince: w?.waitingSince,
         feed: (w?.feed ?? []).slice(-FEED_SHOWN).map((f) => ({ tool: f.tool, target: f.target.slice(0, 240), result: f.result, ts: f.ts }))
       }
     }),

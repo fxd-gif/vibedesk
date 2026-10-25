@@ -208,6 +208,8 @@ const dict: Record<string, string> = {
   '- Keine Hinweise auf KI, Claude oder Werkzeuge, mit denen der Text entstand.': '- No mention of AI, Claude or the tools used to write the text.',
   '- Gib NUR Titel und Beschreibung aus: kein Codeblock drumherum, keine Einleitung.': '- Output ONLY title and description: no surrounding code block, no preamble.',
   '## Commits': '## Commits',
+  // Wartezeit einer Session
+  'wartet · {d}': 'waiting · {d}',
 }
 
 export default dict

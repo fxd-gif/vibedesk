@@ -1,4 +1,5 @@
 import type { HookEvent, SessionStatus } from '../../../shared/types'
+import { nextWaitingSince } from '../../../shared/waiting'
 
 export interface FeedEntry {
   id: number
@@ -43,6 +44,8 @@ export interface SessionWorkflow {
   lastActivity: number
   /** Claude pflegt gerade auf Anstoß von VibeDesk das Gehirn */
   tending?: boolean
+  /** seit wann die Session auf dich wartet (nur bei Status „waiting“) */
+  waitingSince?: number
 }
 
 export interface WorkflowState {
@@ -213,10 +216,19 @@ function applyHook(s: SessionWorkflow, e: HookEvent, nextId: number): { s: Sessi
   }
 }
 
+/** Wartezeitpunkt beim Statuswechsel mitführen – „wartet · 3 min“ statt nur „wartet auf dich“ */
+function stampWaiting(prev: SessionWorkflow | undefined, s: SessionWorkflow, ts: number): SessionWorkflow {
+  const since = nextWaitingSince(prev?.status ?? 'idle', s.status, prev?.waitingSince, ts)
+  if (since === s.waitingSince) return s
+  if (since !== undefined) return { ...s, waitingSince: since }
+  const { waitingSince: _gone, ...rest } = s
+  return rest
+}
+
 export function workflowReducer(state: WorkflowState, a: WorkflowAction): WorkflowState {
   const cur = (id: string): SessionWorkflow => state.sessions[id] ?? emptySession()
-  const put = (id: string, s: SessionWorkflow, nextFeedId = state.nextFeedId): WorkflowState => ({
-    sessions: { ...state.sessions, [id]: s },
+  const put = (id: string, s: SessionWorkflow, nextFeedId = state.nextFeedId, ts = Date.now()): WorkflowState => ({
+    sessions: { ...state.sessions, [id]: stampWaiting(state.sessions[id], s, ts) },
     nextFeedId
   })
   switch (a.type) {
@@ -230,7 +242,7 @@ export function workflowReducer(state: WorkflowState, a: WorkflowAction): Workfl
       return put(a.sessionId, { ...cur(a.sessionId), status: a.code === 0 ? 'done' : 'error', feed: settle(cur(a.sessionId).feed) })
     case 'hook': {
       const { s, usedId } = applyHook(cur(a.event.sessionId), a.event, state.nextFeedId)
-      return put(a.event.sessionId, s, usedId ? state.nextFeedId + 1 : state.nextFeedId)
+      return put(a.event.sessionId, s, usedId ? state.nextFeedId + 1 : state.nextFeedId, a.event.ts)
     }
   }
 }

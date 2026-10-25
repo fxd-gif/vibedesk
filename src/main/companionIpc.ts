@@ -211,6 +211,7 @@ function cleanSnapshot(x: unknown): CompanionSnapshot {
   const out = emptySnapshot()
   out.sessions = (Array.isArray(s.sessions) ? s.sessions : []).slice(0, 20).map((x) => ({
     ...x,
+    waitingSince: x.status === 'waiting' && Number(x.waitingSince) > 0 ? Number(x.waitingSince) : undefined,
     feed: (Array.isArray(x.feed) ? x.feed : []).slice(-FEED_SHOWN).map((f) => ({
       tool: String(f?.tool ?? '').slice(0, 60),
       target: String(f?.target ?? '').slice(0, 240),

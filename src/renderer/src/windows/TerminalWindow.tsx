@@ -23,6 +23,7 @@ import { AttachButton, TermAttach } from './TermAttach'
 import { cancelResume, fmtTime, useResume } from '../store/resumeStore'
 import { t } from '../../../shared/i18n'
 import { canWrapUp, openWrapUp, useWrapUp } from '../store/wrapUpStore'
+import { waitingLabel } from '../../../shared/waiting'
 
 type WfStatus = 'idle' | 'working' | 'waiting' | 'done' | 'error'
 
@@ -61,9 +62,25 @@ export const STATUS_TEXT: Record<WfStatus, string> = {
   }
 }
 
+/**
+ * Status in der Titelleiste; wartet die Session, steht dort „wartet · 3 min“.
+ * Zählt nur alle 30 s weiter und nur, solange sie wartet – eigenes Bauteil, damit nicht das ganze Fenster neu rendert.
+ */
+function StatusLabel({ status, since }: { status: WfStatus; since?: number }): React.JSX.Element {
+  const [, setTick] = useState(0)
+  const waiting = status === 'waiting' && !!since
+  useEffect(() => {
+    if (!waiting) return
+    const iv = setInterval(() => setTick((n) => n + 1), 30_000)
+    return () => clearInterval(iv)
+  }, [waiting, since])
+  return <>{status === 'waiting' ? waitingLabel(since) : statusText(status)}</>
+}
+
 export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX.Element {
   const id = termWin(session.id)
   const status = useWorkflow((s) => s.sessions[session.id]?.status ?? 'idle')
+  const waitingSince = useWorkflow((s) => s.sessions[session.id]?.waitingSince)
   const tending = useWorkflow((s) => !!s.sessions[session.id]?.tending && s.sessions[session.id]?.status === 'working')
   // Abschluss erst, wenn Claude fertig ist – nicht mitten in der Arbeit
   const wrapReady = useWrapUp((s) => canWrapUp(s.turns[session.id]))
@@ -135,7 +152,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
           <span className={`dot ${status}`} />
           <span>{session.name}</span>
           <span className="dim" style={{ fontWeight: 400 }}>
-            · {tending ? t('pflegt Gehirn …') : statusText(status)}
+            · {tending ? t('pflegt Gehirn …') : <StatusLabel status={status} since={waitingSince} />}
           </span>
           {urls?.slice(0, 2).map((u) => (
             <button key={u} className="url-chip" title={t('Vorschau: {url}', { url: u })} onClick={() => usePreview.getState().openPreview(u)} data-testid="url-chip">

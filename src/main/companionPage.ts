@@ -224,6 +224,11 @@ export function companionPage(nonce: string): string {
     var t = $('toast'); t.textContent = text; t.className = 'toast' + (bad ? ' bad' : ''); t.hidden = false;
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, bad ? 5000 : 3500);
   }
+  // „wartet · 3 min“ – wie waitedFor() in shared/waiting.ts, abgerundet
+  var WAIT = ${js(t('wartet · {d}'))}, JUST = ${js(t('gerade eben'))};
+  function waited(ts) { var m = Math.floor(Math.max(0, Date.now() - ts) / 60000); if (m < 1) return JUST; if (m < 60) return m + ' min'; return Math.floor(m / 60) + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : ''); }
+  function stText(s) { return s.status === 'waiting' && s.waitingSince ? fmt(WAIT, { d: waited(s.waitingSince) }) : (STATUS[s.status] || s.status); }
+  function tickWait() { var l = document.querySelectorAll('[data-since]'); for (var i = 0; i < l.length; i++) l[i].textContent = fmt(WAIT, { d: waited(Number(l[i].getAttribute('data-since'))) }); }
   function ago(ts) { var s = Math.max(0, Math.round((Date.now() - ts) / 1000)); if (s < 60) return ${js(t('gerade'))}; if (s < 3600) return Math.round(s / 60) + ' min'; return Math.round(s / 3600) + ' h'; }
 
   function api(path, body) {
@@ -379,7 +384,8 @@ export function companionPage(nonce: string): string {
     var tabs = $('tabs'); clear(tabs);
     var list = state.sessions;
     if (!list.some(function (s) { return s.id === selected; })) {
-      var waiting = list.filter(function (s) { return s.status === 'waiting'; })[0];
+      // wer am längsten wartet, kommt zuerst dran
+      var waiting = list.filter(function (s) { return s.status === 'waiting'; }).sort(function (a, b) { return (a.waitingSince || 0) - (b.waitingSince || 0); })[0];
       selected = (waiting || list[0] || {}).id || '';
     }
     tabs.hidden = list.length < 2;
@@ -401,7 +407,9 @@ export function companionPage(nonce: string): string {
     var h = el('div', 'sess-head');
     h.appendChild(el('span', 'dot ' + s.status));
     h.appendChild(el('b', '', s.name));
-    h.appendChild(el('span', 'st', STATUS[s.status] || s.status));
+    var st = el('span', 'st', stText(s));
+    if (s.status === 'waiting' && s.waitingSince) st.setAttribute('data-since', String(s.waitingSince));
+    h.appendChild(st);
     c.appendChild(h);
     if (s.asked) { var asked = el('div', 'asked'); asked.appendChild(el('b', '', ${js(t('Du:'))})); asked.appendChild(document.createTextNode(s.asked)); c.appendChild(asked); }
     // ohne Aktionsliste wenigstens die laufende Aktion zeigen
@@ -563,7 +571,7 @@ export function companionPage(nonce: string): string {
     var s = sessionById(tm.sid);
     $('t-name').textContent = s ? s.name : ${js(t('Session beendet'))};
     $('t-dot').className = 'dot ' + (s ? s.status : 'off');
-    $('t-st').textContent = s ? (STATUS[s.status] || s.status) : '';
+    $('t-st').textContent = s ? stText(s) : '';
     var keys = !!(state && state.keys && s);
     $('t-keys').hidden = !keys;
     $('sheet').classList.toggle('keys', keys);
@@ -800,7 +808,7 @@ export function companionPage(nonce: string): string {
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden) { connect(); render(); if (tm) { if (tm.ctrl) tm.ctrl.abort(); pull(tm, false); } }
   });
-  setInterval(function () { if (state) { renderNotes(); renderLimits(); } }, 30000);
+  setInterval(function () { if (state) { renderNotes(); renderLimits(); tickWait(); if (tm) headTerm(); } }, 30000);
   setInterval(function () { if (state && state.shutdownAt) renderPc(); }, 1000);
   connect();
 })();

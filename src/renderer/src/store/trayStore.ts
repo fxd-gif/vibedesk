@@ -8,7 +8,8 @@ import { useWorkflow } from './workflowStore'
 
 function build(): TraySession[] {
   const wf = useWorkflow.getState().sessions
-  return useSessions.getState().sessions.map((s) => ({ id: s.id, name: s.name, status: wf[s.id]?.status ?? 'idle' }))
+  // waitingSince bleibt während des Wartens gleich – die Minuten zählt Main selbst hoch, ohne neue Nachricht
+  return useSessions.getState().sessions.map((s) => ({ id: s.id, name: s.name, status: wf[s.id]?.status ?? 'idle', waitingSince: wf[s.id]?.waitingSince }))
 }
 
 let last = ''

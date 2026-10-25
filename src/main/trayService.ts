@@ -5,6 +5,7 @@ import { t } from '../shared/i18n'
 import type { PermissionAsk, PermissionDecision } from '../shared/permissions'
 import { cleanTrayList, dotColor, paintDot, trayCounts, trayState, type TraySession } from '../shared/tray'
 import type { SessionStatus } from '../shared/types'
+import { longestWaitingFirst, waitingLabel } from '../shared/waiting'
 
 interface Deps {
   iconFile: string
@@ -31,6 +32,8 @@ export class TrayService {
   private base: NativeImage
   private icons = new Map<SessionStatus, NativeImage>()
   private lastBadge: boolean | null = null
+  /** zählt „wartet · 3 min“ im Menü weiter – läuft nur, solange jemand wartet */
+  private tick: ReturnType<typeof setInterval> | null = null
 
   constructor(private d: Deps) {
     this.base = nativeImage.createFromPath(d.iconFile)
@@ -44,6 +47,7 @@ export class TrayService {
   }
 
   stop(): void {
+    this.ticking(false)
     this.tray?.destroy()
     this.tray = null
     const w = this.d.win()
@@ -101,6 +105,16 @@ export class TrayService {
     this.tray.setImage(this.icon(this.asks.length ? 'waiting' : state))
     this.tray.setToolTip(this.tooltip())
     this.tray.setContextMenu(Menu.buildFromTemplate(this.menu()))
+    this.ticking(this.sessions.some((s) => s.waitingSince))
+  }
+
+  /** alle 30 s nur das Menü neu bauen – kein Bild, kein Tooltip, keine Nachricht vom Renderer */
+  private ticking(on: boolean): void {
+    if (on && !this.tick) this.tick = setInterval(() => this.tray?.setContextMenu(Menu.buildFromTemplate(this.menu())), 30_000)
+    if (!on && this.tick) {
+      clearInterval(this.tick)
+      this.tick = null
+    }
   }
 
   private tooltip(): string {
@@ -132,7 +146,12 @@ export class TrayService {
     }
     if (items.length) items.push({ type: 'separator' })
     if (!this.sessions.length) items.push({ label: t('Keine Sessions offen'), enabled: false })
-    for (const s of this.sessions) items.push({ label: `${MARK[s.status]}  ${s.name} – ${t(LABEL[s.status])}`, click: () => this.d.show(s.id) })
+    // wer am längsten wartet, steht oben
+    const now = Date.now()
+    for (const s of longestWaitingFirst(this.sessions)) {
+      const label = s.status === 'waiting' ? waitingLabel(s.waitingSince, now) : t(LABEL[s.status])
+      items.push({ label: `${MARK[s.status]}  ${s.name} – ${label}`, click: () => this.d.show(s.id) })
+    }
     items.push({ type: 'separator' }, { label: t('VibeDesk zeigen'), click: () => this.d.show() }, { label: t('Beenden'), click: () => this.d.quit() })
     return items
   }

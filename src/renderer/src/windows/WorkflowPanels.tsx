@@ -9,6 +9,7 @@ import { statusText } from './TerminalWindow'
 import { openInEditor } from '../store/editorStore'
 import { useRedact } from '../store/streamerStore'
 import { t } from '../../../shared/i18n'
+import { waitingLabel } from '../../../shared/waiting'
 
 function useNow(ms = 15000): number {
   const [now, setNow] = useState(Date.now())
@@ -47,7 +48,7 @@ export function StatusPanel(): React.JSX.Element {
               <span className={`dot ${st}`} />
               <b>{s.name}</b>
             </div>
-            <div className="status-text">{statusText(st)}</div>
+            <div className="status-text">{st === 'waiting' ? waitingLabel(w?.waitingSince, now) : statusText(st)}</div>
             <div className="dim small">{w?.lastActivity ? relTime(w.lastActivity, now) : t('noch keine Aktivität')}</div>
           </button>
         )

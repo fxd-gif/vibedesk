@@ -19,6 +19,8 @@ export interface CompanionSnapshot {
     current: string
     todos: { done: number; total: number; active: string }
     lastActivity: number
+    /** seit wann die Session auf dich wartet (Uhr des PCs) */
+    waitingSince?: number
     /** die letzten Aktionen, neueste zuletzt – damit man am Handy nachvollziehen kann, was passiert */
     feed?: FeedItem[]
   }[]

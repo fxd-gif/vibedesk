@@ -5,6 +5,8 @@ export interface TraySession {
   id: string
   name: string
   status: SessionStatus
+  /** seit wann sie wartet (ms, Uhr des PCs) */
+  waitingSince?: number
 }
 
 /** wichtigster zuerst: wer wartet, schlägt alles */
@@ -37,7 +39,12 @@ export const cleanTrayList = (x: unknown): TraySession[] =>
     ? x
         .filter((s): s is TraySession => !!s && typeof s.id === 'string' && typeof s.name === 'string' && RANK.includes(s.status))
         .slice(0, 40)
-        .map((s) => ({ id: s.id.slice(0, 80), name: s.name.replace(/[\u0000-\u001f&]+/g, ' ').slice(0, 60), status: s.status }))
+        .map((s) => ({
+          id: s.id.slice(0, 80),
+          name: s.name.replace(/[\u0000-\u001f&]+/g, ' ').slice(0, 60),
+          status: s.status,
+          ...(s.status === 'waiting' && typeof s.waitingSince === 'number' && s.waitingSince > 0 && Number.isFinite(s.waitingSince) ? { waitingSince: s.waitingSince } : {})
+        }))
     : []
 
 /**
