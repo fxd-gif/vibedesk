@@ -422,6 +422,8 @@ export interface VibedeskApi {
     reportBug(summary?: string): void
     openLog(): void
     info(): Promise<AppInfo>
+    /** Kein Standby (Bildschirm darf aus), solange VibeDesk nach dem Limit von selbst weitermachen will */
+    keepAwake(on: boolean): void
   }
   setup: {
     check(): Promise<ToolStatus>

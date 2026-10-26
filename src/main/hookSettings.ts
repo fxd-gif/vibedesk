@@ -8,7 +8,8 @@ export const HOOK_EVENTS = [
   'SubagentStop',
   'SessionStart',
   'SessionEnd',
-  'PermissionRequest'
+  'PermissionRequest',
+  'StopFailure'
 ] as const
 
 const TOOL_EVENTS = new Set<string>(['PreToolUse', 'PostToolUse', 'PermissionRequest'])

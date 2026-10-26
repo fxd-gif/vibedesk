@@ -31,7 +31,7 @@ import { localDate, StatsHistory, StatsService } from './statsService'
 import os from 'os'
 import { registerRunAlias } from './runAlias'
 import { claudeOnPath, claudeVersion } from './sessionManager'
-import { ipcMain, powerMonitor } from 'electron'
+import { ipcMain, powerMonitor, powerSaveBlocker } from 'electron'
 import { randomBytes } from 'crypto'
 import * as pty from '@lydell/node-pty'
 import { HookServer, type BrainResult } from './hookServer'
@@ -261,6 +261,15 @@ app.whenReady().then(async () => {
       vibe.flush()
     } catch (e) {
       logError('vibe.flush', e)
+    }
+  })
+  // Weiter nach dem Limit: Schläft der PC, kann VibeDesk um 1:30 nicht „mach weiter“ schicken (live gesehen am 26.10.)
+  let resumeBlock: number | null = null
+  ipcMain.on('app:keepAwake', (_e, on: unknown) => {
+    if (on === true && resumeBlock === null) resumeBlock = powerSaveBlocker.start('prevent-app-suspension')
+    if (on !== true && resumeBlock !== null) {
+      powerSaveBlocker.stop(resumeBlock)
+      resumeBlock = null
     }
   })
   ipcMain.on('app:openExternal', (_e, url: string) => {

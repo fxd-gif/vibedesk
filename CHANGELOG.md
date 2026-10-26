@@ -26,6 +26,10 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 - **Wie lange wartet Claude schon?** Statt nur „wartet auf dich“ steht jetzt „wartet · 3 min“ in der Titelleiste der Session, im Status-Überblick, im Tray-Menü und auf dem Handy – so siehst du bei mehreren gelben Punkten, wer seit Sekunden und wer seit einer Viertelstunde wartet. Im Tray-Menü steht die am längsten wartende Session oben. Die Zeit zählt ruhig alle 30 Sekunden weiter. Danke für den Wunsch aus den Kommentaren auf dev.to
 - **Eingabefelder gut lesbar**: In mehrzeiligen Feldern (etwa „Zeig drauf“ in der Vorschau oder „Ändern …“ an der Plan-Karte) war der eingetippte Text fast unsichtbar – jetzt hat er dieselbe helle Farbe wie überall. Auf Englisch stehen dort außerdem englische Anführungszeichen, und der Hinweis beim Hineinziehen einer Datei ins Terminal ist jetzt übersetzt
 
+### Behoben
+
+- **Weiter nach dem Limit klappt wieder:** Neuere Versionen von Claude Code zeigen die Limit-Meldung nicht mehr verlässlich im Terminal. VibeDesk erfährt das Limit jetzt direkt von Claude Code und macht nach dem Reset wieder von selbst weiter. Solange das geplant ist, geht der PC nicht in den Standby (der Bildschirm darf aus), und nach dem Aufwachen wird sofort nachgeholt, was fällig war
+
 ## 1.9.0
 
 ### Neu

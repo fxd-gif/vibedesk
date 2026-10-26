@@ -76,6 +76,17 @@ export function scanLimit(chunk: string, carry: string, now: number, zone?: stri
   return { at: findLimitReset(text, now, zone), carry: text.slice(-CARRY) }
 }
 
+/**
+ * Limit aus dem StopFailure-Hook: Claude Code meldet `error: "rate_limit"` und als `last_assistant_message`
+ * denselben Text wie im Terminal. Seit Claude Code die Session in einem Hintergrund-Dienst laufen lässt und das
+ * Terminal nur eine angehängte Ansicht ist, kommt die Meldung dort nicht mehr verlässlich an.
+ */
+export function limitFromHook(name: string, payload: Record<string, unknown>, now: number, zone?: string): number | null {
+  if (name !== 'StopFailure' || payload.error !== 'rate_limit') return null
+  const text = [payload.last_assistant_message, payload.error_details].filter((x): x is string => typeof x === 'string').join('\n')
+  return text ? findLimitReset(text, now, zone) : null
+}
+
 /** Wie lange nach dem Reset gewartet wird, bevor es weitergeht – die Server brauchen manchmal einen Moment */
 export const RESUME_GRACE_MS = 90_000
 
