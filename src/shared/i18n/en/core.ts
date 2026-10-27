@@ -333,7 +333,7 @@ const dict: Record<string, string> = {
   'Shell öffnen: {name}': 'Open shell: {name}',
   'PowerShell im Projektordner': 'PowerShell in the project folder',
   'Share-Code einfügen …': 'Paste share code …',
-  'Prompts, Skills, Atmosphären': 'Prompts, skills, ambiences',
+  'Prompts, Skills, Atmosphären, lebende Szenen': 'Prompts, skills, ambiences, living scenes',
   'Alle Prompts als Code teilen': 'Share all prompts as a code',
   'Vorhang zuziehen': 'Draw the curtain',
   'Strg+Umschalt+H': 'Ctrl+Shift+H',

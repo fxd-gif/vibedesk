@@ -91,7 +91,7 @@ function buildCommands(projects: Project[]): Cmd[] {
     ...projects
       .filter((p) => !p.missing)
       .map((p): Cmd => ({ id: 'shell:' + p.id, label: t('Shell öffnen: {name}', { name: p.name }), group: t('Projekte'), icon: 'terminal', hint: t('PowerShell im Projektordner'), searchOnly: true, run: () => void useShells.getState().open(p.id) })),
-    { id: 'act:paste', label: t('Share-Code einfügen …'), group: t('Teilen'), icon: 'share', hint: t('Prompts, Skills, Atmosphären'), run: openPaste },
+    { id: 'act:paste', label: t('Share-Code einfügen …'), group: t('Teilen'), icon: 'share', hint: t('Prompts, Skills, Atmosphären, lebende Szenen'), run: openPaste },
     ...(s?.prompts.length ? [{ id: 'act:sharePrompts', label: t('Alle Prompts als Code teilen'), group: t('Teilen'), icon: 'share', searchOnly: true, run: () => sharePrompts(s.prompts) }] : []),
     { id: 'act:curtain', label: t('Vorhang zuziehen'), group: t('Aktionen'), icon: 'eyeoff', hint: t('Strg+Umschalt+H'), searchOnly: true, run: () => toggleCurtain(true) },
     ...(s ? [{ id: 'act:layout', label: s.layout === 'studio' ? t('Aufbau: Desktop mit freien Fenstern') : t('Aufbau: Studio mit Seitenleiste'), group: t('Aktionen'), icon: 'grid', hint: t('Wie das Dashboard aufgebaut ist'), run: () => useSettings.getState().set({ layout: s.layout === 'studio' ? 'desktop' : 'studio' }) }] : []),
