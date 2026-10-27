@@ -71,6 +71,14 @@ const dict: Record<string, string> = {
   'Hier sammelt sich, was Claude über dein Projekt lernt: Bereiche, Entscheidungen, Stolperfallen und Konventionen – als verlinkte Notizen. Jede neue Session startet mit diesem Wissen, statt alles neu zu erkunden.':
     'This is where everything Claude learns about your project collects: areas, decisions, pitfalls and conventions – as linked notes. Every new session starts with this knowledge instead of exploring everything again.',
   'Gehirn aufbauen lassen': 'Let Claude build the brain',
+  // Gehirn: Startnotizen aus CLAUDE.md und README
+  '{n} Startnotiz übernommen': '{n} starter note added',
+  '{n} Startnotizen übernommen': '{n} starter notes added',
+  'Nichts Passendes gefunden': 'Nothing suitable found',
+  'Aus {files}. Claude ergänzt sie, sobald es im Projekt arbeitet.': 'From {files}. Claude adds to them as it works in the project.',
+  'Übernehmen fehlgeschlagen': 'Could not add the notes',
+  'Sofort und ohne Tokens: Abschnitte aus {files} werden zu Notizen': 'Instant and free of tokens: sections of {files} become notes',
+  'Aus {files} übernehmen': 'Start from {files}',
   'Selbst eine Notiz schreiben': 'Write a note yourself',
   'Über dich (alle Projekte)': 'About you (all projects)',
   'Über dich gelernt': 'Learned about you',

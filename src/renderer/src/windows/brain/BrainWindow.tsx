@@ -7,6 +7,7 @@ import { t, tn } from '../../../../shared/i18n'
 import type { Project } from '../../../../shared/types'
 import { Icon } from '../../desktop/icons'
 import { alert } from '../../store/dialogStore'
+import { inform } from '../../store/notifyStore'
 import { promptProject } from '../../store/sessionPrompt'
 import { useSessions } from '../../store/sessionStore'
 import { activeProjectId } from '../../store/activeProject'
@@ -91,6 +92,34 @@ export function BrainWindow(): React.JSX.Element {
       clearTimeout(refetch)
     }
   }, [projectId, load])
+
+  // leeres Gehirn: gibt es CLAUDE.md oder README, aus denen VibeDesk sofort Startnotizen machen kann?
+  const [sources, setSources] = useState<string[]>([])
+  const [importing, setImporting] = useState(false)
+  const isEmpty = !!view && view.notes === 0
+  useEffect(() => {
+    setSources([])
+    if (!isEmpty || !projectId || projectId === ME_ID) return
+    let live = true
+    void api.brain.importable(projectId).then((s) => live && setSources(s), () => undefined)
+    return () => {
+      live = false
+    }
+  }, [isEmpty, projectId])
+
+  const importDocs = async (): Promise<void> => {
+    if (!projectId) return
+    setImporting(true)
+    try {
+      const n = await api.brain.importDocs(projectId)
+      inform(n ? tn(n, '{n} Startnotiz übernommen', '{n} Startnotizen übernommen') : t('Nichts Passendes gefunden'), n ? t('Aus {files}. Claude ergänzt sie, sobald es im Projekt arbeitet.', { files: sources.join(', ') }) : undefined)
+      load()
+    } catch (err) {
+      await alert(t('Übernehmen fehlgeschlagen'), String(err instanceof Error ? err.message : err))
+    } finally {
+      setImporting(false)
+    }
+  }
 
   // Hotspots aus git log – nur wenn der Chip an ist (Main cacht einige Minuten)
   useEffect(() => {
@@ -259,6 +288,11 @@ export function BrainWindow(): React.JSX.Element {
                 <button className="btn primary" onClick={() => void ask(buildPrompt())} data-testid="brain-build">
                   <Icon name="spark" size={14} /> {t('Gehirn aufbauen lassen')}
                 </button>
+                {sources.length > 0 && (
+                  <button className="btn" disabled={importing} onClick={() => void importDocs()} title={t('Sofort und ohne Tokens: Abschnitte aus {files} werden zu Notizen', { files: sources.join(', ') })} data-testid="brain-import">
+                    {importing ? <span className="spin" /> : <Icon name="plus" size={14} />} {t('Aus {files} übernehmen', { files: sources.map((s) => s.replace(/^.*\//, '')).join(' & ') })}
+                  </button>
+                )}
                 <button className="btn ghost" onClick={() => setDraft(emptyDraft())}>
                   {t('Selbst eine Notiz schreiben')}
                 </button>

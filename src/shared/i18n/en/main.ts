@@ -203,6 +203,12 @@ const dict: Record<string, string> = {
 
   // Projekte, Skills, Sessions
   'Projekt nicht gefunden': 'Project not found',
+  // Gehirn: Startnotizen
+  'Quelle: {file} (beim ersten Öffnen übernommen)': 'Source: {file} (added when the brain was first opened)',
+  'Siehe auch: {links}': 'See also: {links}',
+  'Projekt-Überblick': 'Project overview',
+  '(Die README hat keine Einleitung.)': '(The README has no introduction.)',
+  'Regeln aus {file}': 'Rules from {file}',
   'Projektordner fehlt: {path}': 'Project folder missing: {path}',
   'Keine SKILL.md mit gültigem Frontmatter (name, description) gefunden': 'No SKILL.md with valid frontmatter (name, description) found',
   'Import abgelaufen – bitte erneut hinzufügen': 'Import expired – please add it again',

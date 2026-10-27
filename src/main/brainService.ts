@@ -4,6 +4,7 @@ import { t } from '../shared/i18n'
 import { ipcMain, shell } from 'electron'
 import fs from 'fs'
 import path from 'path'
+import { IMPORT_FILE_MAX, IMPORT_FILES, importNotes } from '../shared/brainImport'
 import {
   BRAIN_DIR,
   ME_ID,
@@ -335,6 +336,35 @@ export class BrainService {
     return this.note(p.id, note.title)!
   }
 
+  /** Welche Startdateien (CLAUDE.md, README …) liegen im Projekt? */
+  importable(projectId: string): string[] {
+    const p = this.proj(projectId)
+    if (!p || p.id === ME_ID || p.missing) return []
+    return IMPORT_FILES.filter((f) => {
+      try {
+        const st = fs.statSync(path.join(p.path, f))
+        return st.isFile() && st.size > 0 && st.size <= IMPORT_FILE_MAX
+      } catch {
+        return false
+      }
+    })
+  }
+
+  /** Startnotizen aus CLAUDE.md, AGENTS.md und README anlegen – ohne Claude, vorhandene Notizen bleiben */
+  importDocs(projectId: string): number {
+    const p = this.proj(projectId)
+    if (!p) return 0
+    const sources = this.importable(projectId).map((name) => ({ name, text: fs.readFileSync(path.join(p.path, name), 'utf8') }))
+    const store = this.store(p)
+    const notes = importNotes(sources, store.list().map((n) => n.title))
+    for (const n of notes) store.write(n)
+    if (notes.length) {
+      this.watch(p)
+      this.changed(p.id)
+    }
+    return notes.length
+  }
+
   remove(projectId: string, title: string): boolean {
     const p = this.proj(projectId)
     if (!p) return false
@@ -393,6 +423,8 @@ export function registerBrainIpc(brain: BrainService): void {
   ipcMain.handle('brain:write', (_e, projectId: unknown, note: BrainNoteInput, prev: unknown) =>
     brain.write(str(projectId), { title: str(note?.title), type: str(note?.type), body: str(note?.body), tags: note?.tags, files: note?.files }, str(prev) || undefined)
   )
+  ipcMain.handle('brain:importable', (_e, projectId: unknown) => brain.importable(str(projectId)))
+  ipcMain.handle('brain:import', (_e, projectId: unknown) => brain.importDocs(str(projectId)))
   ipcMain.handle('brain:remove', (_e, projectId: unknown, title: unknown) => brain.remove(str(projectId), str(title)))
   ipcMain.handle('brain:reveal', async (_e, projectId: unknown) => {
     const v = brain.view(str(projectId))

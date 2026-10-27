@@ -25,6 +25,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Verbessert
 
+- **Gehirn sofort mit Startwissen:** Ist das Gehirn eines Projekts noch leer und liegen dort eine `CLAUDE.md`, `AGENTS.md` oder `README.md`, bietet VibeDesk „Aus CLAUDE.md & README.md übernehmen“ an. Ihre Abschnitte werden sofort und ohne Tokens zu verlinkten Notizen – Regeln als Konventionen, aus der README ein Projekt-Überblick plus Abschnitte wie Installation oder Aufbau. Claude ergänzt den Rest, sobald es im Projekt arbeitet
 - **Neue Auslöser für Addons:** „Datei geändert“ (auf Wunsch nur bestimmte, z. B. `*.css`), „Werkzeug benutzt“ (etwa jeder Befehl im Terminal), „Commit“ (aus dem Git-Fenster, dem Abschluss oder von Claude) und „Fehler in der Vorschau“. Über „Ereignis-Info“ kommt das Addon an Datei, Werkzeug oder Text des Ereignisses. Beim Installieren steht dazu „sieht, welche Dateien und Werkzeuge Claude benutzt“
 - **Git-Fenster hilft bei Konflikten:** Bleibt nach einem Merge oder Pull ein Konflikt stehen, zeigt das Git-Fenster oben, welche Dateien betroffen sind. „Claude löst das“ schickt Claude los: Es löst die Konfliktmarker so, dass beide Seiten erhalten bleiben, prüft den Build und markiert die Dateien als gelöst – committet wird erst, wenn du es sagst
 - **Gehirn-Check vor dem Commit:** Sind Notizen im Gehirn veraltet, weil sich ihre Dateien geändert haben, steht über der Commit-Nachricht „3 Gehirn-Notizen zu prüfen“. Ein Klick auf „Claude pflegen lassen“ gleicht sie mit dem Code ab

@@ -693,6 +693,10 @@ export interface VibedeskApi {
     write(projectId: string, note: BrainNoteInput, previousTitle?: string): Promise<NoteDetail>
     remove(projectId: string, title: string): Promise<boolean>
     reveal(projectId: string): Promise<boolean>
+    /** Startdateien im Projekt (CLAUDE.md, AGENTS.md, README.md), aus denen VibeDesk Notizen machen kann */
+    importable(projectId: string): Promise<string[]>
+    /** Startnotizen daraus anlegen – liefert die Zahl neuer Notizen */
+    importDocs(projectId: string): Promise<number>
     /** meistgeänderte Dateien laut git log (90 Tage) */
     hotspots(projectId: string): Promise<Hotspot[]>
   }
