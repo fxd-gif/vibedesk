@@ -11,7 +11,19 @@ export interface DialogSpec {
   checkbox?: string
   defaultValue?: string
   placeholder?: string
+  /** Auswahl als kompakte Kacheln unter dem Eingabefeld – die erste ist vorausgewählt */
+  choices?: DialogChoice[]
+  choicesLabel?: string
+  /** zweites, optionales Textfeld – nur sichtbar, wenn nicht die erste Kachel gewählt ist */
+  detailPlaceholder?: string
   seq?: number
+}
+
+export interface DialogChoice {
+  id: string
+  icon: string
+  label: string
+  hint: string
 }
 
 export interface DialogResult {
@@ -19,6 +31,8 @@ export interface DialogResult {
   alt?: boolean
   value: string
   checked: boolean
+  choice?: string
+  detail?: string
 }
 
 let seq = 0

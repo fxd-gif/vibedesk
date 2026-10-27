@@ -217,6 +217,46 @@ const dict: Record<string, string> = {
   'Dort geändert: {files}': 'Changed there: {files}',
   'und 1 weitere': 'and 1 more',
   'und {n} weitere': 'and {n} more',
+  // Projekt-Vorlagen
+  'Website': 'Website',
+  'HTML, CSS und JavaScript – ohne Build, öffnet direkt im Browser.': 'HTML, CSS and JavaScript – no build step, opens right in the browser.',
+  'Lege eine einfache Website mit index.html, style.css und script.js an – ohne Build-Werkzeuge und ohne Frameworks, so dass sie sich direkt im Browser öffnen lässt. Mit einer ansprechenden Startseite als Beispiel.':
+    'Create a simple website with index.html, style.css and script.js – no build tools and no frameworks, so it opens right in the browser. Include an appealing home page as an example.',
+  'React-App': 'React app',
+  'Vite und TypeScript – modern, schnell, mit Live-Vorschau.': 'Vite and TypeScript – modern, fast, with live preview.',
+  'Lege eine React-App mit Vite und TypeScript an (zum Beispiel mit `npm create vite@latest . -- --template react-ts`, ohne Rückfragen) und installiere die Pakete. Räum das Beispiel auf, so dass eine kleine, saubere Startseite übrig bleibt.':
+    'Create a React app with Vite and TypeScript (for example with `npm create vite@latest . -- --template react-ts`, without interactive questions) and install the packages. Tidy up the example so a small, clean home page remains.',
+  'Kleines Spiel': 'Small game',
+  'Ein Browser-Spiel mit Canvas – sofort spielbar.': 'A browser game with canvas – playable right away.',
+  'Lege ein kleines Spiel für den Browser an: index.html mit einem Canvas, dazu JavaScript ohne Build-Werkzeuge und ohne Frameworks. Baue eine erste spielbare Version mit Steuerung per Tastatur, Punktestand und Neustart.':
+    'Create a small browser game: index.html with a canvas plus JavaScript, no build tools and no frameworks. Build a first playable version with keyboard controls, a score and a restart.',
+  'Python-Werkzeug': 'Python tool',
+  'Ein Skript für die Kommandozeile, das dir Arbeit abnimmt.': 'A command-line script that saves you work.',
+  'Lege ein kleines Python-Werkzeug für die Kommandozeile an: ein Hauptskript mit argparse, eine requirements.txt (nur wenn Pakete nötig sind) und eine README.md. Nutze möglichst nur die Standardbibliothek.':
+    'Create a small Python command-line tool: a main script with argparse, a requirements.txt (only if packages are needed) and a README.md. Stick to the standard library where possible.',
+  'Discord-Bot': 'Discord bot',
+  'Node.js mit discord.js – mit einem ersten Befehl.': 'Node.js with discord.js – with a first command.',
+  'Lege einen Discord-Bot mit Node.js und discord.js an und installiere die Pakete. Der Bot soll einen ersten Slash-Befehl /ping haben. Das Token kommt aus einer .env-Datei (lege eine .env.example an, die echte .env gehört in die .gitignore). Erkläre mir auch, wo ich im Discord-Entwicklerportal das Token bekomme und den Bot einlade.':
+    'Create a Discord bot with Node.js and discord.js and install the packages. The bot should have a first slash command /ping. The token comes from a .env file (create a .env.example; the real .env belongs in the .gitignore). Also explain where I get the token in the Discord developer portal and how to invite the bot.',
+  'Chrome-Erweiterung': 'Chrome extension',
+  'Manifest V3 mit Popup – lädt ohne Build in Chrome.': 'Manifest V3 with a popup – loads into Chrome without a build.',
+  'Lege eine Chrome-Erweiterung mit Manifest V3 an: manifest.json, ein kleines Popup (HTML, CSS, JavaScript) und Platzhalter-Icons. Ohne Build-Werkzeuge. Erkläre mir, wie ich sie unter chrome://extensions als entpackte Erweiterung lade.':
+    'Create a Chrome extension with Manifest V3: manifest.json, a small popup (HTML, CSS, JavaScript) and placeholder icons. No build tools. Explain how I load it as an unpacked extension under chrome://extensions.',
+  'Landingpage': 'Landing page',
+  'Eine schicke Seite mit Tailwind CSS.': 'A sleek page with Tailwind CSS.',
+  'Lege eine Landingpage mit Tailwind CSS an: eine index.html mit Kopfbereich, Vorteilen, Aufruf zum Handeln und Fußzeile. Halte es einfach (Tailwind über die offizielle CDN-Einbindung reicht), modern und auch auf dem Handy gut lesbar.':
+    'Create a landing page with Tailwind CSS: an index.html with a hero section, benefits, a call to action and a footer. Keep it simple (Tailwind via the official CDN include is enough), modern and easy to read on a phone too.',
+  'Notizen & Texte': 'Notes & docs',
+  'Kein Code – ein ordentlicher Platz für Texte und Ideen.': 'No code – a tidy place for writing and ideas.',
+  'Hier entsteht kein Code, sondern eine Sammlung von Notizen und Dokumenten in Markdown. Lege eine sinnvolle Ordnerstruktur an, eine README.md als Startseite mit Inhaltsverzeichnis und eine erste Notiz als Beispiel.':
+    'This isn’t about code but a collection of notes and documents in Markdown. Create a sensible folder structure, a README.md as the start page with a table of contents and a first note as an example.',
+  'Wir starten das neue Projekt „{name}“, der Ordner ist noch leer.': 'We’re starting the new project “{name}”; the folder is still empty.',
+  'Worum es geht: {about}': 'What it’s about: {about}',
+  'Halte das Gerüst klein und einsteigerfreundlich – nur das Nötigste, damit ich gleich etwas sehe.': 'Keep the scaffold small and beginner-friendly – just what’s needed so I see something right away.',
+  'Lege eine passende .gitignore an.': 'Create a suitable .gitignore.',
+  'Erkläre mir danach in zwei, drei Sätzen, wie ich es starte bzw. benutze.': 'Afterwards, explain in two or three sentences how I start or use it.',
+  'Schreibe zum Schluss mit brain_write eine kurze Gehirn-Notiz „Projekt-Überblick“ (type module): Ziel, Aufbau, wichtigste Dateien und wie man es startet.':
+    'Finally, use brain_write to write a short brain note “Project overview” (type module): goal, structure, key files and how to start it.',
 }
 
 export default dict

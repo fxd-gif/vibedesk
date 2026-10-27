@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, errorText } from '../api'
 import { Icon } from '../desktop/icons'
-import { alert, prompt, useDialog } from '../store/dialogStore'
+import { alert, useDialog, type DialogChoice } from '../store/dialogStore'
+import { promptProject } from '../store/sessionPrompt'
 import { useSessions } from '../store/sessionStore'
+import { BLANK_TEMPLATE, projectTemplates, templateById, templatePrompt } from '../../../shared/projectTemplates'
 import { relTime, shortenPath } from '../util'
 import { PathInput } from './PathInput'
 import type { ClaudeSessionMeta, Project } from '../../../shared/types'
@@ -10,14 +12,33 @@ import { Fragment } from 'react'
 import { useRedact } from '../store/streamerStore'
 import { t } from '../../../shared/i18n'
 
-/** Fragt nach dem Namen, legt das Projekt an und startet gleich eine Session darin. */
+/** Kacheln für „Womit willst du starten?“ – „Leer“ zuerst */
+function templateChoices(): DialogChoice[] {
+  return [
+    { id: BLANK_TEMPLATE, icon: '📁', label: t('Leer'), hint: t('Nur der Ordner – du sagst Claude selbst, was entstehen soll.') },
+    ...projectTemplates().map((x) => ({ id: x.id, icon: x.icon, label: x.name, hint: x.hint }))
+  ]
+}
+
+/** Fragt nach Namen und Vorlage, legt das Projekt an und startet gleich eine Session darin – mit Vorlage samt erstem Prompt. */
 export async function newProject(afterCreate?: () => Promise<unknown>): Promise<void> {
-  const name = await prompt({ title: t('Neues Projekt'), message: t('Der Ordner wird in deinem Projekte-Verzeichnis angelegt.'), placeholder: t('Projektname'), confirmLabel: t('Anlegen') })
-  if (!name) return
+  const r = await useDialog.getState().ask({
+    kind: 'prompt',
+    title: t('Neues Projekt'),
+    message: t('Der Ordner wird in deinem Projekte-Verzeichnis angelegt.'),
+    placeholder: t('Projektname'),
+    confirmLabel: t('Anlegen'),
+    choicesLabel: t('Womit willst du starten?'),
+    choices: templateChoices(),
+    detailPlaceholder: t('Worum geht’s? (optional, ein Satz)')
+  })
+  if (!r.ok || !r.value) return
+  const tpl = templateById(r.choice)
   try {
-    const p = await api.projects.create(name)
+    const p = await api.projects.create(r.value)
     await afterCreate?.()
-    await useSessions.getState().start(p.id)
+    if (tpl) await promptProject(p.id, templatePrompt(tpl, { name: p.name, about: r.detail }))
+    else await useSessions.getState().start(p.id)
   } catch (err) {
     await alert(t('Projekt konnte nicht angelegt werden'), errorText(err))
   }

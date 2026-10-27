@@ -12,15 +12,19 @@ function DialogBox({ d }: { d: DialogSpec }): React.JSX.Element {
   const close = useDialog((s) => s.close)
   const [value, setValue] = useState(d.defaultValue ?? '')
   const [checked, setChecked] = useState(false)
+  const [choice, setChoice] = useState(d.choices?.[0]?.id)
+  const [detail, setDetail] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const okRef = useRef<HTMLButtonElement>(null)
-  const ok = (): void => close({ ok: true, value: value.trim(), checked })
+  const ok = (pick = choice): void => close({ ok: true, value: value.trim(), checked, choice: pick, detail: detail.trim() })
   const cancel = (): void => close({ ok: false, value: '', checked: false })
+  const picked = d.choices?.find((c) => c.id === choice)
+  const showDetail = !!d.detailPlaceholder && !!d.choices && choice !== d.choices[0]?.id
 
   return (
     <div className="dlg-backdrop" onPointerDown={(e) => e.target === e.currentTarget && cancel()}>
       <div
-        className="dlg"
+        className={`dlg${d.choices ? ' has-choices' : ''}`}
         role="dialog"
         onKeyDown={(e) => {
           if (e.key === 'Escape') cancel()
@@ -31,6 +35,40 @@ function DialogBox({ d }: { d: DialogSpec }): React.JSX.Element {
         {d.message && <p className="dlg-msg">{d.message}</p>}
         {d.kind === 'prompt' && (
           <input ref={inputRef} autoFocus className="field" value={value} placeholder={d.placeholder} onChange={(e) => setValue(e.target.value)} />
+        )}
+        {d.choices && (
+          <>
+            {d.choicesLabel && <div className="dlg-label">{d.choicesLabel}</div>}
+            <div className="dlg-tiles" role="radiogroup">
+              {d.choices.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={c.id === choice}
+                  className={`dlg-tile${c.id === choice ? ' on' : ''}`}
+                  title={c.hint}
+                  onClick={() => setChoice(c.id)}
+                  onKeyDown={(e) => {
+                    // Enter auf einer Kachel: wählen und – wenn ein Name da ist – gleich anlegen
+                    if (e.key !== 'Enter') return
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setChoice(c.id)
+                    if (d.kind !== 'prompt' || value.trim()) ok(c.id)
+                  }}
+                  data-testid={`dialog-choice-${c.id}`}
+                >
+                  <span className="dlg-tile-icon">{c.icon}</span>
+                  <span className="dlg-tile-name">{c.label}</span>
+                </button>
+              ))}
+            </div>
+            {picked && <p className="dlg-hint">{picked.hint}</p>}
+            {showDetail && (
+              <input className="field" value={detail} placeholder={d.detailPlaceholder} maxLength={200} onChange={(e) => setDetail(e.target.value)} data-testid="dialog-detail" />
+            )}
+          </>
         )}
         {d.checkbox && (
           <label className="check">
@@ -55,7 +93,7 @@ function DialogBox({ d }: { d: DialogSpec }): React.JSX.Element {
             autoFocus={d.kind !== 'prompt'}
             className={`btn ${d.danger ? 'danger' : 'primary'}`}
             disabled={d.kind === 'prompt' && !value.trim()}
-            onClick={ok}
+            onClick={() => ok()}
             data-testid="dialog-ok"
           >
             {d.confirmLabel ?? (d.kind === 'alert' ? t('OK') : t('Bestätigen'))}

@@ -162,6 +162,17 @@ input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 .dlg-msg { margin: 0 0 14px; color: var(--text-dim); line-height: 1.5; white-space: pre-wrap; user-select: text; }
 .dlg .field { margin-top: 6px; }
 .dlg-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+/* Auswahl-Kacheln (z. B. Projekt-Vorlagen) */
+.dlg.has-choices { width: min(500px, calc(100vw - 32px)); }
+.dlg-label { margin: 16px 0 6px; font-size: 12px; color: var(--text-dim); }
+.dlg-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.dlg-tile { display: flex; align-items: center; gap: 7px; min-width: 0; padding: 7px 9px; border-radius: 10px; border: 1px solid var(--glass-border); background: transparent; color: var(--text-dim); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.dlg-tile:hover { color: var(--text); background: rgba(255, 255, 255, .05); }
+.dlg-tile.on { color: var(--text); background: rgba(159, 184, 255, .14); border-color: rgba(159, 184, 255, .55); }
+.dlg-tile-icon { flex: none; font-size: 14px; line-height: 1; }
+.dlg-tile-name { min-width: 0; line-height: 1.25; overflow-wrap: break-word; }
+.dlg-hint { margin: 8px 0 0; min-height: 1.5em; font-size: 12px; line-height: 1.5; color: var(--text-dim); }
+.dlg .dlg-hint + .field { margin-top: 8px; }
 @keyframes fade { from { opacity: 0; } }
 /* Session-Abschluss */
 .dlg.wrapup-dlg { width: min(600px, calc(100vw - 32px)); max-height: calc(100vh - 64px); overflow: auto; }

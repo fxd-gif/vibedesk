@@ -65,6 +65,10 @@ const dict: Record<string, string> = {
   Projektname: 'Project name',
   Anlegen: 'Create',
   'Projekt konnte nicht angelegt werden': 'Couldn’t create the project',
+  'Womit willst du starten?': 'What do you want to start with?',
+  'Worum geht’s? (optional, ein Satz)': 'What’s it about? (optional, one sentence)',
+  Leer: 'Empty',
+  'Nur der Ordner – du sagst Claude selbst, was entstehen soll.': 'Just the folder – you tell Claude yourself what to build.',
   'Ordner konnte nicht hinzugefügt werden': 'Couldn’t add the folder',
   '„{name}“ entfernen?': 'Remove “{name}”?',
   'Das Projekt verschwindet aus der Liste. Der Ordner bleibt erhalten, außer du wählst unten den Papierkorb.':
