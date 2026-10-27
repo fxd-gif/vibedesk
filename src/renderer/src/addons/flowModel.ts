@@ -119,6 +119,10 @@ export const KINDS: Record<string, KindDef> = {
   vd_on_time: trig(() => t('Uhrzeit'), () => t('Jeden Tag zu einer festen Uhrzeit.'), 'clock', { HOUR: 22, MINUTE: 0 }),
   vd_on_hotkey: trig(() => t('Tastenkürzel'), () => t('Wenn du Strg + Alt + Taste drückst.'), 'keyboard', { KEY: 'T' }),
   vd_on_interval: trig(() => t('Intervall'), () => t('Wiederholt sich alle paar Minuten.'), 'repeat', { MINUTES: 30 }),
+  vd_on_file_changed: trig(() => t('Datei geändert'), () => t('Claude hat eine Datei geändert – auf Wunsch nur bestimmte, z. B. *.css.'), 'save', { PATTERN: '' }),
+  vd_on_tool: trig(() => t('Werkzeug benutzt'), () => t('Claude hat ein Werkzeug benutzt, z. B. einen Befehl im Terminal ausgeführt.'), 'wrench', { TOOL: 'Bash' }),
+  vd_on_commit: trig(() => t('Commit'), () => t('Ein Commit ist entstanden – im Git-Fenster, beim Abschluss oder von Claude im Terminal.'), 'check'),
+  vd_on_preview_error: trig(() => t('Fehler in der Vorschau'), () => t('Deine App in der Vorschau meldet einen Fehler in der Konsole.'), 'info'),
   vd_on_command: trig(() => t('Makro-Befehl'), () => t('Startet über die Befehls-Palette (Strg+K) als „Makro: Name“.'), 'zap', () => ({ NAME: t('Mein Makro') })),
 
   vd_claude_start: act(() => t('Session öffnen'), () => t('Öffnet eine Claude-Session im Projekt – oder nimmt die, die schon läuft.'), 'play', 'claude', [], { fields: { PROJECT: '' } }),

@@ -4,6 +4,7 @@ import { GlassWindow } from '../desktop/GlassWindow'
 import { Icon } from '../desktop/icons'
 import { inform } from '../store/notifyStore'
 import { askClaudeFromPreview, previewWin, usePreview } from '../store/previewStore'
+import { addonEvent } from '../addons/appEvents'
 import { CANCEL_PICK_SCRIPT, consoleError, errorsPrompt, PICK_SCRIPT, pickPrompt, pushError, type PickedElement, type PreviewError } from './previewTools'
 import { t } from '../../../shared/i18n'
 
@@ -94,7 +95,9 @@ export function PreviewWindow({ id }: { id: string }): React.JSX.Element {
     const stop = (): void => setLoading(false)
     const onConsole = (e: Event & { level?: unknown; message?: unknown; line?: unknown; sourceId?: unknown }): void => {
       const err = consoleError(e)
-      if (err) setErrors((l) => pushError(l, err))
+      if (!err) return
+      setErrors((l) => pushError(l, err))
+      addonEvent({ type: 'preview_error', text: err.message.slice(0, 500) })
     }
     // neue Seite → alte Fehler sind Geschichte
     const onNavigate = (): void => setErrors([])

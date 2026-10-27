@@ -51,6 +51,10 @@ export type AddonEvent =
   | { type: 'interval'; minutes: number }
   | { type: 'signal'; name: string }
   | { type: 'command'; name: string }
+  | { type: 'file_changed'; path: string; project?: string; session?: string }
+  | { type: 'tool'; tool: string; detail?: string; project?: string; session?: string }
+  | { type: 'preview_error'; text: string }
+  | { type: 'commit'; message: string; project?: string; session?: string }
 
 export interface Clock {
   now(): number
@@ -110,8 +114,50 @@ const EVENT_OF: Record<string, AddonEvent['type']> = {
   vd_on_hotkey: 'hotkey',
   vd_on_interval: 'interval',
   vd_on_signal: 'signal',
-  vd_on_command: 'command'
+  vd_on_command: 'command',
+  vd_on_file_changed: 'file_changed',
+  vd_on_tool: 'tool',
+  vd_on_preview_error: 'preview_error',
+  vd_on_commit: 'commit'
 }
+
+/** „Ereignis-Info“: Projekt, Datei, Werkzeug oder Text (Fehler, Commit-Nachricht) des auslösenden Ereignisses */
+export function eventInfo(e: AddonEvent, what: string): string {
+  switch (what) {
+    case 'event_project':
+      return 'project' in e ? (e.project ?? '') : ''
+    case 'event_file':
+      return e.type === 'file_changed' ? e.path : ''
+    case 'event_tool':
+      return e.type === 'tool' ? e.tool : ''
+    case 'event_text':
+      return e.type === 'preview_error' ? e.text : e.type === 'commit' ? e.message : e.type === 'tool' ? (e.detail ?? '') : ''
+    default:
+      return ''
+  }
+}
+
+/** Dateimuster wie „*.css, src/**“: ohne / zählt nur der Dateiname, leer = jede Datei; groß/klein egal */
+export function globMatch(pattern: string, path: string): boolean {
+  const pats = pattern.split(',').map((p) => p.trim()).filter(Boolean)
+  if (!pats.length) return true
+  const file = path.replace(/\\/g, '/')
+  const base = file.slice(file.lastIndexOf('/') + 1)
+  return pats.some((p) => {
+    const re = p
+      .replace(/\\/g, '/')
+      .replace(/[.+^${}()|[\]]/g, '\\$&')
+      .replace(/\*\*\/?/g, '\u0001')
+      .replace(/\*/g, '[^/]*')
+      .replace(/\?/g, '[^/]')
+      .replace(/\u0001/g, '.*')
+    return new RegExp(`^${re}$`, 'i').test(p.includes('/') ? file : base)
+  })
+}
+
+/** „any“ passt immer, „mcp“ auf alle MCP-Werkzeuge (mcp__server__tool), „Edit“ auch auf MultiEdit */
+export const toolMatch = (want: string, tool: string): boolean =>
+  want === 'any' || want === tool || (want === 'mcp' && tool.startsWith('mcp__')) || (want === 'Edit' && tool === 'MultiEdit')
 
 type Scalar = number | string | boolean
 type Value = Scalar | Scalar[]
@@ -243,6 +289,10 @@ export class AddonRunner {
         return String(field(b, 'NAME')) === e.name
       case 'command':
         return String(field(b, 'NAME') ?? '').trim() === e.name
+      case 'file_changed':
+        return globMatch(String(field(b, 'PATTERN') ?? ''), e.path)
+      case 'tool':
+        return toolMatch(String(field(b, 'TOOL') ?? 'any'), e.tool)
       default:
         return true
     }
@@ -255,7 +305,7 @@ export class AddonRunner {
     for (const hat of this.hats) {
       if (!this.matches(hat, e)) continue
       if (this._running >= LIMITS.maxScripts) break
-      out.push(this.runScript(input(hat, 'DO'), { event: e, session: e.type === 'session_waiting' || e.type === 'session_done' ? e.session : undefined }))
+      out.push(this.runScript(input(hat, 'DO'), { event: e, session: 'session' in e ? e.session : undefined }))
     }
     return out
   }
@@ -615,10 +665,7 @@ export class AddonRunner {
         return this.vars.get(varId(b)) ?? 0
       case 'vd_get': {
         const what = String(field(b, 'WHAT'))
-        if (what === 'event_project') {
-          const e = ctx.event
-          return e.type === 'session_waiting' || e.type === 'session_done' ? (e.project ?? '') : ''
-        }
+        if (what.startsWith('event_')) return eventInfo(ctx.event, what)
         if (what === 'claude_status') return this.opts.actions.claudeStatus(ctx.session)
         return this.opts.actions.query(what)
       }

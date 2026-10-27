@@ -4,7 +4,8 @@ import { useFocus } from '../store/focusStore'
 import { useSettings } from '../store/settingsStore'
 import { useWorkflow } from '../store/workflowStore'
 import { createActions } from './actions'
-import { focusTransition, planRebuild, sceneFallback, statusTransitions } from './events'
+import { focusTransition, hookTransitions, planRebuild, sceneFallback, statusTransitions } from './events'
+import { onAddonEvent } from './appEvents'
 import { AddonRunner, realClock, type AddonEvent } from './interpreter'
 import { createStorage, type ManagedStorage } from './storage'
 import { dismissAsks } from './AskToast'
@@ -105,6 +106,13 @@ export function startAddonRuntime(): void {
     const e = focusTransition(prev.state.phase, s.state.phase)
     if (e) emit(e)
   })
+  // Claude benutzt Werkzeuge, ändert Dateien, committet
+  api.on.hookEvent((e) => {
+    if (e.name !== 'PostToolUse' || !all().length) return
+    const s = useSessions.getState().sessions.find((x) => x.id === e.sessionId)
+    hookTransitions(e, s ? { project: s.name, cwd: s.cwd } : undefined).forEach(emit)
+  })
+  onAddonEvent(emit)
 
   // Strg+Alt+Taste – nur abfangen, wenn ein Addon genau diese Taste nutzt (sonst bleibt AltGr unberührt)
   window.addEventListener(

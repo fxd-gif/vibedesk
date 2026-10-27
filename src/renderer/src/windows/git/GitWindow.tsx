@@ -12,6 +12,7 @@ import { DiffView } from './DiffView'
 import { ensureGh, PrPanel } from './PrPanel'
 import { cancelLogin, githubLogin, installTool, refreshTools, useGitAuth, withAuth } from './gitAuth'
 import { tendPrompt } from '../brain/BrainWindow'
+import { addonEvent } from '../../addons/appEvents'
 import { promptProject } from '../../store/sessionPrompt'
 import { useSettings } from '../../store/settingsStore'
 import { t, tn } from '../../../../shared/i18n'
@@ -303,7 +304,7 @@ function ConflictHelp({ projectId, files }: { projectId: string; files: GitFile[
   )
 }
 
-function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStatus; reload(): Promise<void> }): React.JSX.Element {
+function ChangesView({ projectId, projectName, st, reload }: { projectId: string; projectName?: string; st: GitStatus; reload(): Promise<void> }): React.JSX.Element {
   const [sel, setSel] = useState<Sel | null>(null)
   const [diff, setDiff] = useState('')
   const [msg, setMsg] = useState('')
@@ -364,6 +365,7 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
     setBusy(true)
     try {
       const hash = await api.git.commit(projectId, msg, all)
+      addonEvent({ type: 'commit', message: msg.split('\n')[0], ...(projectName ? { project: projectName } : {}) })
       setMsg('')
       inform(t('Commit {hash}', { hash }), msg.split('\n')[0], st.remoteUrl ? [{ label: t('Pushen'), primary: true, run: () => void withAuth(t('Push fehlgeschlagen'), () => api.git.push(projectId, !!st.upstream)).then(reload) }] : undefined)
     } catch (err) {
@@ -619,7 +621,7 @@ export function GitWindow(): React.JSX.Element {
         </button>
       </div>
     )
-  else body = tab === 'changes' ? <ChangesView projectId={projectId} st={st} reload={reload} /> : <HistoryView projectId={projectId} headKey={`${st.branch}:${st.ahead}:${st.files.length}`} />
+  else body = tab === 'changes' ? <ChangesView projectId={projectId} projectName={project?.name} st={st} reload={reload} /> : <HistoryView projectId={projectId} headKey={`${st.branch}:${st.ahead}:${st.files.length}`} />
 
   return (
     <div className="git" data-testid="git-window">

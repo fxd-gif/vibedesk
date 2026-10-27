@@ -10,7 +10,8 @@ export const FIELD_LABELS = (): Record<string, Record<string, string>> => ({
   SOUND: { chime: t('Gong') },
   ON: { TRUE: t('an'), FALSE: t('aus') },
   WAIT: { TRUE: t('ja, warten bis fertig'), FALSE: t('nein, sofort weiter') },
-  AWAIT: { TRUE: t('ja, erst weiter, wenn Claude fertig ist'), FALSE: t('nein, sofort weiter') }
+  AWAIT: { TRUE: t('ja, erst weiter, wenn Claude fertig ist'), FALSE: t('nein, sofort weiter') },
+  TOOL: { any: t('jedes Werkzeug'), Bash: t('Befehl im Terminal (Bash)'), Edit: t('Datei bearbeiten (Edit)'), Write: t('Datei schreiben (Write)'), Read: t('Datei lesen (Read)'), Grep: t('Suchen (Grep)'), Glob: t('Dateien finden (Glob)'), WebFetch: t('Webseite abrufen (WebFetch)'), WebSearch: t('Websuche (WebSearch)'), Task: t('Subagent (Task)'), mcp: t('MCP-Werkzeug') }
 })
 
 /** App-Werte für die fx-Auswahl, gruppiert */
@@ -24,6 +25,9 @@ export const APP_GROUPS = (): { label: string; items: [string, string][] }[] => 
       ['tokens_today', t('Tokens heute')],
       ['cost_today', t('Kosten heute ($)')],
       ['event_project', t('Projekt des Ereignisses')],
+      ['event_file', t('Datei des Ereignisses')],
+      ['event_tool', t('Werkzeug des Ereignisses')],
+      ['event_text', t('Text des Ereignisses (Fehler, Commit, Befehl)')],
       ['claude_status', t('Claude-Status (arbeitet, wartet, fertig …)')]
     ]
   },
@@ -164,6 +168,14 @@ export function summarize(d: FlowNodeData): string {
       return t('Aufgabe erledigt')
     case 'vd_on_signal':
       return `„${f.NAME}“`
+    case 'vd_on_file_changed':
+      return String(f.PATTERN ?? '').trim() || t('jede Datei')
+    case 'vd_on_tool':
+      return optionLabel('TOOL', String(f.TOOL))
+    case 'vd_on_commit':
+      return t('neuer Commit')
+    case 'vd_on_preview_error':
+      return t('Konsolenfehler')
     case 'vd_on_command':
       return t('Strg+K → Makro: {name}', { name: String(f.NAME) })
     case 'vd_claude_start':

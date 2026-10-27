@@ -1,5 +1,5 @@
 // Reine Übersetzung von App-Zuständen in Addon-Ereignisse (ohne Store-Abhängigkeiten, testbar).
-import type { InstalledAddon, SessionStatus } from '../../../shared/types'
+import type { HookEvent, InstalledAddon, SessionStatus } from '../../../shared/types'
 import { ADDON_SCHEME } from '../../../shared/addonFormat'
 import type { Phase } from '../store/focusTimer'
 import type { AddonEvent } from './interpreter'
@@ -15,6 +15,44 @@ export function statusTransitions(prev: StatusMap, next: StatusMap, projectOf: (
     if (s.status === 'waiting') out.push({ type: 'session_waiting', ...extra })
     else if (s.status === 'done') out.push({ type: 'session_done', ...extra })
   }
+  return out
+}
+
+const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
+/** Details höchstens so lang (Befehl, Pfad) – Addons brauchen nur einen Anhaltspunkt */
+const DETAIL_MAX = 300
+
+/** Pfad relativ zum Ordner der Session, mit / */
+function rel(file: string, cwd: string | undefined): string {
+  const f = file.replace(/\\/g, '/')
+  if (!cwd) return f
+  const root = cwd.replace(/\\/g, '/').replace(/\/+$/, '') + '/'
+  return f.toLowerCase().startsWith(root.toLowerCase()) ? f.slice(root.length) : f
+}
+
+/** Commit-Nachricht aus „git commit -m …“ (erste -m, mit oder ohne Anführungszeichen) */
+export function commitMessage(cmd: string): string {
+  const m = /\s-(?:m|-message)(?:=|\s+)(?:"((?:[^"\\]|\\.)*)"|'([^']*)'|(\S+))/.exec(cmd)
+  return (m?.[1] ?? m?.[2] ?? m?.[3] ?? '').replace(/\\"/g, '"').split('\n')[0].trim()
+}
+
+/**
+ * Claude benutzt ein Werkzeug (PostToolUse): „Werkzeug benutzt“, bei Dateiänderungen „Datei geändert“
+ * und bei „git commit“ im Terminal „Commit“. Gehirn-Notizen zählen nicht als Projektdateien.
+ */
+export function hookTransitions(e: HookEvent, session?: { project?: string; cwd?: string }): AddonEvent[] {
+  if (e.name !== 'PostToolUse') return []
+  const p = e.payload
+  const tool = typeof p.tool_name === 'string' ? p.tool_name : ''
+  if (!tool) return []
+  const input = (p.tool_input ?? {}) as Record<string, unknown>
+  const extra = { ...(session?.project ? { project: session.project } : {}), session: e.sessionId }
+  const file = typeof input.file_path === 'string' ? input.file_path : typeof input.notebook_path === 'string' ? input.notebook_path : ''
+  const cmd = typeof input.command === 'string' ? input.command : ''
+  const detail = (cmd || (file ? rel(file, session?.cwd) : '')).slice(0, DETAIL_MAX)
+  const out: AddonEvent[] = [{ type: 'tool', tool, ...(detail ? { detail } : {}), ...extra }]
+  if (EDIT_TOOLS.has(tool) && file && !/[\\/]\.vibedesk[\\/]brain[\\/]/i.test(file)) out.push({ type: 'file_changed', path: rel(file, session?.cwd), ...extra })
+  if (tool === 'Bash' && /\bgit\s+(?:-\S+\s+)*commit\b/.test(cmd)) out.push({ type: 'commit', message: commitMessage(cmd), ...extra })
   return out
 }
 

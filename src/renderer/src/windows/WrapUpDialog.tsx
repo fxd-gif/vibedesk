@@ -12,6 +12,7 @@ import { redactText } from '../store/streamerStore'
 import { useUi } from '../store/uiStore'
 import { closeWrapUp, finishWrapUp, useWrapUp } from '../store/wrapUpStore'
 import { Markdown } from './brain/Markdown'
+import { addonEvent } from '../addons/appEvents'
 
 export function WrapUpDialog(): React.JSX.Element | null {
   const open = useWrapUp((s) => s.open)
@@ -72,6 +73,7 @@ function WrapUpBox({ sessionId }: { sessionId: string }): React.JSX.Element {
     try {
       const hash = await api.wrapUp.commit(sessionId, message)
       finishWrapUp(sessionId)
+      addonEvent({ type: 'commit', message: message.split('\n')[0], ...(session ? { project: session.name } : {}), session: sessionId })
       inform(t('Commit {hash} erstellt', { hash }), message.split('\n')[0], [{ label: t('Git-Fenster'), run: () => useUi.getState().openWin('git') }], `wrapup:${sessionId}`)
     } catch (e) {
       setError(errorText(e))

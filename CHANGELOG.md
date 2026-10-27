@@ -22,6 +22,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Verbessert
 
+- **Neue Auslöser für Addons:** „Datei geändert“ (auf Wunsch nur bestimmte, z. B. `*.css`), „Werkzeug benutzt“ (etwa jeder Befehl im Terminal), „Commit“ (aus dem Git-Fenster, dem Abschluss oder von Claude) und „Fehler in der Vorschau“. Über „Ereignis-Info“ kommt das Addon an Datei, Werkzeug oder Text des Ereignisses. Beim Installieren steht dazu „sieht, welche Dateien und Werkzeuge Claude benutzt“
 - **Git-Fenster hilft bei Konflikten:** Bleibt nach einem Merge oder Pull ein Konflikt stehen, zeigt das Git-Fenster oben, welche Dateien betroffen sind. „Claude löst das“ schickt Claude los: Es löst die Konfliktmarker so, dass beide Seiten erhalten bleiben, prüft den Build und markiert die Dateien als gelöst – committet wird erst, wenn du es sagst
 - **Gehirn-Check vor dem Commit:** Sind Notizen im Gehirn veraltet, weil sich ihre Dateien geändert haben, steht über der Commit-Nachricht „3 Gehirn-Notizen zu prüfen“. Ein Klick auf „Claude pflegen lassen“ gleicht sie mit dem Code ab
 - **Übergabe zwischen Sessions:** Schickt eine Session einer anderen einen Auftrag, kommt jetzt eine kurze Übergabe mit – was die schickende Session gerade gemacht hat und warum, und welche Dateien sie in dieser Runde geändert hat (mit Zeilenzahlen). So fängt die andere Session mit Kontext an statt kalt. Die Karte „frontend → backend“ zeigt, dass eine Übergabe dabei war. Danke für den Wunsch aus den Kommentaren auf dev.to

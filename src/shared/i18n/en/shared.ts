@@ -25,6 +25,7 @@ const dict: Record<string, string> = {
   'läuft zeitgesteuert': 'runs on a schedule',
   'merkt sich Werte dauerhaft': 'remembers values permanently',
   'steuert Claude: öffnet Sessions und schickt Prompts': 'controls Claude: opens sessions and sends prompts',
+  'sieht, welche Dateien und Werkzeuge Claude benutzt': 'sees which files and tools Claude uses',
   'Diese Datei ist kein gültiges VibeDesk-Addon.': 'This file isn’t a valid VibeDesk add-on.',
   'Dieses Addon braucht eine neuere VibeDesk-Version.': 'This add-on needs a newer VibeDesk version.',
   'Dieses Addon ist zu groß.': 'This add-on is too large.',

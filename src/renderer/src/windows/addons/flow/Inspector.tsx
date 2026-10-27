@@ -230,7 +230,9 @@ const FIELD_NAMES = (): Record<string, string> => ({
   YES_LABEL: t('Text Knopf 1'),
   NO_LABEL: t('Text Knopf 2'),
   AWAIT: t('Auf Claude warten?'),
-  PROJECT: t('Projekt')
+  PROJECT: t('Projekt'),
+  PATTERN: t('Welche Dateien'),
+  TOOL: t('Werkzeug')
 })
 
 export function NodeInspector({
@@ -301,10 +303,12 @@ export function NodeInspector({
                   ? t('Sender und Empfänger brauchen denselben Namen.')
                   : key === 'PROJECT'
                     ? t('Name des Projekts – leer lassen für das Projekt der Session im Vordergrund.')
-                    : undefined
+                    : key === 'PATTERN'
+                      ? t('Leer = jede Datei. Muster wie *.css oder src/**, mehrere mit Komma.')
+                      : undefined
             }
           >
-            <input className="finput" list={key === 'NAME' ? 'flow-signals' : key === 'KEY' ? 'flow-store' : undefined} maxLength={f.maxLen} value={value} onChange={(e) => setField(key, e.target.value)} data-testid={`fi-${key}`} />
+            <input className="finput" list={key === 'NAME' ? 'flow-signals' : key === 'KEY' ? 'flow-store' : undefined} maxLength={f.maxLen} placeholder={key === 'PATTERN' ? '*.css, src/**' : undefined} value={value} onChange={(e) => setField(key, e.target.value)} data-testid={`fi-${key}`} />
           </Field>
         )
       case 'asset': {

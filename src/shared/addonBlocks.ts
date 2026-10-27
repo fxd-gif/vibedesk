@@ -2,7 +2,7 @@
 // Codec, Prüfung, Interpreter und Blockly-Definitionen bauen darauf auf.
 import { t } from './i18n'
 
-export type Capability = 'scene' | 'rain' | 'audio' | 'sound' | 'notice' | 'ask' | 'focus' | 'clipboard' | 'hotkey' | 'schedule' | 'storage' | 'claude'
+export type Capability = 'scene' | 'rain' | 'audio' | 'sound' | 'notice' | 'ask' | 'focus' | 'clipboard' | 'hotkey' | 'schedule' | 'storage' | 'claude' | 'activity'
 
 /** Getter: übersetzt beim Lesen, nicht beim Import */
 export const CAPABILITY_LABELS: Record<Capability, string> = {
@@ -41,6 +41,9 @@ export const CAPABILITY_LABELS: Record<Capability, string> = {
   },
   get claude() {
     return t('steuert Claude: öffnet Sessions und schickt Prompts')
+  },
+  get activity() {
+    return t('sieht, welche Dateien und Werkzeuge Claude benutzt')
   }
 }
 
@@ -104,6 +107,9 @@ export const QUERY_KEYS = [
   'cost_today',
   'session_minutes',
   'event_project',
+  'event_file',
+  'event_tool',
+  'event_text',
   // Zeit
   'weekday',
   'day',
@@ -117,6 +123,8 @@ export const QUERY_KEYS = [
 export const CALC_OPS = ['add', 'sub', 'mul', 'div', 'mod', 'pow', 'min', 'max', 'round', 'floor', 'ceil', 'abs', 'sqrt', 'sin', 'cos', 'join', 'upper', 'lower', 'length', 'contains', 'trim']
 export const LIST_OPS = ['length', 'random', 'first', 'last', 'item', 'contains', 'join']
 const NAME = { kind: 'text', maxLen: 40 } as const
+/** Werkzeuge von Claude Code für „Werkzeug benutzt“ (mcp = alle MCP-Werkzeuge) */
+export const TOOLS = ['any', 'Bash', 'Edit', 'Write', 'Read', 'Grep', 'Glob', 'WebFetch', 'WebSearch', 'Task', 'mcp']
 
 const list: BlockSpec[] = []
 const def = (type: string, category: BlockSpec['category'], o: Partial<Omit<BlockSpec, 'type' | 'category'>> = {}): void => {
@@ -133,6 +141,10 @@ ev('vd_on_focus', { PHASE: { kind: 'enum', options: ['work', 'break', 'end'] } }
 ev('vd_on_time', { HOUR: { kind: 'int', min: 0, max: 23 }, MINUTE: { kind: 'int', min: 0, max: 59 } }, 'schedule')
 ev('vd_on_hotkey', { KEY: { kind: 'enum', options: KEYS } }, 'hotkey')
 ev('vd_on_interval', { MINUTES: { kind: 'int', min: 1, max: 1440 } }, 'schedule')
+ev('vd_on_file_changed', { PATTERN: { kind: 'text', maxLen: 80 } }, 'activity')
+ev('vd_on_tool', { TOOL: { kind: 'enum', options: TOOLS } }, 'activity')
+ev('vd_on_preview_error')
+ev('vd_on_commit')
 
 // Aktionen
 def('vd_set_scene', 'action', { fields: { SCENE: { kind: 'asset', assetKind: 'image', builtins: BUILTIN_SCENES } }, capability: 'scene' })
