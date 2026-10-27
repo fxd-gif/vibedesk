@@ -153,6 +153,23 @@ Claude can see your other sessions and hand them tasks, check usage and limits, 
 </tr>
 </table>
 
+<details>
+<summary><b>Also in 2.0</b></summary>
+
+- **Hand-off between sessions** · [#6](https://github.com/fxd-gif/vibedesk/issues/6): when one session hands a task to another, its summary and changed files go along
+- **How long has it been waiting?** · [#5](https://github.com/fxd-gif/vibedesk/issues/5): "waiting · 3 min" on the session, in the tray and on your phone
+- **Project templates:** start a new project as a website, React app, small game, Python tool, Discord bot and more – Claude sets up the skeleton
+- **Your own music:** play a folder of music from your PC, next to lofi radio and Spotify
+- **Hotspots in the brain:** files that change most glow warm; the ones without a note get a dotted ring
+- **Windows per project:** tool windows return to where they were in each project
+- **Git window:** "Let Claude solve it" for merge conflicts, and a quiet brain check before you commit
+- **Dictate and snip:** talk to Claude through Windows voice typing, or send a screen snip as an image
+- **Brain from your docs:** turn `CLAUDE.md`, `AGENTS.md` and the README into linked starter notes – instantly, without tokens
+- **Addons:** new triggers (file changed, tool used, commit, preview error) and a flow debugger that lights up the running step
+- **Diagnostics, performance meter and a scene that follows the time of day**
+
+</details>
+
 Missing something? [Wish for a feature](https://github.com/fxd-gif/vibedesk/issues/new?template=feature_request.yml). The wishes with the most 👍 move into the next release.
 
 <br/>

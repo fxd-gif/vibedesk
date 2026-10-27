@@ -153,6 +153,23 @@ Claude sieht deine anderen Sessions und schickt ihnen Aufträge, fragt Verbrauch
 </tr>
 </table>
 
+<details>
+<summary><b>Außerdem in 2.0</b></summary>
+
+- **Übergabe zwischen Sessions** · [#6](https://github.com/fxd-gif/vibedesk/issues/6): Gibt eine Session einer anderen einen Auftrag, gehen Zusammenfassung und geänderte Dateien mit
+- **Wie lange wartet Claude schon?** · [#5](https://github.com/fxd-gif/vibedesk/issues/5): „wartet · 3 min“ an der Session, im Tray und auf dem Handy
+- **Projekt-Vorlagen:** Neues Projekt als Website, React-App, kleines Spiel, Python-Werkzeug, Discord-Bot und mehr – Claude legt das Gerüst an
+- **Eigene Musik:** Musik aus einem Ordner auf deinem PC, neben Lofi-Radio und Spotify
+- **Hotspots im Gehirn:** Oft geänderte Dateien leuchten warm, die ohne Notiz bekommen einen gepunkteten Ring
+- **Fenster pro Projekt:** Werkzeug-Fenster kommen in jedem Projekt an ihren Platz zurück
+- **Git-Fenster:** „Claude löst das“ bei Konflikten und ein leiser Gehirn-Check vor dem Commit
+- **Diktieren und Ausschneiden:** Sprich mit Claude über die Windows-Spracheingabe oder schick einen Bildschirmausschnitt als Bild
+- **Gehirn aus deinen Dokumenten:** `CLAUDE.md`, `AGENTS.md` und README werden sofort und ohne Tokens zu verlinkten Startnotizen
+- **Addons:** neue Auslöser (Datei geändert, Werkzeug benutzt, Commit, Fehler in der Vorschau) und ein Flow-Debugger, der den laufenden Schritt zeigt
+- **Diagnose, Leistungsanzeige und eine Szene, die der Tageszeit folgt**
+
+</details>
+
 Fehlt dir etwas? [Wünsch dir ein Feature](https://github.com/fxd-gif/vibedesk/issues/new?template=feature_request.yml). Die Wünsche mit den meisten 👍 kommen ins nächste Release.
 
 <br/>
