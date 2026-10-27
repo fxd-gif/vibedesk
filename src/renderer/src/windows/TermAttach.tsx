@@ -66,7 +66,7 @@ export function TermAttach({ sessionId }: { sessionId: string }): React.JSX.Elem
           <Icon name="clip" size={13} /> {t('Dateien wählen …')}
         </button>
         <button className="btn small" onClick={() => void snipInto(sessionId)} title={t('VibeDesk tritt kurz beiseite, du ziehst einen Rahmen um das, was Claude sehen soll – das Bild landet in der Eingabe')} data-testid="attach-snip">
-          <Icon name="eye" size={13} /> {t('Bildschirmausschnitt')}
+          <Icon name="inspect" size={13} /> {t('Bildschirmausschnitt')}
         </button>
         {done > 0 && (
           <button className="btn small ghost" onClick={() => clearAttachments(sessionId, true)} title={t('Abgeschickte und gelesene aus der Liste nehmen')}>

@@ -15,6 +15,7 @@ const dict: Record<string, string> = {
     'Claude hit the usage limit. It will continue on its own afterwards – click to cancel.',
   'weiter um {time}': 'continues at {time}',
   'Shell schließen': 'Close shell',
+  'Diktieren – sprich, statt zu tippen (Windows-Spracheingabe, Win+H)': 'Dictate – talk instead of typing (Windows voice typing, Win+H)',
   'Shell daneben öffnen (PowerShell im Projektordner)': 'Open a shell alongside (PowerShell in the project folder)',
   'Terminal-Einstellungen': 'Terminal settings',
   'Shell (beendet)': 'Shell (ended)',

@@ -124,6 +124,14 @@ export async function snipInto(id: string): Promise<boolean> {
   return true
 }
 
+/** Diktieren: Eingabe fokussieren, dann die Windows-Spracheingabe (Win+H) öffnen – der Text landet direkt in der Eingabe */
+export function dictateInto(id: string): void {
+  const e = entries.get(id)
+  if (!e) return
+  e.term.focus()
+  void api.app.dictate()
+}
+
 function zoom(action: 'zoomIn' | 'zoomOut' | 'zoomReset'): void {
   const st = useSettings.getState()
   const t = termSettings(st.s)

@@ -14,6 +14,7 @@ import { sessionExitText } from '../../../shared/setupHints'
 import { openSetup } from './ToolSetup'
 import { shortUrl, usePreview } from '../store/previewStore'
 import { TermPane } from '../terminal/TermPane'
+import { dictateInto } from '../store/terminals'
 import { TermSettings } from '../terminal/TermSettings'
 import { toggleZen } from '../desktop/calm'
 import type { DevScript } from '../../../shared/devScript'
@@ -176,6 +177,9 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
             </button>
           )}
           <span className="term-tools" onPointerDown={(e) => e.stopPropagation()}>
+            <button className="term-tool" title={t('Diktieren – sprich, statt zu tippen (Windows-Spracheingabe, Win+H)')} onClick={() => dictateInto(session.id)} data-testid="term-dictate">
+              <Icon name="mic" size={13} />
+            </button>
             <AttachButton sessionId={session.id} open={panel === 'attach'} onToggle={() => togglePanel('attach')} />
             <button className={`term-tool${shell ? ' on' : ''}`} title={shell ? t('Shell schließen') : t('Shell daneben öffnen (PowerShell im Projektordner)')} onClick={() => void toggleShell()} data-testid="term-split">
               <Icon name="terminal" size={13} />

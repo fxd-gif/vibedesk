@@ -440,6 +440,8 @@ export interface VibedeskApi {
     diagnostics(): Promise<DiagnosticsInfo>
     /** Kein Standby (Bildschirm darf aus), solange VibeDesk nach dem Limit von selbst weitermachen will */
     keepAwake(on: boolean): void
+    /** Windows-Spracheingabe (Win+H) öffnen – schreibt ins fokussierte Feld */
+    dictate(): Promise<boolean>
   }
   setup: {
     check(): Promise<ToolStatus>

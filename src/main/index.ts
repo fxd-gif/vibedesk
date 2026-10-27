@@ -43,6 +43,7 @@ import { BrainService, projectOfDir, registerBrainIpc } from './brainService'
 import { ExternalSessions } from './externalSessions'
 import { ShellManager } from './shellManager'
 import { registerTerminalIpc } from './terminalIpc'
+import { openDictation } from './dictate'
 import type { SessionInfo } from '../shared/types'
 import { writeJsonAtomic } from './jsonFile'
 import { GitService } from './gitService'
@@ -272,6 +273,8 @@ app.whenReady().then(async () => {
       resumeBlock = null
     }
   })
+  // Diktieren: Windows-Spracheingabe (Win+H) öffnen – sie schreibt in das Feld, das gerade den Fokus hat (Claudes Eingabe)
+  ipcMain.handle('app:dictate', () => openDictation())
   ipcMain.on('app:openExternal', (_e, url: string) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url)
   })
