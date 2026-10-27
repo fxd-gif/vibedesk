@@ -27,6 +27,7 @@ import { openSettings } from '../SettingsWindow'
 import { startTour } from '../../desktop/Tour'
 import { forgetCurrentWorkspace } from '../../store/workspaceStore'
 import { openAbout } from '../../desktop/About'
+import { togglePerfMeter, usePerf } from '../../desktop/PerfMeter'
 
 interface Cmd {
   id: string
@@ -101,6 +102,7 @@ function buildCommands(projects: Project[]): Cmd[] {
     { id: 'act:wrapped', label: t('Vibe Wrapped – deine Woche'), group: t('Aktionen'), icon: 'stats', hint: t('Rückblick als teilbares Bild'), run: () => void showWrapped() },
     { id: 'act:news', label: t('Was ist neu?'), group: t('Aktionen'), icon: 'spark', run: showWhatsNew },
     { id: 'act:diagnose', label: t('Diagnose'), group: t('Aktionen'), icon: 'inspect', hint: t('Versionen, Hooks, Speicher und Fehlerprotokoll – als Bericht fürs Issue'), run: () => openAbout(true) },
+    { id: 'act:perf', label: usePerf.getState().on ? t('Leistungsanzeige aus') : t('Leistungsanzeige an'), group: t('Aktionen'), icon: 'stats', hint: t('Bildrate, Arbeitsspeicher und CPU unten links'), searchOnly: true, run: togglePerfMeter },
     { id: 'act:update', label: t('Nach Updates suchen'), group: t('Aktionen'), icon: 'restart', run: () => void api.update.check() },
     { id: 'act:tour', label: t('Rundgang starten'), group: t('Aktionen'), icon: 'spark', hint: t('Kurze Klick-Tour: wo was ist'), run: startTour },
     { id: 'act:zen', label: t('Zen-Modus'), group: t('Aktionen'), icon: 'eyeoff', hint: t('Strg+. · nur Claude und der Regen'), run: () => toggleZen() },

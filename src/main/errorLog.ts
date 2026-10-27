@@ -88,6 +88,14 @@ const within = <T>(p: Promise<T>, ms: number): Promise<T | null> =>
 
 /** Diagnose: alles, was hilft herauszufinden, woran es hakt – Pfade im Protokoll unkenntlich */
 export function registerDiagnosticsIpc(d: DiagnosticsDeps): void {
+  // Leistungsanzeige: Arbeitsspeicher aller VibeDesk-Prozesse (MB) und CPU-Last in Prozent eines Kerns
+  ipcMain.handle('app:metrics', () => {
+    const m = app.getAppMetrics()
+    return {
+      memMb: Math.round(m.reduce((sum, x) => sum + (x.memory?.workingSetSize ?? 0), 0) / 1024),
+      cpu: Math.round(m.reduce((sum, x) => sum + (x.cpu?.percentCPUUsage ?? 0), 0))
+    }
+  })
   ipcMain.handle('app:diagnostics', async (): Promise<DiagnosticsInfo> => {
     const [claude, systemNode, tools] = await Promise.all([d.claudeVersion(), systemNodeVersion(), within(d.gitTools(), 8000)])
     const s = d.settings()

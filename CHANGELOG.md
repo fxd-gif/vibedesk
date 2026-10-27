@@ -25,6 +25,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Verbessert
 
+- **Leistungsanzeige:** In der Befehlspalette schaltet „Leistungsanzeige an“ eine kleine Pille unten links ein – Bildrate, Arbeitsspeicher aller VibeDesk-Prozesse und CPU. Praktisch, wenn es irgendwo ruckelt. Ein Klick blendet sie wieder aus
 - **Diktieren:** Das Mikrofon im Terminal-Kopf öffnet die Spracheingabe von Windows direkt in Claudes Eingabe – sprich deinen Auftrag, statt ihn zu tippen, und schick ihn mit Enter ab. Die Erkennung macht Windows selbst (auch mit <kbd>Win</kbd> + <kbd>H</kbd>), VibeDesk hört nicht mit
 - **Bildschirmausschnitt für Claude:** In der Anhang-Leiste des Terminals (Büroklammer) gibt es „Bildschirmausschnitt“. VibeDesk tritt kurz beiseite, das Ausschneidewerkzeug von Windows öffnet sich, und was du einrahmst, landet als Bild in Claudes Eingabe – etwa ein Fehler in einer anderen App oder ein Design als Vorlage. Holst du VibeDesk zurück, ohne etwas auszuschneiden, ist der Vorgang abgebrochen
 - **Gehirn sofort mit Startwissen:** Ist das Gehirn eines Projekts noch leer und liegen dort eine `CLAUDE.md`, `AGENTS.md` oder `README.md`, bietet VibeDesk „Aus CLAUDE.md & README.md übernehmen“ an. Ihre Abschnitte werden sofort und ohne Tokens zu verlinkten Notizen – Regeln als Konventionen, aus der README ein Projekt-Überblick plus Abschnitte wie Installation oder Aufbau. Claude ergänzt den Rest, sobald es im Projekt arbeitet

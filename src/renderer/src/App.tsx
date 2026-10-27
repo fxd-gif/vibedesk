@@ -47,6 +47,7 @@ import { useLounge, wireLounge } from './store/loungeStore'
 import { wireStreamer } from './store/streamerStore'
 import { LoungeFloaters } from './windows/LoungeWindow'
 import { Curtain, StreamerPill } from './windows/StreamerWindow'
+import { PerfMeter } from './desktop/PerfMeter'
 import { ShareDialogs } from './windows/ShareDialogs'
 import { openPanel } from './windows/palette/CommandPalette'
 import { NotifyPanel, ToastStack } from './desktop/NotifyCenter'
@@ -391,6 +392,7 @@ export default function App(): React.JSX.Element {
       <WrapUpDialog />
       <DialogHost />
       <About />
+      <PerfMeter />
       <Curtain />
       {focusBanner && (
         <div className="focus-banner" key={focusBanner.text}>

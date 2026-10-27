@@ -442,6 +442,8 @@ export interface VibedeskApi {
     keepAwake(on: boolean): void
     /** Windows-Spracheingabe (Win+H) öffnen – schreibt ins fokussierte Feld */
     dictate(): Promise<boolean>
+    /** Leistungsanzeige: Arbeitsspeicher aller Prozesse (MB) und CPU (% eines Kerns) */
+    metrics(): Promise<{ memMb: number; cpu: number }>
   }
   setup: {
     check(): Promise<ToolStatus>

@@ -43,7 +43,8 @@ const api: VibedeskApi = {
     info: () => ipcRenderer.invoke('app:info'),
     diagnostics: () => ipcRenderer.invoke('app:diagnostics'),
     keepAwake: (on) => ipcRenderer.send('app:keepAwake', on),
-    dictate: () => ipcRenderer.invoke('app:dictate')
+    dictate: () => ipcRenderer.invoke('app:dictate'),
+    metrics: () => ipcRenderer.invoke('app:metrics')
   },
   sessions: {
     start: (projectId, resumeId, cwd) => ipcRenderer.invoke('sessions:start', projectId, resumeId, cwd),

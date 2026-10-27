@@ -28,6 +28,11 @@ const dict: Record<string, string> = {
   'Fehlerprotokoll (leer)': 'Error log (empty)',
   // Diagnose im Über-Dialog
   'Diagnose': 'Diagnostics',
+  // Leistungsanzeige
+  'Leistungsanzeige aus': 'Performance meter off',
+  'Leistungsanzeige an': 'Performance meter on',
+  'Bildrate, Arbeitsspeicher und CPU unten links': 'Frame rate, memory and CPU in the bottom left',
+  'Leistungsanzeige – Klick blendet sie aus': 'Performance meter – click to hide',
   'Diagnose ▾': 'Diagnostics ▾',
   'Diagnose ▴': 'Diagnostics ▴',
   'Versionen, Hooks, Speicher und Fehlerprotokoll – als Bericht fürs Issue': 'Versions, hooks, memory and error log – as a report for your issue',
