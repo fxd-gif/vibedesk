@@ -36,6 +36,8 @@ const dict: Record<string, string> = {
   'Pfad noch einmal in die Eingabe einfügen': 'Insert the path into the input again',
   'Aus der Liste nehmen': 'Remove from list',
   'Dateien wählen …': 'Choose files …',
+  'Bildschirmausschnitt': 'Screen snip',
+  'VibeDesk tritt kurz beiseite, du ziehst einen Rahmen um das, was Claude sehen soll – das Bild landet in der Eingabe': 'VibeDesk steps aside for a moment, you draw a frame around what Claude should see – the image lands in the input',
   'Abgeschickte und gelesene aus der Liste nehmen': 'Remove sent and read ones from the list',
   'Erledigte entfernen': 'Clear finished',
 

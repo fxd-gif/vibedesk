@@ -64,7 +64,8 @@ const api: VibedeskApi = {
     readClipboard: () => ipcRenderer.invoke('terminal:readClipboard'),
     writeClipboard: (text) => ipcRenderer.invoke('terminal:writeClipboard', text),
     filePath: (file) => webUtils.getPathForFile(file),
-    pickFiles: (defaultPath) => ipcRenderer.invoke('terminal:pickFiles', defaultPath)
+    pickFiles: (defaultPath) => ipcRenderer.invoke('terminal:pickFiles', defaultPath),
+    snip: () => ipcRenderer.invoke('terminal:snip')
   },
   on: {
     sessionData: (cb) => listen<[string, string]>('session:data', cb),

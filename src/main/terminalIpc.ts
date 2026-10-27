@@ -1,12 +1,45 @@
 // Main-Seite der Terminals: Shells (PowerShell/cmd) und Zwischenablage (Text oder Bild als Temp-Datei).
 import { t } from '../shared/i18n'
-import { BrowserWindow, clipboard, dialog, ipcMain } from 'electron'
+import { BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron'
+import { createHash } from 'crypto'
 import fs from 'fs'
 import { join } from 'path'
 import type { ShellManager } from './shellManager'
 import type { ProjectStore } from './projectStore'
 
 const DAY_MS = 24 * 3600_000
+/** so lange wartet VibeDesk auf den Ausschnitt */
+const SNIP_TIMEOUT_MS = 60_000
+const SNIP_POLL_MS = 300
+
+/** Fingerabdruck des Bildes in der Zwischenablage (leer = kein Bild) */
+async function clipboardImage(): Promise<{ key: string; data: Buffer; ext: string } | null> {
+  for (const item of await clipboard.read()) {
+    const type = item.types.find((x) => /^image\/(png|jpeg|gif|webp)$/.test(x))
+    if (!type) continue
+    const data = Buffer.from(await ((await item.getType(type)) as Blob).arrayBuffer())
+    return { key: createHash('sha1').update(data).digest('hex'), data, ext: type === 'image/jpeg' ? 'jpg' : type.slice(6) }
+  }
+  return null
+}
+
+/**
+ * Wartet, bis ein neues Bild in der Zwischenablage liegt (anderer Fingerabdruck als vorher).
+ * Endet ohne Bild nach dem Zeitlimit oder wenn `stop()` wahr wird (z. B. VibeDesk wieder im Vordergrund).
+ */
+export async function waitForNewImage<T extends { key: string }>(o: { before: string | null; read(): Promise<T | null> | T | null; stop(): boolean; sleep(ms: number): Promise<void>; timeoutMs?: number; pollMs?: number }): Promise<T | null> {
+  const limit = o.timeoutMs ?? SNIP_TIMEOUT_MS
+  const step = o.pollMs ?? SNIP_POLL_MS
+  for (let waited = 0; waited < limit; waited += step) {
+    await o.sleep(step)
+    const img = await Promise.resolve()
+      .then(() => o.read())
+      .catch(() => null)
+    if (img && img.key !== o.before) return img
+    if (o.stop()) return null
+  }
+  return null
+}
 
 /** Eingefügte Bilder landen hier; älter als ein Tag wird beim Start aufgeräumt */
 export function cleanPasteDir(dir: string, now = Date.now()): void {
@@ -37,6 +70,34 @@ export function registerTerminalIpc(d: { shells: ShellManager; projects: Project
       return { image: file }
     }
     return null
+  })
+  // Bildschirmausschnitt: VibeDesk tritt beiseite, das Windows-Ausschneidewerkzeug öffnet sich, das Bild landet als PNG bei Claude
+  let snipping = false
+  ipcMain.handle('terminal:snip', async (e) => {
+    const win = BrowserWindow.fromWebContents(e.sender)
+    if (snipping || !win) return null
+    snipping = true
+    const before = (await clipboardImage().catch(() => null))?.key ?? null
+    let back = false
+    const onFocus = (): void => void (back = true)
+    try {
+      win.minimize()
+      await new Promise((r) => setTimeout(r, 250))
+      await shell.openExternal('ms-screenclip:')
+      // erst nach einem Moment zählt „wieder im Vordergrund“ als Abbruch – das Minimieren selbst löst kein focus aus
+      setTimeout(() => win.once('focus', onFocus), 800)
+      const img = await waitForNewImage({ before, read: clipboardImage, stop: () => back, sleep: (ms) => new Promise((r) => setTimeout(r, ms)) })
+      if (!img) return null
+      fs.mkdirSync(d.pasteDir, { recursive: true })
+      const file = join(d.pasteDir, `ausschnitt-${Date.now()}.${img.ext}`)
+      fs.writeFileSync(file, img.data)
+      return file
+    } finally {
+      win.removeListener('focus', onFocus)
+      if (win.isMinimized()) win.restore()
+      win.focus()
+      snipping = false
+    }
   })
   ipcMain.handle('terminal:pickFiles', async (e, defaultPath: unknown) => {
     const win = BrowserWindow.fromWebContents(e.sender)

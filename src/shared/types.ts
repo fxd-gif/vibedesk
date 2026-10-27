@@ -475,6 +475,8 @@ export interface VibedeskApi {
     filePath(file: File): string
     /** Windows-Dateidialog (Mehrfachauswahl) – leer, wenn abgebrochen */
     pickFiles(defaultPath?: string): Promise<{ path: string; size: number }[]>
+    /** Bildschirmausschnitt mit dem Windows-Ausschneidewerkzeug – Pfad der PNG, null bei Abbruch */
+    snip(): Promise<string | null>
   }
   on: {
     sessionData(cb: (id: string, data: string) => void): Unsubscribe

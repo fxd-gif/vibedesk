@@ -116,6 +116,14 @@ export async function pickFiles(id: string): Promise<number> {
   return picked.length
 }
 
+/** Bildschirmausschnitt (Windows-Ausschneidewerkzeug) als Bild anhängen – false, wenn abgebrochen */
+export async function snipInto(id: string): Promise<boolean> {
+  const file = await api.terminal.snip()
+  if (!file) return false
+  insertFiles(id, [{ path: file }])
+  return true
+}
+
 function zoom(action: 'zoomIn' | 'zoomOut' | 'zoomReset'): void {
   const st = useSettings.getState()
   const t = termSettings(st.s)
