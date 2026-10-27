@@ -28,7 +28,8 @@ export function LimitChip({ now }: { now: number }): React.JSX.Element | null {
   )
 }
 
-export function TermStatus({ sessionId, startedAt }: { sessionId: string; startedAt: number }): React.JSX.Element {
+/** claude=false: Gemini CLI / Codex – Modell, Kontext, Kosten und Zurückspulen gibt es dort nicht, nur die Laufzeit */
+export function TermStatus({ sessionId, startedAt, claude = true }: { sessionId: string; startedAt: number; claude?: boolean }): React.JSX.Element {
   const st = useStats((s) => s.sessions[sessionId])
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
@@ -37,6 +38,14 @@ export function TermStatus({ sessionId, startedAt }: { sessionId: string; starte
   }, [])
   const ctx = st && st.contextWindow ? Math.min(1, st.contextUsed / st.contextWindow) : 0
   const level = ctx >= 0.85 ? 'hot' : ctx >= 0.6 ? 'warm' : ''
+  if (!claude)
+    return (
+      <div className="term-status" data-testid="term-status">
+        <span className="ts-time" title={t('Laufzeit der Session')}>
+          {fmtDuration(now - startedAt)}
+        </span>
+      </div>
+    )
   return (
     <div className="term-status" data-testid="term-status">
       <span title={t('Modell')}>{st?.model ? modelLabel(st.model) : t('Modell folgt')}</span>

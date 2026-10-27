@@ -432,6 +432,13 @@ const dict: Record<string, string> = {
   '{from} → {to}': '{from} → {to}',
   'mit Übergabe ({n} Dateien)': 'with hand-off ({n} files)',
   'mit Übergabe': 'with hand-off',
+  // Weitere Agenten (Beta)
+  '{agent} wird in diesem Fenster gestoppt.': '{agent} will be stopped in this window.',
+  '{agent} (Beta): Terminal und einfacher Status – ohne Freigabe-Karten, Plan, Abschluss, Kosten und Gehirn':
+    '{agent} (beta): terminal and basic status – no permission cards, plan, wrap-up, costs or brain',
+  'Mit einem anderen Agenten starten (Beta)': 'Start with another agent (beta)',
+  'Mit … starten:': 'Start with …:',
+  'Mit {agent} starten: {name}': 'Start with {agent}: {name}',
 }
 
 export default dict

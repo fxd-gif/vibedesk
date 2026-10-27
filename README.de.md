@@ -215,6 +215,7 @@ Fehlt dir etwas? [Wünsch dir ein Feature](https://github.com/fxd-gif/vibedesk/i
 - **Abo-Limit im Blick** (Pro/Max): wie viel vom 5-Stunden- und Wochenlimit verbraucht ist, leiser Hinweis bei 75 % und 90 %
 - **Dev-Server per Klick:** „▶ Dev-Server“ startet dein `dev`-Skript (npm, pnpm, yarn oder bun) in einer Shell neben Claude
 - **Claude bedient VibeDesk (MCP):** „Sortier meine Fenster“, „Zen-Modus an“, „Tokyo-Szene mit mehr Regen“ – Claude erledigt es
+- **Beta: Gemini CLI und Codex:** eine Session stattdessen mit der Gemini CLI oder der Codex-CLI von OpenAI starten (Projekte → ⋯ oder Befehlspalette) – Terminal, Dock-Punkt und einfacher Status; Claude-Extras wie Freigabe-Karten, Plan-Karte, Abschluss, Kosten und Gehirn bleiben aus
 
 </details>
 

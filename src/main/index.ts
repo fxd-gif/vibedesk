@@ -456,6 +456,8 @@ app.whenReady().then(async () => {
   })
   const output = new OutputBatcher((id, d) => send('session:data', id, d))
   sessions.on('data', (id, d) => output.push(id, d))
+  // Gemini CLI / Codex: Status aus dem Ausgabestrom
+  sessions.on('activity', (id, status) => send('session:activity', id, status))
   sessions.on('exit', (id, code) => {
     output.flush(id)
     stats.flush(id)

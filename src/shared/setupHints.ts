@@ -1,5 +1,7 @@
 // Reine Logik für die Einrichtung: Anmeldung bei Claude erkennen, Fehlschläge erklären, Texte fürs Terminal.
 import { getLang, t } from './i18n'
+import { agentName } from './agents'
+import type { AgentKind } from './types'
 
 /** Seiten, auf die die Knöpfe „Anleitung“ und „Mehr zur Anmeldung“ verweisen */
 export const SETUP_LINKS = {
@@ -60,8 +62,16 @@ export function installFailReason(log: string[]): string | null {
   return null
 }
 
-/** Text, wenn eine Claude-Session endet */
-export function sessionExitText(code: number): string {
+/** Kurze Zeile im Terminal, wenn die Session endet */
+export function agentExitLine(code: number, agent: AgentKind = 'claude'): string {
+  if (agent === 'claude') return code === 0 ? t('Claude wurde beendet.') : t('Claude ist unerwartet beendet (Code {code}).', { code })
+  const name = agentName(agent)
+  return code === 0 ? t('{name} wurde beendet.', { name }) : t('{name} ist unerwartet beendet (Code {code}).', { name, code })
+}
+
+/** Text, wenn eine Session endet – bei Gemini CLI / Codex ohne Verweis auf die Claude-Einrichtung */
+export function sessionExitText(code: number, agent: AgentKind = 'claude'): string {
+  if (agent !== 'claude') return agentExitLine(code, agent)
   return code === 0
     ? t('Claude wurde beendet.')
     : t('Claude ist unerwartet beendet (Code {code}). Neu starten – oder prüf unter Einrichtung, ob Claude Code installiert und angemeldet ist.', { code })

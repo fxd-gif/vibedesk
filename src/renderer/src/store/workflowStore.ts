@@ -19,4 +19,5 @@ export function wireWorkflow(): void {
   const { dispatch } = useWorkflow.getState()
   api.on.hookEvent((event) => dispatch({ type: 'hook', event }))
   api.on.sessionExit((sessionId, code) => dispatch({ type: 'exit', sessionId, code }))
+  api.on.sessionActivity((sessionId, status) => dispatch({ type: 'activity', sessionId, status, ts: Date.now() }))
 }

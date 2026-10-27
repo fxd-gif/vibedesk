@@ -58,6 +58,8 @@ export type WorkflowAction =
   | { type: 'exit'; sessionId: string; code: number }
   | { type: 'start'; sessionId: string }
   | { type: 'remove'; sessionId: string }
+  /** Gemini CLI / Codex: Status aus dem Ausgabestrom statt aus Hooks */
+  | { type: 'activity'; sessionId: string; status: 'working' | 'waiting'; ts: number }
 
 export const FEED_LIMIT = 500
 const AGENT_TOOLS = new Set(['Task', 'Agent'])
@@ -240,6 +242,12 @@ export function workflowReducer(state: WorkflowState, a: WorkflowAction): Workfl
     }
     case 'exit':
       return put(a.sessionId, { ...cur(a.sessionId), status: a.code === 0 ? 'done' : 'error', feed: settle(cur(a.sessionId).feed) })
+    case 'activity': {
+      // nur laufende Sessions – nach Ende oder Schließen zählt der letzte Stand
+      const s = state.sessions[a.sessionId]
+      if (!s || s.status === 'done' || s.status === 'error') return state
+      return put(a.sessionId, { ...s, status: a.status, lastActivity: a.ts }, state.nextFeedId, a.ts)
+    }
     case 'hook': {
       const { s, usedId } = applyHook(cur(a.event.sessionId), a.event, state.nextFeedId)
       return put(a.event.sessionId, s, usedId ? state.nextFeedId + 1 : state.nextFeedId, a.event.ts)

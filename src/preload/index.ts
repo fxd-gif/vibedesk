@@ -47,7 +47,7 @@ const api: VibedeskApi = {
     metrics: () => ipcRenderer.invoke('app:metrics')
   },
   sessions: {
-    start: (projectId, resumeId, cwd) => ipcRenderer.invoke('sessions:start', projectId, resumeId, cwd),
+    start: (projectId, resumeId, cwd, agent) => ipcRenderer.invoke('sessions:start', projectId, resumeId, cwd, agent),
     stop: (id) => ipcRenderer.invoke('sessions:stop', id),
     write: (id, data) => ipcRenderer.send('sessions:write', id, data),
     devScript: (id) => ipcRenderer.invoke('sessions:devScript', id),
@@ -71,6 +71,7 @@ const api: VibedeskApi = {
   },
   on: {
     sessionData: (cb) => listen<[string, string]>('session:data', cb),
+    sessionActivity: (cb) => listen<[string, 'working' | 'waiting']>('session:activity', cb),
     sessionExit: (cb) => listen<[string, number]>('session:exit', cb),
     sessionExternal: (cb) => listen<[SessionInfo]>('session:external', cb),
     sessionExternalEnd: (cb) => listen<[string]>('session:externalEnd', cb),

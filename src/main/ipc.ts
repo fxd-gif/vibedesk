@@ -11,6 +11,7 @@ import { fetchGithubCandidates } from './github'
 import { listClaudeSessions } from './claudeHistory'
 import { saveShot } from './shots'
 import { pickDevScript } from '../shared/devScript'
+import { parseAgent } from '../shared/agents'
 import type { SkillTarget } from '../shared/types'
 
 export interface IpcDeps {
@@ -100,11 +101,11 @@ export function registerSessionIpc(d: SessionIpcDeps): void {
     const p = d.projects.get(projectId)
     return p ? listClaudeSessions(p.path, d.claudeProjectsDir) : []
   })
-  ipcMain.handle('sessions:start', (_e, projectId: string, resumeId?: string, cwd?: string) => {
+  ipcMain.handle('sessions:start', (_e, projectId: string, resumeId?: string, cwd?: string, agent?: unknown) => {
     const p = d.projects.get(projectId)
     if (!p) throw new Error(t('Projekt nicht gefunden'))
     if (!fs.existsSync(p.path)) throw new Error(t('Projektordner fehlt: {path}', { path: p.path }))
-    const info = d.sessions.start(p, { resumeId, cwd: typeof cwd === 'string' && cwd ? cwd : undefined })
+    const info = d.sessions.start(p, { resumeId, cwd: typeof cwd === 'string' && cwd ? cwd : undefined, agent: parseAgent(agent) })
     d.projects.touch(p.id)
     return info
   })

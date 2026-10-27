@@ -11,6 +11,7 @@ import { useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
 import type { SessionInfo } from '../../../shared/types'
 import { sessionExitText } from '../../../shared/setupHints'
+import { agentName, agentOf } from '../../../shared/agents'
 import { openSetup } from './ToolSetup'
 import { shortUrl, usePreview } from '../store/previewStore'
 import { TermPane } from '../terminal/TermPane'
@@ -80,6 +81,8 @@ function StatusLabel({ status, since }: { status: WfStatus; since?: number }): R
 
 export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX.Element {
   const id = termWin(session.id)
+  const agent = agentOf(session)
+  const claude = agent === 'claude'
   const status = useWorkflow((s) => s.sessions[session.id]?.status ?? 'idle')
   const waitingSince = useWorkflow((s) => s.sessions[session.id]?.waitingSince)
   const tending = useWorkflow((s) => !!s.sessions[session.id]?.tending && s.sessions[session.id]?.status === 'working')
@@ -115,7 +118,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
 
   const close = async (): Promise<void> => {
     const running = exitCode === undefined
-    if (running && !(await confirm({ title: t('Session „{name}“ beenden?', { name: session.name }), message: t('Claude Code wird in diesem Fenster gestoppt.'), confirmLabel: t('Beenden'), danger: true })))
+    if (running && !(await confirm({ title: t('Session „{name}“ beenden?', { name: session.name }), message: claude ? t('Claude Code wird in diesem Fenster gestoppt.') : t('{agent} wird in diesem Fenster gestoppt.', { agent: agentName(agent) }), confirmLabel: t('Beenden'), danger: true })))
       return
     if (shell) await useShells.getState().close(shell.id)
     useSessions.getState().close(session.id)
@@ -152,6 +155,11 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
         <>
           <span className={`dot ${status}`} />
           <span>{session.name}</span>
+          {!claude && (
+            <span className="agent-chip" title={t('{agent} (Beta): Terminal und einfacher Status – ohne Freigabe-Karten, Plan, Abschluss, Kosten und Gehirn', { agent: agentName(agent) })} data-testid="agent-chip">
+              {agentName(agent)} · Beta
+            </span>
+          )}
           <span className="dim" style={{ fontWeight: 400 }}>
             · {tending ? t('pflegt Gehirn …') : <StatusLabel status={status} since={waitingSince} />}
           </span>
@@ -196,7 +204,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
     >
       <div className={`term-panes${shell ? ' split' : ''}`} style={{ bottom }}>
         <div className="term-slot" onPointerDown={() => setActive('claude')}>
-          <TermPane id={session.id} testId={`terminal-${session.name}`} focused={isTop && active === 'claude'} label={shell ? 'Claude' : undefined} />
+          <TermPane id={session.id} testId={`terminal-${session.name}`} focused={isTop && active === 'claude'} label={shell ? (claude ? 'Claude' : agentName(agent)) : undefined} />
         </div>
         {shell && (
           <div className="term-slot" onPointerDown={() => setActive('shell')}>
@@ -206,14 +214,14 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
       </div>
       {queueOpen && <TermQueue sessionId={session.id} />}
       {panel === 'attach' && <TermAttach sessionId={session.id} />}
-      {statusBar && <TermStatus sessionId={session.id} startedAt={startedAt} />}
+      {statusBar && <TermStatus sessionId={session.id} startedAt={startedAt} claude={claude} />}
       {settingsOpen && <TermSettings onClose={() => setSettingsOpen(false)} />}
       {exitCode !== undefined && (
         <div className="term-overlay" data-testid="term-exit">
           <span className="dim" style={{ maxWidth: 420 }}>
-            {sessionExitText(exitCode)}
+            {sessionExitText(exitCode, agent)}
           </span>
-          {exitCode !== 0 && (
+          {exitCode !== 0 && claude && (
             <button className="btn" onClick={openSetup}>
               {t('Einrichtung')}
             </button>

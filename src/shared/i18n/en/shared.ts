@@ -260,6 +260,12 @@ const dict: Record<string, string> = {
   'Erkläre mir danach in zwei, drei Sätzen, wie ich es starte bzw. benutze.': 'Afterwards, explain in two or three sentences how I start or use it.',
   'Schreibe zum Schluss mit brain_write eine kurze Gehirn-Notiz „Projekt-Überblick“ (type module): Ziel, Aufbau, wichtigste Dateien und wie man es startet.':
     'Finally, use brain_write to write a short brain note “Project overview” (type module): goal, structure, key files and how to start it.',
+  // Weitere Agenten (Beta)
+  '{name} (Standard)': '{name} (default)',
+  '{name} ist auf diesem Rechner noch nicht installiert. Installiere es einmal in einer PowerShell (Node.js nötig) mit: {command}':
+    '{name} isn’t installed on this PC yet. Install it once in a PowerShell (needs Node.js) with: {command}',
+  '{name} wurde beendet.': '{name} has exited.',
+  '{name} ist unerwartet beendet (Code {code}).': '{name} quit unexpectedly (code {code}).',
 }
 
 export default dict

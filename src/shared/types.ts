@@ -9,11 +9,16 @@ export interface Project {
 
 export type SessionStatus = 'idle' | 'working' | 'waiting' | 'done' | 'error'
 
+/** Welcher Agent im Terminal läuft – Gemini CLI und Codex sind Beta ohne Hooks */
+export type AgentKind = 'claude' | 'gemini' | 'codex'
+
 export interface SessionInfo {
   id: string
   projectId: string
   name: string
   cwd: string
+  /** fehlt bei älteren Sessions = Claude Code */
+  agent?: AgentKind
   /** nicht von dieser VibeDesk-Instanz gestartet (z. B. vor einem Update) – nur im Inspector, ohne Terminal */
   external?: boolean
 }
@@ -464,7 +469,7 @@ export interface VibedeskApi {
   }
   sessions: {
     /** cwd: Worktree im Projekt (Merge Studio) statt des Projektordners */
-    start(projectId: string, resumeId?: string, cwd?: string): Promise<SessionInfo>
+    start(projectId: string, resumeId?: string, cwd?: string, agent?: AgentKind): Promise<SessionInfo>
     /** Dev-Server-Skript aus package.json im Ordner der Session (null = keins) */
     devScript(id: string): Promise<DevScript | null>
     stop(id: string): Promise<void>
@@ -496,6 +501,8 @@ export interface VibedeskApi {
   }
   on: {
     sessionData(cb: (id: string, data: string) => void): Unsubscribe
+    /** Gemini CLI / Codex (ohne Hooks): Status aus dem Ausgabestrom */
+    sessionActivity(cb: (id: string, status: 'working' | 'waiting') => void): Unsubscribe
     sessionExit(cb: (id: string, code: number) => void): Unsubscribe
     sessionExternal(cb: (info: SessionInfo) => void): Unsubscribe
     sessionExternalEnd(cb: (id: string) => void): Unsubscribe

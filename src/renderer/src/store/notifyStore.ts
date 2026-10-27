@@ -5,7 +5,8 @@ import { api } from '../api'
 import type { NoticeKind, SessionStatus } from '../../../shared/types'
 import { heldSummary, pushLog, route } from './notifyRules'
 import { useFocus } from './focusStore'
-import { termWin, useSessions } from './sessionStore'
+import { sessionAgent, termWin, useSessions } from './sessionStore'
+import { agentName } from '../../../shared/agents'
 import { useSettings } from './settingsStore'
 import { useUi } from './uiStore'
 import { useWorkflow } from './workflowStore'
@@ -147,11 +148,15 @@ function onStatus(id: string, before: SessionStatus | undefined, now: SessionSta
   if (!name) return
   const open: NoticeAction = { label: t('Öffnen'), primary: true, run: () => showSession(id) }
   if (now === 'waiting') {
+    const agent = sessionAgent(id)
+    // Gemini CLI / Codex: geraten aus der Ruhe im Terminal – vorsichtig formuliert
+    const body = agent === 'claude' ? t('Claude braucht eine Antwort oder Freigabe.') : t('{agent} ist gerade still – vermutlich wartet es auf deine Antwort.', { agent: agentName(agent) })
     notify(
-      { kind: 'waiting', key: `waiting:${id}`, title: t('{name} wartet auf dich', { name }), body: t('Claude braucht eine Antwort oder Freigabe.'), actions: [open], onOpen: () => showSession(id) },
+      { kind: 'waiting', key: `waiting:${id}`, title: t('{name} wartet auf dich', { name }), body, actions: [open], onOpen: () => showSession(id) },
       sessionOnTop(id)
     )
-  } else if (now === 'done' && before === 'working') {
+  } else if (now === 'done' && before === 'working' && sessionAgent(id) === 'claude') {
+    // (Gemini CLI / Codex sind nur „fertig“, wenn man sie selbst beendet hat – dafür keine Karte)
     // Runde mit Änderungen: Abschluss (Zusammenfassung, Commit) gleich auf der Karte anbieten
     const files = useWrapUp.getState().turns[id]?.files.length ?? 0
     const wrap = files > 0 && useSettings.getState().s?.wrapUp !== false
@@ -174,7 +179,7 @@ function onStatus(id: string, before: SessionStatus | undefined, now: SessionSta
         kind: 'error',
         key: `error:${id}`,
         title: t('{name} wurde unerwartet beendet', { name }),
-        body: t('Der Claude-Prozess hat sich mit einem Fehler verabschiedet.'),
+        body: sessionAgent(id) === 'claude' ? t('Der Claude-Prozess hat sich mit einem Fehler verabschiedet.') : t('{agent} hat sich mit einem Fehler verabschiedet.', { agent: agentName(sessionAgent(id)) }),
         actions: [{ label: t('Neu starten'), primary: true, run: () => void useSessions.getState().restart(id) }, open],
         onOpen: () => showSession(id)
       })

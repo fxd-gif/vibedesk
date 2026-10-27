@@ -2,6 +2,7 @@
 import { api } from '../api'
 import { bracketedPaste, safePrompt } from '../../../shared/paste'
 import { samePath } from '../../../shared/merge'
+import { isClaude } from '../../../shared/agents'
 import type { SessionStatus } from '../../../shared/types'
 import { termWin, useSessions } from './sessionStore'
 import { useUi } from './uiStore'
@@ -28,9 +29,10 @@ function waitForFirstHook(sessionId: () => string | undefined): Promise<void> {
   })
 }
 
-/** Laufende Session des Projekts – oder neu starten und warten, bis Claude Eingaben annimmt. cwd: nur eine Session in genau diesem Ordner (Worktree) */
+/** Laufende Claude-Session des Projekts – oder neu starten und warten, bis Claude Eingaben annimmt. cwd: nur eine Session in genau diesem Ordner (Worktree) */
 export async function ensureSession(projectId: string, cwd?: string): Promise<string | null> {
-  const running = useSessions.getState().sessions.find((x) => x.projectId === projectId && (!cwd || samePath(x.cwd, cwd)))
+  // Gemini CLI / Codex bekommen keine Claude-Aufträge (Gehirn, Vorlagen, Addons)
+  const running = useSessions.getState().sessions.find((x) => isClaude(x) && x.projectId === projectId && (!cwd || samePath(x.cwd, cwd)))
   if (running) return running.id
   let id: string | undefined
   const ready = waitForFirstHook(() => id)

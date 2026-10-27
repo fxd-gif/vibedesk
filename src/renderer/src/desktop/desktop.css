@@ -330,6 +330,8 @@ input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 /* ---------- Vorschau ---------- */
 .url-chip { margin-left: 6px; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(94, 234, 212, .35); background: rgba(94, 234, 212, .1); color: #99f6e4; font-family: var(--mono); font-size: 11px; cursor: pointer; }
 .url-chip:hover { background: rgba(94, 234, 212, .2); }
+/* Gemini CLI / Codex (Beta) im Terminal-Kopf – nur ein leiser Hinweis */
+.agent-chip { margin-left: 6px; padding: 1px 7px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .14); color: rgba(255, 255, 255, .6); font-size: 10.5px; font-weight: 400; white-space: nowrap; }
 .preview { position: absolute; inset: 0; display: flex; flex-direction: column; }
 .preview-bar { display: flex; align-items: center; gap: 4px; padding: 0 10px 8px; }
 .preview-bar .field { flex: 1; }
@@ -347,6 +349,7 @@ input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; width: 14p
 .hist-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hist-row .btn { opacity: .7; }
 .hist-row:hover .btn { opacity: 1; }
+.hist-row.agent-pick { flex-wrap: wrap; gap: 6px; }
 
 /* ---------- Prompts & Notizen ---------- */
 .tabs { gap: 4px; border-bottom: 1px solid var(--glass-border); padding-bottom: 8px; }

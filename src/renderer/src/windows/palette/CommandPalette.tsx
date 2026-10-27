@@ -28,6 +28,7 @@ import { startTour } from '../../desktop/Tour'
 import { forgetCurrentWorkspace } from '../../store/workspaceStore'
 import { openAbout } from '../../desktop/About'
 import { togglePerfMeter, usePerf } from '../../desktop/PerfMeter'
+import { agentName, OTHER_AGENTS } from '../../../../shared/agents'
 
 interface Cmd {
   id: string
@@ -88,6 +89,14 @@ function buildCommands(projects: Project[]): Cmd[] {
     ...projects
       .filter((p) => !p.missing)
       .map((p): Cmd => ({ id: 'proj:' + p.id, label: t('Session starten: {name}', { name: p.name }), group: t('Projekte'), icon: 'play', hint: redactText(p.path), run: () => void useSessions.getState().start(p.id) })),
+    // Gemini CLI / Codex (Beta) – nur über die Suche, damit die Liste ruhig bleibt
+    ...projects
+      .filter((p) => !p.missing)
+      .flatMap((p) =>
+        OTHER_AGENTS.map(
+          (a): Cmd => ({ id: `agent:${a}:${p.id}`, label: t('Mit {agent} starten: {name}', { agent: agentName(a), name: p.name }), group: t('Projekte'), icon: 'play', hint: 'Beta', searchOnly: true, run: () => void useSessions.getState().start(p.id, undefined, undefined, a) })
+        )
+      ),
     ...projects
       .filter((p) => !p.missing)
       .map((p): Cmd => ({ id: 'shell:' + p.id, label: t('Shell öffnen: {name}', { name: p.name }), group: t('Projekte'), icon: 'terminal', hint: t('PowerShell im Projektordner'), searchOnly: true, run: () => void useShells.getState().open(p.id) })),

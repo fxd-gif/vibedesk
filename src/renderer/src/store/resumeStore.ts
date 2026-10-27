@@ -5,7 +5,7 @@ import { api } from '../api'
 import { limitFromHook, RESUME_GRACE_MS, resumePrompt, scanLimit } from '../../../shared/limitReset'
 import { inform } from './notifyStore'
 import { sendToSession } from './sessionPrompt'
-import { useSessions } from './sessionStore'
+import { sessionAgent, useSessions } from './sessionStore'
 import { useSettings } from './settingsStore'
 
 interface ResumeState {
@@ -78,7 +78,8 @@ export function wireResume(): void {
   wired = true
   const carry: Record<string, string> = {}
   api.on.sessionData((id, data) => {
-    if (useSettings.getState().s?.autoResume === false) return
+    // „Limit-Weiter“ kennt nur die Meldung von Claude Code
+    if (useSettings.getState().s?.autoResume === false || sessionAgent(id) !== 'claude') return
     const r = scanLimit(data, carry[id] ?? '', Date.now())
     carry[id] = r.carry
     if (r.at) {

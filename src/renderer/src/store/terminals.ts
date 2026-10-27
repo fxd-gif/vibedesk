@@ -7,7 +7,8 @@ import { SerializeAddon } from '@xterm/addon-serialize'
 import { Unicode11Addon } from '@xterm/addon-unicode11'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import { api } from '../api'
-import type { Settings, TerminalSettings } from '../../../shared/types'
+import type { AgentKind, Settings, TerminalSettings } from '../../../shared/types'
+import { agentExitLine } from '../../../shared/setupHints'
 import { findFileLinks, isLocalUrl, keyAction, quotePaths, resolveLinkPath, zoomFont } from '../../../shared/terminalInput'
 import { resolveTheme } from '../terminal/themes'
 import { useSettings } from './settingsStore'
@@ -26,6 +27,8 @@ interface Entry {
   cwd: string
   /** GPU-Renderer; fällt bei Kontextverlust auf den DOM-Renderer zurück */
   webgl: WebglAddon | null
+  /** welcher Agent in der Session läuft (Claude, Gemini CLI, Codex) */
+  agent: AgentKind
 }
 
 const entries = new Map<string, Entry>()
@@ -167,7 +170,7 @@ function fileLinks(e: Entry): { provideLinks(y: number, cb: (links: ILink[] | un
 const SAVED = (id: string): string => `vd-term:${id}`
 
 /** Terminal pro Session bzw. Shell – wird beim Start angelegt, damit keine Ausgabe verloren geht. */
-export function createTerminal(id: string, opts: { kind?: TermKind; cwd?: string } = {}): Entry {
+export function createTerminal(id: string, opts: { kind?: TermKind; cwd?: string; agent?: AgentKind } = {}): Entry {
   wire()
   const existing = entries.get(id)
   if (existing) return existing
@@ -188,7 +191,7 @@ export function createTerminal(id: string, opts: { kind?: TermKind; cwd?: string
   term.loadAddon(new Unicode11Addon())
   term.unicode.activeVersion = '11'
   term.loadAddon(new WebLinksAddon((_ev, url) => openUrl(url)))
-  const e: Entry = { term, fit, search, serialize, kind, cwd: opts.cwd ?? '', webgl: null }
+  const e: Entry = { term, fit, search, serialize, kind, cwd: opts.cwd ?? '', webgl: null, agent: opts.agent ?? 'claude' }
   term.registerLinkProvider(fileLinks(e))
   term.attachCustomKeyEventHandler((ev) => {
     if (ev.type !== 'keydown') return true
@@ -302,7 +305,10 @@ function wire(): void {
   }
   api.on.sessionData(write)
   api.on.shellData(write)
-  api.on.sessionExit((id, code) => entries.get(id)?.term.write(`\r\n\x1b[2m— ${code === 0 ? t('Claude wurde beendet.') : t('Claude ist unerwartet beendet (Code {code}).', { code })} —\x1b[0m\r\n`))
+  api.on.sessionExit((id, code) => {
+    const e = entries.get(id)
+    if (e) e.term.write(`\r\n\x1b[2m— ${agentExitLine(code, e.agent)} —\x1b[0m\r\n`)
+  })
   api.on.shellExit((id, code) => entries.get(id)?.term.write(`\r\n\x1b[2m— ${t('Shell beendet (Code {code})', { code })} —\x1b[0m\r\n`))
   let last = useSettings.getState().s
   useSettings.subscribe((st) => {

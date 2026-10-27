@@ -215,6 +215,7 @@ Missing something? [Wish for a feature](https://github.com/fxd-gif/vibedesk/issu
 - **Plan limit at a glance** (Pro/Max): how much of the 5-hour and weekly limit is used, with a quiet heads-up at 75 % and 90 %
 - **Dev server in one click:** "▶ Dev server" starts your `dev` script (npm, pnpm, yarn or bun) in a shell next to Claude
 - **Claude can drive VibeDesk (MCP):** "sort my windows", "zen mode on", "tokyo scene with more rain" – Claude does it
+- **Beta: Gemini CLI and Codex:** start a session with the Gemini CLI or OpenAI's Codex CLI instead (Projects → ⋯ or the command palette) – terminal, dock dot and a simple status; Claude-only extras like permission cards, plan card, wrap-up, costs and the brain stay off
 
 </details>
 

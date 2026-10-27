@@ -1,5 +1,6 @@
 // Weitere MCP-Werkzeuge: Claude sieht die anderen Sessions, schickt ihnen Aufträge, kennt Verbrauch und Budget
 // und kann sich erinnern lassen.
+import { agentName, agentOf } from '../shared/agents'
 import { cleanBudget, type BudgetUse } from '../shared/budget'
 import { handoffRequest, type SessionHandoff } from '../shared/handoff'
 import type { PlanLimits } from '../shared/limits'
@@ -54,7 +55,7 @@ export function createDeskSessionTools(d: Deps) {
         if (!list.length) return { text: 'Keine Sessions offen.' }
         return {
           text: list
-            .map((s) => `- ${s.name}${s.id === self ? ' (das bist du)' : ''} · ${STATUS[states.get(s.id) ?? 'idle']} · Projekt ${d.projectName(s.projectId)} · ${s.cwd} · id ${s.id}`)
+            .map((s) => `- ${s.name}${s.id === self ? ' (das bist du)' : ''}${agentOf(s) === 'claude' ? '' : ` · ${agentName(agentOf(s))} (Beta)`} · ${STATUS[states.get(s.id) ?? 'idle']} · Projekt ${d.projectName(s.projectId)} · ${s.cwd} · id ${s.id}`)
             .join('\n')
         }
       }

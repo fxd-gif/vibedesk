@@ -11,6 +11,7 @@ import type { ClaudeSessionMeta, Project } from '../../../shared/types'
 import { Fragment } from 'react'
 import { useRedact } from '../store/streamerStore'
 import { t } from '../../../shared/i18n'
+import { AGENT_KINDS, agentChoiceLabel } from '../../../shared/agents'
 
 /** Kacheln für „Womit willst du starten?“ – „Leer“ zuerst */
 function templateChoices(): DialogChoice[] {
@@ -51,6 +52,8 @@ export function ProjectsWindow(): React.JSX.Element {
   const sessions = useSessions((s) => s.sessions)
   const [histFor, setHistFor] = useState<string | null>(null)
   const [hist, setHist] = useState<ClaudeSessionMeta[] | null>(null)
+  /** Projekt, für das gerade die Agenten-Wahl (Claude · Gemini CLI · Codex) offen ist */
+  const [agentFor, setAgentFor] = useState<string | null>(null)
   const red = useRedact()
 
   const toggleHist = (id: string): void => {
@@ -148,11 +151,40 @@ export function ProjectsWindow(): React.JSX.Element {
               <button className="btn small primary" disabled={p.missing} onClick={() => useSessions.getState().start(p.id)} data-testid={`open-${p.name}`}>
                 <Icon name="play" size={13} /> {t('Öffnen')}
               </button>
+              <button
+                className={`btn small ghost${agentFor === p.id ? ' on' : ''}`}
+                title={t('Mit einem anderen Agenten starten (Beta)')}
+                disabled={p.missing}
+                onClick={() => setAgentFor((v) => (v === p.id ? null : p.id))}
+                data-testid={`agents-${p.name}`}
+              >
+                <Icon name="more" size={14} />
+              </button>
               <button className="btn small ghost" title={t('Entfernen')} onClick={() => remove(p)} data-testid={`remove-${p.name}`}>
                 <Icon name="trash" size={14} />
               </button>
             </div>
           </li>
+          {agentFor === p.id && (
+            <li className="hist">
+              <div className="hist-row agent-pick">
+                <span className="dim small">{t('Mit … starten:')}</span>
+                {AGENT_KINDS.map((a) => (
+                  <button
+                    key={a}
+                    className={`btn small${a === 'claude' ? ' primary' : ''}`}
+                    onClick={() => {
+                      setAgentFor(null)
+                      void useSessions.getState().start(p.id, undefined, undefined, a)
+                    }}
+                    data-testid={`start-${a}-${p.name}`}
+                  >
+                    {agentChoiceLabel(a)}
+                  </button>
+                ))}
+              </div>
+            </li>
+          )}
           {histFor === p.id && (
             <li className="hist">
               {!hist && <span className="spin" />}

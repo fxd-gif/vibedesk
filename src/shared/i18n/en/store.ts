@@ -137,6 +137,12 @@ const dict: Record<string, string> = {
   // Session-Abschluss
   'Claude hat eine Datei geändert.': 'Claude changed one file.',
   'Claude hat {n} Dateien geändert.': 'Claude changed {n} files.',
+  // Weitere Agenten (Beta)
+  '{name} fehlt noch': '{name} is missing',
+  'Anleitung öffnen': 'Open guide',
+  'Befehl kopieren': 'Copy command',
+  '{agent} ist gerade still – vermutlich wartet es auf deine Antwort.': '{agent} has gone quiet – it’s probably waiting for your answer.',
+  '{agent} hat sich mit einem Fehler verabschiedet.': '{agent} exited with an error.',
 }
 
 export default dict

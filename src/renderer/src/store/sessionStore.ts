@@ -2,10 +2,11 @@ import { t } from '../../../shared/i18n'
 import { useMemo } from 'react'
 import { create } from 'zustand'
 import { api, errorText } from '../api'
-import type { SessionInfo } from '../../../shared/types'
+import type { AgentKind, SessionInfo } from '../../../shared/types'
 import { claudeMissingMessage } from '../../../shared/setupHints'
+import { AGENT_LINKS, agentInstallCommand, agentName, agentOf, missingAgentIn } from '../../../shared/agents'
 import { openSetup } from '../windows/ToolSetup'
-import { alert, confirm } from './dialogStore'
+import { alert, choose, confirm } from './dialogStore'
 import { useUi } from './uiStore'
 import { useWorkflow } from './workflowStore'
 import { createTerminal, disposeTerminal } from './terminals'
@@ -19,8 +20,8 @@ interface SessionStore {
   /** Sessions aus einem früheren App-Start, die sich per Hook melden – nur Inspector, kein Terminal */
   external: SessionInfo[]
   exited: Record<string, number>
-  /** cwd: Worktree im Projekt (Merge Studio) */
-  start(projectId: string, resumeId?: string, cwd?: string): Promise<SessionInfo | null>
+  /** cwd: Worktree im Projekt (Merge Studio); agent: Gemini CLI / Codex (Beta) statt Claude */
+  start(projectId: string, resumeId?: string, cwd?: string, agent?: AgentKind): Promise<SessionInfo | null>
   close(id: string): Promise<void>
   restart(id: string): Promise<void>
 }
@@ -29,10 +30,10 @@ export const useSessions = create<SessionStore>((set, get) => ({
   sessions: [],
   external: [],
   exited: {},
-  start: async (projectId, resumeId, cwd) => {
+  start: async (projectId, resumeId, cwd, agent) => {
     try {
-      const info = await api.sessions.start(projectId, resumeId, cwd)
-      createTerminal(info.id, { cwd: info.cwd })
+      const info = await api.sessions.start(projectId, resumeId, cwd, agent)
+      createTerminal(info.id, { cwd: info.cwd, agent: agentOf(info) })
       useWorkflow.getState().dispatch({ type: 'start', sessionId: info.id })
       set((s) => ({ sessions: [...s.sessions, info] }))
       const ui = useUi.getState()
@@ -41,7 +42,13 @@ export const useSessions = create<SessionStore>((set, get) => ({
       return info
     } catch (err) {
       const msg = errorText(err)
-      if (msg.includes(claudeMissingMessage())) {
+      const missing = missingAgentIn(msg)
+      if (missing) {
+        // Gemini CLI / Codex fehlt: Befehl zum Kopieren und die offizielle Anleitung
+        const r = await choose({ title: t('{name} fehlt noch', { name: agentName(missing) }), message: msg, confirmLabel: t('Anleitung öffnen'), altLabel: t('Befehl kopieren') })
+        if (r === 'ok') api.openExternal(AGENT_LINKS[missing])
+        else if (r === 'alt') api.clipboard.write(agentInstallCommand(missing))
+      } else if (msg.includes(claudeMissingMessage())) {
         // Statt einer Sackgasse: gleich die Einrichtung anbieten
         if (await confirm({ title: t('Claude Code fehlt noch'), message: msg, confirmLabel: t('Jetzt einrichten') })) openSetup()
       } else await alert(t('Session konnte nicht gestartet werden'), msg)
@@ -62,7 +69,7 @@ export const useSessions = create<SessionStore>((set, get) => ({
     const old = get().sessions.find((s) => s.id === id)
     if (!old) return
     await get().close(id)
-    await get().start(old.projectId, undefined, old.cwd)
+    await get().start(old.projectId, undefined, old.cwd, agentOf(old))
   }
 }))
 
@@ -92,7 +99,7 @@ export async function restoreSessions(): Promise<void> {
     const fresh = list.filter((s) => !known.has(s.id))
     if (!fresh.length) return
     for (const info of fresh) {
-      createTerminal(info.id, { cwd: info.cwd })
+      createTerminal(info.id, { cwd: info.cwd, agent: agentOf(info) })
       useWorkflow.getState().dispatch({ type: 'start', sessionId: info.id })
     }
     useSessions.setState((s) => ({ sessions: [...s.sessions, ...fresh] }))
@@ -101,6 +108,9 @@ export async function restoreSessions(): Promise<void> {
     ui.arrangeAll(kindOf)
   })
 }
+
+/** Agent einer eigenen Session – unbekannte und übernommene Sessions sind Claude */
+export const sessionAgent = (id: string): AgentKind => agentOf(useSessions.getState().sessions.find((s) => s.id === id))
 
 /** Alle Sessions für den Inspector: eigene plus übernommene aus einem früheren App-Start */
 export function useAllSessions(): SessionInfo[] {

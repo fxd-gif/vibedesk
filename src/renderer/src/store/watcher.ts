@@ -1,6 +1,7 @@
 // Wächter verdrahten: prüft regelmäßig alle Sessions und meldet Hänger, Fehlerschleifen und vollen Kontext.
 import { t } from '../../../shared/i18n'
 import { api } from '../api'
+import { isClaude } from '../../../shared/agents'
 import { notify, retract, type NoticeAction } from './notifyStore'
 import { sendToSession } from './sessionPrompt'
 import { termWin, useSessions } from './sessionStore'
@@ -53,7 +54,8 @@ export function checkSessions(now = Date.now()): void {
   const stats = useStats.getState().sessions
   for (const s of sessions) {
     const w = flows[s.id]
-    if (!w) continue
+    // Gemini CLI / Codex: ohne Hooks kein Feed – der Wächter würde nur raten
+    if (!w || !isClaude(s)) continue
     const st = stats[s.id]
     const input = { status: w.status, lastActivity: w.lastActivity, feed: w.feed, now, contextUsed: st?.contextUsed, contextWindow: st?.contextWindow }
     for (const a of memory.fresh(s.id, watchAlerts(input), contextRatio(input))) {
