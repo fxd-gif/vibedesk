@@ -32,7 +32,7 @@ export function runDeskCommand(c: DeskCommand): void {
       return st.set({ ...(c.scene ? { scene: c.scene } : {}), ...(c.rain !== undefined ? { rainIntensity: c.rain } : {}), ...(c.blur !== undefined ? { blur: c.blur } : {}) })
     case 'music':
       return st.set({
-        ...(c.music ? { musicOn: c.music === 'lofi' } : {}),
+        ...(c.music ? { musicOn: c.music === 'lofi', ...(c.music === 'lofi' ? { musicPlayer: 'lofi' as const } : {}) } : {}),
         ...(c.volume !== undefined ? { musicVolume: c.volume / 100 } : {}),
         ...(c.rainSound !== undefined ? { rainSoundOn: c.rainSound } : {})
       })

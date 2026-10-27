@@ -4,6 +4,8 @@ import { errorLogFile, installErrorLog, logError, registerDiagnosticsIpc, regist
 import '../shared/i18n/en'
 import { resolveLang, setLang, t } from '../shared/i18n'
 import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
+import { musicFile, registerMusicIpc, serveMusic } from './localMusic'
+import { MUSIC_SCHEME } from '../shared/localMusic'
 import { LivingStore } from './livingScenes'
 import { createLivingTools } from './livingTools'
 import { TrayService } from './trayService'
@@ -65,7 +67,8 @@ installErrorLog(app.getPath('userData'))
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required')
 protocol.registerSchemesAsPrivileged([
   { scheme: SCENE_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true } },
-  { scheme: ADDON_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }
+  { scheme: ADDON_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } },
+  { scheme: MUSIC_SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }
 ])
 
 let mainWindow: BrowserWindow | null = null
@@ -185,6 +188,19 @@ app.whenReady().then(async () => {
     return new Response(res.body, { status: res.status, headers: { 'content-type': res.headers.get('content-type') ?? 'image/*', 'access-control-allow-origin': '*' } })
   })
   registerSceneIpc(scenesDir)
+
+  // eigene Musik: nur Audiodateien im gewählten Ordner, mit Range für Springen im Titel
+  const musicDir = (): string => settings.get().localMusic?.dir ?? ''
+  protocol.handle(MUSIC_SCHEME, (req) => {
+    const f = musicFile(musicDir(), req.url)
+    if (!f) return new Response('not found', { status: 404 })
+    try {
+      return serveMusic(f, req.headers.get('range'))
+    } catch {
+      return new Response('not found', { status: 404 })
+    }
+  })
+  registerMusicIpc(musicDir)
 
   const addons = new AddonStore(join(userData, 'addons'))
   protocol.handle(ADDON_SCHEME, (req) => {
@@ -357,7 +373,7 @@ app.whenReady().then(async () => {
           `Szene: ${s.scene} · Regen ${Math.round(s.rainIntensity * 100)} % · Unschärfe ${Math.round(s.blur * 100)} %`,
           ...(img ? [`Eigenes Hintergrundbild (zum Ansehen lesen; für desk_scene_create image: "current"): ${img}`] : []),
           `Lebende Szenen: ${livingList.length ? livingList.map((x) => `${x.id} („${x.name}“)`).join(', ') : 'keine'}`,
-          `Lofi-Radio: ${s.musicOn ? `an (${Math.round(s.musicVolume * 100)} %)` : 'aus'} · Regengeräusch: ${s.rainSoundOn ? 'an' : 'aus'}`,
+          `${s.musicPlayer === 'local' ? 'Eigene Musik' : 'Lofi-Radio'}: ${s.musicOn ? `an (${Math.round(s.musicVolume * 100)} %)` : 'aus'} · Regengeräusch: ${s.rainSoundOn ? 'an' : 'aus'}`,
           `Terminal-Farbschema: ${s.terminal?.theme ?? 'scene'}${s.customTheme ? ` (eigenes vorhanden: „${s.customTheme.name}“)` : ''}`,
           `Sessions: ${names.length ? names.join(', ') : 'keine'}`
         ].join('\n')

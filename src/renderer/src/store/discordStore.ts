@@ -70,7 +70,7 @@ export function collectVars(now = Date.now()): PresenceVars {
     focus: focus.phase === 'work' ? t('Fokus-Session') : focus.phase === 'idle' ? '' : t('Pause'),
     focusLeft: focus.phase === 'idle' ? '' : fmtClock(remaining(focus, now)),
     scene: scene.startsWith('custom:') ? t('eigener Ausblick') : (SCENES.find((s) => s.id === scene)?.label ?? ''),
-    music: settings?.musicOn ? t('Lofi an') : t('Ruhe'),
+    music: settings?.musicOn ? (settings.musicPlayer === 'local' ? t('Eigene Musik') : t('Lofi an')) : t('Ruhe'),
     appStart: APP_START,
     sessionStart: st?.startedAt ?? null,
     focusEnd: focus.endsAt,

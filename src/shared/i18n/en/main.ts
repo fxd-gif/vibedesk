@@ -11,6 +11,8 @@ const dict: Record<string, string> = {
   'Suche nach Updates …': 'Checking for updates …',
   'Unbekannter Fehler': 'Unknown error',
 
+  // Eigene Musik
+  'Musikordner wählen': 'Choose music folder',
   // Addons
   'Addon importieren': 'Import addon',
   'Addon exportieren': 'Export addon',

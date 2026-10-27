@@ -338,6 +338,8 @@ const dict: Record<string, string> = {
   'Fenster anordnen': 'Arrange windows',
   'Lofi-Radio aus': 'Turn off lofi radio',
   'Lofi-Radio an': 'Turn on lofi radio',
+  'Eigene Musik aus': 'Turn off your own music',
+  'Eigene Musik an': 'Turn on your own music',
   'Vollbild umschalten': 'Toggle full screen',
   'F11 · Esc halten': 'F11 · hold Esc',
   'Schnell-Prompt öffnen': 'Open quick prompt',

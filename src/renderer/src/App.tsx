@@ -31,6 +31,7 @@ import { useSettings } from './store/settingsStore'
 import { ambienceAudio } from './ambience/audio'
 import { isMuted } from './ambience/toggles'
 import { useSpotify } from './store/spotifyStore'
+import { syncLocalMusic, useLocalMusic } from './store/localMusicStore'
 import { useFocus, wireFocus } from './store/focusStore'
 import { phaseTotal, remaining } from './store/focusTimer'
 import { Ring, toneOf } from './windows/FocusPanel'
@@ -141,9 +142,15 @@ export default function App(): React.JSX.Element {
   const [audioState, setAudioState] = useState({ musicOffline: false, musicPlaying: false })
 
   useEffect(() => ambienceAudio.onState(setAudioState), [])
+  const localPlaying = useLocalMusic((s) => s.playing)
+  const lofiOn = !!settings?.musicOn && settings.musicPlayer !== 'local'
   useEffect(() => {
-    if (settings) ambienceAudio.setMusic(settings.musicOn, settings.musicVolume, settings.streamUrl)
-  }, [settings?.musicOn, settings?.musicVolume, settings?.streamUrl])
+    // musicOn gilt für den gewählten Player: Lofi-Radio oder eigene Musik
+    if (settings) ambienceAudio.setMusic(settings.musicOn && settings.musicPlayer !== 'local', settings.musicVolume, settings.streamUrl)
+  }, [settings?.musicOn, settings?.musicVolume, settings?.streamUrl, settings?.musicPlayer])
+  useEffect(() => {
+    if (settings) syncLocalMusic(settings)
+  }, [settings?.musicOn, settings?.musicVolume, settings?.musicPlayer, settings?.localMusic?.dir])
   useEffect(() => {
     if (settings) ambienceAudio.setRain(settings.rainSoundOn, settings.rainSoundVolume, settings.rainIntensity)
   }, [settings?.rainSoundOn, settings?.rainSoundVolume, settings?.rainIntensity])
@@ -318,9 +325,16 @@ export default function App(): React.JSX.Element {
           [
             {
               ...panelItem('ambience'),
-              label: settings?.musicOn && audioState.musicOffline ? t('Atmosphäre · Lofi-Radio offline') : t('Atmosphäre & Musik'),
-              className: settings?.musicOn && audioState.musicOffline ? 'offline' : undefined,
-              badge: (settings?.musicOn && !isMuted(settings.musicVolume) && !audioState.musicOffline) || spotifyPlaying ? <span className="dock-eq" aria-hidden><i /><i /><i /></span> : undefined
+              label: lofiOn && audioState.musicOffline ? t('Atmosphäre · Lofi-Radio offline') : t('Atmosphäre & Musik'),
+              className: lofiOn && audioState.musicOffline ? 'offline' : undefined,
+              badge:
+                (settings?.musicOn && !isMuted(settings.musicVolume) && (settings.musicPlayer === 'local' ? localPlaying : !audioState.musicOffline)) || spotifyPlaying ? (
+                  <span className="dock-eq" aria-hidden>
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                ) : undefined
             },
             (() => {
               const def = panelDef('focus')!

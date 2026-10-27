@@ -23,7 +23,7 @@
 .amb-seg button { display: inline-flex; align-items: center; gap: 7px; border: 0; background: transparent; color: var(--text-dim); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12.5px; font-weight: 500; }
 .amb-seg button.on { background: rgba(255,255,255,.1); color: var(--text); }
 .amb-seg button.on svg { color: var(--sp); }
-.amb-seg button:last-child.on svg { color: var(--accent); }
+.amb-seg button:not(:first-child).on svg { color: var(--accent); }
 .amb-conn { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--sp); }
 .amb-conn i { width: 7px; height: 7px; border-radius: 50%; background: var(--sp); box-shadow: 0 0 8px var(--sp); }
 
@@ -154,3 +154,15 @@
   .sp-content { overflow: visible; }
 }
 .amb-living-thumb { display: grid; place-items: center; width: 64px; height: 36px; border-radius: 7px; flex: 0 0 auto; background: linear-gradient(135deg, rgba(120,150,255,.25), rgba(255,180,120,.2)); font-size: 15px; }
+
+/* Eigene Musik – nutzt die Spotify-Bausteine, nur mit Akzentfarbe */
+.lm { --sp: var(--accent); flex: 1; }
+.lm-now .amb-cover { width: 120px; height: 80px; }
+.lm-calm .lm-logo { color: var(--accent); background: rgba(159,184,255,.12); box-shadow: 0 0 40px rgba(159,184,255,.15); }
+.lm-calm .row { gap: 8px; justify-content: center; }
+.lm-head { gap: 8px; }
+.lm-head .row { gap: 4px; }
+.lm-tracks { min-height: 0; }
+.lm-track { grid-template-columns: 30px minmax(0, 1fr); }
+.lm-track.on { background: rgba(159,184,255,.1); }
+.lm-group { margin: 10px 0 4px; }

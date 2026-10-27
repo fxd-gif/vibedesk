@@ -175,6 +175,7 @@ Missing something? [Wish for a feature](https://github.com/fxd-gif/vibedesk/issu
 
 - Rain running down the window (WebGL): city at night, forest, a Tokyo alley, or your own picture
 - Lofi radio or **Spotify** (control your Spotify app: playlists, liked songs, queue), plus synthetic rain sound with separate volume controls
+- **Your own music** from a folder on your PC (mp3, m4a, aac, ogg, opus, wav, flac): subfolders as groups, shuffle, repeat, remembers the last track – no account, no internet, nothing leaves your PC
 - Focus timer (Pomodoro); audio gets quieter during breaks
 - Streamer mode: hides API keys, passwords, user names and e-mail addresses, locks `.env` files in the editor; a curtain (<kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>H</kbd>) covers the whole screen
 

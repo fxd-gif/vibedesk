@@ -28,13 +28,25 @@ export class AmbienceAudio {
 
   private musicDuck = 1
   private rainDuck = 1
+  private duckListeners: ((music: number) => void)[] = []
 
   /** Absenken in Fokus-Pausen (1 = normal) */
   setDuck(music: number, rain: number): void {
     this.musicDuck = music
     this.rainDuck = rain
+    this.duckListeners.forEach((l) => l(music))
     if (this.musicOn && this.audio) this.fadeTo(this.musicVolume * music)
     this.setRain(this.rainOn, this.rainVolume, this.intensity)
+  }
+
+  /** aktuelles Absenken der Musik – auch die eigene Musik folgt den Fokus-Pausen */
+  get duck(): number {
+    return this.musicDuck
+  }
+
+  onDuck(cb: (music: number) => void): () => void {
+    this.duckListeners.push(cb)
+    return () => (this.duckListeners = this.duckListeners.filter((l) => l !== cb))
   }
 
   onState(cb: Listener): () => void {

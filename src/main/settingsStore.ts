@@ -3,6 +3,7 @@ import type { Settings } from '../shared/types'
 import { DEFAULT_PRESENCE } from '../shared/presence'
 import { DEFAULT_WEBHOOK } from '../shared/webhook'
 import { COMPANION_PORT } from '../shared/companion'
+import { DEFAULT_LOCAL_MUSIC, normalizeLocalMusic } from '../shared/localMusic'
 import { readJson, writeJsonAtomic } from './jsonFile'
 
 export const DEFAULT_STREAM_URL = 'https://stream.laut.fm/lofi'
@@ -12,6 +13,9 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   streamUrl: DEFAULT_STREAM_URL,
   musicOn: true,
   musicVolume: 0.5,
+  musicSource: 'lofi',
+  musicPlayer: 'lofi',
+  localMusic: { ...DEFAULT_LOCAL_MUSIC },
   rainSoundOn: true,
   rainSoundVolume: 0.35,
   rainIntensity: 0.6,
@@ -103,6 +107,9 @@ export class SettingsStore {
     this.value.companion = { ...defaults.companion, ...(this.value.companion ?? {}) }
     this.value.terminal = { ...defaults.terminal, ...(this.value.terminal ?? {}) }
     this.value.notify.kinds = { ...defaults.notify.kinds, ...(this.value.notify.kinds ?? {}) }
+    this.value.localMusic = normalizeLocalMusic({ ...defaults.localMusic, ...(this.value.localMusic ?? {}) })
+    if (!['lofi', 'spotify', 'local'].includes(this.value.musicSource)) this.value.musicSource = defaults.musicSource
+    if (this.value.musicPlayer !== 'local') this.value.musicPlayer = 'lofi'
     if (!this.value.workspaces || typeof this.value.workspaces !== 'object' || Array.isArray(this.value.workspaces)) this.value.workspaces = {}
   }
 

@@ -30,14 +30,14 @@ export function LofiPane(): React.JSX.Element | null {
   const station = STREAMS.find((x) => x.url === s.streamUrl)
   const cover = s.scene.startsWith('custom:') ? s.scene.slice(7) : sceneThumb(s.scene)
 
+  // musicOn gilt fürs Radio nur, wenn nicht gerade eigene Musik der Player ist
+  const on = s.musicOn && s.musicPlayer !== 'local'
   const toggle = (): void => {
-    const patch = toggleMusic(s)
+    if (on) return set({ musicOn: false })
     // Lofi an → Spotify anhalten, sonst laufen zwei Musiken übereinander
-    if (patch.musicOn) {
-      const sp = useSpotify.getState()
-      if (sp.player?.playing) void sp.cmd({ type: 'pause' })
-    }
-    set(patch)
+    const sp = useSpotify.getState()
+    if (sp.player?.playing) void sp.cmd({ type: 'pause' })
+    set({ ...(s.musicOn ? {} : toggleMusic(s)), musicPlayer: 'lofi' })
   }
 
   return (
@@ -47,8 +47,8 @@ export function LofiPane(): React.JSX.Element | null {
         <div className="amb-now-text">
           <div className="amb-title">{station?.label ?? t('Eigener Stream')}</div>
           <div className="dim small">{t('Lofi-Radio rund um die Uhr – ohne Konto')}</div>
-          {s.musicOn && audio.musicOffline && <span className="badge">{t('offline – neuer Versuch alle 30 s')}</span>}
-          {s.musicOn && !audio.musicOffline && (
+          {on && audio.musicOffline && <span className="badge">{t('offline – neuer Versuch alle 30 s')}</span>}
+          {on && !audio.musicOffline && (
             <span className="amb-live">
               <span className="dock-eq" aria-hidden>
                 <i />
@@ -59,8 +59,8 @@ export function LofiPane(): React.JSX.Element | null {
             </span>
           )}
         </div>
-        <button className="amb-play big" onClick={toggle} title={s.musicOn ? t('Pause') : t('Abspielen')} data-testid="lofi-toggle">
-          <Icon name={s.musicOn ? 'pause' : 'play'} size={20} />
+        <button className="amb-play big" onClick={toggle} title={on ? t('Pause') : t('Abspielen')} data-testid="lofi-toggle">
+          <Icon name={on ? 'pause' : 'play'} size={20} />
         </button>
       </div>
       <Slider label={t('Lautstärke')} value={s.musicVolume} onChange={(v) => set({ musicVolume: v })} suffix={`${Math.round(s.musicVolume * 100)} %`} />

@@ -152,7 +152,7 @@ export const KINDS: Record<string, KindDef> = {
     fields: { CHANNEL: 'music' },
     values: { VALUE: num(50) }
   }),
-  vd_music_onoff: act(() => t('Musik an/aus'), () => t('Schaltet das Lofi-Radio ein oder aus.'), 'music', 'action', [], { fields: { ON: 'TRUE' } }),
+  vd_music_onoff: act(() => t('Musik an/aus'), () => t('Schaltet die Musik ein oder aus – Lofi-Radio oder eigene Musik, je nachdem, was zuletzt lief.'), 'music', 'action', [], { fields: { ON: 'TRUE' } }),
   vd_play_sound: act(() => t('Ton abspielen'), () => t('Spielt den Gong oder einen eigenen Ton.'), 'bell', 'action', [], { fields: { SOUND: 'chime' } }),
   vd_focus: act(() => t('Fokus-Timer'), () => t('Startet oder stoppt den Fokus-Timer.'), 'timer', 'action', [], { fields: { CMD: 'start' } }),
 

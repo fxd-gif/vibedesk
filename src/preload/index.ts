@@ -275,6 +275,10 @@ const api: VibedeskApi = {
   scenes: {
     addCustom: (p) => ipcRenderer.invoke('scenes:addCustom', p)
   },
+  music: {
+    pickDir: () => ipcRenderer.invoke('music:pickDir'),
+    scan: (dir) => ipcRenderer.invoke('music:scan', dir)
+  },
   skills: {
     list: () => ipcRenderer.invoke('skills:list'),
     importPaths: (paths) => ipcRenderer.invoke('skills:importPaths', paths),

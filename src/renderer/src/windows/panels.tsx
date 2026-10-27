@@ -50,7 +50,7 @@ export const PANELS: PanelDef[] = [
   panel({ id: 'projects', title: () => t('Projekte'), hint: () => t('Projekte öffnen, anlegen und frühere Sessions fortsetzen'), icon: 'folder', w: 520, h: 480, render: () => <ProjectsWindow /> }),
   panel({ id: 'skills', title: () => t('Skills'), hint: () => t('Fähigkeiten für Claude installieren – per Drag & Drop oder GitHub-Link'), icon: 'spark', w: 600, h: 540, render: () => <SkillsWindow /> }),
   panel({ id: 'prompts', title: () => t('Prompts & Notizen'), hint: () => t('Fertige Prompts und Notizen pro Projekt'), icon: 'pen', w: 520, h: 560, render: () => <PromptsWindow /> }),
-  panel({ id: 'ambience', title: () => t('Atmosphäre & Musik'), hint: () => t('Spotify, Lofi-Radio, Szene und Regen'), icon: 'rain', w: 1100, h: 680, render: () => <AmbienceWindow /> }),
+  panel({ id: 'ambience', title: () => t('Atmosphäre & Musik'), hint: () => t('Spotify, Lofi-Radio, eigene Musik, Szene und Regen'), icon: 'rain', w: 1100, h: 680, render: () => <AmbienceWindow /> }),
   panel({ id: 'focus', title: () => t('Fokus-Timer'), hint: () => t('Pomodoro-Timer – in Pausen wird es leiser'), icon: 'timer', w: 340, h: 470, render: () => <FocusPanel /> }),
   panel({ id: 'discord', title: () => t('Discord Rich Presence'), hint: () => t('Zeig in Discord, woran du gerade baust'), icon: 'discord', w: 900, h: 660, render: () => <DiscordWindow /> }),
   panel({ id: 'inspector', title: () => t('Session-Inspector'), hint: () => t('Live sehen, was Claude tut: Aktionen, Todos, Agents, Kosten'), icon: 'inspect', w: 560, h: 520, render: () => <InspectorWindow /> }),

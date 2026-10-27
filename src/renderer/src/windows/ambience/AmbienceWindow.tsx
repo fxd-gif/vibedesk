@@ -13,8 +13,9 @@ import { Toggle } from '../../desktop/Toggle'
 import { Icon } from '../../desktop/icons'
 import { SpotifyPane } from './SpotifyPane'
 import { LofiPane } from './LofiPane'
+import { LocalPane } from './LocalPane'
 import { sceneThumb, Slider } from './parts'
-import type { EnergySaver } from '../../../../shared/types'
+import type { EnergySaver, MusicSource } from '../../../../shared/types'
 import { t } from '../../../../shared/i18n'
 import { useLiving } from '../../ambience/LivingScene'
 import { LIVING_PREFIX } from '../../../../shared/living'
@@ -23,18 +24,18 @@ import { activeProjectId } from '../../store/activeProject'
 import { promptProject } from '../../store/sessionPrompt'
 import './ambience.css'
 
-export type MusicSource = 'spotify' | 'lofi'
-
 const ENERGY_MODES = (): { id: EnergySaver; label: string }[] => [
   { id: 'auto', label: t('Automatisch') },
   { id: 'on', label: t('An') },
   { id: 'off', label: t('Aus') }
 ]
 
+// früher im localStorage gemerkt – einmalig in die Einstellungen übernehmen
 const SOURCE_KEY = 'vd-music-source'
-function savedSource(): MusicSource | null {
+function takeOldSource(): MusicSource | null {
   try {
     const v = localStorage.getItem(SOURCE_KEY)
+    localStorage.removeItem(SOURCE_KEY)
     return v === 'spotify' || v === 'lofi' ? v : null
   } catch {
     return null
@@ -45,22 +46,18 @@ const pct = (v: number): string => `${Math.round(v * 100)} %`
 
 export function AmbienceWindow(): React.JSX.Element | null {
   const s = useSettings((x) => x.s)
+  const set = useSettings((x) => x.set)
   const connected = useSpotify((x) => !!x.status?.connected)
-  const [source, setSourceState] = useState<MusicSource>(() => savedSource() ?? 'lofi')
+  const source: MusicSource = s?.musicSource ?? 'lofi'
 
   useEffect(() => {
     void useSpotify.getState().refreshStatus()
+    const old = takeOldSource()
+    if (old && old !== useSettings.getState().s?.musicSource) useSettings.getState().set({ musicSource: old })
   }, [])
   useSpotifyPolling(source === 'spotify')
 
-  const setSource = (v: MusicSource): void => {
-    setSourceState(v)
-    try {
-      localStorage.setItem(SOURCE_KEY, v)
-    } catch {
-      // nur Bequemlichkeit
-    }
-  }
+  const setSource = (v: MusicSource): void => set({ musicSource: v })
 
   if (!s) return null
 
@@ -76,6 +73,9 @@ export function AmbienceWindow(): React.JSX.Element | null {
               <button role="tab" aria-selected={source === 'lofi'} className={source === 'lofi' ? 'on' : ''} onClick={() => setSource('lofi')}>
                 <Icon name="radio" size={15} /> {t('Lofi-Radio')}
               </button>
+              <button role="tab" aria-selected={source === 'local'} className={source === 'local' ? 'on' : ''} onClick={() => setSource('local')} data-testid="source-local">
+                <Icon name="folder" size={15} /> {t('Eigene Musik')}
+              </button>
             </div>
             {source === 'spotify' && connected && (
               <span className="amb-conn">
@@ -83,7 +83,7 @@ export function AmbienceWindow(): React.JSX.Element | null {
               </span>
             )}
           </header>
-          {source === 'spotify' ? <SpotifyPane /> : <LofiPane />}
+          {source === 'spotify' ? <SpotifyPane /> : source === 'local' ? <LocalPane /> : <LofiPane />}
         </div>
         <AtmosphereSide source={source} />
       </div>
@@ -177,7 +177,7 @@ function AtmosphereSide({ source }: { source: MusicSource }): React.JSX.Element 
 
       <section>
         <h4>{t('Lautstärken')}</h4>
-        {source === 'lofi' && <Slider label={t('Musik')} value={s.musicVolume} onChange={(v) => set({ musicVolume: v })} suffix={pct(s.musicVolume)} />}
+        {source !== 'spotify' && <Slider label={t('Musik')} value={s.musicVolume} onChange={(v) => set({ musicVolume: v })} suffix={pct(s.musicVolume)} />}
         <Slider
           label={t('Regen')}
           value={s.rainSoundVolume}

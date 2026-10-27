@@ -64,6 +64,7 @@ import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSna
 import type { PermissionAsk, PermissionDecision } from './permissions'
 import type { LangSetting } from './i18n'
 import type { SpotifyCommand, SpotifyDevice, SpotifyPlayer, SpotifyPlaylist, SpotifyQueue, SpotifyStatus, SpotifyTrack } from './spotify'
+import type { LocalMusicSettings, ScanResult } from './localMusic'
 
 export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion' | 'ambience' | 'merge' | 'settings'
 
@@ -195,6 +196,12 @@ export interface Settings {
   streamUrl: string
   musicOn: boolean
   musicVolume: number
+  /** zuletzt gewählter Reiter im Atmosphäre-Fenster */
+  musicSource: MusicSource
+  /** welcher eingebaute Player auf musicOn hört: Lofi-Radio oder eigene Musik */
+  musicPlayer: MusicPlayer
+  /** eigene Musik aus einem Ordner auf dem PC */
+  localMusic: LocalMusicSettings
   rainSoundOn: boolean
   rainSoundVolume: number
   rainIntensity: number
@@ -287,6 +294,9 @@ export interface Workspace {
 }
 
 export type Experience = '' | 'beginner' | 'pro'
+
+export type MusicSource = 'lofi' | 'spotify' | 'local'
+export type MusicPlayer = 'lofi' | 'local'
 
 export type LayoutTheme = 'desktop' | 'studio'
 
@@ -714,6 +724,12 @@ export interface VibedeskApi {
   files: FilesApi
   scenes: {
     addCustom(path: string): Promise<string>
+  }
+  music: {
+    /** Ordner-Dialog – null = abgebrochen */
+    pickDir(): Promise<string | null>
+    /** liest den Ordner aus den Einstellungen ein */
+    scan(dir: string): Promise<ScanResult>
   }
   skills: {
     list(): Promise<SkillInfo[]>

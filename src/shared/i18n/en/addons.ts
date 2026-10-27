@@ -310,7 +310,7 @@ const dict: Record<string, string> = {
   'Lautstärke': 'Volume',
   'Stellt die Lautstärke von Musik oder Regen ein.': 'Sets the volume of music or rain.',
   'Musik an/aus': 'Music on/off',
-  'Schaltet das Lofi-Radio ein oder aus.': 'Turns the lofi radio on or off.',
+  'Schaltet die Musik ein oder aus – Lofi-Radio oder eigene Musik, je nachdem, was zuletzt lief.': 'Turns the music on or off – lofi radio or your own music, whichever played last.',
   'Ton abspielen': 'Play sound',
   'Spielt den Gong oder einen eigenen Ton.': 'Plays the gong or your own sound.',
   'Startet oder stoppt den Fokus-Timer.': 'Starts or stops the focus timer.',

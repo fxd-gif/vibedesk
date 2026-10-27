@@ -175,6 +175,7 @@ Fehlt dir etwas? [Wünsch dir ein Feature](https://github.com/fxd-gif/vibedesk/i
 
 - Regen auf der Scheibe (WebGL) – Stadt bei Nacht, Wald, Tokio-Gasse oder dein eigenes Bild
 - Lofi-Radio oder **Spotify** (steuert deine Spotify-App: Playlists, Lieblingssongs, Warteschlange), dazu synthetisches Regengeräusch, getrennt regelbar
+- **Eigene Musik** aus einem Ordner auf deinem PC (mp3, m4a, aac, ogg, opus, wav, flac): Unterordner als Gruppen, Zufall, Wiederholen, merkt sich den letzten Titel – ohne Konto, ohne Internet, nichts verlässt deinen PC
 - Fokus-Timer (Pomodoro) – in Pausen wird es automatisch leiser
 - Streamer-Modus: schwärzt API-Keys, Passwörter, Benutzernamen und E-Mails, sperrt `.env` & Co. im Editor; der Vorhang (<kbd>Strg</kbd> + <kbd>⇧</kbd> + <kbd>H</kbd>) verdeckt sofort den ganzen Bildschirm
 
