@@ -9,6 +9,7 @@
 .share-facts { margin: 0; padding-left: 18px; line-height: 1.8; }
 .share-md { margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(0,0,0,.3); border: 1px solid var(--glass-border); font-size: 11.5px; white-space: pre-wrap; max-height: 220px; overflow: auto; user-select: text; }
 .warn { color: var(--yellow); }
+.share-scene-frame { display: block; width: 100%; aspect-ratio: 16 / 9; border: 1px solid var(--glass-border); border-radius: 10px; background: #0b0d12; }
 .warnbox { padding: 9px 12px; border-radius: 10px; background: rgba(250, 204, 21, .08); border: 1px solid rgba(250, 204, 21, .3); color: #fde68a; font-size: 12px; line-height: 1.5; }
 
 /* ---------- Vibe-Lounge ---------- */

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api, errorText } from '../api'
 import { Icon } from '../desktop/icons'
 import { DISCORD_LIMIT, riskyFiles, SHARE_KIND_LABEL } from '../../../shared/shareCode'
@@ -8,6 +8,7 @@ import { alert, confirm } from '../store/dialogStore'
 import { useSettings } from '../store/settingsStore'
 import { startImport, useShare, type PendingImport } from '../store/shareStore'
 import { locale, t, tn } from '../../../shared/i18n'
+import { LIVING_PREFIX } from '../../../shared/living'
 
 const pct = (v: number): string => t('{p} %', { p: Math.round(v * 100) })
 
@@ -122,6 +123,9 @@ function ImportPreview({ p }: { p: PendingImport }): React.JSX.Element {
   const [showMd, setShowMd] = useState(false)
   const [busy, setBusy] = useState(false)
   const e = p.env
+  const hasCustom = !!s?.scene.startsWith('custom:')
+  // Bild für eine geteilte Szene: Das Original-Bild kommt nicht mit
+  const [img, setImg] = useState<'none' | 'current' | 'pick'>(() => (e.kind === 'scene' && e.scene.needsImage ? (hasCustom ? 'current' : 'pick') : 'none'))
 
   useEffect(() => {
     if (e.kind === 'skill') api.projects.list().then((l) => setProjects(l.filter((x) => !x.missing)))
@@ -142,6 +146,11 @@ function ImportPreview({ p }: { p: PendingImport }): React.JSX.Element {
         )
       } else if (e.kind === 'ambience') {
         set({ ...e.ambience, streamUrl: e.ambience.streamUrl || s.streamUrl })
+        close()
+      } else if (e.kind === 'scene') {
+        const sc = await api.living.importCode(p.code, img)
+        if (!sc) return // Bild-Dialog abgebrochen
+        set({ scene: LIVING_PREFIX + sc.id })
         close()
       } else if (p.skill?.length) {
         const tgt: SkillTarget = target === 'global' ? { kind: 'global' } : { kind: 'project', projectId: target }
@@ -199,6 +208,36 @@ function ImportPreview({ p }: { p: PendingImport }): React.JSX.Element {
             {e.ambience.streamUrl && <li className="mono small">Stream: {e.ambience.streamUrl}</li>}
           </ul>
         )}
+        {e.kind === 'scene' && (
+          <>
+            <ScenePreview code={p.code} />
+            <ul className="share-facts">
+              <li>
+                {t('Name:')} <b>{e.scene.name}</b>
+              </li>
+              <li>{t('Größe: {kb} KB Skript', { kb: Math.max(1, Math.round(e.scene.code.length / 1024)).toLocaleString(locale()) })}</li>
+              <li>{t('Läuft abgeschottet ohne Internet – die Szene kommt nicht an deine Dateien, Projekte oder Sessions.')}</li>
+            </ul>
+            {e.scene.needsImage && (
+              <>
+                <div className="warnbox">{t('Diese Szene war für ein eigenes Bild gemacht – wähle eins aus oder nimm eine Standardszene.')}</div>
+                <div className="row chips">
+                  <button className={`chip${img === 'pick' ? ' on' : ''}`} onClick={() => setImg('pick')}>
+                    {t('Bild auswählen …')}
+                  </button>
+                  {hasCustom && (
+                    <button className={`chip${img === 'current' ? ' on' : ''}`} onClick={() => setImg('current')}>
+                      {t('Mein aktuelles Hintergrundbild')}
+                    </button>
+                  )}
+                  <button className={`chip${img === 'none' ? ' on' : ''}`} onClick={() => setImg('none')}>
+                    {t('Ohne Bild')}
+                  </button>
+                </div>
+              </>
+            )}
+          </>
+        )}
         {e.kind === 'skill' && (
           <>
             <div>
@@ -238,5 +277,50 @@ function ImportPreview({ p }: { p: PendingImport }): React.JSX.Element {
         </button>
       </div>
     </Backdrop>
+  )
+}
+
+/** Live-Vorschau einer geteilten Szene – dieselbe Sandbox und CSP wie eigene Szenen, nur ohne Bild */
+function ScenePreview({ code }: { code: string }): React.JSX.Element {
+  const ref = useRef<HTMLIFrameElement>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let tok: string | null = null
+    let gone = false
+    api.living
+      .preview(code)
+      .then((x) => {
+        if (gone) api.living.previewEnd(x)
+        else setToken((tok = x))
+      })
+      .catch((err) => setError(errorText(err)))
+    return () => {
+      gone = true
+      if (tok) api.living.previewEnd(tok)
+    }
+  }, [code])
+
+  // Rückmeldung der Szene: läuft sie oder hat sie einen Fehler?
+  useEffect(() => {
+    const onMsg = (ev: MessageEvent): void => {
+      if (ev.source !== ref.current?.contentWindow) return
+      const m = ev.data as { vdLiving?: boolean; type?: string; ok?: boolean; error?: unknown }
+      if (m && m.vdLiving && m.type === 'status' && !m.ok) setError(typeof m.error === 'string' ? m.error.slice(0, 300) : '')
+    }
+    window.addEventListener('message', onMsg)
+    return () => window.removeEventListener('message', onMsg)
+  }, [])
+
+  return (
+    <>
+      {token ? (
+        <iframe ref={ref} className="share-scene-frame" src={`vibedesk-scene://living-preview/${encodeURIComponent(token)}/index.html`} sandbox="allow-scripts" title={t('Vorschau')} tabIndex={-1} data-testid="share-scene-preview" />
+      ) : (
+        <div className="share-scene-frame" />
+      )}
+      {error !== null && <div className="warnbox">{t('Die Szene meldet einen Fehler: {error}', { error })}</div>}
+    </>
   )
 }

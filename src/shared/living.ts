@@ -49,6 +49,24 @@ export function livingSlug(name: string): string {
   return s || 'szene'
 }
 
+/** Share-Code einer Szene höchstens so lang (komprimiert) – reicht für ein großes Skript, bleibt kopierbar */
+export const LIVING_SHARE_MAX = 60_000
+
+/** Adresse, unter der lebende Szenen (und ihre Vorschau) laufen – ein Szenen-iframe darf nirgendwo anders hin */
+export const isLivingFrameUrl = (url: string): boolean => /^vibedesk-scene:\/\/living(-preview)?\//i.test(url)
+
+/** Name, den es noch nicht gibt: „Winterhaus“ → „Winterhaus (2)“ → „Winterhaus (3)“ … */
+export function uniqueLivingName(name: string, taken: string[]): string {
+  const have = new Set(taken.map((x) => x.trim().toLowerCase()))
+  if (!have.has(name.trim().toLowerCase())) return name
+  const base = name.replace(/\s*\(\d+\)$/, '')
+  for (let n = 2; ; n++) {
+    const tail = ` (${n})`
+    const cand = base.slice(0, LIVING_NAME_MAX - tail.length).trimEnd() + tail
+    if (!have.has(cand.toLowerCase())) return cand
+  }
+}
+
 export const cleanLivingName = (x: unknown): string => (typeof x === 'string' ? x.replace(/[\u0000-\u001f]+/g, ' ').trim().slice(0, LIVING_NAME_MAX) : '')
 
 /** Skript prüfen: Text, nicht leer, nicht zu groß */

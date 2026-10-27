@@ -1,5 +1,6 @@
 // Lebende Szenen auf der Platte: pro Szene ein Ordner mit scene.json, scene.js und dem Bild.
 // Ausgeliefert über vibedesk-scene://living/<id>/… mit strenger CSP – das Skript läuft im Sandbox-iframe.
+import { randomUUID } from 'crypto'
 import fs from 'fs'
 import path from 'path'
 import { checkLivingCode, cleanLivingName, imageSize, LIVING_IMAGE_EXT, LIVING_IMAGE_MAX, LIVING_MAX, livingSlug, validLivingId, type LivingScene, type LivingStatus } from '../shared/living'
@@ -8,7 +9,7 @@ import { readJson, writeJsonAtomic } from './jsonFile'
 /** Kein Netz, keine fremden Skripte: nur die Laufzeit und das Szenen-Skript aus demselben Ordner */
 export const LIVING_CSP = "default-src 'none'; script-src vibedesk-scene:; img-src vibedesk-scene: data: blob:; style-src 'unsafe-inline'"
 
-const INDEX = (s: LivingScene): string =>
+const INDEX = (s: Pick<LivingScene, 'image' | 'imageSize'>): string =>
   [
     '<!doctype html>',
     `<html data-image="${s.image ? 1 : 0}" data-w="${s.imageSize?.w ?? 0}" data-h="${s.imageSize?.h ?? 0}">`,
@@ -29,6 +30,8 @@ export interface SaveInput {
 export class LivingStore {
   private waiters = new Map<string, (s: LivingStatus) => void>()
   private last = new Map<string, LivingStatus>()
+  /** Vorschau einer geteilten Szene vor dem Übernehmen – nur im Speicher, immer nur eine */
+  private preview: { token: string; code: string } | null = null
 
   constructor(
     private dir: string,
@@ -117,18 +120,33 @@ export class LivingStore {
     return true
   }
 
-  /** Antwort für vibedesk-scene://living/<id>/<datei> */
+  /** Skript einer geteilten Szene zum Ansehen bereitlegen → Kennung für vibedesk-scene://living-preview/<token>/ */
+  setPreview(code: string): string {
+    const err = checkLivingCode(code)
+    if (err) throw new Error(err)
+    this.preview = { token: randomUUID(), code }
+    return this.preview.token
+  }
+
+  endPreview(token: string): void {
+    if (this.preview?.token === token) this.preview = null
+  }
+
+  /** Antwort für vibedesk-scene://living/<id>/<datei> (und living-preview/<token>/<datei>) */
   serve(url: string): Response {
     let parts: string[]
+    let host: string
     try {
-      parts = new URL(url).pathname.replace(/^\/+/, '').split('/').map(decodeURIComponent)
+      const u = new URL(url)
+      host = u.host
+      parts = u.pathname.replace(/^\/+/, '').split('/').map(decodeURIComponent)
     } catch {
       return new Response('bad', { status: 400 })
     }
     const [id, file] = parts
-    const meta = validLivingId(id) ? this.meta(id) : null
-    if (!meta || parts.length !== 2) return new Response('not found', { status: 404 })
-    const headers = (type: string): HeadersInit => ({ 'content-type': type, 'content-security-policy': LIVING_CSP, 'access-control-allow-origin': '*', 'cache-control': 'no-store' })
+    if (parts.length !== 2) return new Response('not found', { status: 404 })
+    // dns-prefetch aus: auch über Namensauflösung soll nichts hinausgehen
+    const headers = (type: string): HeadersInit => ({ 'content-type': type, 'content-security-policy': LIVING_CSP, 'access-control-allow-origin': '*', 'cache-control': 'no-store', 'x-dns-prefetch-control': 'off' })
     const read = (f: string): ArrayBuffer | null => {
       try {
         const b = fs.readFileSync(f)
@@ -137,13 +155,25 @@ export class LivingStore {
         return null
       }
     }
-    if (file === 'index.html') return new Response(INDEX(meta), { headers: headers('text/html; charset=utf-8') })
-    if (file === 'runtime.js' || file === 'start.js') {
+    const runtime = (): Response => {
       const js = read(this.runtimeFile)
       if (!js) return new Response('not found', { status: 404 })
       // start.js: nur noch die Szene starten – die Laufzeit ist dann schon geladen
       return new Response(file === 'runtime.js' ? js : 'vd.__start()', { headers: headers('text/javascript; charset=utf-8') })
     }
+    if (host === 'living-preview') {
+      // Vorschau: dieselbe Seite, dieselbe CSP, nur ohne Bild
+      const pv = this.preview
+      if (!pv || pv.token !== id) return new Response('not found', { status: 404 })
+      if (file === 'index.html') return new Response(INDEX({ image: null, imageSize: null }), { headers: headers('text/html; charset=utf-8') })
+      if (file === 'runtime.js' || file === 'start.js') return runtime()
+      if (file === 'scene.js') return new Response(pv.code, { headers: headers('text/javascript; charset=utf-8') })
+      return new Response('not found', { status: 404 })
+    }
+    const meta = validLivingId(id) ? this.meta(id) : null
+    if (!meta) return new Response('not found', { status: 404 })
+    if (file === 'index.html') return new Response(INDEX(meta), { headers: headers('text/html; charset=utf-8') })
+    if (file === 'runtime.js' || file === 'start.js') return runtime()
     if (file === 'scene.js') {
       const js = read(path.join(this.sceneDir(id), 'scene.js'))
       return js ? new Response(js, { headers: headers('text/javascript; charset=utf-8') }) : new Response('not found', { status: 404 })

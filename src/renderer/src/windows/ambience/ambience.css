@@ -36,6 +36,8 @@
 .amb-scene.on { color: var(--text); border-color: rgba(159,184,255,.45); background: rgba(159,184,255,.1); }
 .amb-scene-x { border: 0; background: none; color: var(--text-dim); cursor: pointer; font-size: 15px; padding: 0 6px; opacity: .6; }
 .amb-scene-x:hover { opacity: 1; color: var(--red); }
+.amb-scene-share { display: grid; place-items: center; }
+.amb-scene-share:hover { color: var(--accent); }
 
 /* Regler mit gefüllter Spur */
 .amb-win input[type='range'] {

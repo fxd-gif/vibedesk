@@ -6,6 +6,8 @@ import type { Prompt, SkillCandidateSummary } from '../../../shared/types'
 import { SCENES } from '../ambience/sceneParams'
 import { alert } from './dialogStore'
 import { useSettings } from './settingsStore'
+import { useLiving } from '../ambience/LivingScene'
+import { isLivingScene, livingId } from '../../../shared/living'
 
 export interface PendingImport {
   env: ShareEnvelope
@@ -42,9 +44,23 @@ export async function shareSkill(dir: string, name: string): Promise<void> {
   }
 }
 
+/** Lebende Szene als Code – ohne das Bild, das bleibt privat */
+export async function shareLivingScene(id: string, name: string): Promise<void> {
+  try {
+    showCode(t('Szene „{name}“', { name }), await api.living.exportCode(id, author()))
+  } catch (err) {
+    await alert(t('Teilen nicht möglich'), errorText(err))
+  }
+}
+
 export async function shareAmbience(): Promise<void> {
   const s = useSettings.getState().s
   if (!s) return
+  // läuft gerade eine lebende Szene: die teilen statt abzulehnen
+  if (isLivingScene(s.scene)) {
+    const sc = useLiving.getState().list.find((x) => x.id === livingId(s.scene))
+    if (sc) return shareLivingScene(sc.id, sc.name)
+  }
   if (!SCENES.some((x) => x.id === s.scene)) {
     await alert(t('Eigene Bilder lassen sich nicht teilen'), t('Wähle einen der eingebauten Ausblicke – Regen, Musik und Stream werden mitgeteilt.'))
     return

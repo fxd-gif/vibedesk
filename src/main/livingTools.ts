@@ -1,7 +1,9 @@
 // MCP-Werkzeuge für lebende Szenen: Claude legt Szenen an, sieht sie per Schnappschuss und bessert nach.
 import { randomUUID } from 'crypto'
-import { ipcMain } from 'electron'
-import { LIVING_PREFIX, isLivingScene, livingId, validLivingId, type LivingStatus } from '../shared/living'
+import { dialog, ipcMain, type BrowserWindow } from 'electron'
+import { LIVING_IMAGE_EXT, LIVING_MAX, LIVING_PREFIX, isLivingScene, livingId, uniqueLivingName, validLivingId, type LivingStatus } from '../shared/living'
+import { decodeShare, encodeShare, type SharedScene } from '../shared/shareCode'
+import { t } from '../shared/i18n'
 import type { DeskCommand } from '../shared/desk'
 import type { LivingStore } from './livingScenes'
 
@@ -19,7 +21,12 @@ interface Deps {
   scene(): string
   /** Datei des aktuellen eigenen Hintergrundbilds (custom:…), sonst null */
   currentImageFile(): string | null
+  /** Hauptfenster für den Bild-Dialog */
+  win(): BrowserWindow | null
 }
+
+/** Bild für eine übernommene Szene: keins, das aktuelle Hintergrundbild oder eins per Dialog */
+export type LivingImportImage = 'none' | 'current' | 'pick'
 
 const STATUS_WAIT_MS = 6000
 const SNAP_WAIT_MS = 8000
@@ -35,6 +42,42 @@ export function createLivingTools(d: Deps) {
     if (f) f({ data: typeof data === 'string' ? data : undefined, error: typeof error === 'string' ? error : undefined })
   })
   ipcMain.handle('living:delete', (_e, id: unknown) => remove(id))
+
+  // ---------- Teilen per Share-Code (ohne Bild – das bleibt privat) ----------
+  ipcMain.handle('living:exportCode', (_e, id: unknown, from: unknown) => {
+    const meta = validLivingId(id) ? d.store.meta(id) : null
+    const code = meta ? d.store.code(meta.id) : null
+    if (!meta || code === null) throw new Error(t('Szene nicht gefunden'))
+    const scene: SharedScene = { name: meta.name, code, needsImage: !!meta.image, imageSize: meta.imageSize }
+    return encodeShare({ kind: 'scene', scene, from: String(from ?? '').slice(0, 40) })
+  })
+  const sharedScene = (code: unknown): SharedScene => {
+    const e = decodeShare(String(code))
+    if (e.kind !== 'scene') throw new Error(t('Der Code enthält keine lebende Szene.'))
+    return e.scene
+  }
+  ipcMain.handle('living:preview', (_e, code: unknown) => d.store.setPreview(sharedScene(code).code))
+  ipcMain.on('living:previewEnd', (_e, token: unknown) => typeof token === 'string' && d.store.endPreview(token))
+  ipcMain.handle('living:import', async (_e, code: unknown, image: LivingImportImage) => {
+    const sc = sharedScene(code)
+    const list = d.store.list()
+    if (list.length >= LIVING_MAX) throw new Error(t('Du hast schon {n} lebende Szenen – lösche erst eine.', { n: LIVING_MAX }))
+    let imagePath: string | null = null
+    if (image === 'current') {
+      imagePath = d.currentImageFile()
+      if (!imagePath) throw new Error(t('Gerade ist kein eigenes Hintergrundbild eingestellt.'))
+    } else if (image === 'pick') {
+      const w = d.win()
+      const opts = { title: t('Bild für die Szene wählen'), filters: [{ name: t('Bilder'), extensions: LIVING_IMAGE_EXT.map((x) => x.slice(1)) }], properties: ['openFile' as const] }
+      const r = w ? await dialog.showOpenDialog(w, opts) : await dialog.showOpenDialog(opts)
+      if (r.canceled || !r.filePaths[0]) return null
+      imagePath = r.filePaths[0]
+    }
+    // gleiche Prüfung wie bei Claudes Szenen; Name bei Gleichstand mit „(2)“
+    const scene = d.store.save({ name: uniqueLivingName(sc.name, list.map((x) => x.name)), code: sc.code, imagePath })
+    changed()
+    return scene
+  })
 
   const changed = (): void => d.send('living:changed', d.store.list())
   const show = (scene: string): void => d.send('desk:command', { cmd: 'scene', scene } satisfies DeskCommand)

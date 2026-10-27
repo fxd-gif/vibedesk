@@ -199,7 +199,11 @@ const api: VibedeskApi = {
     list: () => ipcRenderer.invoke('living:list'),
     delete: (id) => ipcRenderer.invoke('living:delete', id),
     status: (s) => ipcRenderer.send('living:status', s),
-    snapshotResult: (req, data, error) => ipcRenderer.send('living:snapshotResult', req, data, error)
+    snapshotResult: (req, data, error) => ipcRenderer.send('living:snapshotResult', req, data, error),
+    exportCode: (id, from) => ipcRenderer.invoke('living:exportCode', id, from),
+    preview: (code) => ipcRenderer.invoke('living:preview', code),
+    previewEnd: (token) => ipcRenderer.send('living:previewEnd', token),
+    importCode: (code, image) => ipcRenderer.invoke('living:import', code, image)
   },
   budget: {
     all: () => ipcRenderer.invoke('budget:all'),

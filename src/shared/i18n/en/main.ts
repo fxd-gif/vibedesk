@@ -334,6 +334,12 @@ const dict: Record<string, string> = {
   'Ein farbiger Punkt zeigt, ob eine Session auf dich wartet – auch wenn VibeDesk im Hintergrund ist': 'A coloured dot shows whether a session is waiting for you – even when VibeDesk is in the background',
   'Beim Schließen im Infobereich weiterlaufen': 'Keep running in the tray when closed',
   'Alt+F4 versteckt VibeDesk nur, die Sessions arbeiten weiter': 'Alt+F4 only hides VibeDesk, the sessions keep working',
+  // Lebende Szenen teilen
+  'Szene nicht gefunden': 'Scene not found',
+  'Der Code enthält keine lebende Szene.': 'The code contains no living scene.',
+  'Du hast schon {n} lebende Szenen – lösche erst eine.': 'You already have {n} living scenes – delete one first.',
+  'Gerade ist kein eigenes Hintergrundbild eingestellt.': 'No custom background picture is set right now.',
+  'Bild für die Szene wählen': 'Choose a picture for the scene',
 }
 
 export default dict

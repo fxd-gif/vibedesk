@@ -7,6 +7,7 @@ import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
 import { musicFile, registerMusicIpc, serveMusic } from './localMusic'
 import { MUSIC_SCHEME } from '../shared/localMusic'
 import { LivingStore } from './livingScenes'
+import { isLivingFrameUrl } from '../shared/living'
 import { createLivingTools } from './livingTools'
 import { TrayService } from './trayService'
 import { BudgetService } from './budgetService'
@@ -128,6 +129,17 @@ function createWindow(): BrowserWindow {
     if (/^https?:/.test(url)) shell.openExternal(url)
   }
   win.webContents.on('will-navigate', stay)
+  // Lebende Szenen bleiben in ihrem Rahmen: Ein (auch fremdes) Szenen-Skript darf sein iframe nicht auf eine
+  // Webseite umleiten – sonst könnte es Daten in der Adresse hinausschicken. Gilt auch für Rahmen darin.
+  const livingFrames = new Set<number>()
+  win.webContents.on('will-frame-navigate', (ev) => {
+    const f = ev.frame
+    if (ev.isMainFrame || !f) return
+    let top = f
+    while (top.parent?.parent) top = top.parent
+    if (top.frameTreeNodeId === f.frameTreeNodeId && isLivingFrameUrl(ev.url)) livingFrames.add(f.frameTreeNodeId)
+    else if (livingFrames.has(top.frameTreeNodeId)) ev.preventDefault()
+  })
   // Abgestürzter Renderer: neu laden statt leeres Vollbild – die Sessions in Main laufen weiter und werden wieder angehängt
   win.webContents.on('render-process-gone', (_e, d) => {
     logError('Renderer', d.reason)
@@ -181,7 +193,8 @@ app.whenReady().then(async () => {
   const living = new LivingStore(join(userData, 'living'), app.isPackaged ? join(process.resourcesPath, 'living-runtime.js') : join(app.getAppPath(), 'resources', 'living-runtime.js'))
   protocol.handle(SCENE_SCHEME, async (req) => {
     // lebende Szene: Seite, Laufzeit, Skript und Bild – mit eigener, strenger CSP
-    if (new URL(req.url).host === 'living') return living.serve(req.url)
+    const host = new URL(req.url).host
+    if (host === 'living' || host === 'living-preview') return living.serve(req.url)
     const f = sceneFile(scenesDir, req.url)
     if (!f) return new Response('not found', { status: 404 })
     const res = await net.fetch(pathToFileURL(f).toString())
@@ -345,7 +358,7 @@ app.whenReady().then(async () => {
     const f = sceneFile(scenesDir, sc.slice(7))
     return f && fs.existsSync(f) ? f : null
   }
-  const livingTool = createLivingTools({ store: living, send, scene: () => settings.get().scene, currentImageFile: customImageFile })
+  const livingTool = createLivingTools({ store: living, send, scene: () => settings.get().scene, currentImageFile: customImageFile, win: () => mainWindow })
   const sessionTool = createDeskSessionTools({
     sessions: () => sessions.list(),
     states: () => tray?.list() ?? [],

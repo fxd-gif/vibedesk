@@ -664,6 +664,13 @@ export interface VibedeskApi {
     delete(id: string): Promise<boolean>
     status(s: LivingStatus): void
     snapshotResult(req: string, data: string | null, error?: string): void
+    /** Szene als Share-Code (ohne Bild) */
+    exportCode(id: string, from: string): Promise<string>
+    /** geteilte Szene zum Ansehen bereitlegen → Kennung für vibedesk-scene://living-preview/<token>/index.html */
+    preview(code: string): Promise<string>
+    previewEnd(token: string): void
+    /** geteilte Szene als neue lebende Szene anlegen; null = Bild-Dialog abgebrochen */
+    importCode(code: string, image: 'none' | 'current' | 'pick'): Promise<LivingScene | null>
   }
   /** Budget pro Projekt */
   budget: {

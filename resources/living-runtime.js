@@ -4,6 +4,14 @@
 // Alles in CSS-Pixeln; Positionen im Bild als Anteile 0..1 (nx, ny).
 'use strict'
 ;(function () {
+  // Kein Netz – auch nicht über WebRTC, das die CSP nicht abdeckt (Szenen können auch aus Share-Codes stammen)
+  for (const k of ['RTCPeerConnection', 'webkitRTCPeerConnection', 'RTCDataChannel', 'RTCSessionDescription', 'RTCIceCandidate']) {
+    try {
+      Object.defineProperty(window, k, { value: undefined, writable: false, configurable: false })
+    } catch (e) {
+      /* schon weg */
+    }
+  }
   const root = document.documentElement
   const hasImage = root.dataset.image === '1'
   const canvas = document.createElement('canvas')

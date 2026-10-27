@@ -86,6 +86,7 @@ const dict: Record<string, string> = {
   'Prompt „{title}“': 'Prompt “{title}”',
   '{n} Prompts': '{n} prompts',
   'Skill „{name}“': 'Skill “{name}”',
+  'Szene „{name}“': 'Scene “{name}”',
   'Teilen nicht möglich': 'Can’t share',
   'Eigene Bilder lassen sich nicht teilen': 'Custom images can’t be shared',
   'Wähle einen der eingebauten Ausblicke – Regen, Musik und Stream werden mitgeteilt.': 'Pick one of the built-in views – rain, music and stream are shared too.',

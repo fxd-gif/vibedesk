@@ -212,6 +212,15 @@ const dict: Record<string, string> = {
 
   // ShareDialogs
   '{title} teilen': 'Share {title}',
+  // ShareDialogs – lebende Szene
+  'Name:': 'Name:',
+  'Größe: {kb} KB Skript': 'Size: {kb} KB script',
+  'Läuft abgeschottet ohne Internet – die Szene kommt nicht an deine Dateien, Projekte oder Sessions.': 'Runs sealed off without internet – the scene can’t reach your files, projects or sessions.',
+  'Diese Szene war für ein eigenes Bild gemacht – wähle eins aus oder nimm eine Standardszene.': 'This scene was made for a custom picture – choose one or use a standard scene.',
+  'Bild auswählen …': 'Choose picture …',
+  'Mein aktuelles Hintergrundbild': 'My current background picture',
+  'Ohne Bild': 'Without picture',
+  'Die Szene meldet einen Fehler: {error}': 'The scene reports an error: {error}',
   'Schick den Code an Freunde – per Discord, Chat oder in der Vibe-Lounge. Wer ihn einfügt (Strg+K → Code einfügen), sieht erst eine Vorschau.':
     'Send the code to friends – via Discord, chat or in the Vibe lounge. Whoever pastes it (Ctrl+K → Paste code) sees a preview first.',
   '{n} Zeichen': '{n} characters',
@@ -403,6 +412,7 @@ const dict: Record<string, string> = {
   'Nimm mein aktuelles Hintergrundbild (image: "current") und sieh es dir vorher an – den Pfad nennt desk_state.': 'Use my current background image (image: "current") and look at it first – desk_state gives the path.',
   'Prüfe das Ergebnis mit desk_scene_snapshot und bessere nach, bis es gut aussieht.': 'Check the result with desk_scene_snapshot and refine it until it looks good.',
   'Szene „{name}“ löschen?': 'Delete scene “{name}”?',
+  'Szene als Code teilen': 'Share scene as code',
   'Die Szene „{name}“ hat einen Fehler': 'The scene “{name}” has an error',
   // Budget pro Projekt
   'Budget für {name} festlegen …': 'Set a budget for {name} …',

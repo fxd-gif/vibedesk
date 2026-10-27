@@ -1,6 +1,7 @@
-// Share-Codes: Prompts, Skills und Atmosphären als kopierbarer Text (vibe1:…) – kein Server nötig.
+// Share-Codes: Prompts, Skills, Atmosphären und lebende Szenen als kopierbarer Text (vibe1:…) – kein Server nötig.
 // Rein und in Main + Renderer nutzbar. Alles Eingehende ist fremd: streng prüfen, Größen begrenzen.
 import { t } from './i18n'
+import { cleanLivingName, LIVING_CODE_MAX, LIVING_NAME_MAX, LIVING_SHARE_MAX } from './living'
 import { deflateSync, Inflate, strFromU8, strToU8 } from 'fflate'
 
 export const SHARE_PREFIX = 'vibe1:'
@@ -33,10 +34,22 @@ export interface SharedAmbience {
   streamUrl: string
 }
 
+/** Lebende Szene ohne Bild – das bleibt privat beim Absender */
+export interface SharedScene {
+  name: string
+  /** Szenen-Skript (läuft beim Empfänger in derselben Sandbox wie eigene Szenen) */
+  code: string
+  /** Die Szene war für ein eigenes Bild gemacht */
+  needsImage: boolean
+  /** Größe des Bildes beim Absender – nur zur Info */
+  imageSize: { w: number; h: number } | null
+}
+
 export type ShareData =
   | { kind: 'prompts'; prompts: SharedPrompt[] }
   | { kind: 'skill'; name: string; description: string; files: SharedFile[] }
   | { kind: 'ambience'; ambience: SharedAmbience }
+  | { kind: 'scene'; scene: SharedScene }
 
 export type ShareEnvelope = ShareData & { from?: string }
 
@@ -149,6 +162,19 @@ function validate(raw: unknown): ShareEnvelope {
         }
       }
     }
+    case 'scene': {
+      const sc = obj(d.scene)
+      const name = cleanLivingName(cleanText(sc.name, LIVING_NAME_MAX * 2))
+      // das Skript bleibt unverändert – es läuft ohnehin nur abgeschottet
+      const code = typeof sc.code === 'string' ? sc.code : ''
+      if (!name || !code.trim()) throw new ShareError(t('Die Szene im Code ist unvollständig.'))
+      if (code.length > LIVING_CODE_MAX) throw new ShareError(t('Der Code ist zu groß.'))
+      const sz = obj(sc.imageSize)
+      const dim = (x: unknown): number => (typeof x === 'number' && Number.isInteger(x) && x > 0 && x <= 50_000 ? x : 0)
+      const w = dim(sz.w)
+      const h = dim(sz.h)
+      return { kind: 'scene', from, scene: { name, code, needsImage: bool(sc.needsImage, false), imageSize: w && h ? { w, h } : null } }
+    }
     default:
       throw new ShareError(t('Unbekannter Code-Typ.'))
   }
@@ -160,7 +186,9 @@ export function encodeShare(e: ShareEnvelope): string {
   const { from, ...data } = e
   const { kind, ...rest } = data
   const json = JSON.stringify({ v: 1, kind, from: from || undefined, data: rest })
-  return SHARE_PREFIX + toB64Url(deflateSync(strToU8(json), { level: 9 }))
+  const code = SHARE_PREFIX + toB64Url(deflateSync(strToU8(json), { level: 9 }))
+  if (kind === 'scene' && code.length > LIVING_SHARE_MAX) throw new ShareError(t('Die Szene ist zu groß zum Teilen.'))
+  return code
 }
 
 export function decodeShare(code: string): ShareEnvelope {
@@ -176,7 +204,9 @@ export function decodeShare(code: string): ShareEnvelope {
     if (err instanceof ShareError) throw err
     throw new ShareError(t('Der Code ist beschädigt – wurde er vollständig kopiert?'))
   }
-  return validate(json)
+  const env = validate(json)
+  if (env.kind === 'scene' && c.length > LIVING_SHARE_MAX) throw new ShareError(t('Der Code ist zu groß.'))
+  return env
 }
 
 /** Findet den ersten Share-Code in beliebigem Text (Chat, Discord-Nachricht …). */
@@ -217,5 +247,8 @@ export const SHARE_KIND_LABEL: Record<ShareData['kind'], string> = {
   },
   get ambience() {
     return t('Atmosphäre')
+  },
+  get scene() {
+    return t('Lebende Szene')
   }
 }

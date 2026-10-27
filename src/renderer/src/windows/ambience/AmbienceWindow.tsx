@@ -8,7 +8,7 @@ import { playChime } from '../../ambience/chime'
 import { toggleRainSound } from '../../ambience/toggles'
 import { useUpdate } from '../../store/updateStore'
 import { showWhatsNew } from '../../changelog/WhatsNew'
-import { shareAmbience } from '../../store/shareStore'
+import { shareAmbience, shareLivingScene } from '../../store/shareStore'
 import { Toggle } from '../../desktop/Toggle'
 import { Icon } from '../../desktop/icons'
 import { SpotifyPane } from './SpotifyPane'
@@ -290,6 +290,9 @@ function LivingSection(): React.JSX.Element | null {
                 <button onClick={() => set({ scene: id })}>
                   {sc.image ? <img src={`vibedesk-scene://living/${encodeURIComponent(sc.id)}/image?rev=${sc.rev}`} alt="" /> : <span className="amb-living-thumb">✨</span>}
                   <span>{sc.name}</span>
+                </button>
+                <button className="amb-scene-x amb-scene-share" title={t('Szene als Code teilen')} onClick={() => void shareLivingScene(sc.id, sc.name)} data-testid={`living-share-${sc.id}`}>
+                  <Icon name="share" size={12} />
                 </button>
                 <button
                   className="amb-scene-x"
