@@ -164,8 +164,17 @@ const DESK_TOOLS = [
   {
     name: 'desk_session_send',
     description:
-      'Schickt einer ANDEREN Claude-Session in VibeDesk einen Auftrag, als hätte der User ihn getippt – z. B. „Schreib Tests für die neue API“ an die Session im Backend-Projekt. Nur nutzen, wenn der User mehrere Sessions zusammenarbeiten lassen will. Formuliere vollständig, die andere Session kennt deinen Kontext nicht. Arbeitet sie gerade, kommt der Auftrag danach dran.',
-    inputSchema: { type: 'object', properties: { session: { type: 'string', description: 'id oder Name aus desk_sessions' }, prompt: { type: 'string' } }, required: ['session', 'prompt'] }
+      'Schickt einer ANDEREN Claude-Session in VibeDesk einen Auftrag, als hätte der User ihn getippt – z. B. „Schreib Tests für die neue API“ an die Session im Backend-Projekt. Nur nutzen, wenn der User mehrere Sessions zusammenarbeiten lassen will. Formuliere vollständig, die andere Session kennt deinen Kontext nicht. VibeDesk hängt eine kurze Übergabe an: deine summary und die Dateien, die du in dieser Runde geändert hast (mit Zeilenzahlen). Arbeitet sie gerade, kommt der Auftrag danach dran.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        session: { type: 'string', description: 'id oder Name aus desk_sessions' },
+        prompt: { type: 'string' },
+        summary: { type: 'string', description: '2–4 Sätze: was du gerade gemacht hast und warum (Entscheidungen, offene Punkte) – kommt als Übergabe mit' },
+        handoff: { type: 'boolean', description: 'false = nur den Auftrag schicken, ohne Übergabe (Standard: true)' }
+      },
+      required: ['session', 'prompt']
+    }
   },
   { name: 'desk_usage', description: 'Verbrauch: Tokens und geschätzte Kosten heute und in den letzten 7 Tagen, Abo-Limits (5-Stunden-Fenster, Woche) und Budgets der Projekte.', inputSchema: { type: 'object', properties: {} } },
   {

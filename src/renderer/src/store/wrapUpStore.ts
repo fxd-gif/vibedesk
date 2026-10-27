@@ -12,9 +12,14 @@ interface WrapUpState {
   notes: Record<string, string[]>
   /** Session im Abschluss-Dialog */
   open: string | null
+  /** letzte Zusammenfassung je Session – bleibt über den nächsten Prompt hinaus (für Übergaben) */
+  last: Record<string, string>
 }
 
-export const useWrapUp = create<WrapUpState>(() => ({ turns: {}, notes: {}, open: null }))
+export const useWrapUp = create<WrapUpState>(() => ({ turns: {}, notes: {}, open: null, last: {} }))
+
+const remember = (s: WrapUpState, id: string, summary: string | undefined): Partial<WrapUpState> =>
+  summary && s.last[id] !== summary ? { last: { ...s.last, [id]: summary } } : {}
 
 /** Runde mit Änderungen ist fertig – dann lohnt sich ein Abschluss */
 export const canWrapUp = (turn: WrapTurn | undefined): boolean => !!turn?.ended && turn.files.length > 0
@@ -52,7 +57,8 @@ export function wireWrapUp(): void {
       else delete turns[e.sessionId]
       // neuer Prompt: die Gehirn-Notizen des Projekts gehören ab jetzt zur neuen Runde
       const pid = e.name === 'UserPromptSubmit' ? projectOf(e.sessionId) : undefined
-      return pid ? { turns, notes: { ...s.notes, [pid]: [] } } : { turns }
+      const kept = remember(s, e.sessionId, next?.summary)
+      return pid ? { turns, notes: { ...s.notes, [pid]: [] }, ...kept } : { turns, ...kept }
     })
     // Zusammenfassung beim ersten Ende der Runde holen – nach der Gehirn-Pflege wäre sie nur „Gehirn ist aktuell.“
     if (next?.ended && !next.summary && next.transcript && next.files.length && !before?.ended) {
@@ -61,7 +67,7 @@ export function wireWrapUp(): void {
         if (!summary) return
         useWrapUp.setState((s) => {
           const cur = s.turns[e.sessionId]
-          return cur && cur.transcript === transcript && !cur.summary ? { turns: { ...s.turns, [e.sessionId]: { ...cur, summary } } } : s
+          return cur && cur.transcript === transcript && !cur.summary ? { turns: { ...s.turns, [e.sessionId]: { ...cur, summary } }, ...remember(s, e.sessionId, summary) } : s
         })
       })
     }
@@ -73,5 +79,13 @@ export function wireWrapUp(): void {
       return list.includes(p.title!) ? s : { notes: { ...s.notes, [p.projectId]: [...list, p.title!] } }
     })
   })
-  api.on.sessionExit((id) => finishWrapUp(id))
+  api.on.sessionExit((id) => {
+    finishWrapUp(id)
+    useWrapUp.setState((s) => {
+      if (!(id in s.last)) return s
+      const last = { ...s.last }
+      delete last[id]
+      return { last }
+    })
+  })
 }

@@ -11,6 +11,8 @@ import { t } from '../../../shared/i18n'
 import { useSettings } from './settingsStore'
 import { useUi } from './uiStore'
 import { usePreview } from './previewStore'
+import { relTo, withHandoff, type Handoff, type HandoffFile, type SessionHandoff } from '../../../shared/handoff'
+import { useWrapUp } from './wrapUpStore'
 
 export function runDeskCommand(c: DeskCommand): void {
   const st = useSettings.getState()
@@ -59,10 +61,37 @@ export function wireDeskCommands(): void {
   wired = true
   api.on.deskCommand(runDeskCommand)
   // Claude schickt einer anderen Session einen Auftrag (desk_session_send)
-  api.on.deskSessionPrompt((id, text, from) => {
+  api.on.deskSessionPrompt(async (id, text, from, req) => {
     const to = useSessions.getState().sessions.find((s) => s.id === id)
     if (!to) return
-    sendToSession(id, text, false)
-    inform(t('{from} → {to}', { from, to: to.name }), text.length > 140 ? text.slice(0, 139) + '…' : text)
+    const h = req ? await sessionHandoff(req) : null
+    sendToSession(id, withHandoff(text, h), false)
+    const preview = text.length > 140 ? text.slice(0, 139) + '…' : text
+    const extra = h?.files.length ? ' · ' + t('mit Übergabe ({n} Dateien)', { n: h.files.length }) : h?.summary ? ' · ' + t('mit Übergabe') : ''
+    inform(t('{from} → {to}', { from, to: to.name }), preview + extra)
   })
+}
+
+/** Runde der schickenden Session: Zusammenfassung und geänderte Dateien mit Zeilenzahlen aus git */
+async function sessionHandoff(req: SessionHandoff): Promise<Handoff | null> {
+  const from = useSessions.getState().sessions.find((s) => s.id === req.fromId)
+  if (!from) return null
+  const w = useWrapUp.getState()
+  const turn = w.turns[req.fromId]
+  const summary = req.summary || turn?.summary || w.last[req.fromId]
+  const paths = (turn?.files ?? []).map((f) => relTo(from.cwd, f))
+  const counts = new Map<string, { add: number | null; del: number | null }>()
+  if (paths.length) {
+    try {
+      const ch = await api.wrapUp.changes(req.fromId)
+      if (ch.repo) for (const f of ch.files) counts.set(f.path.toLowerCase(), f)
+    } catch {
+      // ohne git gehen die Dateien eben ohne Zeilenzahlen mit
+    }
+  }
+  const files: HandoffFile[] = paths.map((p) => {
+    const c = counts.get(p.toLowerCase())
+    return { path: p, add: c?.add ?? null, del: c?.del ?? null }
+  })
+  return { from: from.name, cwd: from.cwd, summary, files }
 }

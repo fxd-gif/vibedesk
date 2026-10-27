@@ -398,6 +398,8 @@ const dict: Record<string, string> = {
   '{name}: Budget erreicht': '{name}: budget reached',
   '{used} von {amount} {period}': '{used} of {amount} {period}',
   '{from} → {to}': '{from} → {to}',
+  'mit Übergabe ({n} Dateien)': 'with hand-off ({n} files)',
+  'mit Übergabe': 'with hand-off',
 }
 
 export default dict

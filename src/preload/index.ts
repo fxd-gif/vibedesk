@@ -6,6 +6,7 @@ import type { PermissionAsk } from '../shared/permissions'
 import type { CompanionDevice, CompanionStatus, PromptTarget, TermQuery } from '../shared/companion'
 import type { PlanLimits } from '../shared/limits'
 import type { DeskCommand } from '../shared/desk'
+import type { SessionHandoff } from '../shared/handoff'
 import type { LivingScene } from '../shared/living'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
@@ -95,7 +96,7 @@ const api: VibedeskApi = {
     livingChanged: (cb) => listen<[LivingScene[]]>('living:changed', cb),
     livingSnapshot: (cb) => listen<[string]>('living:snapshot', cb),
     trayFocus: (cb) => listen<[string]>('tray:focus', cb),
-    deskSessionPrompt: (cb) => listen<[string, string, string]>('desk:sessionPrompt', cb),
+    deskSessionPrompt: (cb) => listen<[string, string, string, SessionHandoff | null]>('desk:sessionPrompt', cb),
     budgetUsage: (cb) => listen<[BudgetUse[]]>('budget:usage', cb),
     budgetAlert: (cb) => listen<[BudgetAlert]>('budget:alert', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),

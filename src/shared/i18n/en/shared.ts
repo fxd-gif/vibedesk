@@ -210,6 +210,12 @@ const dict: Record<string, string> = {
   '## Commits': '## Commits',
   // Wartezeit einer Session
   'wartet · {d}': 'waiting · {d}',
+  // Übergabe zwischen Sessions
+  'Übergabe von „{from}“ (Ordner {cwd}):': 'Hand-off from "{from}" (folder {cwd}):',
+  'Was dort gerade passiert ist: {summary}': 'What just happened there: {summary}',
+  'Dort geändert: {files}': 'Changed there: {files}',
+  'und 1 weitere': 'and 1 more',
+  'und {n} weitere': 'and {n} more',
 }
 
 export default dict

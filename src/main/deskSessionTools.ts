@@ -1,6 +1,7 @@
 // Weitere MCP-Werkzeuge: Claude sieht die anderen Sessions, schickt ihnen Aufträge, kennt Verbrauch und Budget
 // und kann sich erinnern lassen.
 import { cleanBudget, type BudgetUse } from '../shared/budget'
+import { handoffRequest, type SessionHandoff } from '../shared/handoff'
 import type { PlanLimits } from '../shared/limits'
 import type { TraySession } from '../shared/tray'
 import type { DayStats, SessionInfo } from '../shared/types'
@@ -11,8 +12,8 @@ interface Deps {
   /** Status je Session (vom Renderer, wie fürs Tray) */
   states(): TraySession[]
   projectName(projectId: string): string
-  /** Prompt in eine Session tippen (über den Renderer) */
-  prompt(sessionId: string, text: string, from: string): void
+  /** Prompt in eine Session tippen (über den Renderer); handoff: Übergabe der schickenden Session anhängen */
+  prompt(sessionId: string, text: string, from: string, handoff: SessionHandoff | null): void
   days(n: number): DayStats[]
   limits(): PlanLimits | null
   budgets(): BudgetUse[]
@@ -65,10 +66,11 @@ export function createDeskSessionTools(d: Deps) {
         if (!text) return { text: 'prompt fehlt.', isError: true }
         if (text.length > PROMPT_MAX) return { text: `prompt ist zu lang (höchstens ${PROMPT_MAX} Zeichen).`, isError: true }
         const from = d.sessions().find((s) => s.id === self)?.name ?? 'Claude'
-        d.prompt(target.id, text, from)
+        const h = handoffRequest(a)
+        d.prompt(target.id, text, from, h ? { fromId: self, ...h } : null)
         const st = d.states().find((s) => s.id === target.id)?.status
         return {
-          text: `An „${target.name}“ geschickt.${st === 'working' ? ' Die Session arbeitet gerade – Claude Code nimmt den Auftrag danach dran.' : ''} Mit desk_sessions siehst du, wann sie fertig ist.`
+          text: `An „${target.name}“ geschickt${h ? ' – mit Übergabe (deine Zusammenfassung und die in dieser Runde geänderten Dateien)' : ''}.${st === 'working' ? ' Die Session arbeitet gerade – Claude Code nimmt den Auftrag danach dran.' : ''} Mit desk_sessions siehst du, wann sie fertig ist.`
         }
       }
       case 'desk_usage': {

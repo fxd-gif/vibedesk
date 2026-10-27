@@ -57,6 +57,7 @@ import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult
 import type { PlanLimits } from './limits'
 import type { DevScript } from './devScript'
 import type { CustomTheme, DeskCommand } from './desk'
+import type { SessionHandoff } from './handoff'
 import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget, TermChunk, TermQuery } from './companion'
 import type { PermissionAsk, PermissionDecision } from './permissions'
 import type { LangSetting } from './i18n'
@@ -497,7 +498,7 @@ export interface VibedeskApi {
     /** Klick im Tray-Menü auf eine Session */
     trayFocus(cb: (sessionId: string) => void): Unsubscribe
     /** Claude schickt einer anderen Session einen Auftrag */
-    deskSessionPrompt(cb: (sessionId: string, text: string, from: string) => void): Unsubscribe
+    deskSessionPrompt(cb: (sessionId: string, text: string, from: string, handoff: SessionHandoff | null) => void): Unsubscribe
     budgetUsage(cb: (list: BudgetUse[]) => void): Unsubscribe
     budgetAlert(cb: (a: BudgetAlert) => void): Unsubscribe
     /** Neue Abo-Limits aus der Statuszeile von Claude Code */
