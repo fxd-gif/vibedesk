@@ -6,7 +6,7 @@ import { openPanel } from '../windows/palette/CommandPalette'
 import { useFocus } from './focusStore'
 import { inform } from './notifyStore'
 import { kindOf, useSessions } from './sessionStore'
-import { sendToSession } from './sessionPrompt'
+import { sendToSession, SUBMIT_DELAY_MS } from './sessionPrompt'
 import { t } from '../../../shared/i18n'
 import { useSettings } from './settingsStore'
 import { useUi } from './uiStore'
@@ -61,16 +61,26 @@ export function wireDeskCommands(): void {
   wired = true
   api.on.deskCommand(runDeskCommand)
   // Claude schickt einer anderen Session einen Auftrag (desk_session_send)
-  api.on.deskSessionPrompt(async (id, text, from, req) => {
-    const to = useSessions.getState().sessions.find((s) => s.id === id)
-    if (!to) return
-    const h = req ? await sessionHandoff(req) : null
-    sendToSession(id, withHandoff(text, h), false)
-    const preview = text.length > 140 ? text.slice(0, 139) + '…' : text
-    const extra = h?.files.length ? ' · ' + t('mit Übergabe ({n} Dateien)', { n: h.files.length }) : h?.summary ? ' · ' + t('mit Übergabe') : ''
-    inform(t('{from} → {to}', { from, to: to.name }), preview + extra)
+  api.on.deskSessionPrompt((id, text, from, req) => {
+    // Aufträge an dieselbe Session nacheinander – die Übergabe fragt erst git, ein späterer Auftrag darf nicht überholen
+    const prev = queues.get(id) ?? Promise.resolve()
+    const next = prev.then(async () => {
+      const h = req ? await sessionHandoff(req).catch(() => null) : null
+      const to = useSessions.getState().sessions.find((s) => s.id === id)
+      if (!to) return
+      sendToSession(id, withHandoff(text, h), false)
+      const preview = text.length > 140 ? text.slice(0, 139) + '…' : text
+      const extra = h?.files.length ? ' · ' + t('mit Übergabe ({n} Dateien)', { n: h.files.length }) : h?.summary ? ' · ' + t('mit Übergabe') : ''
+      inform(t('{from} → {to}', { from, to: to.name }), preview + extra)
+      // Einfügen und Enter brauchen einen Moment – erst danach kommt der nächste Auftrag
+      await new Promise((r) => setTimeout(r, SUBMIT_DELAY_MS + 50))
+    })
+    queues.set(id, next)
+    void next.finally(() => queues.get(id) === next && queues.delete(id))
   })
 }
+
+const queues = new Map<string, Promise<void>>()
 
 /** Runde der schickenden Session: Zusammenfassung und geänderte Dateien mit Zeilenzahlen aus git */
 async function sessionHandoff(req: SessionHandoff): Promise<Handoff | null> {

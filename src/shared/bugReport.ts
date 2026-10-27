@@ -13,9 +13,23 @@ export interface BugInfo {
 /** GitHub nimmt keine beliebig langen URLs – das Protokoll wird vom Anfang her gekürzt */
 const MAX_LOG = 1500
 
-/** Benutzername in Pfaden unkenntlich machen (C:\Users\tom\… → C:\Users\…\…) */
+/**
+ * Private Angaben unkenntlich machen, bevor etwas in ein öffentliches Issue geht: von Pfaden bleibt nur der
+ * Dateiname (Benutzer-, Projekt- und Firmennamen stecken in den Ordnern), Zugangsdaten in URLs und E-Mail-Adressen fliegen raus.
+ */
 export function scrubPaths(text: string): string {
-  return text.replace(/([A-Za-z]:[\\/]+Users[\\/]+)[^\\/\r\n"']+/gi, '$1…')
+  return (
+    text
+      // C:\Users\tom\Projekte\kunde\x.ts → C:\…\x.ts (auch mit /)
+      .replace(/(?<![\w])([A-Za-z]:)([\\/])+(?:[^\\/\r\n"'<>|:*?]+[\\/]+)+/g, (_m, drive: string, sep: string) => `${drive}${sep}…${sep}`)
+      // \\server\freigabe\… → \\…\
+      .replace(/\\\\[^\\\s"']+(?:\\[^\\\r\n"'<>|:*?]+)*\\/g, '\\\\…\\')
+      // /c/Users/tom/… (Git-Bash) und /home/tom/… → /…/
+      .replace(/(^|[\s"'(=])\/(?:[a-z]|home|Users|mnt)\/(?:[^/\s"']+\/)+/g, '$1/…/')
+      // https://user:token@host → https://…@host
+      .replace(/([a-z][\w+.-]*:\/\/)[^@\s/]+@/gi, '$1…@')
+      .replace(/[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g, '…@…')
+  )
 }
 
 export function bugReportUrl(i: BugInfo): string {

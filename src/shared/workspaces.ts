@@ -6,8 +6,8 @@ export const MAX_WORKSPACES = 30
 
 /** wird nie von selbst geöffnet oder geschlossen (Editor hat ungespeicherte Änderungen und ein eigenes Projekt) */
 const NEVER_TOUCH = new Set<string>(['editor'])
-/** wird nie von selbst geschlossen – dort laufen womöglich Commits oder Zusammenführungen */
-const NEVER_CLOSE = new Set<string>(['editor', 'git', 'merge'])
+/** wird nie von selbst geschlossen – dort laufen womöglich Commits, Zusammenführungen oder ein Addon-Test mit ungespeicherten Änderungen */
+const NEVER_CLOSE = new Set<string>(['editor', 'git', 'merge', 'addons'])
 
 const sameRect = (a: WindowRect | undefined, b: WindowRect): boolean => !!a && a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h
 

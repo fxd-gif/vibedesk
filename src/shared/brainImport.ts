@@ -115,7 +115,8 @@ export function importNotes(sources: ImportSource[], existing: string[] = []): I
       }
       for (const p of useful) add({ title: headingTitle(p.heading), type: 'fact', body: clip(plain(p.body)) + source(src.name), tags: ['import', tag] })
     } else {
-      const file = src.name.replace(/^.*\//, '')
+      // .claude/CLAUDE.md und CLAUDE.md sollen nicht denselben Titel bekommen
+      const file = src.name.replace(/\//g, ' › ')
       if (!parts.length) {
         const body = plain(src.text)
         if (body) add({ title: t('Regeln aus {file}', { file }), type: 'convention', body: clip(body) + source(src.name), tags: ['import', tag] })

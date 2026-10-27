@@ -41,9 +41,11 @@ export const LOG_LINES = 30
 const MAX_LINE = 300
 
 /** Die letzten Zeilen des Protokolls, überlange Zeilen gekürzt */
-export function logTail(text: string, lines = LOG_LINES): string {
-  return text
-    .split(/\r?\n/)
+export function logTail(text: string, lines = LOG_LINES, cut = false): string {
+  const all = text.split(/\r?\n/)
+  // vom Dateiende gelesen: die erste Zeile ist meist angeschnitten (und entginge so dem Schwärzen)
+  if (cut) all.shift()
+  return all
     .filter((l) => l.trim())
     .slice(-lines)
     .map((l) => (l.length > MAX_LINE ? l.slice(0, MAX_LINE) + ' …' : l))

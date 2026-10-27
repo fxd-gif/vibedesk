@@ -120,7 +120,7 @@ export function registerDiagnosticsIpc(d: DiagnosticsDeps): void {
       memoryMb: Math.round(kb / 1024),
       energySaver: s.energySaver ?? 'auto',
       onBattery: powerMonitor.isOnBatteryPower(),
-      log: scrubPaths(logTail(readErrorLog(20000)))
+      log: scrubPaths(logTail(readErrorLog(20000), undefined, true))
     }
   })
 }

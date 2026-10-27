@@ -124,6 +124,11 @@ export class AmbienceAudio {
     cancelAnimationFrame(this.fadeRaf)
     const a = this.audio
     if (!a) return done?.()
+    // im Tray/minimiert laufen keine Bilder – dann ohne Überblenden, sonst bliebe es hängen
+    if (document.hidden) {
+      a.volume = Math.max(0, Math.min(1, target))
+      return done?.()
+    }
     const from = a.volume
     const start = performance.now()
     const step = (now: number): void => {

@@ -80,23 +80,28 @@ export function registerTerminalIpc(d: { shells: ShellManager; projects: Project
     const before = (await clipboardImage().catch(() => null))?.key ?? null
     let back = false
     const onFocus = (): void => void (back = true)
+    let arm: ReturnType<typeof setTimeout> | undefined
     try {
       win.minimize()
       await new Promise((r) => setTimeout(r, 250))
       await shell.openExternal('ms-screenclip:')
       // erst nach einem Moment zählt „wieder im Vordergrund“ als Abbruch – das Minimieren selbst löst kein focus aus
-      setTimeout(() => win.once('focus', onFocus), 800)
-      const img = await waitForNewImage({ before, read: clipboardImage, stop: () => back, sleep: (ms) => new Promise((r) => setTimeout(r, ms)) })
+      arm = setTimeout(() => !win.isDestroyed() && win.once('focus', onFocus), 800)
+      const img = await waitForNewImage({ before, read: clipboardImage, stop: () => back || win.isDestroyed(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) })
       if (!img) return null
       fs.mkdirSync(d.pasteDir, { recursive: true })
       const file = join(d.pasteDir, `ausschnitt-${Date.now()}.${img.ext}`)
       fs.writeFileSync(file, img.data)
       return file
     } finally {
-      win.removeListener('focus', onFocus)
-      if (win.isMinimized()) win.restore()
-      win.focus()
+      clearTimeout(arm)
       snipping = false
+      // VibeDesk wurde inzwischen beendet? Dann gibt es nichts mehr zurückzuholen
+      if (!win.isDestroyed()) {
+        win.removeListener('focus', onFocus)
+        if (win.isMinimized()) win.restore()
+        win.focus()
+      }
     }
   })
   ipcMain.handle('terminal:pickFiles', async (e, defaultPath: unknown) => {

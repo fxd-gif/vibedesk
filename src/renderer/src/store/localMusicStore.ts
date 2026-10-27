@@ -103,6 +103,11 @@ function fadeTo(to: number, done?: () => void): void {
   cancelAnimationFrame(fadeRaf)
   const a = audio
   if (!a) return done?.()
+  // im Tray/minimiert laufen keine Bilder – dann ohne Überblenden, sonst bliebe es hängen
+  if (document.hidden) {
+    a.volume = Math.max(0, Math.min(1, to))
+    return done?.()
+  }
   const from = a.volume
   const start = performance.now()
   const step = (now: number): void => {
@@ -135,7 +140,15 @@ function apply(): void {
       const at = resumeAt
       resumeAt = 0
       a.src = trackUrl(rel)
-      if (at > 0) a.addEventListener('loadedmetadata', () => (a.currentTime = Math.min(at, Math.max(0, (a.duration || at) - 1))), { once: true })
+      // nur für genau diesen Titel – wechselt er vorher (kaputt, schneller Klick), springt der nächste nicht mit
+      if (at > 0)
+        a.addEventListener(
+          'loadedmetadata',
+          () => {
+            if (loadedRel === rel) a.currentTime = Math.min(at, Math.max(0, (a.duration || at) - 1))
+          },
+          { once: true }
+        )
       set({ time: at, duration: 0 })
     }
     if (a.paused) a.play().catch(() => undefined)

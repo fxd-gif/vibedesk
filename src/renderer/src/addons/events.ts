@@ -52,8 +52,16 @@ export function hookTransitions(e: HookEvent, session?: { project?: string; cwd?
   const detail = (cmd || (file ? rel(file, session?.cwd) : '')).slice(0, DETAIL_MAX)
   const out: AddonEvent[] = [{ type: 'tool', tool, ...(detail ? { detail } : {}), ...extra }]
   if (EDIT_TOOLS.has(tool) && file && !/[\\/]\.vibedesk[\\/]brain[\\/]/i.test(file)) out.push({ type: 'file_changed', path: rel(file, session?.cwd), ...extra })
-  if (tool === 'Bash' && /\bgit\s+(?:-\S+\s+)*commit\b/.test(cmd)) out.push({ type: 'commit', message: commitMessage(cmd), ...extra })
+  if (tool === 'Bash' && /\bgit\s+(?:-[Cc]\s+\S+\s+|-\S+\s+)*commit\b/.test(cmd) && commitSucceeded(p.tool_response)) out.push({ type: 'commit', message: commitMessage(cmd), ...extra })
   return out
+}
+
+/** git meldet einen neuen Commit als „[branch abc1234] Nachricht“ – ohne das (nichts zu committen, Hook rot) kein Commit-Ereignis */
+function commitSucceeded(res: unknown): boolean {
+  if (!res || typeof res !== 'object') return true
+  const out = (res as { stdout?: unknown }).stdout
+  if (typeof out !== 'string') return true
+  return /\[[^\]\n]+ [0-9a-f]{7,}\]/.test(out)
 }
 
 export function focusTransition(prev: Phase, next: Phase): AddonEvent | null {
