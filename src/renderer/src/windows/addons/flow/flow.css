@@ -255,3 +255,45 @@ textarea.finput { resize: vertical; line-height: 1.45; }
 .ftmpl-desc { font-size: 12.5px; line-height: 1.5; color: #9aa4ba; flex: 1; }
 .ftmpl-tags { display: flex; flex-wrap: wrap; gap: 5px; }
 .ftmpl-tags i { font-style: normal; font-size: 10.5px; font-weight: 600; padding: 3px 7px; border-radius: 999px; color: color-mix(in srgb, var(--c) 70%, #fff); background: color-mix(in srgb, var(--c) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); }
+
+/* Testmodus: laufender Knoten, Nachglimmen, genommene Kanten */
+.fcanvas .react-flow__node.is-run .fnode { border-color: #b9c5ff; box-shadow: 0 0 0 3px rgba(185, 197, 255, 0.28), 0 10px 26px -12px rgba(0, 0, 0, 0.7), 0 0 30px -4px rgba(185, 197, 255, 0.75); animation: frun 1.6s ease-in-out infinite; }
+.fcanvas .react-flow__node.is-recent .fnode { animation: fglow 1.6s ease-out forwards; }
+@keyframes frun { 50% { box-shadow: 0 0 0 5px rgba(185, 197, 255, 0.16), 0 10px 26px -12px rgba(0, 0, 0, 0.7), 0 0 36px -4px rgba(185, 197, 255, 0.55); } }
+@keyframes fglow {
+  from { border-color: #b9c5ff; box-shadow: 0 0 0 3px rgba(185, 197, 255, 0.24), 0 10px 26px -12px rgba(0, 0, 0, 0.7), 0 0 28px -4px rgba(185, 197, 255, 0.6); }
+}
+.fcanvas .react-flow__edge.is-hot .react-flow__edge-path { animation: fedge 1.2s ease-out forwards; }
+@keyframes fedge {
+  from { stroke-width: 3.4px; filter: drop-shadow(0 0 5px rgba(185, 197, 255, 0.95)); }
+  to { stroke-width: 1.8px; filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fcanvas .react-flow__node.is-run .fnode { animation: none; }
+}
+
+/* „▶ Auslösen“ an Auslöser-Knoten */
+.fnode-fire { position: absolute; top: -11px; right: 10px; z-index: 2; height: 21px; padding: 0 9px; border-radius: 999px; border: 1px solid rgba(185, 197, 255, 0.55); background: #161b2c; color: #dbe3ff; font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.7); }
+.fnode-fire:hover { background: #b9c5ff; border-color: #b9c5ff; color: #121630; }
+.finsp-test .fbtn { align-self: flex-start; margin-bottom: 8px; }
+
+/* Protokoll „Ablauf“ */
+.fdebug { position: absolute; right: 16px; bottom: 16px; z-index: 6; width: min(460px, calc(100% - 240px)); min-width: 240px; border-radius: 11px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(14, 18, 28, 0.95); box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.8); overflow: hidden; }
+.fdebug-head { display: flex; align-items: center; gap: 4px; padding: 0 4px 0 0; }
+.fdebug-head .ficon-btn { width: 26px; height: 26px; }
+.fdebug-toggle { flex: 1; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 0; background: transparent; color: #eef1f8; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; text-align: left; }
+.fdebug-live { width: 7px; height: 7px; border-radius: 50%; background: #b9c5ff; box-shadow: 0 0 8px #b9c5ff; animation: fpulse 1.4s ease-in-out infinite; }
+.fdebug-count { padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); color: #9aa4ba; font-size: 11px; font-variant-numeric: tabular-nums; }
+.fdebug-chev { margin-left: auto; display: grid; color: #69738b; transform: rotate(180deg); transition: transform 0.15s; }
+.fdebug-chev.open { transform: none; }
+.fdebug-list { list-style: none; margin: 0; padding: 4px; max-height: 210px; overflow-y: auto; border-top: 1px solid rgba(255, 255, 255, 0.07); }
+.fdebug-row { width: 100%; display: flex; align-items: baseline; gap: 9px; padding: 4px 8px; border: 0; border-radius: 7px; background: transparent; color: #c9d1e3; font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
+.fdebug-row:hover { background: rgba(159, 184, 255, 0.1); }
+.fdebug-row time { flex-shrink: 0; color: #69738b; font-variant-numeric: tabular-nums; }
+.fdebug-row b { flex-shrink: 0; max-width: 40%; font-weight: 600; color: #eef1f8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fdebug-row span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fdebug-row.tone-trigger span { color: #c4b5fd; }
+.fdebug-row.tone-branch span { color: #a7f3d0; }
+.fdebug-row.tone-stop span { color: #fbbf24; }
+.fdebug-row.tone-error span { color: #f87171; white-space: normal; }
+.fdebug-empty { padding: 8px 10px; font-size: 12px; color: #7c869e; line-height: 1.45; }

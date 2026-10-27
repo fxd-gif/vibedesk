@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { BLOCKS } from '../../../../../shared/addonBlocks'
 import { KINDS, type Cmp, type Cond, type FlowNode, type FlowNodeData, type Val, type ValueSetting } from '../../../addons/flowModel'
 import { APP_GROUPS, CALC, LIST_OPS, OPS, optionLabel, valLabel } from '../../../addons/flowLabels'
+import { eventSummary, sampleEvent } from '../../../addons/flowDebug'
 import { FlowIcon } from './FlowIcon'
 import { t } from '../../../../../shared/i18n'
 
@@ -241,7 +242,8 @@ export function NodeInspector({
   onChange,
   onRemoveCase,
   onDelete,
-  onDuplicate
+  onDuplicate,
+  onFire
 }: {
   node: FlowNode
   ctx: InspectorContext
@@ -249,6 +251,8 @@ export function NodeInspector({
   onRemoveCase(index: number): void
   onDelete(): void
   onDuplicate(): void
+  /** nur im Testmodus bei Auslösern: Beispiel-Ereignis schicken */
+  onFire?: () => void
 }): React.JSX.Element {
   const d = node.data
   const kind = KINDS[d.type]
@@ -336,6 +340,7 @@ export function NodeInspector({
           <div className="finsp-desc">{kind.desc}</div>
         </div>
       </div>
+      {onFire && <FireSection d={d} onFire={onFire} />}
       <div className="finsp-section">
         <h4>{t('Einstellungen')}</h4>
         {Object.keys(spec.fields)
@@ -406,6 +411,20 @@ export function NodeInspector({
           <option key={v} value={v} />
         ))}
       </datalist>
+    </div>
+  )
+}
+
+/** Testmodus: Auslöser mit Beispieldaten von Hand starten */
+function FireSection({ d, onFire }: { d: FlowNodeData; onFire(): void }): React.JSX.Element {
+  const example = eventSummary(sampleEvent(d) ?? undefined)
+  return (
+    <div className="finsp-section finsp-test">
+      <h4>{t('Test')}</h4>
+      <button className="fbtn" onClick={onFire} data-testid="insp-fire">
+        <FlowIcon name="play" size={13} /> {t('Auslösen')}
+      </button>
+      <p className="ffield-hint">{example ? t('Schickt ein Beispiel-Ereignis an diesen Auslöser: {example}', { example }) : t('Schickt ein Beispiel-Ereignis an diesen Auslöser')}</p>
     </div>
   )
 }

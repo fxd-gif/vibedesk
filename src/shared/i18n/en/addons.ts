@@ -367,7 +367,26 @@ const dict: Record<string, string> = {
   'Keine Claude-Session offen – öffne eine oder nutze „Session öffnen“.': 'No Claude session open – open one or use “Open session”.',
   'Listen-Speicher voll (max. 20.000 Einträge über alle Listen)': 'List storage full (max. 20,000 entries across all lists)',
   'Speichern: {error}': 'Saving: {error}',
-  'Test im Maker': 'Test in the maker'
+  'Test im Maker': 'Test in the maker',
+  // Maker: Ablauf beim Testen
+  'ausgelöst – {detail}': 'triggered – {detail}',
+  'ausgelöst': 'triggered',
+  'läuft': 'running',
+  'durchgelassen': 'let through',
+  'gestoppt (noch {n} s)': 'stopped ({n} s left)',
+  'Fall „{value}“': 'case “{value}”',
+  'Gelöschter Knoten': 'Deleted node',
+  'Beispiel: Knopf repariert': 'Example: fix button',
+  'Ablauf einklappen': 'Collapse run log',
+  'Ablauf aufklappen': 'Expand run log',
+  'Ablauf': 'Run log',
+  'Ablauf leeren': 'Clear run log',
+  'Noch nichts gelaufen. Löse einen Auslöser mit „▶ Auslösen“ aus oder warte auf das Ereignis.': 'Nothing has run yet. Fire a trigger with “▶ Fire” or wait for the event.',
+  'Knoten auswählen': 'Select node',
+  'Schickt ein Beispiel-Ereignis an diesen Auslöser': 'Sends a sample event to this trigger',
+  'Schickt ein Beispiel-Ereignis an diesen Auslöser: {example}': 'Sends a sample event to this trigger: {example}',
+  'Auslösen': 'Fire',
+  'Neuer Auslöser – starte den Test neu, damit er mitläuft': 'New trigger – restart the test so it runs along'
 }
 
 export default dict

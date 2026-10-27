@@ -56,6 +56,21 @@ export type AddonEvent =
   | { type: 'preview_error'; text: string }
   | { type: 'commit'; message: string; project?: string; session?: string }
 
+/** Ablauf-Spur für den Test im Maker: Auslöser, Knoten betreten/verlassen, Entscheidungen, Fehler */
+export type TracePhase = 'trigger' | 'enter' | 'decide' | 'leave' | 'error'
+export interface TraceInfo {
+  /** bei „trigger“: das auslösende Ereignis */
+  event?: AddonEvent
+  /** bei „decide“: genommener Ausgang (yes/no, caseN/default) */
+  branch?: string
+  /** bei „decide“ der Drossel: durchgelassen? und sonst die Restzeit */
+  passed?: boolean
+  waitMs?: number
+  /** bei „error“ */
+  message?: string
+}
+export type TraceHook = (blockId: string, phase: TracePhase, info?: TraceInfo) => void
+
 export interface Clock {
   now(): number
   sleep(ms: number, signal: AbortSignal): Promise<void>
@@ -234,9 +249,22 @@ export class AddonRunner {
       clock: Clock
       storage?: AddonStorage
       onError(msg: string): void
+      /** nur im Test-Runner des Makers gesetzt – ohne Hook kostet die Spur nichts */
+      onStep?: TraceHook
     }
   ) {
     this.storage = opts.storage ?? memoryStorage()
+  }
+
+  /** Spur melden – nur mit Hook und Block-ID; ein Fehler im Hook darf den Ablauf nicht stören */
+  private trace(b: BlocklyBlock, phase: TracePhase, info?: TraceInfo): void {
+    const hook = this.opts.onStep
+    if (!hook || !b.id) return
+    try {
+      hook(b.id, phase, info)
+    } catch {
+      // Anzeige-Fehler ignorieren
+    }
   }
 
   get running(): number {
@@ -305,13 +333,26 @@ export class AddonRunner {
     for (const hat of this.hats) {
       if (!this.matches(hat, e)) continue
       if (this._running >= LIMITS.maxScripts) break
-      out.push(this.runScript(input(hat, 'DO'), { event: e, session: 'session' in e ? e.session : undefined }))
+      out.push(this.start(hat, e))
     }
     return out
   }
 
+  private start(hat: BlocklyBlock, e: AddonEvent): Promise<void> {
+    this.trace(hat, 'trigger', { event: e })
+    return this.runScript(input(hat, 'DO'), { event: e, session: 'session' in e ? e.session : undefined })
+  }
+
   emit(e: AddonEvent): void {
     void this.launch(e)
+  }
+
+  /** Test im Maker: genau diesen Auslöser mit einem Beispiel-Ereignis starten (ohne Filter wie Dateimuster). */
+  fire(hatId: string, e: AddonEvent): boolean {
+    const hat = this.hats.find((b) => b.id === hatId)
+    if (this.stopped || !hat || this._running >= LIMITS.maxScripts) return false
+    void this.start(hat, e)
+    return true
   }
 
   stop(): void {
@@ -390,7 +431,27 @@ export class AddonRunner {
       if (this.ctrl.signal.aborted) throw new Aborted()
       // Alle paar hundert Schritte die Kontrolle an die App zurückgeben, damit nichts einfriert
       if (++this.steps % LIMITS.yieldEvery === 0) await this.sleep(0)
+      if (this.opts.onStep) await this.execTraced(b, ctx)
+      else await this.exec(b, ctx)
+    }
+  }
+
+  /** Fehler, die schon an ihrem Knoten gemeldet wurden – die umschließenden Knoten melden sie nicht noch einmal */
+  private readonly tracedErrors = new WeakSet<object>()
+
+  private async execTraced(b: BlocklyBlock, ctx: Ctx): Promise<void> {
+    this.trace(b, 'enter')
+    try {
       await this.exec(b, ctx)
+    } catch (e) {
+      const real = !(e instanceof Aborted) && !(e instanceof GateClosed) && !this.ctrl.signal.aborted
+      if (real && !(e instanceof Object && this.tracedErrors.has(e))) {
+        if (e instanceof Object) this.tracedErrors.add(e)
+        this.trace(b, 'error', { message: e instanceof Error ? e.message : String(e) })
+      }
+      throw e
+    } finally {
+      this.trace(b, 'leave')
     }
   }
 
@@ -460,8 +521,12 @@ export class AddonRunner {
       }
       case 'controls_if': {
         for (const i of numberedInputs(b, 'IF')) {
-          if (isTrue(await val(`IF${i}`))) return this.execStack(input(b, `DO${i}`), ctx)
+          if (isTrue(await val(`IF${i}`))) {
+            this.trace(b, 'decide', { branch: i === 0 ? 'yes' : `if${i}` })
+            return this.execStack(input(b, `DO${i}`), ctx)
+          }
         }
+        this.trace(b, 'decide', { branch: 'no' })
         return this.execStack(input(b, 'ELSE'), ctx)
       }
       case 'variables_set':
@@ -475,8 +540,12 @@ export class AddonRunner {
       case 'vd_switch': {
         const v = await val('VALUE')
         for (const i of numbered(Object.keys(b.fields ?? {}), 'V')) {
-          if (same(v, String(field(b, `V${i}`) ?? ''))) return this.execStack(input(b, `CASE${i}`), ctx)
+          if (same(v, String(field(b, `V${i}`) ?? ''))) {
+            this.trace(b, 'decide', { branch: `case${i}` })
+            return this.execStack(input(b, `CASE${i}`), ctx)
+          }
         }
+        this.trace(b, 'decide', { branch: 'default' })
         return this.execStack(input(b, 'DEFAULT'), ctx)
       }
       case 'vd_store_set': {
@@ -512,6 +581,7 @@ export class AddonRunner {
         const yes = String(field(b, 'YES_LABEL') ?? 'Ja').slice(0, 24) || 'Ja'
         const no = String(field(b, 'NO_LABEL') ?? 'Nein').slice(0, 24) || 'Nein'
         const ok = await this.abortable(a.ask(text, yes, no))
+        this.trace(b, 'decide', { branch: ok ? 'yes' : 'no' })
         return this.execStack(input(b, ok ? 'DO_YES' : 'DO_NO'), ctx)
       }
 
@@ -581,8 +651,12 @@ export class AddonRunner {
         const gap = clamp(toNum(await val('SECONDS')), 0, 86_400) * 1000
         const now = this.opts.clock.now()
         const last = this.gates.get(key)
-        if (last !== undefined && now - last < gap) throw new GateClosed()
+        if (last !== undefined && now - last < gap) {
+          this.trace(b, 'decide', { passed: false, waitMs: gap - (now - last) })
+          throw new GateClosed()
+        }
         this.gates.set(key, now)
+        this.trace(b, 'decide', { passed: true })
         return
       }
       case 'vd_list_add': {

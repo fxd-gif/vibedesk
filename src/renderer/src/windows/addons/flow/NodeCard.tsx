@@ -1,8 +1,9 @@
-import { memo } from 'react'
+import { memo, useContext } from 'react'
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { isTrigger, KINDS, outputsOf, type FlowNodeData } from '../../../addons/flowModel'
 import { HANDLE_LABELS, summarize } from '../../../addons/flowLabels'
 import { FlowIcon } from './FlowIcon'
+import { FlowTest } from './DebugLog'
 import { t } from '../../../../../shared/i18n'
 
 const SIDE = new Set(['next', 'body'])
@@ -17,8 +18,9 @@ function outLabel(d: FlowNodeData, h: string): string {
 }
 
 /** Kartenknoten im Neon-Stil: Icon-Kachel, Titel, Kurzfassung; Anschlüsse je nach Typ. */
-export const NodeCard = memo(function NodeCard({ data, selected }: NodeProps): React.JSX.Element {
+export const NodeCard = memo(function NodeCard({ id, data, selected }: NodeProps): React.JSX.Element {
   const d = data as FlowNodeData
+  const test = useContext(FlowTest)
   const kind = KINDS[d.type]
   const sub = summarize(d)
   const isText = ['vd_show_notice', 'vd_copy_text', 'vd_ask'].includes(d.type) && d.values.TEXT?.k === 'text'
@@ -30,6 +32,19 @@ export const NodeCard = memo(function NodeCard({ data, selected }: NodeProps): R
   return (
     <div className={`fnode cat-${kind.category}${selected ? ' sel' : ''}${footer.length ? ' fnode-branch' : ''}`} style={{ width }} data-testid={`fnode-${d.type}`}>
       {!isTrigger(d.type) && <Handle type="target" position={Position.Top} className="fh fh-in" />}
+      {test && isTrigger(d.type) && (
+        <button
+          className="fnode-fire nodrag nopan"
+          title={t('Schickt ein Beispiel-Ereignis an diesen Auslöser')}
+          onClick={(e) => {
+            e.stopPropagation()
+            test.fire(id)
+          }}
+          data-testid="fnode-fire"
+        >
+          ▶ {t('Auslösen')}
+        </button>
+      )}
       <div className="fnode-main">
         <div className="fnode-icon">
           <FlowIcon name={kind.icon} size={20} />

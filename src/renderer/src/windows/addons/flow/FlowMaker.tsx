@@ -18,8 +18,10 @@ import { ADDON_SCHEME, type AddonPackage } from '../../../../../shared/addonForm
 import { sniffAsset } from '../../../../../shared/addonValidate'
 import { useAddons } from '../../../store/addonStore'
 import { alert } from '../../../store/dialogStore'
-import { canConnect, graphToProgram, KINDS, newNode, outputsOf, programToGraph, unreachable, type FlowEdge, type FlowNode, type FlowNodeData, type Handle, type Val } from '../../../addons/flowModel'
-import { AddonRunner, realClock } from '../../../addons/interpreter'
+import { canConnect, graphToProgram, isTrigger, KINDS, newNode, outputsOf, programToGraph, unreachable, type FlowEdge, type FlowNode, type FlowNodeData, type Handle, type Val } from '../../../addons/flowModel'
+import { AddonRunner, realClock, type TraceHook } from '../../../addons/interpreter'
+import { applyStep, emptyDebug, expireDebug, sampleEvent, type DebugGraph } from '../../../addons/flowDebug'
+import { useSessions } from '../../../store/sessionStore'
 import { createActions } from '../../../addons/actions'
 import { addonStorage, pauseForTest, setTestRunner } from '../../../addons/runtime'
 import { NodeCard } from './NodeCard'
@@ -27,6 +29,7 @@ import { Palette, DRAG_TYPE } from './Palette'
 import { NodeInspector, type InspectorContext } from './Inspector'
 import { AddonMeta, type Meta } from './AddonMeta'
 import { FlowIcon } from './FlowIcon'
+import { DebugLog, FlowTest } from './DebugLog'
 import { TEMPLATES, templateGraph } from '../../../addons/templates'
 import { t } from '../../../../../shared/i18n'
 import './flow.css'
@@ -86,8 +89,23 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
   const [testing, setTesting] = useState(false)
   const [status, setStatus] = useState<{ kind: 'saved' | 'dirty' | 'saving' | 'error'; text: string }>({ kind: 'saved', text: t('Gespeichert') })
   const [dirty, setDirty] = useState(0)
-  const { screenToFlowPosition } = useReactFlow()
+  const { screenToFlowPosition, setCenter, getZoom } = useReactFlow()
   const canvas = useRef<HTMLDivElement>(null)
+
+  // ---------- Testmodus: Ablauf sichtbar machen ----------
+  const runner = useRef<AddonRunner | null>(null)
+  const debug = useRef(emptyDebug())
+  const [debugRev, setDebugRev] = useState(0)
+  const frame = useRef(0)
+  /** höchstens ein Neuzeichnen pro Bild, auch wenn der Ablauf viele Schritte macht */
+  const redraw = useCallback(() => {
+    if (frame.current) return
+    frame.current = requestAnimationFrame(() => {
+      frame.current = 0
+      setDebugRev((r) => r + 1)
+    })
+  }, [])
+  useEffect(() => () => cancelAnimationFrame(frame.current), [])
 
   const latest = useRef({ nodes, edges, meta })
   latest.current = { nodes, edges, meta }
@@ -155,6 +173,7 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
     })()
     return () => {
       cancelled = true
+      runner.current = null
       setTestRunner(null)
     }
   }, [editId, templateId, setNodes, setEdges])
@@ -338,8 +357,18 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
     setDirty((d) => d + 1)
   }
 
+  const stopDebug = (): void => {
+    runner.current = null
+    const s = debug.current
+    s.active.clear()
+    s.recent.clear()
+    s.hot.clear()
+    redraw()
+  }
+
   const toggleTest = async (): Promise<void> => {
     if (testing) {
+      stopDebug()
       setTestRunner(null)
       setTesting(false)
       return
@@ -349,8 +378,51 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
     if (!(await save())) return void setTestRunner(null)
     const p = await build()
     if (!p) return void setTestRunner(null)
-    setTestRunner(new AddonRunner({ program: p.program, prompts: p.manifest.prompts, actions: createActions(id, p.manifest.name), clock: realClock, storage: addonStorage(id), onError: (m) => setStatus({ kind: 'error', text: t('Fehler: {error}', { error: m }) }) }), id)
+    debug.current = emptyDebug()
+    const graph: DebugGraph = {
+      node: (nid) => latest.current.nodes.find((n) => n.id === nid)?.data,
+      inEdge: (nid) => latest.current.edges.find((e) => e.target === nid)?.id
+    }
+    let self: AddonRunner | null = null
+    // Schritte eines alten Test-Runners (nach Stopp oder Neustart) zählen nicht mehr
+    const onStep: TraceHook = (nid, phase, info) => {
+      if (!self || runner.current !== self) return
+      applyStep(debug.current, graph, nid, phase, info, Date.now())
+      redraw()
+    }
+    const r = new AddonRunner({ program: p.program, prompts: p.manifest.prompts, actions: createActions(id, p.manifest.name), clock: realClock, storage: addonStorage(id), onError: (m) => setStatus({ kind: 'error', text: t('Fehler: {error}', { error: m }) }), onStep })
+    self = r
+    runner.current = r
+    setTestRunner(r, id)
     setTesting(true)
+    redraw()
+  }
+
+  /** „▶ Auslösen“: Beispiel-Ereignis an genau diesen Auslöser im laufenden Test */
+  const fire = useCallback((nodeId: string) => {
+    const n = latest.current.nodes.find((x) => x.id === nodeId)
+    const r = runner.current
+    if (!n || !r) return
+    const e = sampleEvent(n.data, { project: useSessions.getState().sessions[0]?.name })
+    if (!e) return
+    if (!r.fire(nodeId, e)) setStatus({ kind: 'dirty', text: t('Neuer Auslöser – starte den Test neu, damit er mitläuft') })
+  }, [])
+  const testCtx = useMemo(() => (testing ? { fire } : null), [testing, fire])
+
+  // Nachglimmen auslaufen lassen
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (expireDebug(debug.current, Date.now())) setDebugRev((r) => r + 1)
+    }, 200)
+    return () => clearInterval(timer)
+  }, [])
+
+  /** Klick im Protokoll: Knoten auswählen und in die Mitte holen */
+  const pickNode = (nodeId: string): void => {
+    const n = latest.current.nodes.find((x) => x.id === nodeId)
+    if (!n) return
+    setNodes((ns) => ns.map((x) => ({ ...x, selected: x.id === nodeId })))
+    void setCenter(n.position.x + (n.measured?.width ?? NODE_W) / 2, n.position.y + (n.measured?.height ?? 70) / 2, { duration: 250, zoom: Math.max(0.8, getZoom()) })
   }
 
   const exportFile = async (): Promise<void> => {
@@ -365,15 +437,24 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
 
   // ---------- Darstellung ----------
   const dim = useMemo(() => unreachable(nodes.map(fromRF), toFlowEdges(edges)), [nodes, edges])
-  const shownNodes = useMemo(() => nodes.map((n) => (dim.has(n.id) ? { ...n, className: 'is-dim' } : n)), [nodes, dim])
+  const shownNodes = useMemo(() => {
+    void debugRev
+    const { active, recent } = debug.current
+    return nodes.map((n) => {
+      const cls = [dim.has(n.id) && 'is-dim', active.has(n.id) ? 'is-run' : recent.has(n.id) && 'is-recent'].filter(Boolean).join(' ')
+      return cls ? { ...n, className: cls } : n
+    })
+  }, [nodes, dim, debugRev])
   const shownEdges = useMemo(() => {
+    void debugRev
+    const { hot } = debug.current
     const cat = new Map(nodes.map((n) => [n.id, KINDS[n.data.type].category]))
     return edges.map((e) => {
       const color = HANDLE_COLOR[e.sourceHandle as Handle] ?? CAT_COLOR[cat.get(e.source) ?? 'action']
-
-      return { ...e, style: { stroke: color, strokeWidth: 1.8 }, className: dim.has(e.target) ? 'is-dim' : '' }
+      const cls = [dim.has(e.target) && 'is-dim', hot.has(e.id) && 'is-hot'].filter(Boolean).join(' ')
+      return { ...e, style: { stroke: color, strokeWidth: 1.8 }, className: cls }
     })
-  }, [edges, nodes, dim])
+  }, [edges, nodes, dim, debugRev])
   const selected = nodes.filter((n) => n.selected)
   const one = selected.length === 1 ? selected[0] : null
 
@@ -436,32 +517,45 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
           }}
         >
           {loaded && (
-            <ReactFlow
-              nodes={shownNodes}
-              edges={shownEdges}
-              nodeTypes={NODE_TYPES}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              isValidConnection={isValidConnection}
-              onNodeDragStop={() => commit()}
-              onNodesDelete={() => commit()}
-              onEdgesDelete={() => commit()}
-              deleteKeyCode={['Delete', 'Backspace']}
-              colorMode="dark"
-              fitView
-              fitViewOptions={{ padding: 0.15, maxZoom: 1 }}
-              minZoom={0.2}
-              maxZoom={1.8}
-              snapToGrid
-              snapGrid={[10, 10]}
-              proOptions={{ hideAttribution: true }}
-              defaultEdgeOptions={{ type: 'default' }}
-              connectionLineStyle={{ stroke: '#9fb8ff', strokeWidth: 1.8 }}
-            >
-              <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="rgba(255,255,255,0.09)" />
-              <ZoomBar onUndo={() => restore('undo')} onRedo={() => restore('redo')} canUndo={h.past.length > 0} canRedo={h.future.length > 0} />
-            </ReactFlow>
+            <FlowTest.Provider value={testCtx}>
+              <ReactFlow
+                nodes={shownNodes}
+                edges={shownEdges}
+                nodeTypes={NODE_TYPES}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                isValidConnection={isValidConnection}
+                onNodeDragStop={() => commit()}
+                onNodesDelete={() => commit()}
+                onEdgesDelete={() => commit()}
+                deleteKeyCode={['Delete', 'Backspace']}
+                colorMode="dark"
+                fitView
+                fitViewOptions={{ padding: 0.15, maxZoom: 1 }}
+                minZoom={0.2}
+                maxZoom={1.8}
+                snapToGrid
+                snapGrid={[10, 10]}
+                proOptions={{ hideAttribution: true }}
+                defaultEdgeOptions={{ type: 'default' }}
+                connectionLineStyle={{ stroke: '#9fb8ff', strokeWidth: 1.8 }}
+              >
+                <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="rgba(255,255,255,0.09)" />
+                <ZoomBar onUndo={() => restore('undo')} onRedo={() => restore('redo')} canUndo={h.past.length > 0} canRedo={h.future.length > 0} />
+              </ReactFlow>
+            </FlowTest.Provider>
+          )}
+          {(testing || debug.current.log.length > 0) && (
+            <DebugLog
+              log={debug.current.log}
+              testing={testing}
+              onPick={pickNode}
+              onClear={() => {
+                debug.current.log = []
+                setDebugRev((r) => r + 1)
+              }}
+            />
           )}
         </div>
         <aside className="fside">
@@ -474,6 +568,7 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
               onRemoveCase={(i) => removeCase(one.id, i)}
               onDelete={() => removeNode(one.id)}
               onDuplicate={() => duplicate(one.id)}
+              onFire={testing && isTrigger(one.data.type) ? () => fire(one.id) : undefined}
             />
           ) : (
             <AddonMeta meta={meta} onChange={setMetaDirty} />
