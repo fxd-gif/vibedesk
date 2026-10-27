@@ -57,6 +57,7 @@ import type { LivingScene, LivingStatus } from './living'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { PlanLimits } from './limits'
 import type { DevScript } from './devScript'
+import type { DiagnosticsInfo } from './diagnostics'
 import type { CustomTheme, DeskCommand } from './desk'
 import type { SessionHandoff } from './handoff'
 import type { CompanionDevice, CompanionPairing, CompanionSettings, CompanionSnapshot, CompanionStatus, PromptTarget, TermChunk, TermQuery } from './companion'
@@ -435,6 +436,8 @@ export interface VibedeskApi {
     reportBug(summary?: string): void
     openLog(): void
     info(): Promise<AppInfo>
+    /** Diagnose: Versionen, Hook-Server, Module, Speicher und Ende des Fehlerprotokolls */
+    diagnostics(): Promise<DiagnosticsInfo>
     /** Kein Standby (Bildschirm darf aus), solange VibeDesk nach dem Limit von selbst weitermachen will */
     keepAwake(on: boolean): void
   }

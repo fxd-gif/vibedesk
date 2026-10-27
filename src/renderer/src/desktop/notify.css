@@ -76,6 +76,12 @@
 .about-card dt { color: var(--text-dim); }
 .about-card dd { margin: 0; font-family: var(--mono); font-size: 12px; }
 .about-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+/* Diagnose: breiter, scrollt statt aus dem Bild zu wachsen */
+.about-card.wide { width: min(620px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow-y: auto; }
+.about-diag { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--glass-border); }
+.about-diag dl { margin-top: 0; }
+.about-diag dd { overflow-wrap: anywhere; }
+.about-log { max-height: 180px; overflow: auto; margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(0, 0, 0, .3); font-family: var(--mono); font-size: 11px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-dim); }
 
 /* Ruhe-Budget: weitere Karten hinter einem kleinen Knopf */
 .ntoast-more { align-self: flex-end; padding: 5px 12px; border-radius: 999px; background: rgba(14, 18, 26, .8); border: 1px solid var(--glass-border); color: var(--text-dim); font: inherit; font-size: 12px; cursor: pointer; backdrop-filter: blur(18px); }

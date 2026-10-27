@@ -41,6 +41,7 @@ const api: VibedeskApi = {
     reportBug: (summary) => ipcRenderer.send('app:reportBug', summary),
     openLog: () => ipcRenderer.send('app:openLog'),
     info: () => ipcRenderer.invoke('app:info'),
+    diagnostics: () => ipcRenderer.invoke('app:diagnostics'),
     keepAwake: (on) => ipcRenderer.send('app:keepAwake', on)
   },
   sessions: {

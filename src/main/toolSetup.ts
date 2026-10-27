@@ -37,6 +37,9 @@ export function parseNodeVersion(out: string | null): string | null {
   return out ? (/v?(\d+\.\d+\.\d+)/.exec(out)?.[1] ?? null) : null
 }
 
+/** Node.js auf dem System (nicht das in Electron) */
+export const systemNodeVersion = (): Promise<string | null> => run('node', ['--version']).then(parseNodeVersion)
+
 const readJson = async (file: string): Promise<unknown> => {
   try {
     return JSON.parse(await fs.readFile(file, 'utf8'))
@@ -56,7 +59,7 @@ export async function checkClaudeLogin(env: NodeJS.ProcessEnv = process.env, hom
 export async function checkTools(): Promise<ToolStatus> {
   await refreshPath()
   const [node, claude, winget, login] = await Promise.all([
-    run('node', ['--version']).then(parseNodeVersion),
+    systemNodeVersion(),
     process.env.VIBEDESK_CLAUDE_CMD ? Promise.resolve('Test') : claudeVersion(),
     run('where', ['winget']).then((x) => x !== null),
     checkClaudeLogin()

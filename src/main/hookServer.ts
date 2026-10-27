@@ -23,6 +23,10 @@ export type PermissionHandler = (e: HookEvent) => { reply: Promise<string>; canc
 /** Lokaler HTTP-Endpunkt für Claude-Code-Hooks (nur 127.0.0.1, Token-geschützt). */
 export class HookServer {
   private server: http.Server | null = null
+  private port: number | null = null
+  /** für die Diagnose: empfangene Hook-Ereignisse (ohne Statuszeile) */
+  private events = 0
+  private lastEventAt: number | null = null
 
   constructor(
     private token: string,
@@ -36,7 +40,10 @@ export class HookServer {
     this.server = server
     return new Promise((resolve, reject) => {
       server.once('error', reject)
-      server.listen(0, '127.0.0.1', () => resolve((server.address() as AddressInfo).port))
+      server.listen(0, '127.0.0.1', () => {
+        this.port = (server.address() as AddressInfo).port
+        resolve(this.port)
+      })
     })
   }
 
@@ -46,7 +53,13 @@ export class HookServer {
       this.server.close(() => resolve())
       this.server.closeAllConnections()
       this.server = null
+      this.port = null
     })
+  }
+
+  /** Stand für das Diagnose-Fenster */
+  stats(): { running: boolean; port: number | null; events: number; lastEventAt: number | null } {
+    return { running: !!this.server?.listening, port: this.port, events: this.events, lastEventAt: this.lastEventAt }
   }
 
   private tokenOk(given: string | string[] | undefined): boolean {
@@ -93,6 +106,11 @@ export class HookServer {
       const payload = body.payload as Record<string, unknown>
       const name = typeof payload.hook_event_name === 'string' ? payload.hook_event_name : 'unknown'
       const event: HookEvent = { sessionId: body.sessionId, name, payload, ts: Date.now() }
+      // Die Statuszeile meldet sich ständig – sie würde verdecken, wenn echte Hooks ausbleiben
+      if (name !== 'StatusLine') {
+        this.events++
+        this.lastEventAt = event.ts
+      }
       let out: HookReply
       try {
         out = this.onEvent(event)

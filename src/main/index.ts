@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, Menu, net, protocol, session, shell } from 'electron'
 import { pathToFileURL } from 'url'
-import { errorLogFile, installErrorLog, logError, registerErrorIpc } from './errorLog'
+import { errorLogFile, installErrorLog, logError, registerDiagnosticsIpc, registerErrorIpc } from './errorLog'
 import '../shared/i18n/en'
 import { resolveLang, setLang, t } from '../shared/i18n'
 import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
@@ -414,6 +414,13 @@ app.whenReady().then(async () => {
     brain: { mcpPath: resource('brain-mcp.js'), enabled: () => settings.get().brainOn },
     statusLine: { path: resource('statusline.js'), configDir: process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude') },
     endpointFile
+  })
+  registerDiagnosticsIpc({
+    claudeVersion,
+    gitTools: () => gitService.tools(),
+    hooks: () => hookServer.stats(),
+    sessions: () => sessions.list().length,
+    settings: () => settings.get()
   })
   const output = new OutputBatcher((id, d) => send('session:data', id, d))
   sessions.on('data', (id, d) => output.push(id, d))

@@ -1,10 +1,13 @@
 // Lokales Fehlerprotokoll: nichts verlässt den Rechner – „Fehler melden“ hängt es auf Wunsch an ein GitHub-Issue.
-import { app, ipcMain, shell } from 'electron'
+import { app, ipcMain, powerMonitor, shell } from 'electron'
 import fs from 'fs'
 import os from 'os'
 import { join } from 'path'
-import { bugReportUrl } from '../shared/bugReport'
-import type { AppInfo } from '../shared/types'
+import { bugReportUrl, scrubPaths } from '../shared/bugReport'
+import { logTail, type DiagnosticsInfo, type GhState } from '../shared/diagnostics'
+import type { GitTools } from '../shared/git'
+import type { AppInfo, Settings } from '../shared/types'
+import { systemNodeVersion } from './toolSetup'
 
 const MAX_BYTES = 256 * 1024
 
@@ -69,4 +72,47 @@ export function registerErrorIpc(claudeVersion: () => Promise<string | null>): v
     claude: await claudeVersion(),
     hasErrors: readErrorLog(10).length > 0
   }))
+}
+
+export interface DiagnosticsDeps {
+  claudeVersion(): Promise<string | null>
+  gitTools(): Promise<GitTools>
+  hooks(): DiagnosticsInfo['hooks']
+  sessions(): number
+  settings(): Settings
+}
+
+/** Wartet höchstens ms – die GitHub-CLI fragt bei der Anmeldung manchmal lange nach */
+const within = <T>(p: Promise<T>, ms: number): Promise<T | null> =>
+  Promise.race([p.catch(() => null), new Promise<null>((r) => setTimeout(() => r(null), ms))])
+
+/** Diagnose: alles, was hilft herauszufinden, woran es hakt – Pfade im Protokoll unkenntlich */
+export function registerDiagnosticsIpc(d: DiagnosticsDeps): void {
+  ipcMain.handle('app:diagnostics', async (): Promise<DiagnosticsInfo> => {
+    const [claude, systemNode, tools] = await Promise.all([d.claudeVersion(), systemNodeVersion(), within(d.gitTools(), 8000)])
+    const s = d.settings()
+    const kb = app.getAppMetrics().reduce((sum, m) => sum + (m.memory?.workingSetSize ?? 0), 0)
+    const gh: GhState = tools ? tools.gh : 'unknown'
+    return {
+      versions: {
+        vibedesk: app.getVersion(),
+        electron: process.versions.electron,
+        chrome: process.versions.chrome,
+        node: process.versions.node,
+        os: osLabel(),
+        claude,
+        systemNode,
+        git: tools?.git ?? null,
+        gh
+      },
+      hooks: d.hooks(),
+      sessions: d.sessions(),
+      brainOn: s.brainOn,
+      companionOn: !!s.companion?.enabled,
+      memoryMb: Math.round(kb / 1024),
+      energySaver: s.energySaver ?? 'auto',
+      onBattery: powerMonitor.isOnBatteryPower(),
+      log: scrubPaths(logTail(readErrorLog(20000)))
+    }
+  })
 }
