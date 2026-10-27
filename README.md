@@ -166,6 +166,8 @@ Claude can see your other sessions and hand them tasks, check usage and limits, 
 - **Dictate and snip:** talk to Claude through Windows voice typing, or send a screen snip as an image
 - **Brain from your docs:** turn `CLAUDE.md`, `AGENTS.md` and the README into linked starter notes – instantly, without tokens
 - **Addons:** new triggers (file changed, tool used, commit, preview error) and a flow debugger that lights up the running step
+- **Share living scenes:** send a scene Claude built for you as a share code – your friends get a live preview first
+- **Gemini CLI and Codex (beta):** start a session with another agent in the same calm desktop, with its own status dot
 - **Diagnostics, performance meter and a scene that follows the time of day**
 
 </details>

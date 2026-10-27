@@ -166,6 +166,8 @@ Claude sieht deine anderen Sessions und schickt ihnen Aufträge, fragt Verbrauch
 - **Diktieren und Ausschneiden:** Sprich mit Claude über die Windows-Spracheingabe oder schick einen Bildschirmausschnitt als Bild
 - **Gehirn aus deinen Dokumenten:** `CLAUDE.md`, `AGENTS.md` und README werden sofort und ohne Tokens zu verlinkten Startnotizen
 - **Addons:** neue Auslöser (Datei geändert, Werkzeug benutzt, Commit, Fehler in der Vorschau) und ein Flow-Debugger, der den laufenden Schritt zeigt
+- **Lebende Szenen teilen:** Schick eine Szene, die Claude für dich gebaut hat, als Share-Code – deine Freunde sehen vorher eine Live-Vorschau
+- **Gemini CLI und Codex (Beta):** Starte eine Session mit einem anderen Agenten im selben ruhigen Desktop, mit eigenem Status-Punkt
 - **Diagnose, Leistungsanzeige und eine Szene, die der Tageszeit folgt**
 
 </details>
