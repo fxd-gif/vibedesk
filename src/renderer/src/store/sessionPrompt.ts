@@ -7,6 +7,7 @@ import type { SessionStatus } from '../../../shared/types'
 import { termWin, useSessions } from './sessionStore'
 import { useUi } from './uiStore'
 import { useWorkflow } from './workflowStore'
+import { relayed } from './screenRelay'
 
 const READY_TIMEOUT_MS = 20_000
 /** Claude Code braucht nach dem ersten Hook noch einen Moment, bis die Eingabe steht */
@@ -54,6 +55,8 @@ export function sendToSession(sessionId: string, text: string, focus = true): vo
 }
 
 export async function promptProject(projectId: string, text: string): Promise<boolean> {
+  // im Zweitfenster: Sessions gehören dem Hauptfenster
+  if (relayed({ kind: 'prompt', projectId, text })) return true
   const id = await ensureSession(projectId)
   if (!id) return false
   sendToSession(id, text)

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { WindowRect } from '../../../shared/types'
 import { arrange, restoreRects } from '../desktop/layout'
+import { relayed } from './screenRelay'
 
 export const DOCK_H = 84
 
@@ -50,15 +51,19 @@ export const useUi = create<UiState>((set, get) => ({
   rects: {},
   zen: null,
   used: {},
-  initRects: (rects) => set({ rects: restoreRects(rects, screen(), DOCK_H) }),
-  openWin: (id, fallback) =>
+  // schon vorhandene Plätze (z. B. ein Fenster, das vom zweiten Bildschirm zurückkam) bleiben
+  initRects: (rects) => set((s) => ({ rects: { ...s.rects, ...restoreRects(rects, screen(), DOCK_H) } })),
+  openWin: (id, fallback) => {
+    // liegt das Fenster auf dem anderen Bildschirm, wird es dort nach vorn geholt
+    if (relayed({ kind: 'open', id })) return
     set((s) => ({
       open: [...s.open.filter((x) => x !== id), id],
       minimized: s.minimized.filter((x) => x !== id),
       rects: s.rects[id] ? s.rects : { ...s.rects, [id]: fallback ?? centeredRect(560, 420) },
       used: { ...s.used, [id]: Date.now() },
       zen: zenAfter(s.zen, id)
-    })),
+    }))
+  },
   closeWin: (id) =>
     set((s) => ({
       open: s.open.filter((x) => x !== id),
@@ -72,12 +77,14 @@ export const useUi = create<UiState>((set, get) => ({
     else s.openWin(id, fallback)
   },
   minimize: (id) => set((s) => ({ minimized: [...s.minimized.filter((x) => x !== id), id] })),
-  focus: (id) =>
+  focus: (id) => {
+    if (relayed({ kind: 'focus', id })) return
     set((s) =>
       s.open.includes(id)
         ? { open: [...s.open.filter((x) => x !== id), id], minimized: s.minimized.filter((x) => x !== id), used: { ...s.used, [id]: Date.now() }, zen: zenAfter(s.zen, id) }
         : s
-    ),
+    )
+  },
   setRect: (id, r) => set((s) => ({ rects: { ...s.rects, [id]: r } })),
   setZen: (id) => set((s) => (id ? { zen: id, open: [...s.open.filter((x) => x !== id), id], minimized: s.minimized.filter((x) => x !== id) } : { zen: null })),
   tidy: (kindOf, idleMs) => {

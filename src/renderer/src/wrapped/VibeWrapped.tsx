@@ -5,6 +5,7 @@ import { api } from '../api'
 import type { VibeWeek } from '../../../shared/types'
 import { inform } from '../store/notifyStore'
 import { useSettings } from '../store/settingsStore'
+import { relayed } from '../store/screenRelay'
 import { fmtActive, wrappedDue } from './wrappedMath'
 import './wrapped.css'
 import { t, tn } from '../../../shared/i18n'
@@ -12,6 +13,7 @@ import { t, tn } from '../../../shared/i18n'
 export const useWrapped = create<{ week: VibeWeek | null }>(() => ({ week: null }))
 
 export async function showWrapped(): Promise<void> {
+  if (relayed({ kind: 'wrapped' })) return
   useWrapped.setState({ week: await api.vibe.week() })
 }
 

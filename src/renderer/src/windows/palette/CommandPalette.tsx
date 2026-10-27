@@ -29,6 +29,7 @@ import { forgetCurrentWorkspace } from '../../store/workspaceStore'
 import { openAbout } from '../../desktop/About'
 import { togglePerfMeter, usePerf } from '../../desktop/PerfMeter'
 import { agentName, OTHER_AGENTS } from '../../../../shared/agents'
+import { useScreen } from '../../store/screenStore'
 
 interface Cmd {
   id: string
@@ -63,6 +64,7 @@ function buildCommands(projects: Project[]): Cmd[] {
     return { id: 'win:' + id, label: d.title, group: t('Fenster'), icon: d.icon, hint, run: () => openPanel(id) }
   }
   const off = s?.modulesOff ?? []
+  const scr = useScreen.getState()
   /** Werkzeugkasten: ausgeblendete Module samt ihren Aktionen weglassen */
   const hidden = (c: Cmd): boolean => (c.id.startsWith('win:') && !moduleOn(c.id.slice(4), off)) || (c.id.startsWith('act:addon') && !moduleOn('addons', off))
   return [
@@ -105,6 +107,12 @@ function buildCommands(projects: Project[]): Cmd[] {
     { id: 'act:curtain', label: t('Vorhang zuziehen'), group: t('Aktionen'), icon: 'eyeoff', hint: t('Strg+Umschalt+H'), searchOnly: true, run: () => toggleCurtain(true) },
     ...(s ? [{ id: 'act:layout', label: s.layout === 'studio' ? t('Aufbau: Desktop mit freien Fenstern') : t('Aufbau: Studio mit Seitenleiste'), group: t('Aktionen'), icon: 'grid', hint: t('Wie das Dashboard aufgebaut ist'), run: () => useSettings.getState().set({ layout: s.layout === 'studio' ? 'desktop' : 'studio' }) }] : []),
     { id: 'act:arrange', label: t('Fenster anordnen'), group: t('Aktionen'), icon: 'grid', run: () => useUi.getState().arrangeAll(kindOf) },
+    // Zweiter Bildschirm (Beta): nur mit zweitem Monitor
+    ...(scr.open
+      ? [{ id: 'act:secondClose', label: t('Zweiten Bildschirm schließen'), group: t('Aktionen'), icon: 'screen', hint: t('Alle Fenster kommen zurück'), run: () => api.screen.close() }]
+      : scr.available
+        ? [{ id: 'act:secondOpen', label: t('Zweiten Bildschirm öffnen (Beta)'), group: t('Aktionen'), icon: 'screen', hint: t('Inspector, Git, Gehirn & Co. auf den anderen Monitor holen'), run: () => api.screen.open() }]
+        : []),
     ...(s ? [{ id: 'act:music', label: s.musicPlayer === 'local' ? (s.musicOn ? t('Eigene Musik aus') : t('Eigene Musik an')) : s.musicOn ? t('Lofi-Radio aus') : t('Lofi-Radio an'), group: t('Aktionen'), icon: 'music', run: () => useSettings.getState().set(toggleMusic(s)) }] : []),
     { id: 'act:fullscreen', label: t('Vollbild umschalten'), group: t('Aktionen'), icon: 'exit', hint: t('F11 · Esc halten'), run: () => api.app.toggleFullscreen() },
     { id: 'act:quick', label: t('Schnell-Prompt öffnen'), group: t('Aktionen'), icon: 'send', hint: t('Strg+Alt+Leertaste, auch in anderen Apps'), run: () => api.quick.open() },

@@ -8,6 +8,7 @@ import { createEditorStore, samePath } from './editorModel'
 import { useSettings } from './settingsStore'
 import { centeredRect, useUi } from './uiStore'
 import { useSessions } from './sessionStore'
+import { relayed } from './screenRelay'
 
 export const EDITOR_ID = 'editor'
 export const EDITOR_SIZE = { w: 980, h: 640 }
@@ -150,6 +151,8 @@ export async function closeEditor(): Promise<void> {
 
 /** Aus dem Live-Feed: Datei öffnen und zur Stelle springen. */
 export async function openInEditor(path: string, find?: string, line?: number): Promise<void> {
+  // im Zweitfenster: der Editor bleibt im Hauptfenster
+  if (relayed({ kind: 'editor', path, ...(find !== undefined ? { find } : {}), ...(line !== undefined ? { line } : {}) })) return
   const projects = await loadProjects()
   const p = projectOf(projects, path)
   if (!p) {

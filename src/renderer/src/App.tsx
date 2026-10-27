@@ -80,6 +80,8 @@ import { wirePermissions } from './store/permissionStore'
 import { wireCompanion } from './store/companionStore'
 import { t } from '../../shared/i18n'
 import { rememberLayout, wireWorkspaces } from './store/workspaceStore'
+import { wireScreenMain } from './store/screenMain'
+import { onScreen, useScreen } from './store/screenStore'
 
 
 const initials = (n: string): string => {
@@ -209,10 +211,11 @@ export default function App(): React.JSX.Element {
     wireHints()
     wireLimits()
     wireDeskCommands()
-    useSettings.getState().load().then((s) => {
+    // zweiter Bildschirm: erst wissen, welche Fenster drüben bleiben – die öffnen hier nicht
+    Promise.all([useSettings.getState().load(), wireScreenMain()]).then(([s]) => {
       const ui = useUi.getState()
       ui.initRects(s.windowRects)
-      const migrated = migratePanels(s.visiblePanels)
+      const migrated = migratePanels(s.visiblePanels).filter((id) => !onScreen(id))
       // ohne gemerkte Fenster begrüßt die Startkarte
       migrated.forEach((id) => {
         const def = panelDef(id)
@@ -237,16 +240,25 @@ export default function App(): React.JSX.Element {
   // Fensterpositionen + sichtbare Panels persistieren (debounced)
   useEffect(() => {
     if (!ready) return
-    return useUi.subscribe((s) => {
+    const save = (): void => {
       clearTimeout(saveTimer.current)
       saveTimer.current = setTimeout(() => {
+        const s = useUi.getState()
         const rects = Object.fromEntries(Object.entries(s.rects).filter(([id]) => !id.startsWith('term:') && !id.startsWith('shell:')))
-        const visiblePanels = s.open.filter((id) => PANEL_IDS.includes(id)) as PanelId[]
+        // Fenster auf dem zweiten Bildschirm zählen als offen – ohne den Monitor gehen sie beim nächsten Start hier auf
+        const second = useScreen.getState().items.map((x) => x.id)
+        const visiblePanels = [...new Set([...s.open, ...second])].filter((id) => PANEL_IDS.includes(id)) as PanelId[]
         api.settings.set({ windowRects: rects, visiblePanels })
         // zusätzlich unter dem Projekt, dessen Anordnung gerade zu sehen ist
         rememberLayout()
       }, 500)
-    })
+    }
+    const offUi = useUi.subscribe(save)
+    const offScreen = useScreen.subscribe(save)
+    return () => {
+      offUi()
+      offScreen()
+    }
   }, [ready])
 
   const ui = useUi.getState()

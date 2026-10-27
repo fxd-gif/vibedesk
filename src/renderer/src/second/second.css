@@ -1,0 +1,5 @@
+/* Zweiter Bildschirm: dunkler, ruhiger Hintergrund statt Szene und Regen */
+.second-app { background: radial-gradient(ellipse at 30% 15%, #161d2b 0%, #0a0d14 55%, #07090d 100%); }
+.second-empty { position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 420px; text-align: center; color: var(--text-dim); line-height: 1.5; }
+.second-empty b { color: var(--text); font-size: 15px; font-weight: 600; }
+.second-bar { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 14px; border-radius: 999px; background: var(--glass); border: 1px solid var(--glass-border); color: var(--text-dim); font-size: 12px; z-index: 5; }

@@ -61,6 +61,8 @@ import { parseRateLimits, type PlanLimits } from '../shared/limits'
 import { deskDone, parseDeskCommand, type DeskCommand } from '../shared/desk'
 import { QuickPrompt, type QuickTarget } from './quickPrompt'
 import { VibeLog } from './vibeLog'
+import { SecondScreen } from './secondScreen'
+import { SECOND_CHANNELS } from '../shared/secondScreen'
 import { captureCard } from './vibeCapture'
 
 if (process.env.VIBEDESK_USERDATA) app.setPath('userData', process.env.VIBEDESK_USERDATA)
@@ -73,6 +75,8 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 let mainWindow: BrowserWindow | null = null
+/** Zweiter Bildschirm (Beta) – ohne zweiten Monitor bleibt sein Fenster zu */
+let secondScreen: SecondScreen | null = null
 // Update-Fensterchen beim Start – nur in der installierten App (oder VIBEDESK_SPLASH=1 zum Ausprobieren)
 let splash: SplashWindow | null = null
 // Per Doppelklick geöffnete .vibeaddon-Datei, bis der Renderer sie abholt
@@ -147,13 +151,19 @@ function createWindow(): BrowserWindow {
   })
   win.on('unresponsive', () => logError('Renderer', 'reagiert nicht'))
   win.webContents.on('will-redirect', stay)
-  if (process.env['ELECTRON_RENDERER_URL']) win.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  else win.loadFile(join(__dirname, '../renderer/index.html'))
+  loadRenderer(win)
   return win
+}
+
+/** derselbe Renderer – das Zweitfenster bekommt #second und zeigt dann nur die herübergeholten Werkzeug-Fenster */
+function loadRenderer(win: BrowserWindow, hash?: string): void {
+  if (process.env['ELECTRON_RENDERER_URL']) win.loadURL(process.env['ELECTRON_RENDERER_URL'] + (hash ? '#' + hash : ''))
+  else win.loadFile(join(__dirname, '../renderer/index.html'), hash ? { hash } : undefined)
 }
 
 const send = (ch: string, ...args: unknown[]): void => {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(ch, ...args)
+  if (SECOND_CHANNELS.has(ch)) secondScreen?.toSecond(ch, ...args)
 }
 
 let gate: ReturnType<typeof createSplashGate> | null = null
@@ -188,7 +198,14 @@ app.whenReady().then(async () => {
     () => process.env.VIBEDESK_PROJECTS_DIR || settings.get().projectsDir,
     (p) => shell.trashItem(p)
   )
-  registerCoreIpc({ win: () => mainWindow, projects, settings })
+  secondScreen = new SecondScreen({
+    main: () => mainWindow,
+    settings,
+    preload: join(__dirname, '../preload/index.js'),
+    load: (w) => loadRenderer(w, 'second')
+  })
+  secondScreen.register()
+  registerCoreIpc({ win: () => mainWindow, projects, settings, peers: () => [mainWindow, secondScreen?.window() ?? null] })
   const scenesDir = join(userData, 'scenes')
   const living = new LivingStore(join(userData, 'living'), app.isPackaged ? join(process.resourcesPath, 'living-runtime.js') : join(app.getAppPath(), 'resources', 'living-runtime.js'))
   protocol.handle(SCENE_SCHEME, async (req) => {
@@ -516,7 +533,7 @@ app.whenReady().then(async () => {
   ipcMain.handle('discord:status', () => discordStatus)
   ipcMain.handle('discord:appInfo', (_e, clientId: string) => fetchAppInfo(clientId))
   // „weg“ = VibeDesk nicht im Vordergrund oder 2 Minuten keine Eingabe
-  const away = (): boolean => !mainWindow?.isFocused() || powerMonitor.getSystemIdleTime() >= 120
+  const away = (): boolean => (!mainWindow?.isFocused() && !secondScreen?.window()?.isFocused()) || powerMonitor.getSystemIdleTime() >= 120
   ipcMain.handle('discord:webhook', async (_e, kind: WebhookKind, body: unknown) => {
     const hook = settings.get().discordHook
     if (!shouldSend(kind, hook, away)) return { ok: false, skipped: true }
@@ -593,6 +610,11 @@ app.whenReady().then(async () => {
     e.preventDefault()
     mainWindow?.hide()
   })
+  // Zweiter Bildschirm folgt dem Hauptfenster: erscheint mit ihm, versteckt sich mit ihm, geht mit ihm zu
+  mainWindow.once('show', () => secondScreen?.restore())
+  mainWindow.on('hide', () => secondScreen?.hide())
+  mainWindow.on('show', () => secondScreen?.show())
+  mainWindow.on('closed', () => secondScreen?.shutdown())
   if (splash) {
     const win = mainWindow
     let ready = false

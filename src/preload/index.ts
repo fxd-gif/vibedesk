@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
-import type { DiscordStatus, FileChange, HookEvent, SessionInfo, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
+import type { DiscordStatus, FileChange, HookEvent, SessionInfo, Settings, ToolId, SessionStats, UpdateStatus, VibedeskApi } from '../shared/types'
 import type { BudgetAlert, BudgetUse } from '../shared/budget'
 import type { BrainPulse } from '../shared/brain'
 import type { PermissionAsk } from '../shared/permissions'
@@ -8,6 +8,7 @@ import type { PlanLimits } from '../shared/limits'
 import type { DeskCommand } from '../shared/desk'
 import type { SessionHandoff } from '../shared/handoff'
 import type { LivingScene } from '../shared/living'
+import type { ScreenAction, ScreenMirror, ScreenState } from '../shared/secondScreen'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
   const h = (_e: unknown, ...args: unknown[]): void => cb(...(args as A))
@@ -105,7 +106,23 @@ const api: VibedeskApi = {
     budgetUsage: (cb) => listen<[BudgetUse[]]>('budget:usage', cb),
     budgetAlert: (cb) => listen<[BudgetAlert]>('budget:alert', cb),
     quickPrompt: (cb) => listen<[string, string | null]>('quick:prompt', cb),
-    power: (cb) => listen<[boolean]>('power:battery', cb)
+    power: (cb) => listen<[boolean]>('power:battery', cb),
+    settingsChanged: (cb) => listen<[Partial<Settings>]>('settings:changed', cb),
+    screenState: (cb) => listen<[ScreenState]>('screen:state', cb),
+    screenAction: (cb) => listen<[ScreenAction]>('screen:action', cb),
+    screenHello: (cb) => listen<[]>('screen:hello', cb),
+    screenMirror: (cb) => listen<[ScreenMirror]>('screen:mirror', cb),
+    screenFocus: (cb) => listen<[string]>('screen:focus', cb)
+  },
+  screen: {
+    state: () => ipcRenderer.invoke('screen:state'),
+    open: () => ipcRenderer.send('screen:open'),
+    close: () => ipcRenderer.send('screen:close'),
+    move: (id, to, url) => ipcRenderer.send('screen:move', id, to, url),
+    relay: (a) => ipcRenderer.send('screen:relay', a),
+    mirror: (m) => ipcRenderer.send('screen:mirror', m),
+    ready: () => ipcRenderer.send('screen:ready'),
+    focus: (id) => ipcRenderer.send('screen:focus', id)
   },
   power: {
     onBattery: () => ipcRenderer.invoke('power:onBattery')

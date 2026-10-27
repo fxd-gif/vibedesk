@@ -424,6 +424,19 @@ const dict: Record<string, string> = {
   'Für dieses Projekt ist nichts gemerkt': 'Nothing is remembered for this project',
   'Anordnung vergessen': 'Arrangement forgotten',
   'Beim nächsten Wechsel in dieses Projekt bleiben die Fenster, wie sie sind.': 'Next time you switch to this project, the windows stay as they are.',
+  // Zweiter Bildschirm (Beta)
+  'Auf den anderen Bildschirm': 'Move to the other screen',
+  Zurückholen: 'Bring back',
+  'Zweiter Bildschirm': 'Second screen',
+  'Hol Inspector, Git, Gehirn, Prompts, Skills oder eine Vorschau mit dem Bildschirm-Knopf im Fensterkopf hierher.':
+    'Bring the Inspector, Git, Brain, Prompts, Skills or a preview over here with the screen button in the window header.',
+  'Zweiter Bildschirm · Beta': 'Second screen · Beta',
+  'Alle Fenster zurück auf den Hauptbildschirm': 'All windows back to the main screen',
+  'Alles zurückholen': 'Bring everything back',
+  'Zweiten Bildschirm schließen': 'Close second screen',
+  'Alle Fenster kommen zurück': 'All windows come back',
+  'Zweiten Bildschirm öffnen (Beta)': 'Open second screen (Beta)',
+  'Inspector, Git, Gehirn & Co. auf den anderen Monitor holen': 'Move Inspector, Git, Brain & co. to the other monitor',
 }
 
 export default dict

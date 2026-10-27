@@ -24,3 +24,15 @@ export const useSettings = create<SettingsState>((set, get) => ({
     if (patch.language) applyLangSetting(patch.language)
   }
 }))
+
+let synced = false
+/** Zweiter Bildschirm: Änderungen aus dem jeweils anderen Fenster übernehmen (ohne Zweitfenster kommt nie etwas) */
+export function wireSettingsSync(): void {
+  if (synced) return
+  synced = true
+  api.on.settingsChanged((patch) => {
+    const cur = useSettings.getState().s
+    if (cur) useSettings.setState({ s: { ...cur, ...patch } })
+    if (patch.language) applyLangSetting(patch.language)
+  })
+}

@@ -8,6 +8,7 @@ import { termWin, useSessions } from './sessionStore'
 import { useSettings } from './settingsStore'
 import { useWorkflow } from './workflowStore'
 import { useShells } from './shellStore'
+import { relayed } from './screenRelay'
 
 export const previewWin = (key: string): string => `preview:${key}`
 
@@ -109,6 +110,8 @@ export function askClaudeFromPreview(url: string, text: string): 'sent' | 'queue
   const id = sessionForUrl(url)
   if (!id) return 'none'
   const st = useWorkflow.getState().sessions[id]?.status
+  // Vorschau auf dem zweiten Bildschirm: das Hauptfenster schickt den Auftrag (es kennt die Dev-Server der Sessions)
+  if (relayed({ kind: 'askPreview', url, text })) return st === 'working' || st === 'waiting' ? 'queued' : 'sent'
   if (st === 'working' || st === 'waiting') {
     enqueue(id, text)
     return 'queued'

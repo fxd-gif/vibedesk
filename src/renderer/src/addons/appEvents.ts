@@ -1,10 +1,13 @@
 // Ereignisse aus anderen Teilen der App für Addons (Commit im Git-Fenster, Fehler in der Vorschau).
 // Eigenes Modul, damit Fenster nicht die ganze Addon-Laufzeit importieren müssen.
 import type { AddonEvent } from './interpreter'
+import { relayed } from '../store/screenRelay'
 
 const subs = new Set<(e: AddonEvent) => void>()
 
 export function addonEvent(e: AddonEvent): void {
+  // im Zweitfenster läuft keine Addon-Laufzeit – das Hauptfenster bekommt das Ereignis
+  if ((e.type === 'commit' || e.type === 'preview_error') && relayed({ kind: 'addon', event: e })) return
   for (const s of subs) s(e)
 }
 

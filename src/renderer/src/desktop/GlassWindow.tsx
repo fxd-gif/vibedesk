@@ -3,6 +3,9 @@ import { DOCK_H, useUi } from '../store/uiStore'
 import { magnetize, pageRect, snapRect, zenRect, type Guide } from './layout'
 import { useSettings } from '../store/settingsStore'
 import { ErrorBoundary } from './ErrorBoundary'
+import { Icon } from './icons'
+import { IS_SECOND, moveTo, useScreen } from '../store/screenStore'
+import { isMovable } from '../../../shared/secondScreen'
 import type { WindowRect } from '../../../shared/types'
 import { t } from '../../../shared/i18n'
 
@@ -28,7 +31,11 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
   const zenMe = useUi((s) => s.zen === id)
   const zenHide = useUi((s) => !!s.zen && s.zen !== id)
   // Studio-Aufbau: Fenster sind Seiten – nur die oberste ist sichtbar, die anderen bleiben (mit ihrem Zustand) im Hintergrund
-  const page = useSettings((s) => s.s?.layout === 'studio')
+  // im Zweitfenster immer freie Fenster
+  const page = useSettings((s) => s.s?.layout === 'studio') && !IS_SECOND
+  // Zweiter Bildschirm (Beta): Knopf nur, wenn es einen zweiten Monitor gibt und das Fenster hinüber darf
+  const movable = isMovable(id)
+  const canSend = useScreen((s) => s.available) && movable && !IS_SECOND
   const { setRect, focus, toggleMax, minimize, closeWin } = useUi.getState()
   const drag = useRef<{ dx: number; dy: number; resize: boolean; start: WindowRect; px: number; py: number } | null>(null)
   const [snapPreview, setSnapPreview] = useState<WindowRect | null>(null)
@@ -103,9 +110,22 @@ export function GlassWindow({ id, title, children, solid, minW = 280, minH = 160
         >
           <div className="gwin-title">{title}</div>
           <div className="gwin-btns">
-            <button className="gbtn" title={t('Minimieren')} onClick={() => minimize(id)}>
-              <span className="gbtn-min" />
-            </button>
+            {canSend && (
+              <button className="gbtn" title={t('Auf den anderen Bildschirm')} onClick={() => moveTo(id, 'second')} data-testid="gwin-second">
+                <Icon name="screen" size={14} />
+              </button>
+            )}
+            {IS_SECOND && movable && (
+              <button className="gbtn" title={t('Zurückholen')} onClick={() => moveTo(id, 'main')} data-testid="gwin-back">
+                <Icon name="screen" size={14} />
+              </button>
+            )}
+            {/* im Zweitfenster gibt es kein Dock, aus dem ein minimiertes Fenster zurückkäme */}
+            {!IS_SECOND && (
+              <button className="gbtn" title={t('Minimieren')} onClick={() => minimize(id)}>
+                <span className="gbtn-min" />
+              </button>
+            )}
             {!page && !zenMe && (
               <button className="gbtn" title={maximized ? t('Wiederherstellen') : t('Maximieren')} onClick={() => toggleMax(id)}>
                 <span className="gbtn-max" />

@@ -340,6 +340,8 @@ const dict: Record<string, string> = {
   'Du hast schon {n} lebende Szenen – lösche erst eine.': 'You already have {n} living scenes – delete one first.',
   'Gerade ist kein eigenes Hintergrundbild eingestellt.': 'No custom background picture is set right now.',
   'Bild für die Szene wählen': 'Choose a picture for the scene',
+  // Zweiter Bildschirm
+  'VibeDesk – zweiter Bildschirm': 'VibeDesk – second screen',
 }
 
 export default dict

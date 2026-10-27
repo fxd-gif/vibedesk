@@ -16,6 +16,8 @@ import type { SkillTarget } from '../shared/types'
 
 export interface IpcDeps {
   win: () => BrowserWindow | null
+  /** alle App-Fenster (Haupt- und Zweitfenster) – Einstellungen bleiben in beiden gleich */
+  peers?: () => (BrowserWindow | null)[]
   projects: ProjectStore
   settings: SettingsStore
 }
@@ -41,10 +43,12 @@ export function registerCoreIpc(d: IpcDeps): void {
   // „Zeig drauf“: Ausschnitt der Vorschau als PNG, Claude liest ihn über den Pfad
   ipcMain.handle('preview:saveShot', (_e, dataUrl: unknown) => saveShot(path.join(app.getPath('userData'), 'shots'), dataUrl))
   ipcMain.handle('settings:get', () => d.settings.get())
-  ipcMain.handle('settings:set', (_e, patch) => {
+  ipcMain.handle('settings:set', (e, patch) => {
     const s = d.settings.set(patch)
     // Texte aus Main (Dialoge, Benachrichtigungen) folgen der Sprache sofort
     setLang(resolveLang(s.language, app.getLocale()))
+    // zweiter Bildschirm: das jeweils andere Fenster übernimmt die Änderung
+    for (const w of d.peers?.() ?? []) if (w && !w.isDestroyed() && w.webContents !== e.sender) w.webContents.send('settings:changed', patch)
     return s
   })
 

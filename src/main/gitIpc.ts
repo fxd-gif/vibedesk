@@ -1,5 +1,5 @@
 import { t } from '../shared/i18n'
-import { ipcMain, shell, type BrowserWindow } from 'electron'
+import { ipcMain, shell, type BrowserWindow, type WebContents } from 'electron'
 import type { ProjectStore } from './projectStore'
 import type { GitService } from './gitService'
 
@@ -10,19 +10,21 @@ export function registerGitIpc(git: GitService, projects: ProjectStore, win: () 
     return p.path
   }
   const list = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [])
-  const send = (ch: string, ...args: unknown[]): void => {
+  /** ans Hauptfenster – und ans fragende Fenster, falls Git auf dem zweiten Bildschirm offen ist */
+  const send = (from: WebContents, ch: string, ...args: unknown[]): void => {
     const w = win()
     if (w && !w.isDestroyed()) w.webContents.send(ch, ...args)
+    if (from !== w?.webContents && !from.isDestroyed()) from.send(ch, ...args)
   }
 
   ipcMain.handle('git:tools', () => git.tools())
-  ipcMain.handle('git:install', (_e, tool) => {
+  ipcMain.handle('git:install', (e, tool) => {
     if (tool !== 'git' && tool !== 'gh') return false
-    return git.install(tool, (line) => send('git:installLog', tool, line))
+    return git.install(tool, (line) => send(e.sender, 'git:installLog', tool, line))
   })
-  ipcMain.handle('git:login', async () => {
+  ipcMain.handle('git:login', async (e) => {
     await git.githubLogin((code, url) => {
-      send('git:loginCode', code, url)
+      send(e.sender, 'git:loginCode', code, url)
       void shell.openExternal(url)
     })
   })

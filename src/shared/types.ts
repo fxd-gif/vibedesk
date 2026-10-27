@@ -70,6 +70,7 @@ import type { PermissionAsk, PermissionDecision } from './permissions'
 import type { LangSetting } from './i18n'
 import type { SpotifyCommand, SpotifyDevice, SpotifyPlayer, SpotifyPlaylist, SpotifyQueue, SpotifyStatus, SpotifyTrack } from './spotify'
 import type { LocalMusicSettings, ScanResult } from './localMusic'
+import type { MoveTarget, ScreenAction, ScreenMirror, ScreenState, SecondScreenSettings } from './secondScreen'
 
 export type PanelId = 'projects' | 'skills' | 'inspector' | 'prompts' | 'focus' | 'discord' | 'editor' | 'addons' | 'lounge' | 'streamer' | 'brain' | 'git' | 'companion' | 'ambience' | 'merge' | 'settings'
 
@@ -291,6 +292,8 @@ export interface Settings {
   tourDone: boolean
   /** eigenes Terminal-Farbschema (z. B. von Claude über desk_custom_theme erzeugt) – gilt bei terminal.theme 'custom' */
   customTheme: CustomTheme | null
+  /** Zweiter Bildschirm (Beta): welche Werkzeug-Fenster dort waren – kommen beim Start nur mit zweitem Monitor zurück */
+  secondScreen: SecondScreenSettings
 }
 
 /** Arbeitsbereich eines Projekts: offene Werkzeug-Fenster und wo sie liegen */
@@ -549,6 +552,35 @@ export interface VibedeskApi {
     quickPrompt(cb: (text: string, sessionId: string | null) => void): Unsubscribe
     /** Wechsel zwischen Akku (true) und Netzteil (false) */
     power(cb: (onBattery: boolean) => void): Unsubscribe
+    /** Einstellungen wurden im anderen Fenster geändert (zweiter Bildschirm) */
+    settingsChanged(cb: (patch: Partial<Settings>) => void): Unsubscribe
+    /** Zweiter Bildschirm: Monitor da/weg, Fenster hinüber oder zurück */
+    screenState(cb: (s: ScreenState) => void): Unsubscribe
+    /** Hauptfenster: Auftrag aus dem Zweitfenster */
+    screenAction(cb: (a: ScreenAction) => void): Unsubscribe
+    /** Hauptfenster: das Zweitfenster ist bereit und braucht den vollen Stand */
+    screenHello(cb: () => void): Unsubscribe
+    /** Zweitfenster: Stand aus dem Hauptfenster */
+    screenMirror(cb: (m: ScreenMirror) => void): Unsubscribe
+    /** Zweitfenster: dieses Fenster nach vorn holen */
+    screenFocus(cb: (id: string) => void): Unsubscribe
+  }
+  /** Zweiter Bildschirm (Beta): einzelne Werkzeug-Fenster auf einem anderen Monitor */
+  screen: {
+    state(): Promise<ScreenState>
+    open(): void
+    /** Zweitfenster zu, alle Fenster zurück ins Hauptfenster */
+    close(): void
+    /** url: nur bei Vorschauen */
+    move(id: string, to: MoveTarget, url?: string): void
+    /** Zweitfenster → Hauptfenster */
+    relay(a: ScreenAction): void
+    /** Hauptfenster → Zweitfenster */
+    mirror(m: ScreenMirror): void
+    /** Zweitfenster ist geladen */
+    ready(): void
+    /** Hauptfenster: Fenster auf dem anderen Bildschirm nach vorn holen */
+    focus(id: string): void
   }
   vibe: {
     /** Wochenrückblick der letzten 7 Tage */

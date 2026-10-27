@@ -5,6 +5,7 @@ import { confirm } from '../store/dialogStore'
 import { termWin, useSessions } from '../store/sessionStore'
 import { useSettings } from '../store/settingsStore'
 import { useUi } from '../store/uiStore'
+import { useScreen } from '../store/screenStore'
 import { bracketedPaste } from '../../../shared/paste'
 import type { Project, Prompt } from '../../../shared/types'
 import { sharePrompts } from '../store/shareStore'
@@ -14,7 +15,9 @@ import { t } from '../../../shared/i18n'
 function useActiveSession(): string | null {
   const sessions = useSessions((s) => s.sessions)
   const open = useUi((s) => s.open)
-  const top = [...open].reverse().find((id) => id.startsWith('term:'))
+  // Zweitfenster: Terminals des Hauptfensters (sonst leer)
+  const terms = useScreen((s) => s.terms)
+  const top = [...terms, ...open].reverse().find((id) => id.startsWith('term:'))
   return top?.slice(5) ?? sessions[0]?.id ?? null
 }
 

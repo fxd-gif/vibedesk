@@ -16,6 +16,7 @@ import { fmtTokens, fmtUsd, modelLabel, useStats } from './statsStore'
 import { setOutputTransform } from './terminals'
 import { useUi } from './uiStore'
 import { useWorkflow } from './workflowStore'
+import { relayed } from './screenRelay'
 import { STATUS_TEXT } from '../windows/TerminalWindow'
 
 type TwitchState = { state: 'off' } | { state: 'connecting' } | { state: 'connected'; channel: string } | { state: 'error'; message: string }
@@ -64,6 +65,8 @@ export function newOverlayToken(): string {
 }
 
 export function toggleCurtain(v = !useStreamer.getState().curtain): void {
+  // Zweitfenster: der Vorhang gehört dem Hauptfenster (dort hängt auch Strg+Umschalt+H)
+  if (relayed({ kind: 'curtain', on: v })) return
   useStreamer.setState({ curtain: v })
 }
 
