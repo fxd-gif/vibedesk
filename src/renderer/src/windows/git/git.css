@@ -37,6 +37,11 @@
 .git-row-actions button { width: 22px; height: 22px; border: 0; border-radius: 6px; background: transparent; color: var(--text-dim); display: grid; place-items: center; cursor: pointer; }
 .git-row-actions button:hover { background: rgba(255,255,255,.1); color: var(--text); }
 
+.git-hint { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-dim); }
+.git-hint .linkish { margin-left: auto; }
+.git-conflict { display: flex; align-items: center; gap: 8px; margin: 8px; padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(250, 204, 21, 0.35); background: rgba(250, 204, 21, 0.07); font-size: 12.5px; }
+.git-conflict > span { display: flex; flex-direction: column; flex: 1; }
+.git-conflict small { color: var(--text-dim); font-size: 11.5px; }
 .git-commit { padding: 10px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 8px; }
 .git-commit textarea { min-height: 96px; max-height: 220px; resize: vertical; font-size: 12.5px; line-height: 1.5; color: var(--text); user-select: text; }
 

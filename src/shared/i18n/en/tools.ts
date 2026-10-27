@@ -166,6 +166,18 @@ const dict: Record<string, string> = {
   'Zurücknehmen fehlgeschlagen': 'Unstage failed',
   'Vormerken fehlgeschlagen': 'Stage failed',
   'Alles committet.': 'Everything is committed.',
+  // Git: Gehirn-Check und Konflikt-Hilfe
+  '{n} Gehirn-Notiz zu prüfen': '{n} brain note to review',
+  '{n} Gehirn-Notizen zu prüfen': '{n} brain notes to review',
+  'Claude gleicht die Notizen mit dem Code ab, bevor du committest': 'Claude checks the notes against the code before you commit',
+  'Claude ist dran': 'Claude is on it',
+  'Claude pflegen lassen': 'Let Claude tend it',
+  '{n} Datei mit Konflikt': '{n} file with a conflict',
+  '{n} Dateien mit Konflikt': '{n} files with conflicts',
+  'Beide Seiten haben dieselben Stellen geändert.': 'Both sides changed the same lines.',
+  'In diesem Projekt gibt es Git-Konflikte in: {files}. Löse die Konfliktmarker so, dass die Absichten beider Seiten erhalten bleiben, prüfe, ob alles baut, und markiere die Dateien mit git add als gelöst. Nicht committen.':
+    'This project has Git conflicts in: {files}. Resolve the conflict markers so that the intent of both sides is kept, check that everything builds, and mark the files as resolved with git add. Do not commit.',
+  'Claude löst das': 'Let Claude solve it',
   'Sobald du oder Claude etwas änderst, erscheint es hier.': 'As soon as you or Claude change something, it shows up here.',
   'Vorgemerkt · {n}': 'Staged · {n}',
   'alle zurücknehmen': 'unstage all',

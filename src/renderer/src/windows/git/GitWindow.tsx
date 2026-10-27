@@ -11,7 +11,10 @@ import { relTime } from '../../util'
 import { DiffView } from './DiffView'
 import { ensureGh, PrPanel } from './PrPanel'
 import { cancelLogin, githubLogin, installTool, refreshTools, useGitAuth, withAuth } from './gitAuth'
-import { t } from '../../../../shared/i18n'
+import { tendPrompt } from '../brain/BrainWindow'
+import { promptProject } from '../../store/sessionPrompt'
+import { useSettings } from '../../store/settingsStore'
+import { t, tn } from '../../../../shared/i18n'
 import './git.css'
 
 const POLL_MS = 3000
@@ -231,6 +234,75 @@ function BranchMenu({ projectId, current, title, disabled, onSwitch }: { project
   )
 }
 
+/** Vor dem Commit: Notizen im Gehirn, deren Dateien sich seitdem geändert haben */
+function BrainCheck({ projectId }: { projectId: string }): React.JSX.Element | null {
+  const brainOn = useSettings((s) => s.s?.brainOn ?? true)
+  const [stale, setStale] = useState(0)
+  const [asked, setAsked] = useState(false)
+  useEffect(() => {
+    setAsked(false)
+    if (!brainOn) return setStale(0)
+    let live = true
+    const load = (): void => void api.brain.view(projectId).then((v) => live && setStale(v?.stale ?? 0), () => live && setStale(0))
+    load()
+    const off = api.on.brainChanged((pid) => pid === projectId && load())
+    return () => {
+      live = false
+      off()
+    }
+  }, [projectId, brainOn])
+  if (!stale) return null
+  return (
+    <div className="git-hint" data-testid="git-brain-check">
+      <Icon name="brain" size={13} />
+      <span>{tn(stale, '{n} Gehirn-Notiz zu prüfen', '{n} Gehirn-Notizen zu prüfen')}</span>
+      <button
+        className="linkish"
+        disabled={asked}
+        title={t('Claude gleicht die Notizen mit dem Code ab, bevor du committest')}
+        onClick={() => {
+          setAsked(true)
+          void promptProject(projectId, tendPrompt())
+        }}
+      >
+        {asked ? t('Claude ist dran') : t('Claude pflegen lassen')}
+      </button>
+    </div>
+  )
+}
+
+/** Konflikte nach Merge, Pull oder Rebase: Claude löst die Konfliktmarker */
+function ConflictHelp({ projectId, files }: { projectId: string; files: GitFile[] }): React.JSX.Element {
+  const [asked, setAsked] = useState(false)
+  const key = files.map((f) => f.path).join('|')
+  useEffect(() => setAsked(false), [key])
+  return (
+    <div className="git-conflict" data-testid="git-conflicts">
+      <Icon name="alert" size={14} />
+      <span>
+        {tn(files.length, '{n} Datei mit Konflikt', '{n} Dateien mit Konflikt')}
+        <small>{t('Beide Seiten haben dieselben Stellen geändert.')}</small>
+      </span>
+      <button
+        className="btn small primary"
+        disabled={asked}
+        onClick={() => {
+          setAsked(true)
+          void promptProject(
+            projectId,
+            t('In diesem Projekt gibt es Git-Konflikte in: {files}. Löse die Konfliktmarker so, dass die Absichten beider Seiten erhalten bleiben, prüfe, ob alles baut, und markiere die Dateien mit git add als gelöst. Nicht committen.', {
+              files: files.map((f) => f.path).join(', ')
+            })
+          )
+        }}
+        data-testid="git-conflicts-claude"
+      >
+        <Icon name="spark" size={13} /> {asked ? t('Claude ist dran') : t('Claude löst das')}
+      </button>
+    </div>
+  )
+}
+
 function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStatus; reload(): Promise<void> }): React.JSX.Element {
   const [sel, setSel] = useState<Sel | null>(null)
   const [diff, setDiff] = useState('')
@@ -239,6 +311,7 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
   const [busy, setBusy] = useState(false)
   const staged = st.files.filter(isStaged)
   const unstaged = st.files.filter(isUnstaged)
+  const conflicts = st.files.filter((f) => f.conflict)
 
   // Auswahl gültig halten und Diff nachladen, wenn sich etwas tut
   const key = st.files.map((f) => f.path + f.index + f.work).join('|')
@@ -332,6 +405,7 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
     <div className="git-split">
       <div className="git-side">
         <div className="git-lists">
+          {conflicts.length > 0 && <ConflictHelp projectId={projectId} files={conflicts} />}
           {!st.files.length && (
             <div className="panel-empty">
               {t('Alles committet.')}
@@ -368,6 +442,7 @@ function ChangesView({ projectId, st, reload }: { projectId: string; st: GitStat
           )}
         </div>
         <div className="git-commit">
+          {st.files.length > 0 && <BrainCheck projectId={projectId} />}
           <textarea
             className="field"
             placeholder={count ? t('Was hast du geändert?') : t('Nichts zu committen')}
