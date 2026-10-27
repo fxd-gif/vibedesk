@@ -49,6 +49,7 @@ import { wireStreamer } from './store/streamerStore'
 import { LoungeFloaters } from './windows/LoungeWindow'
 import { Curtain, StreamerPill } from './windows/StreamerWindow'
 import { PerfMeter } from './desktop/PerfMeter'
+import { DaylightTint } from './ambience/DaylightTint'
 import { ShareDialogs } from './windows/ShareDialogs'
 import { openPanel } from './windows/palette/CommandPalette'
 import { NotifyPanel, ToastStack } from './desktop/NotifyCenter'
@@ -294,6 +295,7 @@ export default function App(): React.JSX.Element {
           blur={settings.blur}
         />
       ) : null}
+      {settings?.daylight && !livingScene && <DaylightTint />}
       {/* Feste DOM-Reihenfolge: Umsortieren beim Fokussieren würde Klicks verschlucken; Ebenen nur per z-index */}
       {PANELS.filter((p) => open.includes(p.id)).map((def) => {
         const id = def.id

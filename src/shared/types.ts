@@ -206,6 +206,8 @@ export interface Settings {
   rainSoundVolume: number
   rainIntensity: number
   blur: number
+  /** Szene folgt der Tageszeit (leiser Farbschleier über dem Regen) */
+  daylight?: boolean
   scene: string
   customScenes: string[]
   visiblePanels: PanelId[]

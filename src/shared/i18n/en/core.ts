@@ -216,6 +216,8 @@ const dict: Record<string, string> = {
   'Neue Projekte legt VibeDesk hier an. Bestehende Ordner kannst du jederzeit hinzufügen.': 'VibeDesk creates new projects here. You can add existing folders at any time.',
   'Deine Atmosphäre': 'Your ambience',
   'Regengeräusch': 'Rain sound',
+  'Folgt der Tageszeit': 'Follows the time of day',
+  'Kühl in der Nacht, rosig am Morgen, hell am Tag, orange am Abend': 'Cool at night, rosy in the morning, bright by day, orange in the evening',
   'Fast geschafft': 'Almost there',
   'Alles bereit': 'All set',
   'Node.js oder Claude Code fehlen noch. Sobald du eine Session startest, hilft dir VibeDesk beim Einrichten.': 'Node.js or Claude Code is still missing. As soon as you start a session, VibeDesk will help you set it up.',

@@ -165,6 +165,10 @@ function AtmosphereSide({ source }: { source: MusicSource }): React.JSX.Element 
         <h4>{t('Regen')}</h4>
         <Slider label={t('Stärke')} value={s.rainIntensity} onChange={(v) => set({ rainIntensity: v })} />
         <Slider label={t('Beschlag')} value={s.blur} onChange={(v) => set({ blur: v })} />
+        <div className="row between" title={t('Kühl in der Nacht, rosig am Morgen, hell am Tag, orange am Abend')}>
+          <span>{t('Folgt der Tageszeit')}</span>
+          <Toggle label={t('Folgt der Tageszeit')} on={!!s.daylight} onChange={(v) => set({ daylight: v })} />
+        </div>
         <div className="row between">
           <span>{t('Regengeräusch')}</span>
           <Toggle label={t('Regengeräusch')} on={s.rainSoundOn} onChange={() => set(toggleRainSound(s))} />
