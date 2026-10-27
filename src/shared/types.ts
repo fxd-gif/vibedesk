@@ -47,6 +47,7 @@ import type { BlocklyProgram } from './addonBlocks'
 import type { OverlayLook, OverlayState } from './overlay'
 import type { WebhookPayload, WebhookSettings } from './webhook'
 import type { BrainPulse, BrainView, NoteDetail } from './brain'
+import type { Hotspot } from './hotspots'
 import type { GitCommit, GitState, GitTools } from './git'
 import type { WrapChanges } from './wrapUp'
 import type { TraySession } from './tray'
@@ -689,6 +690,8 @@ export interface VibedeskApi {
     write(projectId: string, note: BrainNoteInput, previousTitle?: string): Promise<NoteDetail>
     remove(projectId: string, title: string): Promise<boolean>
     reveal(projectId: string): Promise<boolean>
+    /** meistgeänderte Dateien laut git log (90 Tage) */
+    hotspots(projectId: string): Promise<Hotspot[]>
   }
   openExternal(url: string): void
   preview: {

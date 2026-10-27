@@ -41,6 +41,11 @@ export function registerGitIpc(git: GitService, projects: ProjectStore, win: () 
   )
   ipcMain.handle('git:commit', (_e, id, message, all) => git.commit(cwd(id), String(message ?? ''), !!all))
   ipcMain.handle('git:log', (_e, id) => git.log(cwd(id)))
+  // Hotspots fürs Gehirn: unbekanntes Projekt (z. B. „Über dich“) → leer statt Fehler
+  ipcMain.handle('brain:hotspots', (_e, id) => {
+    const p = typeof id === 'string' ? projects.get(id) : undefined
+    return p && !p.missing ? git.hotspots(p.path) : []
+  })
   ipcMain.handle('git:branches', (_e, id) => git.branches(cwd(id)))
   ipcMain.handle('git:switch', (_e, id, name, create) => git.switchBranch(cwd(id), String(name ?? ''), !!create))
   ipcMain.handle('git:show', (_e, id, hash) => git.show(cwd(id), String(hash)))

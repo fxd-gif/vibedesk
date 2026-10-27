@@ -235,7 +235,8 @@ const api: VibedeskApi = {
     file: (projectId, file) => ipcRenderer.invoke('brain:file', projectId, file),
     write: (projectId, note, previousTitle) => ipcRenderer.invoke('brain:write', projectId, note, previousTitle),
     remove: (projectId, title) => ipcRenderer.invoke('brain:remove', projectId, title),
-    reveal: (projectId) => ipcRenderer.invoke('brain:reveal', projectId)
+    reveal: (projectId) => ipcRenderer.invoke('brain:reveal', projectId),
+    hotspots: (projectId) => ipcRenderer.invoke('brain:hotspots', projectId)
   },
   openExternal: (url) => ipcRenderer.send('app:openExternal', url),
   preview: {

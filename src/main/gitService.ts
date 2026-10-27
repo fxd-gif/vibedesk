@@ -5,8 +5,10 @@ import fs from 'fs'
 import path from 'path'
 import { AUTH_MARK, LOG_FORMAT, addedFileDiff, cleanMessage, commitPrompt, parseLog, parseStatus, webUrl, type GitCommit, type GitState, type GitTools, validBranchName, parsePr, prBranchName, prPrompt, stripAiNotes, type PrDraft, type PrInfo } from '../shared/git'
 import { parseNumstat, type WrapChanges, type WrapFile } from '../shared/wrapUp'
+import { HOTSPOT_TOP, countCommits, hotspotArgs, topHotspots, type Hotspot } from '../shared/hotspots'
 
 const MAX_OUT = 8 * 1024 * 1024
+const HOT_CACHE_MS = 5 * 60_000
 const DIFF_MAX = 400_000
 const FILE_MAX = 300_000
 const LOGIN_TIMEOUT_MS = 15 * 60_000
@@ -87,6 +89,7 @@ export class GitService {
   private run: Runner
   private bins: Partial<Record<Tool, string | null>> = {}
   private login: ChildProcess | null = null
+  private hotCache = new Map<string, { at: number; list: Hotspot[] }>()
 
   constructor(private d: GitDeps = {}) {
     this.run = d.run ?? defaultRunner
@@ -297,6 +300,19 @@ export class GitService {
     if (!git) return []
     const r = await this.run(git, ['log', `-n${n}`, `--pretty=format:${LOG_FORMAT}`], { cwd })
     return r.code === 0 ? parseLog(r.stdout) : []
+  }
+
+  /** Meistgeänderte Dateien der letzten 90 Tage (für das Gehirn) – gecacht, ohne Repo oder Git leer */
+  async hotspots(cwd: string): Promise<Hotspot[]> {
+    const hit = this.hotCache.get(cwd)
+    if (hit && Date.now() - hit.at < HOT_CACHE_MS) return hit.list
+    const git = await this.bin('git')
+    if (!git) return []
+    const r = await this.run(git, hotspotArgs(), { cwd, timeout: 20_000 })
+    // gelöschte Dateien gehören nicht mehr in den Graph
+    const list = r.code === 0 ? topHotspots(countCommits(r.stdout), HOTSPOT_TOP, (f) => fs.existsSync(path.join(cwd, f))) : []
+    this.hotCache.set(cwd, { at: Date.now(), list })
+    return list
   }
 
   async show(cwd: string, hash: string): Promise<string> {

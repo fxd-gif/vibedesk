@@ -3,7 +3,8 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type Simulation, type SimulationLinkDatum, type SimulationNodeDatum } from 'd3-force'
 import type { BrainGraph as Graph, GraphEdge, GraphNode, GraphNodeKind, NoteType } from '../../../../shared/brain'
-import { t } from '../../../../shared/i18n'
+import { heatColor, type HotNode } from '../../../../shared/hotspots'
+import { t, tn } from '../../../../shared/i18n'
 
 export const KIND_COLOR: Record<GraphNodeKind, string> = {
   module: '#9fb8ff',
@@ -36,8 +37,10 @@ export function noteTypeLabel(type: NoteType): string {
 
 const PULSE_COLOR = { read: '#67e8f9', edit: '#4ade80', write: '#c4a7ff' } as const
 const PULSE_MS = 1800
+/** Datei ohne Commits, solange Hotspots an sind – tritt zurück */
+const COLD_FILE = 'rgba(223, 229, 239, 0.22)'
 
-type SimNode = GraphNode & SimulationNodeDatum & { r: number }
+type SimNode = HotNode & SimulationNodeDatum & { r: number }
 type SimLink = SimulationLinkDatum<SimNode> & { kind: GraphEdge['kind']; weight: number }
 
 export interface GraphHandle {
@@ -51,13 +54,15 @@ interface Props {
   hidden: ReadonlySet<GraphNodeKind>
   query: string
   selected: string | null
+  /** Hotspots an: Dateien nach Commits einfärben */
+  heatOn?: boolean
   onSelect(id: string | null): void
 }
 
 const radius = (n: GraphNode): number => (n.kind === 'file' ? 2.5 + n.weight * 1.3 : 5 + n.weight * 2.4)
 const shortLabel = (n: GraphNode): string => (n.kind === 'file' ? n.label.split('/').pop() ?? n.label : n.label)
 
-export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ graph, hidden, query, selected, onSelect }, ref) {
+export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ graph, hidden, query, selected, heatOn = false, onSelect }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const st = useRef({
     nodes: [] as SimNode[],
@@ -74,7 +79,8 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     pulses: new Map<string, { kind: keyof typeof PULSE_COLOR; at: number }>(),
     dirty: true,
     anim: null as null | { from: { k: number; x: number; y: number }; to: { k: number; x: number; y: number }; at: number },
-    fitted: false
+    fitted: false,
+    heatOn: false
   })
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
@@ -142,6 +148,10 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     st.current.query = query.trim().toLowerCase()
     st.current.dirty = true
   }, [query])
+  useEffect(() => {
+    st.current.heatOn = heatOn
+    st.current.dirty = true
+  }, [heatOn])
 
   // ---------- Kamera ----------
   const animateTo = (to: { k: number; x: number; y: number }): void => {
@@ -292,9 +302,19 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
             ctx.shadowColor = KIND_COLOR[n.kind]
             ctx.shadowBlur = dim ? 0 : 14
           }
-          ctx.fillStyle = KIND_COLOR[n.kind]
+          ctx.fillStyle = n.kind === 'file' && s.heatOn ? (n.heat !== undefined ? heatColor(n.heat) : COLD_FILE) : KIND_COLOR[n.kind]
           ctx.fill()
           ctx.shadowBlur = 0
+        }
+        if (s.heatOn && n.unlinked) {
+          // Hotspot ohne Notiz: gepunkteter Ring
+          ctx.beginPath()
+          ctx.arc(n.x, n.y!, n.r + 3.5, 0, Math.PI * 2)
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'
+          ctx.lineWidth = 1.3 / s.t.k
+          ctx.setLineDash([1.5, 2.5])
+          ctx.stroke()
+          ctx.setLineDash([])
         }
         if (n.stale) {
           ctx.beginPath()
@@ -329,6 +349,12 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
         ctx.shadowColor = 'rgba(0,0,0,.9)'
         ctx.shadowBlur = 4
         ctx.fillText(shortLabel(n), n.x, n.y! + n.r + 4 / s.t.k)
+        if (s.heatOn && n.commits && (n.id === focus || n.id === s.selected)) {
+          ctx.font = `400 ${10 / s.t.k}px Inter, system-ui, sans-serif`
+          ctx.fillStyle = heatColor(n.heat ?? 0)
+          ctx.globalAlpha = 1
+          ctx.fillText(tn(n.commits, '{n} Commit in 90 Tagen', '{n} Commits in 90 Tagen'), n.x, n.y! + n.r + 4 / s.t.k + size * 1.3)
+        }
         ctx.shadowBlur = 0
       }
       ctx.globalAlpha = 1

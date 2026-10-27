@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../../api'
 import { ME_ID, NOTE_TYPES, noteId, type BrainView, type GraphNodeKind } from '../../../../shared/brain'
+import { heatColor, withHotspots, type Hotspot } from '../../../../shared/hotspots'
 import { t, tn } from '../../../../shared/i18n'
 import type { Project } from '../../../../shared/types'
 import { Icon } from '../../desktop/icons'
@@ -23,6 +24,19 @@ export const tendPrompt = (): string =>
 export const meetPrompt = (): string =>
   t('Lerne mich kennen, damit du in allen Projekten besser zu mir passt: Lies ~/.claude/CLAUDE.md (falls vorhanden) und das Gehirn dieses Projekts (brain_overview, vor allem Konventionen). Halte mit brain_write und scope "me" fest, was über dieses Projekt hinaus für mich gilt: wie ich arbeite, wie ich angesprochen werden will, Sprache, Stil, Werkzeuge, was ich nicht mag. Eine Notiz pro Thema, kurz (3–8 Zeilen). Was wörtlich schon in CLAUDE.md steht, nicht doppeln. Projektspezifisches gehört nicht hinein.')
 
+export const hotspotNotePrompt = (file: string, commits: number): string =>
+  t('Die Datei {file} wurde in den letzten 90 Tagen in {n} Commits geändert, im Gehirn steht aber noch nichts dazu. Lies sie und halte mit brain_write fest, was man darüber wissen sollte: wofür sie da ist, wie sie mit dem Rest zusammenhängt und worauf man beim Ändern achten muss. Gib die Datei unter files an, verlinke passende Notizen mit [[Titel]] und halte die Notiz kurz (5–15 Zeilen).', { file, n: commits })
+
+// Hotspots-Chip merken (pro Rechner, wie die Inspector-Reiter)
+const HOT_KEY = 'vibedesk.brainHotspots'
+const hotInitial = (): boolean => {
+  try {
+    return localStorage.getItem(HOT_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 const filters = (): { kind: GraphNodeKind; label: string }[] => [...NOTE_TYPES.map((k) => ({ kind: k as GraphNodeKind, label: noteTypeLabel(k) })), { kind: 'file', label: t('Dateien') }]
 
 export function BrainWindow(): React.JSX.Element {
@@ -33,6 +47,8 @@ export function BrainWindow(): React.JSX.Element {
   const [draft, setDraft] = useState<Draft | null>(null)
   const [query, setQuery] = useState('')
   const [hidden, setHidden] = useState<ReadonlySet<GraphNodeKind>>(new Set())
+  const [heatOn, setHeatOn] = useState(hotInitial)
+  const [hot, setHot] = useState<Hotspot[]>([])
   const graph = useRef<GraphHandle>(null)
   const brainOn = useSettings((s) => s.s?.brainOn ?? true)
   const sessionCount = useSessions((s) => s.sessions.filter((x) => x.projectId === projectId).length)
@@ -76,6 +92,33 @@ export function BrainWindow(): React.JSX.Element {
     }
   }, [projectId, load])
 
+  // Hotspots aus git log – nur wenn der Chip an ist (Main cacht einige Minuten)
+  useEffect(() => {
+    setHot([])
+    if (!heatOn || !projectId || projectId === ME_ID) return
+    let live = true
+    void api.brain
+      .hotspots(projectId)
+      .then((h) => live && setHot(h))
+      .catch(() => undefined)
+    return () => {
+      live = false
+    }
+  }, [heatOn, projectId])
+
+  const toggleHeat = (): void => {
+    const v = !heatOn
+    setHeatOn(v)
+    try {
+      localStorage.setItem(HOT_KEY, v ? '1' : '0')
+    } catch {
+      // egal
+    }
+  }
+
+  const shown = useMemo(() => (view && heatOn && hot.length ? withHotspots(view.graph, hot) : view?.graph), [view, heatOn, hot])
+  const hotOf = useMemo(() => new Map(hot.map((h) => [h.path, h.commits])), [hot])
+
   const select = useCallback((id: string | null) => {
     setDraft(null)
     setSelected(id)
@@ -110,6 +153,8 @@ export function BrainWindow(): React.JSX.Element {
   const isMe = projectId === ME_ID
   // „Lerne mich kennen“ läuft in einer Session des zuletzt genutzten Projekts
   const meetIn = isMe ? activeProjectId(projects) : null
+  // Hotspots nur zeigen, wenn git auch welche geliefert hat (kein Repo → Graph wie bisher)
+  const heatShown = heatOn && !isMe && hot.length > 0
 
   return (
     <div className="brain" data-testid="brain-window">
@@ -166,6 +211,17 @@ export function BrainWindow(): React.JSX.Element {
             {f.label}
           </button>
         ))}
+        <span className="brain-sep" />
+        <button
+          className={`brain-filter${heatOn ? '' : ' off'}`}
+          onClick={toggleHeat}
+          disabled={isMe}
+          title={t('Färbt Dateien danach, wie oft sie in den letzten 90 Tagen geändert wurden – dort lohnt sich Wissen im Gehirn')}
+          data-testid="brain-hotspots"
+        >
+          <i style={{ background: heatColor(1) }} />
+          {t('Hotspots')}
+        </button>
         <span className="brain-spacer" />
         <button className="brain-filter" onClick={() => graph.current?.fit()} title={t('Alles einpassen')}>
           <Icon name="grid" size={12} /> {t('Einpassen')}
@@ -173,7 +229,7 @@ export function BrainWindow(): React.JSX.Element {
       </div>
       <div className="brain-main">
         <div className="brain-stage">
-          {view && <BrainGraph ref={graph} graph={view.graph} hidden={hidden} query={query} selected={selected} onSelect={select} />}
+          {shown && <BrainGraph ref={graph} graph={shown} hidden={hidden} query={query} selected={selected} heatOn={heatShown} onSelect={select} />}
           {!projectId && <div className="brain-empty">{t('Lege zuerst ein Projekt an – dann wächst hier sein Gehirn.')}</div>}
           {empty && isMe && (
             <div className="brain-empty card" data-testid="brain-empty-me">
@@ -224,6 +280,16 @@ export function BrainWindow(): React.JSX.Element {
               <span>
                 <i className="stale" /> {t('zu prüfen')}
               </span>
+              {heatShown && (
+                <>
+                  <span>
+                    <i className="heat" /> {t('selten → oft geändert')}
+                  </span>
+                  <span>
+                    <i className="unlinked" /> {t('Hotspot ohne Notiz')}
+                  </span>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -235,6 +301,8 @@ export function BrainWindow(): React.JSX.Element {
               draft={draft}
               setDraft={setDraft}
               onSelect={select}
+              commits={heatShown && selected?.startsWith('f:') ? hotOf.get(selected.slice(2)) : undefined}
+              onAskNote={(file, n) => void ask(hotspotNotePrompt(file, n))}
               onSaved={(title) => {
                 load()
                 setTimeout(() => select(noteId(title)), 250)

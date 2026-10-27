@@ -54,6 +54,17 @@ const dict: Record<string, string> = {
   'Ordner öffnen (auch in Obsidian nutzbar)': 'Open folder (works with Obsidian too)',
   'Alles einpassen': 'Fit everything',
   Einpassen: 'Fit',
+  // Hotspots
+  Hotspots: 'Hotspots',
+  'Färbt Dateien danach, wie oft sie in den letzten 90 Tagen geändert wurden – dort lohnt sich Wissen im Gehirn':
+    'Colors files by how often they changed in the last 90 days – that’s where knowledge in the brain pays off',
+  '{n} Commit in 90 Tagen': '{n} commit in 90 days',
+  '{n} Commits in 90 Tagen': '{n} commits in 90 days',
+  'selten → oft geändert': 'rarely → often changed',
+  'Hotspot ohne Notiz': 'Hotspot without a note',
+  'Claude schreibt die Notiz': 'Let Claude write the note',
+  'Die Datei {file} wurde in den letzten 90 Tagen in {n} Commits geändert, im Gehirn steht aber noch nichts dazu. Lies sie und halte mit brain_write fest, was man darüber wissen sollte: wofür sie da ist, wie sie mit dem Rest zusammenhängt und worauf man beim Ändern achten muss. Gib die Datei unter files an, verlinke passende Notizen mit [[Titel]] und halte die Notiz kurz (5–15 Zeilen).':
+    'The file {file} changed in {n} commits over the last 90 days, but the brain has nothing about it yet. Read it and use brain_write to record what someone should know about it: what it’s for, how it connects to the rest and what to watch out for when changing it. List the file under files, link related notes with [[Title]] and keep the note short (5–15 lines).',
   'Lege zuerst ein Projekt an – dann wächst hier sein Gehirn.': 'Create a project first – its brain will grow here.',
   'Das Gehirn von {name} ist noch leer': 'The brain of {name} is still empty',
   'Das Gehirn dieses Projekts ist noch leer': 'This project’s brain is still empty',

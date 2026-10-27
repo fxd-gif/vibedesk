@@ -9,7 +9,7 @@ import { useSettings } from '../../store/settingsStore'
 import { relTime } from '../../util'
 import { Icon } from '../../desktop/icons'
 import { KIND_COLOR, noteTypeLabel } from './BrainGraph'
-import { t } from '../../../../shared/i18n'
+import { t, tn } from '../../../../shared/i18n'
 import { Markdown } from './Markdown'
 
 export interface Draft {
@@ -30,6 +30,10 @@ interface Props {
   setDraft(d: Draft | null): void
   onSelect(id: string | null): void
   onSaved(title: string): void
+  /** Commits der gewählten Datei in 90 Tagen (nur bei eingeschalteten Hotspots) */
+  commits?: number
+  /** Claude eine Notiz zur Datei schreiben lassen */
+  onAskNote?(file: string, commits: number): void
 }
 
 function Editor({ projectId, draft, setDraft, onSaved }: { projectId: string; draft: Draft; setDraft(d: Draft | null): void; onSaved(t: string): void }): React.JSX.Element {
@@ -87,7 +91,7 @@ function Editor({ projectId, draft, setDraft, onSaved }: { projectId: string; dr
   )
 }
 
-export function BrainSide({ projectId, selected, draft, setDraft, onSelect, onSaved }: Props): React.JSX.Element | null {
+export function BrainSide({ projectId, selected, draft, setDraft, onSelect, onSaved, commits, onAskNote }: Props): React.JSX.Element | null {
   const [note, setNote] = useState<NoteDetail | null>(null)
   const [file, setFile] = useState<BrainFileInfo | null>(null)
   const [reveal, setReveal] = useState(false)
@@ -128,6 +132,7 @@ export function BrainSide({ projectId, selected, draft, setDraft, onSelect, onSa
         <h3 className="mono">{file.file}</h3>
         <p className="dim small">
           {t('{reads}× gelesen · {edits}× geändert', { reads: file.reads, edits: file.edits })}
+          {commits ? ' · ' + tn(commits, '{n} Commit in 90 Tagen', '{n} Commits in 90 Tagen') : null}
         </p>
         <div className="row">
           <button className="btn small" onClick={() => void openInEditor(file.abs)}>
@@ -156,6 +161,13 @@ export function BrainSide({ projectId, selected, draft, setDraft, onSelect, onSa
               </button>
             ))}
           </section>
+        )}
+        {!file.notes.length && !!commits && onAskNote && (
+          <div className="row">
+            <button className="btn small primary" onClick={() => onAskNote(file.file, commits)} data-testid="brain-hotspot-ask">
+              <Icon name="spark" size={13} /> {t('Claude schreibt die Notiz')}
+            </button>
+          </div>
         )}
         {!file.notes.length && <p className="bs-hint">{t('Zu dieser Datei gibt es noch kein Wissen. Claude legt es an, wenn es hier arbeitet – oder du schreibst selbst eine Notiz.')}</p>}
       </div>
