@@ -134,6 +134,13 @@ function Toolbox(): React.JSX.Element | null {
           <option value="studio">{t('Studio · Seitenleiste')}</option>
         </select>
       </div>
+      <div className="nset-row">
+        <span>
+          {t('Fenster pro Projekt merken')}
+          <small>{t('Wechselst du das Projekt, kommen die Werkzeug-Fenster zurück, die du dort zuletzt offen hattest – Terminals bleiben, wo sie sind')}</small>
+        </span>
+        <Toggle on={s.workspacesOn !== false} onChange={(v) => set({ workspacesOn: v })} label={t('Fenster pro Projekt merken')} />
+      </div>
       <h4 className="toolbox-h">{t('Werkzeugkasten')}</h4>
       <p className="dim small">{t('Schalte dazu, was du brauchst. Ausgeblendetes verschwindet aus Dock, Mehr-Menü und Befehls-Palette – Einstellungen bleiben erhalten.')}</p>
       <div className="row" style={{ gap: 8 }}>

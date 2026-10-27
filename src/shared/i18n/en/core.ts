@@ -383,6 +383,13 @@ const dict: Record<string, string> = {
   'Details: Cache, Antworten, Tool-Aufrufe': 'Details: cache, responses, tool calls',
   'Alles zeigen (Strg+.)': 'Show everything (Ctrl+.)',
   'Nur diese Session – Zen-Modus (Strg+.)': 'Just this session – Zen mode (Ctrl+.)',
+  // Fenster pro Projekt merken
+  'Fenster pro Projekt merken': 'Remember windows per project',
+  'Wechselst du das Projekt, kommen die Werkzeug-Fenster zurück, die du dort zuletzt offen hattest – Terminals bleiben, wo sie sind': 'When you switch projects, the tool windows you last had open there come back – terminals stay where they are',
+  'Anordnung für dieses Projekt vergessen': 'Forget the arrangement for this project',
+  'Für dieses Projekt ist nichts gemerkt': 'Nothing is remembered for this project',
+  'Anordnung vergessen': 'Arrangement forgotten',
+  'Beim nächsten Wechsel in dieses Projekt bleiben die Fenster, wie sie sind.': 'Next time you switch to this project, the windows stay as they are.',
 }
 
 export default dict

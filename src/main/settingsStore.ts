@@ -20,6 +20,8 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   customScenes: [],
   visiblePanels: [],
   windowRects: {},
+  workspacesOn: true,
+  workspaces: {},
   maxSessions: 3,
   chimeOn: true,
   chimeVolume: 0.5,
@@ -101,6 +103,7 @@ export class SettingsStore {
     this.value.companion = { ...defaults.companion, ...(this.value.companion ?? {}) }
     this.value.terminal = { ...defaults.terminal, ...(this.value.terminal ?? {}) }
     this.value.notify.kinds = { ...defaults.notify.kinds, ...(this.value.notify.kinds ?? {}) }
+    if (!this.value.workspaces || typeof this.value.workspaces !== 'object' || Array.isArray(this.value.workspaces)) this.value.workspaces = {}
   }
 
   get(): Settings {

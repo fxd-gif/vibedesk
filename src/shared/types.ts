@@ -201,6 +201,10 @@ export interface Settings {
   customScenes: string[]
   visiblePanels: PanelId[]
   windowRects: Record<string, WindowRect>
+  /** Fenster pro Projekt merken: beim Projektwechsel kommt die dort zuletzt genutzte Anordnung zurück */
+  workspacesOn: boolean
+  /** gemerkte Anordnung pro Projekt (projectId → Werkzeug-Fenster und ihre Plätze), höchstens 30 */
+  workspaces: Record<string, Workspace>
   maxSessions: number
   chimeOn: boolean
   chimeVolume: number
@@ -271,6 +275,13 @@ export interface Settings {
   tourDone: boolean
   /** eigenes Terminal-Farbschema (z. B. von Claude über desk_custom_theme erzeugt) – gilt bei terminal.theme 'custom' */
   customTheme: CustomTheme | null
+}
+
+/** Arbeitsbereich eines Projekts: offene Werkzeug-Fenster und wo sie liegen */
+export interface Workspace {
+  rects: Record<string, WindowRect>
+  panels: PanelId[]
+  savedAt: number
 }
 
 export type Experience = '' | 'beginner' | 'pro'

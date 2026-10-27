@@ -25,6 +25,7 @@ import { moduleOn } from '../../desktop/modules'
 import { tidyNow, toggleZen } from '../../desktop/calm'
 import { openSettings } from '../SettingsWindow'
 import { startTour } from '../../desktop/Tour'
+import { forgetCurrentWorkspace } from '../../store/workspaceStore'
 
 interface Cmd {
   id: string
@@ -102,6 +103,9 @@ function buildCommands(projects: Project[]): Cmd[] {
     { id: 'act:tour', label: t('Rundgang starten'), group: t('Aktionen'), icon: 'spark', hint: t('Kurze Klick-Tour: wo was ist'), run: startTour },
     { id: 'act:zen', label: t('Zen-Modus'), group: t('Aktionen'), icon: 'eyeoff', hint: t('Strg+. · nur Claude und der Regen'), run: () => toggleZen() },
     { id: 'act:tidy', label: t('Aufräumen'), group: t('Aktionen'), icon: 'grid', hint: t('Übrige Fenster ins Dock, Rest anordnen'), run: tidyNow },
+    ...(s && s.workspacesOn !== false && s.layout !== 'studio'
+      ? [{ id: 'act:forgetWorkspace', label: t('Anordnung für dieses Projekt vergessen'), group: t('Aktionen'), icon: 'grid', hint: t('Fenster pro Projekt merken'), searchOnly: true, run: forgetCurrentWorkspace }]
+      : []),
     { id: 'win:settings', label: t('Einstellungen'), group: t('Fenster'), icon: 'gear', hint: t('Sprache, Aufbau, Mitteilungen, Terminal'), run: () => openSettings() },
     { id: 'act:toolbox', label: t('Werkzeugkasten'), group: t('Fenster'), icon: 'puzzle', hint: t('Module ein- und ausblenden'), run: () => openSettings('toolbox') },
     { id: 'act:quit', label: t('VibeDesk beenden'), group: t('Aktionen'), icon: 'exit', run: () => api.app.quit() }

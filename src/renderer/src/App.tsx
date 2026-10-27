@@ -75,6 +75,7 @@ import { wireDeskCommands } from './store/deskCommands'
 import { wirePermissions } from './store/permissionStore'
 import { wireCompanion } from './store/companionStore'
 import { t } from '../../shared/i18n'
+import { rememberLayout, wireWorkspaces } from './store/workspaceStore'
 
 
 const initials = (n: string): string => {
@@ -208,6 +209,7 @@ export default function App(): React.JSX.Element {
       // Sessions und Shells, die ein Neuladen des Fensters überlebt haben
       void restoreSessions()
       void restoreShells()
+      wireWorkspaces(s)
       setReady(true)
       startAddonRuntime()
       // per Doppelklick geöffnete .vibeaddon-Datei
@@ -229,6 +231,8 @@ export default function App(): React.JSX.Element {
         const rects = Object.fromEntries(Object.entries(s.rects).filter(([id]) => !id.startsWith('term:') && !id.startsWith('shell:')))
         const visiblePanels = s.open.filter((id) => PANEL_IDS.includes(id)) as PanelId[]
         api.settings.set({ windowRects: rects, visiblePanels })
+        // zusätzlich unter dem Projekt, dessen Anordnung gerade zu sehen ist
+        rememberLayout()
       }, 500)
     })
   }, [ready])
