@@ -361,6 +361,13 @@ const dict: Record<string, string> = {
   'VibeDesk ist aktuell.': 'VibeDesk is up to date.',
   'Suche fehlgeschlagen: {message}': 'Check failed: {message}',
   'Automatische Updates': 'Automatic updates',
+  // anonym mitzählen
+  'Anonym mitzählen': 'Count me in anonymously',
+  'Meldet alle paar Minuten nur „läuft“ – mit einer Zufallskennung, die jeden Tag neu verschlüsselt wird, und der Versionsnummer. Kein Name, keine Projekte, keine Pfade.': 'Every few minutes it only reports "running" – with a random ID that is re-hashed every day, and the version number. No name, no projects, no paths.',
+  'Darf VibeDesk anonym mitzählen?': 'May VibeDesk count you in anonymously?',
+  'Dann sieht der Entwickler, wie viele VibeDesk gerade nutzen – das motiviert enorm. Geschickt wird nur eine zufällige Kennung, die jeden Tag neu verschlüsselt wird, und die Versionsnummer. Kein Name, keine Projekte, keine Pfade. Änderbar unter Einstellungen → Updates.': 'Then the developer can see how many people are using VibeDesk right now – a huge motivation. Only a random ID that is re-hashed every day and the version number are sent. No name, no projects, no paths. You can change this under Settings → Updates.',
+  'Ja, gern': 'Yes, sure',
+  'Nein danke': 'No thanks',
   'Neue Versionen im Hintergrund laden und beim nächsten Start installieren. Aus: VibeDesk sagt nur Bescheid, geladen wird erst auf Knopfdruck.': 'Download new versions in the background and install them on the next start. Off: VibeDesk only lets you know, and downloads when you click.',
   'Installiert: v{version}': 'Installed: v{version}',
   'Jetzt suchen': 'Check now',

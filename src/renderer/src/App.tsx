@@ -81,6 +81,7 @@ import { wireCompanion } from './store/companionStore'
 import { t } from '../../shared/i18n'
 import { rememberLayout, wireWorkspaces } from './store/workspaceStore'
 import { wireScreenMain } from './store/screenMain'
+import { wireCountAsk } from './store/countAsk'
 import { onScreen, useScreen } from './store/screenStore'
 
 
@@ -211,6 +212,7 @@ export default function App(): React.JSX.Element {
     wireHints()
     wireLimits()
     wireDeskCommands()
+    wireCountAsk()
     // zweiter Bildschirm: erst wissen, welche Fenster drüben bleiben – die öffnen hier nicht
     Promise.all([useSettings.getState().load(), wireScreenMain()]).then(([s]) => {
       const ui = useUi.getState()

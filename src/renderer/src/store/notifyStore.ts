@@ -32,6 +32,8 @@ export interface Notice {
   onOpen?(): void
   /** gebündelte Karte: so viele Mitteilungen stecken darin */
   count?: number
+  /** bleibt stehen, bis man einen Knopf drückt */
+  sticky?: boolean
 }
 
 interface NotifyState {
@@ -74,7 +76,7 @@ function showToast(input: Notice): void {
     return { toasts: [n, ...list].slice(0, MAX_TOASTS) }
   })
   const n = useNotify.getState().toasts[0]
-  const ms = TOAST_MS[n.kind]
+  const ms = n.sticky ? 0 : TOAST_MS[n.kind]
   if (ms) setTimeout(() => dismiss(n.id), ms)
 }
 
@@ -100,8 +102,8 @@ export function notify(input: NoticeInput & { kind: NoticeKind }, visible = fals
 }
 
 /** Karte ohne Verlauf – für Hinweise von VibeDesk selbst */
-export function inform(title: string, body?: string, actions?: NoticeAction[], key?: string): void {
-  showToast({ id: ++seq, kind: 'info', title, body, actions, key, time: Date.now() })
+export function inform(title: string, body?: string, actions?: NoticeAction[], key?: string, sticky = false): void {
+  showToast({ id: ++seq, kind: 'info', title, body, actions, key, time: Date.now(), sticky })
 }
 
 export function dismiss(id: number): void {

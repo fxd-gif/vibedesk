@@ -87,7 +87,10 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   inspectorTabsOff: [],
   tourDone: false,
   customTheme: null,
-  secondScreen: { panels: [] }
+  secondScreen: { panels: [] },
+  countMe: null,
+  countMeAsked: 0,
+  installId: ''
 })
 
 export class SettingsStore {

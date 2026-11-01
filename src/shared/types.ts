@@ -294,6 +294,12 @@ export interface Settings {
   customTheme: CustomTheme | null
   /** Zweiter Bildschirm (Beta): welche Werkzeug-Fenster dort waren – kommen beim Start nur mit zweitem Monitor zurück */
   secondScreen: SecondScreenSettings
+  /** Anonym mitzählen (Tages-Hash + Version ans Cockpit) – null = noch nicht gefragt */
+  countMe: boolean | null
+  /** so oft schon gefragt – höchstens zweimal, dann nie wieder */
+  countMeAsked: number
+  /** Zufalls-ID dieser Installation, entsteht erst mit der Zustimmung */
+  installId: string
 }
 
 /** Arbeitsbereich eines Projekts: offene Werkzeug-Fenster und wo sie liegen */

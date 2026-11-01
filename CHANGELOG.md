@@ -28,6 +28,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 - **Streamer-Overlay anpassen:** Position (alle vier Ecken), Größe, Breite, Stil (dunkles Glas, hell, nur Text), Hintergrund und Akzentfarbe. Die Auswahl der Bausteine bleibt jetzt gespeichert, und „Ansehen“ öffnet das Overlay im Browser.
 - **Dezenter VibeDesk-Hinweis statt Wasserzeichen:** eine kleine Plakette in der Statuskarte (oder wie bisher eine Zeile darunter, oder aus).
 - **`!vibedesk` im Twitch-Chat** zeigt 20 Sekunden lang eine Info-Karte, womit du codest (abschaltbar, mit Abklingzeit).
+- **Anonym mitzählen (freiwillig):** VibeDesk fragt einmal leise, ob es anonym mitzählen darf. Sagst du ja, meldet es alle paar Minuten nur „läuft“ – mit einer Zufallskennung, die jeden Tag neu verschlüsselt wird, und der Versionsnummer. Kein Name, keine Projekte, keine Pfade. Jederzeit änderbar unter Einstellungen → Updates
 
 ### Verbessert
 

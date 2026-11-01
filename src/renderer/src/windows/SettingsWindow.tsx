@@ -205,6 +205,9 @@ function Updates(): React.JSX.Element | null {
       <Row label={t('Automatische Updates')} hint={t('Neue Versionen im Hintergrund laden und beim nächsten Start installieren. Aus: VibeDesk sagt nur Bescheid, geladen wird erst auf Knopfdruck.')}>
         <Toggle on={s.autoUpdate !== false} onChange={(v) => set({ autoUpdate: v })} label={t('Automatische Updates')} />
       </Row>
+      <Row label={t('Anonym mitzählen')} hint={t('Meldet alle paar Minuten nur „läuft“ – mit einer Zufallskennung, die jeden Tag neu verschlüsselt wird, und der Versionsnummer. Kein Name, keine Projekte, keine Pfade.')}>
+        <Toggle on={s.countMe === true} onChange={(v) => set({ countMe: v })} label={t('Anonym mitzählen')} />
+      </Row>
       <Row label={t('Installiert: v{version}', { version: version || '…' })} hint={label ?? undefined}>
         <span className="row" style={{ gap: 6 }}>
           {status.state === 'available' && status.manual && (

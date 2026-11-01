@@ -61,6 +61,7 @@ import { parseRateLimits, type PlanLimits } from '../shared/limits'
 import { deskDone, parseDeskCommand, type DeskCommand } from '../shared/desk'
 import { QuickPrompt, type QuickTarget } from './quickPrompt'
 import { VibeLog } from './vibeLog'
+import { UsagePing } from './usagePing'
 import { SecondScreen } from './secondScreen'
 import { SECOND_CHANNELS } from '../shared/secondScreen'
 import { captureCard } from './vibeCapture'
@@ -562,6 +563,9 @@ app.whenReady().then(async () => {
   ipcMain.on('streamer:push', (_e, state: unknown) => overlay.push(state))
   ipcMain.handle('streamer:user', () => basename(os.homedir()))
   app.on('before-quit', () => void overlay.stop())
+
+  // anonym mitzählen – tut nichts, solange der User nicht zugestimmt hat
+  new UsagePing(settings, app.getVersion()).start()
 
   const bridgeScript = resource('update-splash.ps1')
   setupUpdater(
