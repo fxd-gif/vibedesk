@@ -104,9 +104,9 @@ One card at a time, "done" messages are bundled, and the dock dims while you typ
 
 <br/>
 
-## Coming in 2.0 &nbsp;<sub>Sunday, 1 November 2026</sub>
+## New in 2.0 &nbsp;<sub>released 1 November 2026</sub>
 
-We ship one bigger, tested release at a time instead of many small ones. Countdown and plan are on the [website](https://fxd-gif.github.io/vibedesk/#next).
+Every feature you asked for in the issues made it in. We ship one bigger, tested release at a time instead of many small ones – [download 2.0](https://github.com/fxd-gif/vibedesk/releases/latest), or wish for the next feature with a 👍 on the [issues](https://github.com/fxd-gif/vibedesk/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement+sort%3Areactions-%2B1-desc).
 
 <table>
 <tr>

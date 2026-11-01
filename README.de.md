@@ -104,9 +104,9 @@ Eine Karte auf einmal, „fertig“-Meldungen werden gebündelt, und das Dock bl
 
 <br/>
 
-## Kommt mit 2.0 &nbsp;<sub>Sonntag, 1. November 2026</sub>
+## Neu in 2.0 &nbsp;<sub>erschienen am 1. November 2026</sub>
 
-Wir bringen lieber ein größeres, getestetes Release als viele kleine. Countdown und Plan stehen auf der [Website](https://fxd-gif.github.io/vibedesk/#next).
+Jeder Wunsch aus den Issues ist drin. Wir bringen lieber ein größeres, getestetes Release als viele kleine – [2.0 herunterladen](https://github.com/fxd-gif/vibedesk/releases/latest) oder das nächste Feature mit 👍 in den [Issues](https://github.com/fxd-gif/vibedesk/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement+sort%3Areactions-%2B1-desc) wünschen.
 
 <table>
 <tr>
