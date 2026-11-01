@@ -350,7 +350,7 @@ The `Hash` value must match the checksum listed in the release notes exactly. Yo
 
 ## Privacy
 
-VibeDesk has **no telemetry, no analytics and no account**. There is no VibeDesk server.
+VibeDesk has **no analytics and no account**, and sends **no telemetry unless you say yes**. Since 2.0 it asks once whether it may count you in anonymously: if you agree, it reports "running" every few minutes with a random ID that is re-hashed every day (so days can't be linked) and the version number – no name, no projects, no paths, no IP stored. It is off until you agree and can be switched off under Settings → Updates.
 
 <details>
 <summary><b>What stays local</b></summary>
@@ -370,6 +370,7 @@ VibeDesk has **no telemetry, no analytics and no account**. There is no VibeDesk
 |---|---|---|
 | Lofi radio | the selected stream (laut.fm by default; also ilovemusic.de, zeno.fm) | while music is on (on by default) |
 | Update check and download | GitHub Releases | on start |
+| Anonymous counting (daily hash + version) | the VibeDesk counter (address from `fxd-gif.github.io/vibedesk/ping.json`) | only if you agreed, every 5 minutes while VibeDesk runs |
 | Claude Code itself, AI commit messages, Merge Studio review, prompt formulation on the phone | Anthropic, through your own Claude Code | when you use Claude |
 | Spotify | accounts.spotify.com (login) and api.spotify.com (control playback), with your own Spotify app ID | only if you connect Spotify |
 | Skill downloads | GitHub (codeload.github.com) | when you install a skill from a link |
