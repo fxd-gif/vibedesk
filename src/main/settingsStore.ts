@@ -90,7 +90,9 @@ export const DEFAULT_SETTINGS = (docsDir: string): Settings => ({
   secondScreen: { panels: [] },
   countMe: null,
   countMeAsked: 0,
-  installId: ''
+  installId: '',
+  doneCount: 0,
+  starAsked: false
 })
 
 export class SettingsStore {

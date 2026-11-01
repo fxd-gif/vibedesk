@@ -7,6 +7,10 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ## Unveröffentlicht
 
+### Verbessert
+
+- **Eine einzige Bitte um einen Stern:** Nach der zehnten fertigen Claude-Runde fragt VibeDesk einmal leise, ob du dem Projekt auf GitHub einen Stern gibst – das hilft anderen, VibeDesk zu finden. Die Frage kommt nur dieses eine Mal
+
 ## 2.0.0
 
 ### Neu

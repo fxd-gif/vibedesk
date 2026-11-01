@@ -300,6 +300,10 @@ export interface Settings {
   countMeAsked: number
   /** Zufalls-ID dieser Installation, entsteht erst mit der Zustimmung */
   installId: string
+  /** fertige Claude-Runden – nur bis zur einmaligen Stern-Bitte gezählt */
+  doneCount: number
+  /** um einen GitHub-Stern schon gebeten (passiert nur einmal) */
+  starAsked: boolean
 }
 
 /** Arbeitsbereich eines Projekts: offene Werkzeug-Fenster und wo sie liegen */

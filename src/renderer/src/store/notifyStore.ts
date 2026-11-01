@@ -161,6 +161,7 @@ function onStatus(id: string, before: SessionStatus | undefined, now: SessionSta
     // (Gemini CLI / Codex sind nur „fertig“, wenn man sie selbst beendet hat – dafür keine Karte)
     // Runde mit Änderungen: Abschluss (Zusammenfassung, Commit) gleich auf der Karte anbieten
     const files = useWrapUp.getState().turns[id]?.files.length ?? 0
+    void import('./starAsk').then((m) => m.noteDone())
     const wrap = files > 0 && useSettings.getState().s?.wrapUp !== false
     notify(
       {
