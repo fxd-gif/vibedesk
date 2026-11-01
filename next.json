@@ -30,6 +30,27 @@
     {
       "title": "Claude runs your desk",
       "text": "New desktop tools for Claude: see your other sessions and hand them tasks, check usage and limits, set a budget and leave you a reminder."
+    },
+    {
+      "title": "Shows how long Claude has been waiting",
+      "text": "“waiting · 3 min” on the session, in the tray and on your phone – the longest wait comes first.",
+      "issue": 5
+    },
+    {
+      "title": "Much lighter on your laptop",
+      "text": "About a tenth of the graphics load of 1.9 while Claude works – VibeDesk stays cool and quick, even after hours."
+    },
+    {
+      "title": "Gemini CLI and Codex (beta)",
+      "text": "Start a session with another agent in the same terminal, with a simple working/waiting dot."
+    },
+    {
+      "title": "Second screen (beta)",
+      "text": "Move the Inspector, Git, the brain or a preview to your other monitor."
+    },
+    {
+      "title": "Your own music, project templates, diagnostics",
+      "text": "Play a folder of your own tracks, start new projects from eight templates, copy a diagnostic report for an issue."
     }
   ]
 }

@@ -83,8 +83,25 @@
           .map((f) => `<li>${f.issue ? `<a href="${issueUrl(f.issue)}"><b>${esc(f.title)}</b></a>` : `<b>${esc(f.title)}</b>`}<small>${esc(f.text)}</small></li>`)
           .join('')
         const cell = (k) => nextCount.querySelector(`[data-cd="${k}"]`)
+        // Countdown abgelaufen: der Abschnitt wird zur Ankündigung „ist da“ mit Download – ohne neuen Push
+        let out = false
+        const released = () => {
+          if (out) return
+          out = true
+          const sec = nextCount.closest('section')
+          const label = sec.querySelector('.label')
+          if (label) label.textContent = 'Latest release'
+          const h2 = sec.querySelector('h2')
+          if (h2) h2.innerHTML = `VibeDesk <span data-next-version>${esc(n.version)}</span> is here`
+          nextCount.hidden = true
+          const date = $('[data-next-date]')
+          date.innerHTML = `Released ${esc(at.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))} · <a href="download/?start=1"><b>Download VibeDesk ${esc(n.version)}</b></a> · <a href="https://github.com/fxd-gif/vibedesk/releases/latest">What's new</a>`
+          const planned = sec.querySelector('.nx-col h3')
+          if (planned) planned.textContent = `New in ${n.version}`
+        }
         const tick = () => {
           const left = Math.max(0, at - Date.now())
+          if (!left) released()
           const s = Math.floor(left / 1000)
           cell('d').textContent = Math.floor(s / 86400)
           cell('h').textContent = String(Math.floor(s / 3600) % 24).padStart(2, '0')
