@@ -95,7 +95,8 @@ export function templatePrompt(tpl: ProjectTemplate, opts: { name: string; about
   return [
     t('Wir starten das neue Projekt „{name}“, der Ordner ist noch leer.', { name: opts.name }),
     tpl.task,
-    about && t('Worum es geht: {about}', { about }),
+    // ohne eigenes Satzende liefe die Beschreibung in den nächsten Satz hinein
+    about && t('Worum es geht: {about}', { about: /[.?…:;]$/.test(about) ? about : about + '.' }),
     t('Halte das Gerüst klein und einsteigerfreundlich – nur das Nötigste, damit ich gleich etwas sehe.'),
     t('Lege eine passende .gitignore an.'),
     t('Erkläre mir danach in zwei, drei Sätzen, wie ich es starte bzw. benutze.'),
