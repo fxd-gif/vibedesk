@@ -712,3 +712,7 @@ html[data-typing] .dock:not(:hover) { opacity: .28; }
 @media (prefers-reduced-motion: no-preference) {
   html[data-ws-glide] .gwin { transition: opacity 160ms ease, transform 160ms ease, box-shadow 200ms ease, left 320ms ease, top 320ms ease, width 320ms ease, height 320ms ease; }
 }
+
+/* Sparmodus: Live-Unschärfe (backdrop-filter) kostet bei jeder Terminal-Ausgabe einen neuen Durchgang auf der GPU.
+   Gemessen mit echter Claude-Session: GPU-Prozess ~20 % → ~9 % eines Kerns. Dafür etwas deckenderes Glas. */
+.app.saver .gwin, .app.saver .dock, .app.saver .sidebar, .app.saver .statusbar { backdrop-filter: none; background: rgba(13, 17, 25, 0.9); }

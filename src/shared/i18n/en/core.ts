@@ -267,7 +267,7 @@ const dict: Record<string, string> = {
   'Stärke': 'Intensity',
   'Beschlag': 'Fog',
   'Lautstärke': 'Volume',
-  'Sparsamer Regen: 15 statt 30 Bilder pro Sekunde und geringere Auflösung': 'Lighter rain: 15 instead of 30 frames per second and lower resolution',
+  'Sparsamer: Regen mit 15 statt 30 Bildern pro Sekunde, Fenster ohne Live-Unschärfe': 'Lighter: rain at 15 instead of 30 frames per second, windows without live blur',
   'Energiesparen': 'Energy saver',
   'Ton bei „wartet auf dich“': 'Sound for “waiting for you”',
   'Test': 'Test',

@@ -202,7 +202,7 @@ function AtmosphereSide({ source }: { source: MusicSource }): React.JSX.Element 
       </section>
 
       <section>
-        <div className="amb-energy" title={t('Sparsamer Regen: 15 statt 30 Bilder pro Sekunde und geringere Auflösung')}>
+        <div className="amb-energy" title={t('Sparsamer: Regen mit 15 statt 30 Bildern pro Sekunde, Fenster ohne Live-Unschärfe')}>
           <span className="dim small">{t('Energiesparen')}</span>
           <div className="row chips" role="radiogroup" aria-label={t('Energiesparen')}>
             {ENERGY_MODES().map((m) => (

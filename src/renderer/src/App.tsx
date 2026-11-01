@@ -26,7 +26,8 @@ import { PreviewWindow } from './windows/PreviewWindow'
 import { TerminalWindow } from './windows/TerminalWindow'
 import { ShellWindow } from './windows/ShellWindow'
 import { restoreShells, useShells, wireShells } from './store/shellStore'
-import { RainCanvas } from './ambience/RainCanvas'
+import { RainCanvas, useOnBattery } from './ambience/RainCanvas'
+import { saverActive } from './ambience/framePolicy'
 import { useSettings } from './store/settingsStore'
 import { ambienceAudio } from './ambience/audio'
 import { isMuted } from './ambience/toggles'
@@ -166,6 +167,8 @@ export default function App(): React.JSX.Element {
   const edits = useWorkflow(hasEdits)
   const brainUsed = useBrainUsed()
   const zen = useUi((s) => s.zen)
+  // Sparmodus: Glas ohne Live-Unschärfe – die wird sonst bei jeder Terminal-Ausgabe neu berechnet
+  const saver = saverActive(settings?.energySaver, useOnBattery())
   const detected = usePreview((s) => Object.values(s.urls).flat().length)
   /** einmal verdiente Dock-Symbole bleiben bis zum Neustart */
   const sticky = useRef(new Set<PanelId>())
@@ -284,7 +287,7 @@ export default function App(): React.JSX.Element {
   const Nav = studio ? Sidebar : Dock
 
   return (
-    <div className={`app${zen ? ' zen' : ''}`} data-layout={studio ? 'studio' : 'desktop'}>
+    <div className={`app${zen ? ' zen' : ''}${saver ? ' saver' : ''}`} data-layout={studio ? 'studio' : 'desktop'}>
       {settings && livingScene ? (
         <LivingSceneView scene={livingScene} />
       ) : settings ? (

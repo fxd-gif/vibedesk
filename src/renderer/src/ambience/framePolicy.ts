@@ -10,11 +10,13 @@ export interface FrameState {
   /** Fenster unsichtbar oder ohne Fokus */
   idle: boolean
   saver: boolean
+  /** Regenstärke 0..1 – bei 0 hängt das Bild nicht von der Zeit ab */
+  rain?: number
 }
 
 /** Mindestabstand zwischen zwei Bildern in ms – null heißt: gar nicht laufend zeichnen (Standbild). */
 export function frameInterval(s: FrameState): number | null {
-  if (s.paused) return null
+  if (s.paused || (s.rain !== undefined && s.rain <= 0)) return null
   if (s.idle) return 1000 / FPS_IDLE
   return 1000 / (s.saver ? FPS_SAVER : FPS_FOCUS)
 }

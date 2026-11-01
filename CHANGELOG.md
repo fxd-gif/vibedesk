@@ -29,6 +29,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Verbessert
 
+- **Deutlich sparsamer, wenn Claude arbeitet:** Der Rahmen um ein arbeitendes Terminal leuchtet nicht mehr in 60 Bildern pro Sekunde, sondern in wenigen ruhigen Stufen. Steht der Regen auf 0 %, zeichnet VibeDesk den Hintergrund nur noch einmal statt dauernd neu. Im Energiesparmodus verzichten die Fenster zusätzlich auf die Live-Unschärfe – die musste bei jeder Terminal-Ausgabe neu berechnet werden. Gemessen mit einer echten Claude-Session: Grafik-Last etwa ein Zehntel von 1.9, der Laptop bleibt kühl und VibeDesk auch nach Stunden flott
 - **Szene folgt der Tageszeit:** Unter Atmosphäre → Regen legt „Folgt der Tageszeit“ einen leisen Farbschleier über die Szene – kühl in der Nacht, rosig am Morgen, hell am Tag, orange am Abend. Die Übergänge laufen so langsam, dass du sie kaum bemerkst
 - **Lebende Szenen teilen:** Jede lebende Szene hat in „Atmosphäre & Musik“ einen Teilen-Knopf – der Share-Code landet in der Zwischenablage, dein eigenes Bild bleibt dabei privat. Wer den Code einfügt, sieht die Szene erst in einer Live-Vorschau und übernimmt sie dann mit einem Klick. Fremde Szenen laufen genauso abgeschottet ohne Internet wie deine eigenen
 - **Leistungsanzeige:** In der Befehlspalette schaltet „Leistungsanzeige an“ eine kleine Pille unten links ein – Bildrate, Arbeitsspeicher aller VibeDesk-Prozesse und CPU. Praktisch, wenn es irgendwo ruckelt. Ein Klick blendet sie wieder aus

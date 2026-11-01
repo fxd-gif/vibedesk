@@ -165,7 +165,7 @@ export function RainCanvas({ scene, customImage, intensity, blur, paused }: Prop
     const frame = (now: number): void => {
       raf = 0
       const p = params.current
-      const interval = frameInterval({ paused: !!p.paused, idle: document.hidden || !document.hasFocus(), saver: p.saver })
+      const interval = frameInterval({ paused: !!p.paused, idle: document.hidden || !document.hasFocus(), saver: p.saver, rain: p.intensity })
       if (interval === null) {
         // Pausiert: nur ein Standbild, keine laufende Schleife
         if (dirty) draw(now)
