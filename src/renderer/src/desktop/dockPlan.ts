@@ -57,16 +57,16 @@ export function dockPlan(c: DockCtx): { dock: PanelId[]; more: PanelId[] } {
 /** Vorschau erst, wenn es etwas anzusehen gibt: offene Vorschau oder erkannter Dev-Server */
 export const showPreviewInDock = (c: DockCtx, previews: number): boolean => c.all || previews > 0
 
-/** Mit anderen und fürs Publikum – alles andere ist Arbeitswerkzeug */
-const SOCIAL = new Set<PanelId>(['lounge', 'companion', 'discord', 'streamer'])
+/** Übersicht hinter „Mehr“: alle Werkzeuge in festen Gruppen – egal, ob sie gerade im Dock stehen */
+const GROUPS: { id: string; label: () => string; items: PanelId[] }[] = [
+  { id: 'work', label: () => t('Arbeiten'), items: ['projects', 'inspector', 'editor', 'git', 'brain', 'merge', 'prompts', 'skills'] },
+  { id: 'own', label: () => t('Eigene'), items: ['addons'] },
+  { id: 'calm', label: () => t('Ruhe'), items: ['ambience', 'focus'] },
+  { id: 'social', label: () => t('Gemeinsam & Streaming'), items: ['lounge', 'companion', 'discord', 'streamer'] }
+]
 
-/** Arbeiten · Gemeinsam & Streaming; Überschriften nur, wenn es beide Gruppen gibt */
-export function moreGroups(items: PanelId[]): { id: string; label: string; items: PanelId[] }[] {
-  const work = items.filter((id) => !SOCIAL.has(id))
-  const social = items.filter((id) => SOCIAL.has(id))
-  const both = work.length > 0 && social.length > 0
-  return [
-    { id: 'work', label: both ? t('Arbeiten') : '', items: work },
-    { id: 'social', label: both ? t('Gemeinsam & Streaming') : '', items: social }
-  ].filter((g) => g.items.length)
+/** Gruppen der Übersicht mit den verfügbaren Werkzeugen; „Eigene“ bleibt immer (dort leben Claudes Werkzeug-Fenster) */
+export function launcherGroups(available: readonly PanelId[]): { id: string; label: string; items: PanelId[] }[] {
+  const has = new Set(available)
+  return GROUPS.map((g) => ({ id: g.id, label: g.label(), items: g.items.filter((id) => has.has(id)) })).filter((g) => g.items.length || g.id === 'own')
 }

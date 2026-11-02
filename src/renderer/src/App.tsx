@@ -423,7 +423,7 @@ export default function App(): React.JSX.Element {
       <StartCard />
       <ToastStack />
       <NotifyPanel />
-      {more && <MoreMenu items={plan.more} onClose={closeMore} />}
+      {more && <MoreMenu items={['projects', ...plan.dock, ...plan.more, 'ambience', 'focus']} onClose={closeMore} />}
       <WhatsNew />
       <VibeWrapped />
       <SetupPrompt />

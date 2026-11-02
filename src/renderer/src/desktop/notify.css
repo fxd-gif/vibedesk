@@ -60,6 +60,28 @@
 .more-app:hover .more-app-del, .more-app-del:focus-visible { opacity: .7; }
 .more-apps-hint { margin: 2px 10px 6px; font-size: 11.5px; line-height: 1.45; color: var(--text-dim); opacity: .8; }
 .more-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px; padding: 10px 10px 4px; border-top: 1px solid var(--glass-border); color: var(--text-dim); font-size: 12px; }
+/* Übersicht hinter „Mehr“: Kacheln statt Liste */
+.more-menu.launcher { width: 476px; padding: 10px 12px 8px; }
+.lx-body { display: flex; flex-wrap: wrap; column-gap: 0; row-gap: 4px; }
+.lx-group { flex: 0 0 100%; min-width: 0; }
+.lx-group.half { flex: 0 0 50%; }
+.lx-group.half .lx-grid { grid-template-columns: repeat(2, 1fr); padding-right: 4px; }
+.lx-group .more-head { margin: 6px 4px 4px; }
+.lx-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; }
+.lx-tile-wrap { position: relative; display: flex; }
+.lx-tile { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 9px 4px 8px; border: 0; border-radius: 12px; background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.lx-tile:hover, .lx-tile:focus-visible { background: rgba(255,255,255,.07); outline: none; }
+.lx-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid var(--glass-border); color: var(--text-dim); transition: color 150ms, background 150ms; }
+.lx-tile:hover .lx-icon, .lx-tile:focus-visible .lx-icon { color: var(--text); background: rgba(159, 184, 255, .14); }
+.lx-icon.own { color: #c4a7ff; }
+.lx-new .lx-icon { border-style: dashed; background: transparent; }
+.lx-name { max-width: 100%; font-size: 11.5px; line-height: 1.25; text-align: center; color: var(--text-dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lx-tile:hover .lx-name { color: var(--text); }
+.lx-del { position: absolute; top: 2px; right: 6px; width: 20px; height: 20px; opacity: 0; }
+.lx-tile-wrap:hover .lx-del, .lx-del:focus-visible { opacity: .7; }
+.lx-info { min-height: 34px; margin: 6px 4px 0; padding: 8px 2px 0; border-top: 1px solid var(--glass-border); font-size: 11.5px; line-height: 1.45; color: var(--text-dim); }
+.lx-info b { color: var(--text); font-weight: 500; }
+.launcher .more-foot { margin-top: 4px; padding: 8px 4px 4px; }
 
 /* ---------- Startkarte ---------- */
 .start-card { position: absolute; left: 50%; top: calc(50% - 42px); translate: -50% -50%; z-index: 1; width: min(440px, calc(100vw - 48px)); padding: 28px 26px 22px; border-radius: 22px; background: rgba(14, 18, 26, .55); backdrop-filter: blur(28px) saturate(150%); border: 1px solid var(--glass-border); box-shadow: 0 40px 120px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06); display: flex; flex-direction: column; gap: 16px; animation: onb-in 450ms cubic-bezier(.2,.8,.2,1); }
