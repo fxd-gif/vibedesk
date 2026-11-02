@@ -9,6 +9,7 @@ Abschnitte: `### Neu`, `### Verbessert`, `### Entfernt`
 
 ### Verbessert
 
+- **Gehirn übersichtlicher und flüssiger:** Rechts steht jetzt in Worten, was Claude über dein Projekt weiß – zuletzt Gelerntes, was zu prüfen ist, die wichtigsten Bereiche. Der Graph beschriftet die wichtigsten Notizen auch in der Gesamtansicht, ohne dass Texte übereinanderliegen; Dateien sind zunächst ausgeblendet (ändert Claude eine, leuchtet das Wissen dazu auf). Wenn Claude liest, ändert oder lernt, breitet sich ein Ring aus und Funken laufen die Verbindungen entlang, neue Notizen wachsen hinein. Auf schwächeren Laptops läuft der Graph etwa doppelt so flüssig
 - **Eine einzige Bitte um einen Stern:** Nach der zehnten fertigen Claude-Runde fragt VibeDesk einmal leise, ob du dem Projekt auf GitHub einen Stern gibst – das hilft anderen, VibeDesk zu finden. Die Frage kommt nur dieses eine Mal
 
 ## 2.0.0

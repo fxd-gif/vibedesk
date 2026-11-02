@@ -54,6 +54,18 @@ const dict: Record<string, string> = {
   'Ordner öffnen (auch in Obsidian nutzbar)': 'Open folder (works with Obsidian too)',
   'Alles einpassen': 'Fit everything',
   Einpassen: 'Fit',
+  'Klicken blendet ein oder aus': 'Click to show or hide',
+  Überblick: 'Overview',
+  'Was Claude über dich weiß': 'What Claude knows about you',
+  'Was Claude über dein Projekt weiß': 'What Claude knows about your project',
+  '{n} Notiz gilt in allen Projekten. Jede neue Session startet damit.': '{n} note applies in every project. Every new session starts with it.',
+  '{n} Notizen gelten in allen Projekten. Jede neue Session startet damit.': '{n} notes apply in every project. Every new session starts with them.',
+  '{n} Notiz. Jede neue Session startet mit diesem Wissen, statt alles neu zu erkunden.': '{n} note. Every new session starts with this knowledge instead of exploring everything again.',
+  '{n} Notizen. Jede neue Session startet mit diesem Wissen, statt alles neu zu erkunden.': '{n} notes. Every new session starts with this knowledge instead of exploring everything again.',
+  'Zuletzt gelernt': 'Recently learned',
+  'Zu prüfen': 'To check',
+  Bereiche: 'Areas',
+  '+ {n} weitere im Graph': '+ {n} more in the graph',
   // Hotspots
   Hotspots: 'Hotspots',
   'Färbt Dateien danach, wie oft sie in den letzten 90 Tagen geändert wurden – dort lohnt sich Wissen im Gehirn':

@@ -15,6 +15,9 @@ import { useSettings } from '../../store/settingsStore'
 import { Toggle } from '../../desktop/Toggle'
 import { BrainGraph, KIND_COLOR, noteTypeLabel, type GraphHandle } from './BrainGraph'
 import { BrainSide, emptyDraft, type Draft } from './BrainSide'
+import { BrainOverview } from './BrainOverview'
+import { saverActive } from '../../ambience/framePolicy'
+import { useOnBattery } from '../../ambience/RainCanvas'
 import './brain.css'
 
 export const buildPrompt = (): string =>
@@ -47,11 +50,13 @@ export function BrainWindow(): React.JSX.Element {
   const [selected, setSelected] = useState<string | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [query, setQuery] = useState('')
-  const [hidden, setHidden] = useState<ReadonlySet<GraphNodeKind>>(new Set())
+  // Dateien sind Rauschen, solange man nicht gezielt nach ihnen schaut – Pulse auf Dateien lassen dann das Wissen dazu leuchten
+  const [hidden, setHidden] = useState<ReadonlySet<GraphNodeKind>>(new Set(['file']))
   const [heatOn, setHeatOn] = useState(hotInitial)
   const [hot, setHot] = useState<Hotspot[]>([])
   const graph = useRef<GraphHandle>(null)
   const brainOn = useSettings((s) => s.s?.brainOn ?? true)
+  const calm = saverActive(useSettings((s) => s.s?.energySaver), useOnBattery())
   const sessionCount = useSessions((s) => s.sessions.filter((x) => x.projectId === projectId).length)
 
   useEffect(() => {
@@ -138,6 +143,12 @@ export function BrainWindow(): React.JSX.Element {
   const toggleHeat = (): void => {
     const v = !heatOn
     setHeatOn(v)
+    // Hotspots handeln von Dateien – also zeigen
+    if (v && hidden.has('file')) {
+      const next = new Set(hidden)
+      next.delete('file')
+      setHidden(next)
+    }
     try {
       localStorage.setItem(HOT_KEY, v ? '1' : '0')
     } catch {
@@ -153,6 +164,12 @@ export function BrainWindow(): React.JSX.Element {
     setSelected(id)
     if (id) graph.current?.focusNode(id)
   }, [])
+
+  const counts = useMemo(() => {
+    const m = new Map<GraphNodeKind, number>()
+    for (const n of view?.graph.nodes ?? []) m.set(n.kind, (m.get(n.kind) ?? 0) + 1)
+    return m
+  }, [view])
 
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -233,32 +250,9 @@ export function BrainWindow(): React.JSX.Element {
           <Icon name="folder" size={14} />
         </button>
       </div>
-      <div className="brain-filters">
-        {filters().map((f) => (
-          <button key={f.kind} className={`brain-filter${hidden.has(f.kind) ? ' off' : ''}`} onClick={() => toggleKind(f.kind)}>
-            <i style={{ background: KIND_COLOR[f.kind] }} />
-            {f.label}
-          </button>
-        ))}
-        <span className="brain-sep" />
-        <button
-          className={`brain-filter${heatOn ? '' : ' off'}`}
-          onClick={toggleHeat}
-          disabled={isMe}
-          title={t('Färbt Dateien danach, wie oft sie in den letzten 90 Tagen geändert wurden – dort lohnt sich Wissen im Gehirn')}
-          data-testid="brain-hotspots"
-        >
-          <i style={{ background: heatColor(1) }} />
-          {t('Hotspots')}
-        </button>
-        <span className="brain-spacer" />
-        <button className="brain-filter" onClick={() => graph.current?.fit()} title={t('Alles einpassen')}>
-          <Icon name="grid" size={12} /> {t('Einpassen')}
-        </button>
-      </div>
       <div className="brain-main">
         <div className="brain-stage">
-          {shown && <BrainGraph ref={graph} graph={shown} hidden={hidden} query={query} selected={selected} heatOn={heatShown} onSelect={select} />}
+          {shown && <BrainGraph ref={graph} graph={shown} hidden={hidden} query={query} selected={selected} heatOn={heatShown} calm={calm} onSelect={select} />}
           {!projectId && <div className="brain-empty">{t('Lege zuerst ein Projekt an – dann wächst hier sein Gehirn.')}</div>}
           {empty && isMe && (
             <div className="brain-empty card" data-testid="brain-empty-me">
@@ -301,34 +295,72 @@ export function BrainWindow(): React.JSX.Element {
             </div>
           )}
           {view && !empty && (
-            <div className="brain-legend">
-              <span>
-                <i className="pulse read" /> {t('liest')}
-              </span>
-              <span>
-                <i className="pulse edit" /> {t('ändert')}
-              </span>
-              <span>
-                <i className="pulse write" /> {t('lernt')}
-              </span>
-              <span>
-                <i className="stale" /> {t('zu prüfen')}
-              </span>
-              {heatShown && (
-                <>
-                  <span>
-                    <i className="heat" /> {t('selten → oft geändert')}
-                  </span>
-                  <span>
-                    <i className="unlinked" /> {t('Hotspot ohne Notiz')}
-                  </span>
-                </>
+            <div className="brain-tools">
+              {!isMe && (
+                <button
+                  className={`brain-filter${heatOn ? '' : ' off'}`}
+                  onClick={toggleHeat}
+                  title={t('Färbt Dateien danach, wie oft sie in den letzten 90 Tagen geändert wurden – dort lohnt sich Wissen im Gehirn')}
+                  data-testid="brain-hotspots"
+                >
+                  <i style={{ background: heatColor(1) }} />
+                  {t('Hotspots')}
+                </button>
               )}
+              <button className="brain-filter" onClick={() => graph.current?.fit()} title={t('Alles einpassen')}>
+                <Icon name="grid" size={12} /> {t('Einpassen')}
+              </button>
+            </div>
+          )}
+          {view && !empty && (
+            <div className="brain-dock">
+              <div className="brain-kinds" title={t('Klicken blendet ein oder aus')}>
+                {filters()
+                  .filter((f) => counts.get(f.kind))
+                  .map((f) => (
+                    <button key={f.kind} className={`brain-filter${hidden.has(f.kind) ? ' off' : ''}`} onClick={() => toggleKind(f.kind)} data-testid={`brain-kind-${f.kind}`}>
+                      <i style={{ background: KIND_COLOR[f.kind] }} />
+                      {f.label}
+                    </button>
+                  ))}
+              </div>
+              <span className="brain-spacer" />
+              <div className="brain-legend">
+                <span>
+                  <i className="pulse read" /> {t('liest')}
+                </span>
+                <span>
+                  <i className="pulse edit" /> {t('ändert')}
+                </span>
+                <span>
+                  <i className="pulse write" /> {t('lernt')}
+                </span>
+                {view.stale > 0 && (
+                  <span>
+                    <i className="stale" /> {t('zu prüfen')}
+                  </span>
+                )}
+                {heatShown && (
+                  <>
+                    <span>
+                      <i className="heat" /> {t('selten → oft geändert')}
+                    </span>
+                    <span>
+                      <i className="unlinked" /> {t('Hotspot ohne Notiz')}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>
         {projectId && (selected || draft) && (
           <aside className="brain-side">
+            {selected && !draft && (
+              <button className="bs-back" onClick={() => select(null)} data-testid="brain-back">
+                <Icon name="back" size={13} /> {t('Überblick')}
+              </button>
+            )}
             <BrainSide
               projectId={projectId}
               selected={selected}
@@ -342,6 +374,11 @@ export function BrainWindow(): React.JSX.Element {
                 setTimeout(() => select(noteId(title)), 250)
               }}
             />
+          </aside>
+        )}
+        {projectId && view && !empty && !selected && !draft && (
+          <aside className="brain-side">
+            <BrainOverview view={view} isMe={isMe} onSelect={select} />
           </aside>
         )}
       </div>
