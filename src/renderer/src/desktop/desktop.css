@@ -716,3 +716,9 @@ html[data-typing] .dock:not(:hover) { opacity: .28; }
 /* Sparmodus: Live-Unschärfe (backdrop-filter) kostet bei jeder Terminal-Ausgabe einen neuen Durchgang auf der GPU.
    Gemessen mit echter Claude-Session: GPU-Prozess ~20 % → ~9 % eines Kerns. Dafür etwas deckenderes Glas. */
 .app.saver .gwin, .app.saver .dock, .app.saver .sidebar, .app.saver .statusbar { backdrop-filter: none; background: rgba(13, 17, 25, 0.9); }
+
+/* ---------- Werkzeug-Fenster (von Claude gebaut, im Sandbox-iframe) ---------- */
+.app-frame-wrap { position: relative; flex: 1; min-height: 0; display: flex; }
+.app-frame { flex: 1; width: 100%; border: 0; background: transparent; color-scheme: dark; }
+.app-error { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 10px; padding: 9px 10px 9px 12px; border-radius: 10px; background: rgba(60, 14, 18, 0.92); border: 1px solid rgba(248, 113, 113, 0.45); color: #fecaca; }
+.app-error .mono { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 90px; overflow: auto; }

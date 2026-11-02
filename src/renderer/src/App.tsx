@@ -83,6 +83,9 @@ import { rememberLayout, wireWorkspaces } from './store/workspaceStore'
 import { wireScreenMain } from './store/screenMain'
 import { wireCountAsk } from './store/countAsk'
 import { onScreen, useScreen } from './store/screenStore'
+import { useApps, wireApps } from './store/appsStore'
+import { AppWindow } from './windows/AppWindow'
+import { appWin } from '../../shared/apps'
 
 
 const initials = (n: string): string => {
@@ -138,6 +141,7 @@ export default function App(): React.JSX.Element {
   const settings = useSettings((s) => s.s)
   const livingList = useLiving((s) => s.list)
   const previews = usePreview((s) => s.open)
+  const apps = useApps((s) => s.list)
   const focusPhase = useFocus((s) => s.state.phase)
   // nur minutengenau – sonst würde die ganze App jede Sekunde neu rendern
   const focusMinutes = useFocus((s) => Math.ceil(remaining(s.state, s.now) / 60_000))
@@ -213,6 +217,7 @@ export default function App(): React.JSX.Element {
     wireLimits()
     wireDeskCommands()
     wireCountAsk()
+    wireApps()
     // zweiter Bildschirm: erst wissen, welche Fenster drüben bleiben – die öffnen hier nicht
     Promise.all([useSettings.getState().load(), wireScreenMain()]).then(([s]) => {
       const ui = useUi.getState()
@@ -333,6 +338,11 @@ export default function App(): React.JSX.Element {
       {Object.keys(previews).map((k) => (
         <PreviewWindow key={k} id={k} />
       ))}
+      {apps
+        .filter((a) => open.includes(appWin(a.id)))
+        .map((a) => (
+          <AppWindow key={a.id} app={a} />
+        ))}
       {/* im Zen-Modus holt die Maus am unteren Rand das Dock zurück – steht vor dem Dock, damit CSS (~) es findet */}
       {zen && <div className="zen-reveal" aria-hidden />}
       <Nav

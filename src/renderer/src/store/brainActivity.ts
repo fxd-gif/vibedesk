@@ -1,6 +1,6 @@
 // Zeigt, was Claude gerade im Gehirn festhält: geschriebene Notizen kurz als Karte (mehrere in Folge zusammengefasst).
-import { ME_ID } from '../../../shared/brain'
-import { t, tn } from '../../../shared/i18n'
+import { brainToastTitle, ME_ID } from '../../../shared/brain'
+import { t } from '../../../shared/i18n'
 import { api } from '../api'
 import { inform } from './notifyStore'
 import { useSettings } from './settingsStore'
@@ -17,22 +17,29 @@ export function wireBrainActivity(): void {
   if (wired) return
   wired = true
   let titles: string[] = []
+  /** davon neu angelegt (der Rest wurde aktualisiert) */
+  let fresh = new Set<string>()
   /** alles in dieser Runde betraf das persönliche Gehirn – dann eine eigene Karte */
   let onlyMe = true
   let timer: ReturnType<typeof setTimeout> | undefined
   const flush = (): void => {
     const list = titles
     const me = onlyMe
+    const created = fresh
     titles = []
+    fresh = new Set()
     onlyMe = true
     if (!list.length || !useSettings.getState().s?.brainOn) return
-    const title = me ? t('Claude hat sich etwas über dich gemerkt') : tn(list.length, 'Gehirn aktualisiert', 'Gehirn: {n} Notizen aktualisiert')
-    inform(title, list.join(' · '), [{ label: t('Ansehen'), run: () => useUi.getState().openWin('brain') }], 'brain-write')
+    const title = brainToastTitle(created.size, list.length - created.size, me)
+    // neue Notizen zuerst
+    const ordered = [...list.filter((x) => created.has(x)), ...list.filter((x) => !created.has(x))]
+    inform(title, ordered.join(' · '), [{ label: t('Ansehen'), run: () => useUi.getState().openWin('brain') }], 'brain-write')
   }
   api.on.brainPulse((p) => {
     if (!useBrainUsed.getState()) useBrainUsed.setState(true, true)
     if (p.kind !== 'write' || !p.title) return
     if (!titles.includes(p.title)) titles.push(p.title)
+    if (p.created) fresh.add(p.title)
     if (p.projectId !== ME_ID) onlyMe = false
     clearTimeout(timer)
     timer = setTimeout(flush, GATHER_MS)

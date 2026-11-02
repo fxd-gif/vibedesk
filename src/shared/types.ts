@@ -59,6 +59,7 @@ import type { TraySession } from './tray'
 import type { Budget, BudgetAlert, BudgetUse } from './budget'
 import type { PrDraft, PrInfo } from './git'
 import type { LivingScene, LivingStatus } from './living'
+import type { AppStatus, DeskApp } from './apps'
 import type { ApplyResult, Checkpoint, MergeFileView, MergeOverview, MergeResult, ReviewResult, TestRun } from './merge'
 import type { PlanLimits } from './limits'
 import type { DevScript } from './devScript'
@@ -548,6 +549,12 @@ export interface VibedeskApi {
     livingChanged(cb: (list: LivingScene[]) => void): Unsubscribe
     /** Main bittet um einen Schnappschuss der laufenden lebenden Szene */
     livingSnapshot(cb: (req: string) => void): Unsubscribe
+    /** Werkzeug-Fenster angelegt, geändert oder gelöscht */
+    appsChanged(cb: (list: DeskApp[]) => void): Unsubscribe
+    /** Claude möchte ein Werkzeug-Fenster öffnen */
+    appOpen(cb: (id: string) => void): Unsubscribe
+    /** Main bittet um die Lage eines Werkzeug-Fensters (für den Schnappschuss) */
+    appRect(cb: (req: string, id: string) => void): Unsubscribe
     /** Klick im Tray-Menü auf eine Session */
     trayFocus(cb: (sessionId: string) => void): Unsubscribe
     /** Claude schickt einer anderen Session einen Auftrag */
@@ -720,6 +727,17 @@ export interface VibedeskApi {
     previewEnd(token: string): void
     /** geteilte Szene als neue lebende Szene anlegen; null = Bild-Dialog abgebrochen */
     importCode(code: string, image: 'none' | 'current' | 'pick'): Promise<LivingScene | null>
+  }
+  /** Werkzeug-Fenster, die Claude baut (abgeschottet im Sandbox-iframe) */
+  apps: {
+    list(): Promise<DeskApp[]>
+    delete(id: string): Promise<boolean>
+    status(s: AppStatus): void
+    storeGet(id: string, key: string): Promise<unknown>
+    storeSet(id: string, key: string, value: unknown): Promise<boolean>
+    /** Gehirn-Notizen eines Projekts, nur lesend; null = Gehirn aus oder Projekt fehlt */
+    brain(projectId: string): Promise<unknown>
+    rectResult(req: string, rect: { x: number; y: number; width: number; height: number } | null): void
   }
   /** Budget pro Projekt */
   budget: {

@@ -197,8 +197,8 @@ export class BrainService {
     const meStore = me && this.store(me)
     // scope "me": Wissen über den User selbst, gilt in allen Projekten
     const mine = s('scope') === 'me' && !!me
-    const pulse = (title: string, kind: BrainPulse['kind'], projectId = p.id): void =>
-      this.d.emit('brain:pulse', { projectId, id: noteId(title), kind, ...(kind === 'write' ? { title } : {}) } satisfies BrainPulse)
+    const pulse = (title: string, kind: BrainPulse['kind'], projectId = p.id, created?: boolean): void =>
+      this.d.emit('brain:pulse', { projectId, id: noteId(title), kind, ...(kind === 'write' ? { title, created: !!created } : {}) } satisfies BrainPulse)
     try {
       switch (name) {
         case 'brain_overview':
@@ -256,7 +256,7 @@ export class BrainService {
               tags: Array.isArray(args.tags) ? (args.tags as unknown[]).map(String) : undefined
             } satisfies NoteInput
           )
-          pulse(note.title, 'write', target.id)
+          pulse(note.title, 'write', target.id, created)
           this.markTended(sessionId)
           this.watch(target)
           this.changed(target.id)
@@ -301,6 +301,17 @@ export class BrainService {
       stale: notes.filter((n) => isStale(n, act)).length,
       sessions: act.sessions.slice(-12).reverse()
     }
+  }
+
+  /** Für Werkzeug-Fenster: Notizen nur lesend, Inhalt gekürzt */
+  notesFor(projectId: string): { project: string; notes: { title: string; type: string; body: string; tags: string[]; files: string[]; updated: number; stale: boolean; links: string[] }[] } | null {
+    const p = this.proj(projectId)
+    if (!p || p.missing || !this.d.enabled()) return null
+    const act = this.activity(p.id)
+    const notes = this.store(p)
+      .list()
+      .map((n) => ({ title: n.title, type: n.type, body: n.body.slice(0, 2000), tags: n.tags, files: n.files, updated: n.updated, stale: isStale(n, act), links: n.links }))
+    return { project: p.name, notes }
   }
 
   note(projectId: string, title: string): NoteDetail | null {

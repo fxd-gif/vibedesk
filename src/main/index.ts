@@ -7,7 +7,9 @@ import { registerSceneIpc, SCENE_SCHEME, sceneFile } from './scenes'
 import { musicFile, registerMusicIpc, serveMusic } from './localMusic'
 import { MUSIC_SCHEME } from '../shared/localMusic'
 import { LivingStore } from './livingScenes'
-import { isLivingFrameUrl } from '../shared/living'
+import { isSandboxFrameUrl } from '../shared/apps'
+import { AppStore } from './appStore'
+import { createAppTools } from './appTools'
 import { createLivingTools } from './livingTools'
 import { TrayService } from './trayService'
 import { BudgetService } from './budgetService'
@@ -142,7 +144,7 @@ function createWindow(): BrowserWindow {
     if (ev.isMainFrame || !f) return
     let top = f
     while (top.parent?.parent) top = top.parent
-    if (top.frameTreeNodeId === f.frameTreeNodeId && isLivingFrameUrl(ev.url)) livingFrames.add(f.frameTreeNodeId)
+    if (top.frameTreeNodeId === f.frameTreeNodeId && isSandboxFrameUrl(ev.url)) livingFrames.add(f.frameTreeNodeId)
     else if (livingFrames.has(top.frameTreeNodeId)) ev.preventDefault()
   })
   // Abgestürzter Renderer: neu laden statt leeres Vollbild – die Sessions in Main laufen weiter und werden wieder angehängt
@@ -209,10 +211,14 @@ app.whenReady().then(async () => {
   registerCoreIpc({ win: () => mainWindow, projects, settings, peers: () => [mainWindow, secondScreen?.window() ?? null] })
   const scenesDir = join(userData, 'scenes')
   const living = new LivingStore(join(userData, 'living'), app.isPackaged ? join(process.resourcesPath, 'living-runtime.js') : join(app.getAppPath(), 'resources', 'living-runtime.js'))
+  const res = (f: string): string => (app.isPackaged ? join(process.resourcesPath, f) : join(app.getAppPath(), 'resources', f))
+  const apps = new AppStore(join(userData, 'apps'), res('app-runtime.js'), res('app-runtime.css'))
   protocol.handle(SCENE_SCHEME, async (req) => {
     // lebende Szene: Seite, Laufzeit, Skript und Bild – mit eigener, strenger CSP
     const host = new URL(req.url).host
     if (host === 'living' || host === 'living-preview') return living.serve(req.url)
+    // Werkzeug-Fenster von Claude – ebenso abgeschottet
+    if (host === 'app') return apps.serve(req.url)
     const f = sceneFile(scenesDir, req.url)
     if (!f) return new Response('not found', { status: 404 })
     const res = await net.fetch(pathToFileURL(f).toString())
@@ -376,6 +382,7 @@ app.whenReady().then(async () => {
     const f = sceneFile(scenesDir, sc.slice(7))
     return f && fs.existsSync(f) ? f : null
   }
+  const appTool = createAppTools({ store: apps, send, win: () => mainWindow, brainNotes: (id) => brain.notesFor(id) })
   const livingTool = createLivingTools({ store: living, send, scene: () => settings.get().scene, currentImageFile: customImageFile, win: () => mainWindow })
   const sessionTool = createDeskSessionTools({
     sessions: () => sessions.list(),
@@ -391,6 +398,8 @@ app.whenReady().then(async () => {
   const deskTool = async (tool: string, args: Record<string, unknown>, sid: string): Promise<BrainResult> => {
     const lt = await livingTool(tool, args)
     if (lt) return lt
+    const at = await appTool(tool, args)
+    if (at) return at
     const st = sessionTool(tool, args, sid)
     if (st) return st
     if (tool === 'desk_state') {

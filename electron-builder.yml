@@ -17,6 +17,10 @@ extraResources:
     to: update-splash.ps1
   - from: resources/living-runtime.js
     to: living-runtime.js
+  - from: resources/app-runtime.js
+    to: app-runtime.js
+  - from: resources/app-runtime.css
+    to: app-runtime.css
   - from: resources/icon.png
     to: icon.png
 asarUnpack:

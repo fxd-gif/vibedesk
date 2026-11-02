@@ -2,7 +2,7 @@ import { t } from '../../../shared/i18n'
 import { create } from 'zustand'
 import { api } from '../api'
 import { SCENES } from '../ambience/sceneParams'
-import { doingText, renderPresence, streakDays, type PresenceVars, type StatusIconKey } from '../../../shared/presence'
+import { renderPresence, streakDays, type PresenceVars, type StatusIconKey } from '../../../shared/presence'
 import { MAX_PEERS } from '../../../shared/lounge'
 import type { DiscordAppInfo, DiscordStatus } from '../../../shared/types'
 import { fmtClock, useFocus } from './focusStore'
@@ -13,6 +13,7 @@ import { fmtTokens, fmtUsd, modelLabel, useStats } from './statsStore'
 import { useLounge } from './loungeStore'
 import { useUi } from './uiStore'
 import { useWorkflow } from './workflowStore'
+import { doingOf } from './workflowReducer'
 import { STATUS_TEXT } from '../windows/TerminalWindow'
 
 interface DiscordState {
@@ -55,7 +56,6 @@ export function collectVars(now = Date.now()): PresenceVars {
   const scene = settings?.scene ?? 'city'
   const statusKey: StatusIconKey | '' = focus.phase === 'work' ? 'focus' : focus.phase !== 'idle' ? 'break' : (wf?.status ?? '')
   const lounge = useLounge.getState()
-  const pending = wf ? [...wf.feed].reverse().find((f) => f.result === 'pending') : undefined
   const todos = wf?.todos ?? []
   const current = todos.find((x) => x.status === 'in_progress')
   const task = (current?.activeForm || current?.content || '').trim()
@@ -75,7 +75,7 @@ export function collectVars(now = Date.now()): PresenceVars {
     sessionStart: st?.startedAt ?? null,
     focusEnd: focus.endsAt,
     statusKey,
-    doing: active ? doingText({ status: wf?.status ?? 'idle', tool: pending?.tool, agents: wf?.agents.filter((x) => !x.done).length ?? 0, tending: wf?.tending }) : '',
+    doing: active ? doingOf(wf) : '',
     task: task.length > 60 ? task.slice(0, 59) + '…' : task,
     progress: todos.length ? `${todos.filter((x) => x.status === 'completed').length}/${todos.length}` : '',
     streak: streakDays(days),

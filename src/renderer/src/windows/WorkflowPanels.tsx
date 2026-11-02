@@ -3,7 +3,9 @@ import { Icon } from '../desktop/icons'
 import { termWin, useAllSessions, useSessions } from '../store/sessionStore'
 import { centeredRect, useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
-import type { FeedEntry } from '../store/workflowReducer'
+import { doingOf, type FeedEntry } from '../store/workflowReducer'
+import { toolLabel } from '../../../shared/toolLabel'
+import { agentOf } from '../../../shared/agents'
 import { clock, relTime } from '../util'
 import { statusText } from './TerminalWindow'
 import { openInEditor } from '../store/editorStore'
@@ -48,7 +50,7 @@ export function StatusPanel(): React.JSX.Element {
               <span className={`dot ${st}`} />
               <b>{s.name}</b>
             </div>
-            <div className="status-text">{st === 'waiting' ? waitingLabel(w?.waitingSince, now) : statusText(st)}</div>
+            <div className="status-text">{st === 'waiting' ? waitingLabel(w?.waitingSince, now) : st === 'working' && agentOf(s) === 'claude' ? doingOf(w) : statusText(st)}</div>
             <div className="dim small">{w?.lastActivity ? relTime(w.lastActivity, now) : t('noch keine Aktivität')}</div>
           </button>
         )
@@ -98,7 +100,9 @@ export function FeedPanel(): React.JSX.Element {
           >
             <span className="mono dim">{clock(e.ts)}</span>
             {sessions.length > 1 && <span className="feed-sess">{names[e.sessionId]}</span>}
-            <span className="feed-tool">{e.tool}</span>
+            <span className="feed-tool" title={e.tool}>
+              {toolLabel(e.tool)}
+            </span>
             <span className="feed-target mono">
               {red(e.target)}
             </span>

@@ -449,6 +449,11 @@ const dict: Record<string, string> = {
   'Mit einem anderen Agenten starten (Beta)': 'Start with another agent (beta)',
   'Mit … starten:': 'Start with …:',
   'Mit {agent} starten: {name}': 'Start with {agent}: {name}',
+  'unbekannter Fehler': 'unknown error',
+  'Unbekannte Daten: {what}': 'Unknown data: {what}',
+  'Unbekannte Anfrage': 'Unknown request',
+  'Das Werkzeug-Fenster „{name}“ (id {id}) meldet einen Fehler: {error}\nSieh dir den Code mit desk_app_code an, behebe den Fehler mit desk_app_create (id angeben) und prüfe es mit desk_app_snapshot.': 'The tool window "{name}" (id {id}) reports an error: {error}\nLook at the code with desk_app_code, fix it with desk_app_create (pass the id) and check it with desk_app_snapshot.',
+  'Claude reparieren lassen': 'Let Claude fix it',
 }
 
 export default dict

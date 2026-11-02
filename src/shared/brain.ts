@@ -1,6 +1,6 @@
 // VibeDesk-Gehirn: Projektwissen als Markdown-Notizen mit [[Links]] (Obsidian-kompatibel)
 // plus lokal mitgeschriebene Aktivität (welche Dateien Claude liest und ändert).
-import { t } from './i18n'
+import { t, tn } from './i18n'
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml'
 
 export const NOTE_TYPES = ['module', 'decision', 'pitfall', 'convention', 'task', 'fact'] as const
@@ -407,6 +407,8 @@ export interface BrainPulse {
   kind: 'read' | 'edit' | 'write'
   /** bei 'write': Titel der geschriebenen Notiz */
   title?: string
+  /** bei 'write': Notiz ist neu (sonst aktualisiert) */
+  created?: boolean
 }
 
 // ---------- Aktivität ----------
@@ -461,4 +463,12 @@ export function normalizeActivity(raw: unknown): Activity {
   if (r.coEdits && typeof r.coEdits === 'object') a.coEdits = r.coEdits
   if (Array.isArray(r.sessions)) a.sessions = r.sessions
   return a
+}
+
+/** Überschrift der Gehirn-Mitteilung: neue und aktualisierte Notizen getrennt benennen */
+export function brainToastTitle(created: number, updated: number, onlyMe: boolean): string {
+  if (onlyMe) return t('Claude hat sich etwas über dich gemerkt')
+  if (created && updated) return t('Gehirn: {created} neu, {updated} aktualisiert', { created, updated })
+  if (created) return tn(created, 'Neues Wissen im Gehirn', 'Gehirn: {n} neue Notizen')
+  return tn(updated, 'Gehirn aktualisiert', 'Gehirn: {n} Notizen aktualisiert')
 }

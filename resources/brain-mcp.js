@@ -156,6 +156,40 @@ const DESK_TOOLS = [
   { name: 'desk_scene_show', description: 'Schaltet eine gespeicherte lebende Szene ein.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
   { name: 'desk_scene_delete', description: 'Löscht eine lebende Szene.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
   {
+    name: 'desk_app_create',
+    description: [
+      'Werkzeug-Fenster bauen oder ändern: ein kleines, echtes Fenster in VibeDesk für eine Aufgabe des Users – z. B. Dashboard über alle Sessions, Übersicht der Entscheidungen im Gehirn, Rechner, Checkliste, Zähler, Konfigurator. Es erscheint in der Glas-Optik von VibeDesk, wird gespeichert und steht im Mehr-Menü unter „Eigene Werkzeuge“. Läuft abgeschottet: kein Netz, keine Dateien, keine Befehle.',
+      'Du lieferst html (Markup für <body>, OHNE <script> und OHNE onclick=…), code (JavaScript, läuft nach dem Markup in einer async-Funktion – await geht direkt) und optional css. Das Designsystem ist schon geladen: button (.primary .danger .ghost .small), input, select, textarea, table, progress, h1–h3 sehen fertig aus; Klassen .card .row .col .grid .spacer .muted .small .stat (<b>Zahl</b><span>Label</span>) .badge(.green .yellow .red .blue) .dot(.working .waiting .done .error) .list .empty .bar .tabs .chip(.on). Kein eigener Hintergrund nötig – das Glas scheint durch. Eigene Farben nur sparsam (var(--accent), var(--green) …).',
+      'API (global vd): await vd.data(art) liest, vd.watch(art, fn) ruft fn sofort und bei jeder Änderung. Arten: "sessions" → [{id, name, project, agent, status: working|waiting|done|error|idle, doing, waitingSince, todos:[{content,status}], agents, lastActivity}] · "brain" → {project, notes:[{title, type: module|decision|pitfall|convention|task|fact, body, tags, files, updated, stale, links}]} oder null (Gehirn aus / kein Projekt) · "usage" → {today:{tokens,costUsd}, days:[{date,tokens,costUsd}] (7 Tage), sessions:[{id,name,tokens,costUsd,context}]} · "project" → {id, name} oder null. Alles nur lesend.',
+      'Speichern: await vd.store.get(key, fallback), await vd.store.set(key, wert) – bleibt erhalten (JSON, insgesamt höchstens 200 kB). Bauen: vd.h(tag, {class, style:{…}, onClick: fn, …}, ...kinder) erzeugt Elemente (Text wird nie als HTML gelesen), vd.mount("#ziel", ...knoten) ersetzt den Inhalt, vd.$ / vd.$$. Helfer: vd.fmt.tokens/usd/pct/time/date/ago, vd.sparkline(werte, {w,h}), vd.bar(0..1).',
+      'Beispiel: html \'<h2>Wartet auf mich</h2><ul id="l" class="list"></ul>\', code \'vd.watch("sessions", (s) => vd.mount("#l", s.filter((x) => x.status === "waiting").map((x) => vd.h("li", {class: "row"}, vd.h("span", {class: "dot waiting"}), x.name, vd.h("span", {class: "spacer"}), vd.h("span", {class: "muted small"}, vd.fmt.ago(x.waitingSince)))) ))\'',
+      'Danach mit desk_app_snapshot ansehen und nachbessern (id angeben; nur die geänderten Teile html/code/css schicken). Klein, ruhig und klar halten – ein Werkzeug, keine Webseite.'
+    ].join('\n'),
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'kurzer Name, z. B. „Todo-Übersicht“ (Pflicht bei neuen Fenstern)' },
+        hint: { type: 'string', description: 'ein Satz, wofür es da ist' },
+        html: { type: 'string', description: 'Markup für <body>, ohne Skripte' },
+        code: { type: 'string', description: 'JavaScript gegen die vd-API' },
+        css: { type: 'string', description: 'optional, zusätzliche Stile' },
+        w: { type: 'number', description: 'Breite beim ersten Öffnen (280–1400, Standard 560)' },
+        h: { type: 'number', description: 'Höhe beim ersten Öffnen (200–1000, Standard 440)' },
+        id: { type: 'string', description: 'id eines bestehenden Fensters, um es zu ändern' },
+        open: { type: 'boolean', description: 'Standard true: gleich öffnen' }
+      }
+    }
+  },
+  {
+    name: 'desk_app_snapshot',
+    description: 'Schnappschuss eines Werkzeug-Fensters als Bild (holt es nach vorn) – so prüfst du Layout, Lesbarkeit und ob die Daten ankommen. Meldet auch den letzten Skriptfehler. wait = Sekunden warten.',
+    inputSchema: { type: 'object', properties: { id: { type: 'string' }, wait: { type: 'number', minimum: 0, maximum: 20 } }, required: ['id'] }
+  },
+  { name: 'desk_app_list', description: 'Listet die Werkzeug-Fenster (id, Name, Zweck, Größe).', inputSchema: { type: 'object', properties: {} } },
+  { name: 'desk_app_code', description: 'Liefert html, css und code eines Werkzeug-Fensters, um es zu ändern.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+  { name: 'desk_app_open', description: 'Öffnet ein gespeichertes Werkzeug-Fenster.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+  { name: 'desk_app_delete', description: 'Löscht ein Werkzeug-Fenster samt seinem Speicher.', inputSchema: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
+  {
     name: 'desk_notify',
     description: 'Zeigt dem User in VibeDesk eine kurze Karte (z. B. „Build fertig“). Sparsam nutzen.',
     inputSchema: { type: 'object', properties: { title: { type: 'string' }, body: { type: 'string' } }, required: ['title'] }
@@ -204,7 +238,7 @@ const UNREACHABLE = { text: 'VibeDesk ist nicht erreichbar – läuft die App no
 
 /** null = Verbindung abgelehnt oder Token falsch – dann lohnt ein zweiter Versuch mit frischem Endpunkt */
 /** Szenen warten auf die Rückmeldung bzw. ein paar Sekunden für den Schnappschuss */
-const timeoutFor = (tool) => (tool.startsWith('desk_scene_') ? 60000 : 10000)
+const timeoutFor = (tool) => (tool.startsWith('desk_scene_') || tool.startsWith('desk_app_') ? 60000 : 10000)
 
 function post(ep, tool, args) {
   return new Promise((resolve) => {
@@ -268,7 +302,7 @@ async function handle(msg) {
           serverInfo: { name: 'vibedesk-brain', version: '1.0.0' },
           instructions:
             (process.env.VIBEDESK_BRAIN === '0' ? '' : 'Projektgedächtnis von VibeDesk: vor dem Erkunden suchen (brain_search, brain_related), Gelerntes festhalten (brain_write). ') +
-            'Den VibeDesk-Desktop steuern die desk_*-Werkzeuge (Fenster anordnen, Zen-Modus, Szene, Musik …), wenn der User darum bittet. Interaktive Hintergründe (z. B. Schnee, der auf dem Dach im eigenen Bild liegen bleibt) baust du mit desk_scene_create und prüfst sie mit desk_scene_snapshot. Andere Sessions siehst du mit desk_sessions und gibst ihnen mit desk_session_send Aufträge; Verbrauch und Budget liefert desk_usage.'
+            'Den VibeDesk-Desktop steuern die desk_*-Werkzeuge (Fenster anordnen, Zen-Modus, Szene, Musik …), wenn der User darum bittet. Interaktive Hintergründe (z. B. Schnee, der auf dem Dach im eigenen Bild liegen bleibt) baust du mit desk_scene_create und prüfst sie mit desk_scene_snapshot. Braucht der User ein Werkzeug (Dashboard, Übersicht, Rechner, Checkliste …), baust du ihm mit desk_app_create ein eigenes Fenster in VibeDesk und prüfst es mit desk_app_snapshot. Andere Sessions siehst du mit desk_sessions und gibst ihnen mit desk_session_send Aufträge; Verbrauch und Budget liefert desk_usage.'
         }
       })
     case 'ping':

@@ -9,6 +9,7 @@ import { attachedShell, useShells } from '../store/shellStore'
 import { useSettings } from '../store/settingsStore'
 import { useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
+import { doingOf } from '../store/workflowReducer'
 import type { SessionInfo } from '../../../shared/types'
 import { sessionExitText } from '../../../shared/setupHints'
 import { agentName, agentOf } from '../../../shared/agents'
@@ -68,15 +69,17 @@ export const STATUS_TEXT: Record<WfStatus, string> = {
  * Status in der Titelleiste; wartet die Session, steht dort „wartet · 3 min“.
  * Zählt nur alle 30 s weiter und nur, solange sie wartet – eigenes Bauteil, damit nicht das ganze Fenster neu rendert.
  */
-function StatusLabel({ status, since }: { status: WfStatus; since?: number }): React.JSX.Element {
+function StatusLabel({ status, since, sessionId, claude }: { status: WfStatus; since?: number; sessionId: string; claude: boolean }): React.JSX.Element {
   const [, setTick] = useState(0)
+  // „liest Code“, „schaut im Gehirn nach“ … – Text statt Objekt, damit nur bei einem Wechsel neu gerendert wird
+  const doing = useWorkflow((s) => (claude && status === 'working' ? doingOf(s.sessions[sessionId]) : ''))
   const waiting = status === 'waiting' && !!since
   useEffect(() => {
     if (!waiting) return
     const iv = setInterval(() => setTick((n) => n + 1), 30_000)
     return () => clearInterval(iv)
   }, [waiting, since])
-  return <>{status === 'waiting' ? waitingLabel(since) : statusText(status)}</>
+  return <>{status === 'waiting' ? waitingLabel(since) : doing || statusText(status)}</>
 }
 
 export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX.Element {
@@ -161,7 +164,7 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
             </span>
           )}
           <span className="dim" style={{ fontWeight: 400 }}>
-            · {tending ? t('pflegt Gehirn …') : <StatusLabel status={status} since={waitingSince} />}
+            · {tending ? t('pflegt Gehirn …') : <StatusLabel status={status} since={waitingSince} sessionId={session.id} claude={claude} />}
           </span>
           {urls?.slice(0, 2).map((u) => (
             <button key={u} className="url-chip" title={t('Vorschau: {url}', { url: u })} onClick={() => usePreview.getState().openPreview(u)} data-testid="url-chip">

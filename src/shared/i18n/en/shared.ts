@@ -266,6 +266,21 @@ const dict: Record<string, string> = {
     '{name} isn’t installed on this PC yet. Install it once in a PowerShell (needs Node.js) with: {command}',
   '{name} wurde beendet.': '{name} has exited.',
   '{name} ist unerwartet beendet (Code {code}).': '{name} quit unexpectedly (code {code}).',
+  'Gehirn-Überblick': 'Brain overview',
+  'Gehirn durchsuchen': 'Search brain',
+  'Notiz lesen': 'Read note',
+  'Wissen zur Datei': 'Knowledge about file',
+  'Notiz schreiben': 'Write note',
+  'Notiz archivieren': 'Archive note',
+  'VibeDesk bedienen': 'Control VibeDesk',
+  'hält Wissen fest': 'saving knowledge',
+  'schaut im Gehirn nach': 'checking the brain',
+  'bedient VibeDesk': 'controlling VibeDesk',
+  'Gehirn: {created} neu, {updated} aktualisiert': 'Brain: {created} new, {updated} updated',
+  'Neues Wissen im Gehirn': 'New knowledge in the brain',
+  'Gehirn: {n} neue Notizen': 'Brain: {n} new notes',
+  'Werkzeug-Fenster': 'Tool window',
+  'baut ein Werkzeug-Fenster': 'building a tool window',
 }
 
 export default dict

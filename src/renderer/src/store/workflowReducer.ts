@@ -1,5 +1,7 @@
 import type { HookEvent, SessionStatus } from '../../../shared/types'
 import { nextWaitingSince } from '../../../shared/waiting'
+import { doingText } from '../../../shared/presence'
+import { brainTool } from '../../../shared/toolLabel'
 
 export interface FeedEntry {
   id: number
@@ -81,6 +83,8 @@ function shortPath(p: string): string {
 
 export function describeTarget(tool: string, input: unknown): string {
   const i = obj(input)
+  // Gehirn: welche Notiz, welche Suche, welche Datei – der Inhalt bleibt im Gehirn-Fenster
+  if (brainTool(tool)) return str(i.title || i.query || i.file).slice(0, 80)
   if (i.file_path || i.notebook_path) return shortPath(str(i.file_path || i.notebook_path))
   if (tool === 'Bash') return str(i.command).slice(0, 80)
   if (i.pattern) return str(i.pattern).slice(0, 80)
@@ -260,3 +264,15 @@ const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit'])
 
 /** Hat Claude in irgendeiner Session schon Dateien geändert? */
 export const hasEdits = (s: Pick<WorkflowState, 'sessions'>): boolean => Object.values(s.sessions).some((w) => w.feed.some((f) => EDIT_TOOLS.has(f.tool) && f.result !== 'fail'))
+
+/** Werkzeug, das in dieser Session gerade läuft (jüngster offener Feed-Eintrag) */
+export function currentTool(wf: SessionWorkflow | undefined): string | undefined {
+  if (!wf) return undefined
+  for (let i = wf.feed.length - 1; i >= 0; i--) if (wf.feed[i].result === 'pending') return wf.feed[i].tool
+  return undefined
+}
+
+/** Klartext, was Claude in dieser Session gerade tut („liest Code“, „schaut im Gehirn nach“ …) */
+export function doingOf(wf: SessionWorkflow | undefined): string {
+  return doingText({ status: wf?.status ?? 'idle', tool: currentTool(wf), agents: wf?.agents.filter((x) => !x.done).length ?? 0, tending: wf?.tending })
+}

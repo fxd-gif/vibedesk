@@ -437,6 +437,15 @@ const dict: Record<string, string> = {
   'Alle Fenster kommen zurück': 'All windows come back',
   'Zweiten Bildschirm öffnen (Beta)': 'Open second screen (Beta)',
   'Inspector, Git, Gehirn & Co. auf den anderen Monitor holen': 'Move Inspector, Git, Brain & co. to the other monitor',
+  'Claude {doing}': 'Claude is {doing}',
+  'Arbeiten': 'Work',
+  'Gemeinsam & Streaming': 'Together & streaming',
+  'Eigene Werkzeuge': 'Your tools',
+  '„{name}“ löschen': 'Delete "{name}"',
+  '„{name}“ löschen?': 'Delete "{name}"?',
+  'Das Werkzeug-Fenster und alles, was es gespeichert hat, sind dann weg.': 'The tool window and everything it saved will be gone.',
+  'Neues? Sag Claude, was du brauchst.': 'Need another? Tell Claude what you need.',
+  'Sag Claude, was du brauchst – z. B. „Bau mir ein Fenster, das zeigt, welche Session auf mich wartet“. Es erscheint dann hier.': 'Tell Claude what you need – e.g. "Build me a window that shows which session is waiting for me". It will show up here.',
 }
 
 export default dict

@@ -1,5 +1,6 @@
 // Discord Rich Presence: Konfiguration + Vorlagen-Rendering (rein, in Main und Renderer nutzbar).
 import { t, tn } from './i18n'
+import { brainTool, brainWrites, vibedeskTool } from './toolLabel'
 
 export interface PresenceButton {
   label: string
@@ -285,6 +286,10 @@ export function doingText(o: { status: string; tool?: string; agents: number; te
   if (RUN_TOOLS.has(tool)) return t('führt Befehle aus')
   if (WEB_TOOLS.has(tool)) return t('recherchiert im Web')
   if (PLAN_TOOLS.has(tool)) return t('plant die nächsten Schritte')
+  const brain = brainTool(tool)
+  if (brain) return brainWrites(brain) ? t('hält Wissen fest') : t('schaut im Gehirn nach')
+  if (vibedeskTool(tool) === 'desk_app_create') return t('baut ein Werkzeug-Fenster')
+  if (vibedeskTool(tool)) return t('bedient VibeDesk')
   if (tool.startsWith('mcp__')) return t('nutzt Werkzeuge')
   return t('denkt nach')
 }

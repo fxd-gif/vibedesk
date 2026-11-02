@@ -8,6 +8,7 @@ import type { PlanLimits } from '../shared/limits'
 import type { DeskCommand } from '../shared/desk'
 import type { SessionHandoff } from '../shared/handoff'
 import type { LivingScene } from '../shared/living'
+import type { DeskApp } from '../shared/apps'
 import type { ScreenAction, ScreenMirror, ScreenState } from '../shared/secondScreen'
 
 function listen<A extends unknown[]>(channel: string, cb: (...args: A) => void): () => void {
@@ -101,6 +102,9 @@ const api: VibedeskApi = {
     deskCommand: (cb) => listen<[DeskCommand]>('desk:command', cb),
     livingChanged: (cb) => listen<[LivingScene[]]>('living:changed', cb),
     livingSnapshot: (cb) => listen<[string]>('living:snapshot', cb),
+    appsChanged: (cb) => listen<[DeskApp[]]>('apps:changed', cb),
+    appOpen: (cb) => listen<[string]>('apps:open', cb),
+    appRect: (cb) => listen<[string, string]>('apps:rect', cb),
     trayFocus: (cb) => listen<[string]>('tray:focus', cb),
     deskSessionPrompt: (cb) => listen<[string, string, string, SessionHandoff | null]>('desk:sessionPrompt', cb),
     budgetUsage: (cb) => listen<[BudgetUse[]]>('budget:usage', cb),
@@ -222,6 +226,15 @@ const api: VibedeskApi = {
     preview: (code) => ipcRenderer.invoke('living:preview', code),
     previewEnd: (token) => ipcRenderer.send('living:previewEnd', token),
     importCode: (code, image) => ipcRenderer.invoke('living:import', code, image)
+  },
+  apps: {
+    list: () => ipcRenderer.invoke('apps:list'),
+    delete: (id) => ipcRenderer.invoke('apps:delete', id),
+    status: (s) => ipcRenderer.send('apps:status', s),
+    storeGet: (id, key) => ipcRenderer.invoke('apps:storeGet', id, key),
+    storeSet: (id, key, value) => ipcRenderer.invoke('apps:storeSet', id, key, value),
+    brain: (projectId) => ipcRenderer.invoke('apps:brain', projectId),
+    rectResult: (req, rect) => ipcRenderer.send('apps:rectResult', req, rect)
   },
   budget: {
     all: () => ipcRenderer.invoke('budget:all'),

@@ -7,6 +7,8 @@ import { activeProjectId } from '../store/activeProject'
 import { useSessions } from '../store/sessionStore'
 import { useUi } from '../store/uiStore'
 import { useWorkflow } from '../store/workflowStore'
+import { doingOf } from '../store/workflowReducer'
+import { agentOf } from '../../../shared/agents'
 import { openPanel } from '../windows/palette/CommandPalette'
 import { Icon } from './icons'
 import { LimitChip } from '../terminal/TermStatus'
@@ -23,6 +25,11 @@ export function StatusBar(): React.JSX.Element {
   // neu berechnen, wenn ein anderes Fenster nach vorn kommt (oberste Session bestimmt das Projekt)
   const top = useUi((s) => s.open[s.open.length - 1])
   const statusKey = useWorkflow((w) => sessions.map((s) => w.sessions[s.id]?.status ?? 'idle').join(','))
+  // was die erste arbeitende Claude-Session gerade tut – als Text, damit nur ein Wechsel neu rendert
+  const doing = useWorkflow((w) => {
+    const s = sessions.find((x) => agentOf(x) === 'claude' && w.sessions[x.id]?.status === 'working')
+    return s ? doingOf(w.sessions[s.id]) : ''
+  })
   const projectId = activeProjectId(projects)
   const project = projects.find((p) => p.id === projectId)
 
@@ -51,7 +58,7 @@ export function StatusBar(): React.JSX.Element {
   const statuses = statusKey ? (statusKey.split(',') as SessionStatus[]) : []
   const lead = RANK.find((r) => statuses.includes(r)) ?? 'idle'
   const label =
-    lead === 'waiting' ? t('Claude wartet auf dich') : lead === 'error' ? t('Fehler in einer Session') : lead === 'working' ? t('Claude arbeitet') : lead === 'done' ? t('Claude ist fertig') : t('Claude Code')
+    lead === 'waiting' ? t('Claude wartet auf dich') : lead === 'error' ? t('Fehler in einer Session') : lead === 'working' ? (doing ? t('Claude {doing}', { doing }) : t('Claude arbeitet')) : lead === 'done' ? t('Claude ist fertig') : t('Claude Code')
 
   return (
     <footer className="statusbar" data-testid="statusbar">

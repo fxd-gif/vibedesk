@@ -1,6 +1,7 @@
 // Das Dock wächst mit: Werkzeuge erscheinen erst, wenn sie etwas zu tun haben – der Rest liegt unter „Mehr“.
 import type { PanelId } from '../../../shared/types'
 import { moduleOn } from './modules'
+import { t } from '../../../shared/i18n'
 
 export interface DockCtx {
   /** Nutzer will immer alle Symbole */
@@ -55,3 +56,17 @@ export function dockPlan(c: DockCtx): { dock: PanelId[]; more: PanelId[] } {
 
 /** Vorschau erst, wenn es etwas anzusehen gibt: offene Vorschau oder erkannter Dev-Server */
 export const showPreviewInDock = (c: DockCtx, previews: number): boolean => c.all || previews > 0
+
+/** Mit anderen und fürs Publikum – alles andere ist Arbeitswerkzeug */
+const SOCIAL = new Set<PanelId>(['lounge', 'companion', 'discord', 'streamer'])
+
+/** Arbeiten · Gemeinsam & Streaming; Überschriften nur, wenn es beide Gruppen gibt */
+export function moreGroups(items: PanelId[]): { id: string; label: string; items: PanelId[] }[] {
+  const work = items.filter((id) => !SOCIAL.has(id))
+  const social = items.filter((id) => SOCIAL.has(id))
+  const both = work.length > 0 && social.length > 0
+  return [
+    { id: 'work', label: both ? t('Arbeiten') : '', items: work },
+    { id: 'social', label: both ? t('Gemeinsam & Streaming') : '', items: social }
+  ].filter((g) => g.items.length)
+}
