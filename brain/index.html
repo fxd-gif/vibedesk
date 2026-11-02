@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#07090d">
+  <meta name="theme-color" content="#08090b">
   <title>The brain – VibeDesk</title>
   <meta name="description" content="Project memory for Claude Code: linked Markdown notes in your repo, a personal “About you” brain and a live graph that lights up while Claude reads, edits and learns.">
   <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/brain/">
@@ -20,29 +20,28 @@
   <link rel="icon" href="../img/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/site.css">
+  <script>document.documentElement.classList.add('js');setTimeout(function(){document.documentElement.classList.add('ready')},2600)</script>
+  <script src="../assets/ascii.js" defer></script>
   <script src="../assets/site.js" defer></script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
   <header class="nav">
     <div class="wrap nav-in">
-      <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
-      <nav class="nav-links" aria-label="Features">
+      <a class="brand" href="../" style="--d:80ms"><img src="../img/icon.png" alt="" width="30" height="30">VibeDesk</a>
+      <nav class="nav-links" aria-label="Features" style="--d:180ms">
         <a href="../sessions/">Sessions</a>
         <a href="../phone/">Phone</a>
         <a href="../brain/" aria-current="page">Brain</a>
-        <a href="../merge-studio/">Merge Studio</a>
         <a href="../ambience/">Ambience</a>
-        <a href="../calm/">Calm</a>
         <a href="../tools/">Tools</a>
-        <a href="../social/">Social</a>
       </nav>
-      <div class="nav-end">
+      <div class="nav-end" style="--d:260ms">
         <details class="menu">
-          <summary>Features <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></summary>
-          <nav class="menu-panel" aria-label="Features">
+          <summary><span class="m-desk">More</span><span class="m-mobile">Menu</span><span class="m-ico" aria-hidden="true"></span></summary>
+          <nav class="menu-panel" aria-label="All pages">
             <a href="../">Overview<small>Start page</small></a>
             <hr>
             <a href="../sessions/">Sessions<small>Status, approvals, queue</small></a>
@@ -55,21 +54,22 @@
             <a href="../social/">Social<small>Discord, lounge, streaming</small></a>
             <hr>
             <a href="https://github.com/fxd-gif/vibedesk">GitHub<small>Source code</small></a>
+            <a class="btn btn-light m-dl" href="https://fxd-gif.github.io/vibedesk/download/?start=1">Download for Windows</a>
           </nav>
         </details>
-        <a class="btn btn-light btn-sm dl" href="https://fxd-gif.github.io/vibedesk/download/?start=1">Download</a>
+        <span class="nav-sep" aria-hidden="true"></span>
+        <a class="btn btn-light btn-sm dl" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download</a>
       </div>
     </div>
   </header>
 
   <main id="main">
     <div class="sky page-hero">
-      <canvas class="rain" aria-hidden="true"></canvas>
-      <div class="glow soft" aria-hidden="true"></div>
+      <canvas class="ascii" data-scene="contour" data-scroll data-seed="21" aria-hidden="true"></canvas>
       <div class="wrap">
         <div class="copy">
           <p class="label crumbs"><a href="../">VibeDesk</a><span>/</span><span>Brain</span></p>
-          <h1>Claude stops exploring from scratch.</h1>
+          <h1>Claude stops exploring <em>from scratch.</em></h1>
           <p class="lead">The brain keeps what Claude learns about your project as linked Markdown notes inside your repo. Every new session starts with that knowledge – and a living graph shows Claude reading, editing and learning.</p>
           <div class="chips"><span class="chip">Plain Markdown</span><span class="chip">[[links]] like Obsidian</span><span class="chip">Versioned with Git</span><span class="chip">“About you” for all projects</span></div>
         </div>
@@ -197,31 +197,35 @@
         <a class="next" href="../merge-studio/"><span>Next →</span><b>Merge Studio</b></a>
       </div>
     </section>
-    <section class="tight">
+    <div class="xline" aria-hidden="true"></div>
+    <section class="end">
       <div class="wrap">
-        <div class="cta">
-          <h2>Let Claude work.<br>Step in when it counts.</h2>
-          <p>Free for Windows 10 and 11.</p>
+        <div class="end-in">
+          <h2 class="h-xl split"><span class="line"><span>Let Claude work.</span></span><span class="line"><span><em>Step in when it counts.</em></span></span></h2>
           <div class="hero-actions">
-            <a class="btn btn-light" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
-            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
+            <a class="btn btn-light" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download VibeDesk<svg class="arr" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a>
+            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk">Explore on GitHub<svg class="arr" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 8h10.5M9 4l4 4-4 4"/></svg></a>
           </div>
         </div>
+        <p class="end-micro"><span>Free</span><span>Open source (MIT)</span><span>Windows 10/11</span><span>Uses your own Claude plan</span></p>
       </div>
     </section>
   </main>
 
   <footer>
-    <div class="wrap foot">
-      <div class="foot-brand">
-        <a class="brand" href="../"><img src="../img/icon.png" alt="" width="26" height="26">VibeDesk</a>
-        <p>A calm desk for Claude Code on Windows.<br>Free and open source (MIT). Not affiliated with Anthropic.</p>
+    <div class="wrap">
+      <div class="foot">
+        <div class="foot-brand">
+          <a class="brand" href="../"><img src="../img/icon.png" alt="" width="30" height="30">VibeDesk</a>
+          <p>A calm desk for Claude Code on Windows. Free and open source (MIT). Not affiliated with Anthropic.</p>
+        </div>
+        <div class="foot-cols">
+          <div><h2>Features</h2><ul><li><a href="../sessions/">Sessions</a></li><li><a href="../phone/">Phone companion</a></li><li><a href="../brain/">The brain</a></li><li><a href="../merge-studio/">Merge Studio</a></li><li><a href="../ambience/">Ambience &amp; music</a></li><li><a href="../calm/">Calm by default</a></li><li><a href="../tools/">Tools</a></li><li><a href="../social/">Social &amp; streaming</a></li></ul></div>
+          <div><h2>Guides</h2><ul><li><a href="../guides/claude-code-multiple-sessions-windows/">Parallel sessions</a></li><li><a href="../guides/claude-code-notifications-windows/">Notifications</a></li><li><a href="../guides/claude-code-approve-from-phone/">Approve from your phone</a></li><li><a href="../guides/claude-code-gui-windows/">Claude Code GUIs</a></li></ul></div>
+          <div><h2>Project</h2><ul><li><a href="https://fxd-gif.github.io/vibedesk/download/">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li></ul></div>
+        </div>
       </div>
-      <div class="foot-cols">
-        <div><h2>Features</h2><ul><li><a href="../sessions/">Sessions</a></li><li><a href="../phone/">Phone companion</a></li><li><a href="../brain/">The brain</a></li><li><a href="../merge-studio/">Merge Studio</a></li></ul></div>
-        <div><h2>&nbsp;</h2><ul><li><a href="../ambience/">Ambience & music</a></li><li><a href="../calm/">Calm by default</a></li><li><a href="../tools/">Tools</a></li><li><a href="../social/">Social & streaming</a></li></ul></div>
-        <div><h2>Project</h2><ul><li><a href="https://fxd-gif.github.io/vibedesk/download/">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li><li><a href="https://github.com/fxd-gif/vibedesk/security">Security</a></li><li><a href="../guides/claude-code-multiple-sessions-windows/">Guide: parallel sessions</a></li><li><a href="../guides/claude-code-notifications-windows/">Guide: notifications</a></li><li><a href="../guides/claude-code-approve-from-phone/">Guide: approve from phone</a></li><li><a href="../guides/claude-code-gui-windows/">Guide: Claude Code GUIs</a></li></ul></div>
-      </div>
+      <div class="foot-base"><span>VibeDesk · Windows 10/11 · MIT</span><a href="#main">Back to top ↑</a></div>
     </div>
   </footer>
 </body>

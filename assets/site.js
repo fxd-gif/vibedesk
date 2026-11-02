@@ -41,6 +41,243 @@
     })
   }
 
+  // ---------- Entrance: one orchestrated sequence once the fonts are there ----------
+  {
+    const root = document.documentElement
+    const go = () => requestAnimationFrame(() => root.classList.add('ready'))
+    const fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()
+    Promise.race([fonts, new Promise((r) => setTimeout(r, 900))]).then(go)
+  }
+
+  // ---------- Headlines reveal line by line when they enter ----------
+  {
+    const splits = $$('.split')
+    if (RM || !('IntersectionObserver' in window)) splits.forEach((x) => x.classList.add('in'))
+    else {
+      const io = new IntersectionObserver(
+        (es) =>
+          es.forEach((e) => {
+            if (e.isIntersecting) {
+              e.target.classList.add('in')
+              io.unobserve(e.target)
+            }
+          }),
+        { rootMargin: '0px 0px -12% 0px' }
+      )
+      splits.forEach((x) => io.observe(x))
+    }
+  }
+
+  // ---------- Section rail (index) ----------
+  const rail = $('.srail')
+  if (rail && 'IntersectionObserver' in window) {
+    const links = $$('a', rail)
+    const secs = links.map((a) => $(a.getAttribute('href'))).filter(Boolean)
+    const io = new IntersectionObserver(
+      (es) => {
+        for (const e of es) {
+          if (!e.isIntersecting) continue
+          links.forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id))
+        }
+      },
+      { rootMargin: '-45% 0px -50% 0px' }
+    )
+    secs.forEach((s) => io.observe(s))
+  }
+
+  // ---------- Showcase: switch between real screenshots ----------
+  const show = $('[data-show]')
+  if (show) {
+    const tabs = $$('[role="tab"]', show)
+    const wipeC = $('.sw-wipe', show)
+    const title = $('[data-sw-title]', show)
+    const cap = $('[data-sw-cap]', show)
+    const link = $('[data-sw-link]', show)
+    const select = (tab, focus) => {
+      if (tab.getAttribute('aria-selected') === 'true') return
+      tabs.forEach((t) => {
+        const on = t === tab
+        t.setAttribute('aria-selected', on)
+        t.tabIndex = on ? 0 : -1
+        $('#' + t.getAttribute('aria-controls')).hidden = !on
+      })
+      const pan = $('#' + tab.getAttribute('aria-controls'))
+      if (title) title.textContent = pan.dataset.title
+      cap.textContent = pan.dataset.cap
+      link.href = pan.dataset.href
+      if (wipeC && window.VDAscii) window.VDAscii.wipe(wipeC)
+      if (focus) tab.focus()
+    }
+    tabs.forEach((t) => t.addEventListener('click', () => select(t)))
+    $('[role="tablist"]', show).addEventListener('keydown', (e) => {
+      const i = tabs.indexOf(document.activeElement)
+      if (i < 0) return
+      const n = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key]
+      if (n) {
+        e.preventDefault()
+        select(tabs[(i + n + tabs.length) % tabs.length], true)
+      } else if (e.key === 'Home' || e.key === 'End') {
+        e.preventDefault()
+        select(tabs[e.key === 'Home' ? 0 : tabs.length - 1], true)
+      }
+    })
+  }
+
+  // ---------- Scroll choreography: the window settles flat, a little parallax ----------
+  {
+    const win = $('.show-win')
+    const par = $$('[data-par]')
+    if (!RM && (win || par.length)) {
+      let queued = false
+      const update = () => {
+        queued = false
+        const vh = innerHeight
+        if (win) {
+          const r = win.getBoundingClientRect()
+          const p = Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.85)))
+          win.style.setProperty('--tilt', ((1 - p) * 14).toFixed(2) + 'deg')
+          win.style.setProperty('--lift', ((1 - p) * 26).toFixed(1) + 'px')
+        }
+        for (const el of par) {
+          const r = el.getBoundingClientRect()
+          const off = r.top + r.height / 2 - vh / 2
+          el.style.transform = `translateY(${(off * Number(el.dataset.par)).toFixed(1)}px)`
+        }
+      }
+      const queue = () => {
+        if (!queued) {
+          queued = true
+          requestAnimationFrame(update)
+        }
+      }
+      addEventListener('scroll', queue, { passive: true })
+      addEventListener('resize', queue)
+      update()
+    }
+  }
+
+  // ---------- Index of all pages: floating preview that follows the cursor ----------
+  const ix = $('[data-ix]')
+  const prev = $('.ix-prev')
+  if (ix && prev && matchMedia('(pointer: fine)').matches) {
+    const img = $('[data-ix-img]', prev)
+    let tx = 0
+    let ty = 0
+    let x = 0
+    let y = 0
+    let raf = 0
+    let on = false
+    const loop = () => {
+      x += (tx - x) * (RM ? 1 : 0.16)
+      y += (ty - y) * (RM ? 1 : 0.16)
+      prev.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${RM ? 0 : ((tx - x) * 0.02).toFixed(2)}deg)`
+      raf = on || Math.abs(tx - x) > 0.5 ? requestAnimationFrame(loop) : 0
+    }
+    ix.addEventListener('pointermove', (e) => {
+      // über der Zeile schweben, damit Name und Beschreibung lesbar bleiben
+      tx = e.clientX - prev.offsetWidth / 2
+      ty = e.clientY - prev.offsetHeight - 34
+      if (!on) {
+        x = tx
+        y = ty
+      }
+      const a = e.target.closest('a[data-img]')
+      if (a && !img.src.endsWith(a.dataset.img)) img.src = a.dataset.img
+      on = !!a
+      prev.classList.toggle('on', on)
+      if (!raf) raf = requestAnimationFrame(loop)
+    })
+    ix.addEventListener('pointerleave', () => {
+      on = false
+      prev.classList.remove('on')
+    })
+  }
+
+  // ---------- Sessions board (index): click Allow and watch the status change ----------
+  const board = $('[data-board]')
+  if (board) {
+    const row = (k) => $(`[data-s="${k}"]`, board)
+    const setRow = (k, st, act, time) => {
+      const r = row(k)
+      const cls = { working: 'g', waiting: 'y', done: 'b' }[st]
+      $('[data-dot]', r).className = 'dot ' + cls
+      const chip = $('[data-chip]', r)
+      chip.className = 'chip-st ' + cls
+      chip.textContent = st
+      $('[data-act]', r).textContent = act
+      if (time != null) $('[data-t]', r).textContent = time
+      r.classList.toggle('hot', st === 'waiting')
+    }
+    const card = $('[data-approve]', board)
+    const hint = $('[data-hint]', board)
+    const adot = $('[data-adot]', board)
+    const toast = $('[data-toast]', board)
+    const btns = $$('button', card)
+    let timers = []
+    const later = (ms, fn) => timers.push(setTimeout(fn, ms))
+    // api-server arbeitet still vor sich hin
+    const apiSteps = ['Edit(src/routes/users.ts)', 'Bash(npm run lint)', 'Read(src/db/schema.ts)', 'Edit(src/db/users.repo.ts)', 'Bash(npm test -- users)']
+    let ai = 0
+    if (!RM)
+      setInterval(() => {
+        if (document.hidden) return
+        ai = (ai + 1) % apiSteps.length
+        $('[data-act]', row('api')).textContent = apiSteps[ai]
+      }, 2600)
+    const reset = () => {
+      timers.forEach(clearTimeout)
+      timers = []
+      setRow('shop', 'waiting', 'Wants to run npm test', '1 min')
+      card.classList.remove('ok')
+      adot.className = 'dot y'
+      btns.forEach((b) => (b.disabled = false))
+      hint.textContent = 'Try it – click Allow'
+      toast.classList.remove('show')
+      board.classList.remove('done')
+    }
+    card.addEventListener('click', (e) => {
+      const b = e.target.closest('button')
+      if (!b) return
+      const a = b.dataset.a
+      if (a === 'term') {
+        hint.textContent = 'Opens the terminal with Claude’s usual prompt'
+        return
+      }
+      btns.forEach((x) => (x.disabled = true))
+      if (a === 'deny') {
+        setRow('shop', 'working', 'Denied – Claude takes another route', 'now')
+        adot.className = 'dot b'
+        hint.textContent = 'Denied – Claude takes another route'
+      } else {
+        card.classList.add('ok')
+        adot.className = 'dot g'
+        setRow('shop', 'working', 'Bash(npm test)', 'now')
+        hint.textContent = a === 'always' ? 'Allowed and remembered – working again' : 'Allowed – working again'
+        later(1600, () => setRow('shop', 'working', '✓ 42 tests passed', 'now'))
+        later(3000, () => {
+          setRow('shop', 'done', 'Finished – tests are green', 'just now')
+          toast.classList.add('show')
+          board.classList.add('done')
+        })
+      }
+      later(7200, reset)
+    })
+  }
+
+  // ---------- Ambience slider controls the rain on the page ----------
+  const rainIn = $('[data-rain]')
+  if (rainIn) {
+    const field = $('.amb-canvas')
+    const out = $('[data-rain-v]')
+    const apply = () => {
+      out.textContent = rainIn.value + ' %'
+      if (field && field.asciiField) field.asciiField.setDensity(Number(rainIn.value) / 50)
+    }
+    rainIn.addEventListener('input', apply)
+    // das Feld ist erst nach dem Laden der Schrift bereit
+    setTimeout(apply, 1200)
+  }
+
   // ---------- Latest release (hidden on error) ----------
   const latest = $('#latest')
   if (latest) {
@@ -51,6 +288,8 @@
         $('#latest-v').textContent = j.tag_name
         if (j.html_url) $('#latest-link').href = j.html_url
         latest.hidden = false
+        const v = j.tag_name.replace(/^v/, '')
+        $$('[data-ver]').forEach((x) => (x.textContent = v))
       })
       .catch(() => {})
   }
@@ -92,7 +331,7 @@
           const label = sec.querySelector('.label')
           if (label) label.textContent = 'Latest release'
           const h2 = sec.querySelector('h2')
-          if (h2) h2.innerHTML = `VibeDesk <span data-next-version>${esc(n.version)}</span> is here`
+          if (h2) h2.innerHTML = `VibeDesk <em data-next-version>${esc(n.version)}</em> is here.`
           nextCount.hidden = true
           const date = $('[data-next-date]')
           date.innerHTML = `Released ${esc(at.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }))} · <a href="download/?start=1"><b>Download VibeDesk ${esc(n.version)}</b></a> · <a href="https://github.com/fxd-gif/vibedesk/releases/latest">What's new</a>`
