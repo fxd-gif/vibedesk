@@ -444,8 +444,10 @@ const dict: Record<string, string> = {
   '„{name}“ löschen': 'Delete "{name}"',
   '„{name}“ löschen?': 'Delete "{name}"?',
   'Das Werkzeug-Fenster und alles, was es gespeichert hat, sind dann weg.': 'The tool window and everything it saved will be gone.',
-  'Neues? Sag Claude, was du brauchst.': 'Need another? Tell Claude what you need.',
-  'Sag Claude, was du brauchst – z. B. „Bau mir ein Fenster, das zeigt, welche Session auf mich wartet“. Es erscheint dann hier.': 'Tell Claude what you need – e.g. "Build me a window that shows which session is waiting for me". It will show up here.',
+  'Mit Claude bauen …': 'Build with Claude …',
+  'Claude baut dir kleine Fenster für das, was du gerade brauchst – z. B. alle offenen Todos auf einen Blick.': 'Claude builds small windows for whatever you need right now – e.g. all open todos at a glance.',
+  'Werkzeug-Fenster mit Claude bauen …': 'Build a tool window with Claude …',
+  'Ein kleines Fenster für genau deine Aufgabe': 'A small window for exactly your task',
 }
 
 export default dict

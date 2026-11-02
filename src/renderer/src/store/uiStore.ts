@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { WindowRect } from '../../../shared/types'
-import { arrange, restoreRects } from '../desktop/layout'
+import { arrange, placeRect, restoreRects, type Placed } from '../desktop/layout'
 import { relayed } from './screenRelay'
 
 export const DOCK_H = 84
@@ -44,6 +44,24 @@ export function centeredRect(w: number, h: number): WindowRect {
   return { x: Math.round((s.w - w) / 2), y: Math.max(16, Math.round((s.h - DOCK_H - h) / 2)), w, h }
 }
 
+const isTerminal = (id: string): boolean => id.startsWith('term:') || id.startsWith('shell:')
+/** Studio-Aufbau: Fenster sind ganze Seiten, Plätze spielen keine Rolle */
+const studio = (): boolean => typeof document !== 'undefined' && document.querySelector('.app')?.getAttribute('data-layout') === 'studio'
+
+/**
+ * Erster Platz eines Fensters: wo es am wenigsten verdeckt – Claude möglichst gar nicht.
+ * Kann dafür ein bildschirmfüllendes Terminal auf die linke Hälfte schieben.
+ */
+function firstPlace(s: Pick<UiState, 'open' | 'minimized' | 'rects' | 'zen'>, id: string, want: WindowRect): Record<string, WindowRect> {
+  if (s.zen || studio()) return { [id]: want }
+  const ids = s.open.filter((x) => x !== id && !s.minimized.includes(x) && s.rects[x])
+  const others: Placed[] = ids.map((x) => ({ rect: s.rects[x], kind: isTerminal(x) ? 'terminal' : 'panel' }))
+  const { rect, resize } = placeRect({ w: want.w, h: want.h }, others, screen(), DOCK_H)
+  const out: Record<string, WindowRect> = { [id]: rect }
+  for (const [i, r] of Object.entries(resize)) out[ids[Number(i)]] = r
+  return out
+}
+
 export const useUi = create<UiState>((set, get) => ({
   open: [],
   minimized: [],
@@ -59,7 +77,7 @@ export const useUi = create<UiState>((set, get) => ({
     set((s) => ({
       open: [...s.open.filter((x) => x !== id), id],
       minimized: s.minimized.filter((x) => x !== id),
-      rects: s.rects[id] ? s.rects : { ...s.rects, [id]: fallback ?? centeredRect(560, 420) },
+      rects: s.rects[id] ? s.rects : { ...s.rects, ...firstPlace(s, id, fallback ?? centeredRect(560, 420)) },
       used: { ...s.used, [id]: Date.now() },
       zen: zenAfter(s.zen, id)
     }))

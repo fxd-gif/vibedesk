@@ -1,5 +1,6 @@
 // Merge Studio: parallele Claude-Sessions (Git-Worktrees) vergleichen, Konflikte sehen, prüfen und sicher zusammenführen.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { NoProject } from '../NoProject'
 import { api, errorText } from '../../api'
 import { overlaps, samePath, sessionState, type Checkpoint, type MergeFile, type MergeOverview, type MergeSession, type ReviewResult, type TestRun } from '../../../../shared/merge'
 import type { Project, SessionStatus } from '../../../../shared/types'
@@ -427,7 +428,7 @@ export function MergeStudio(): React.JSX.Element {
 
   // ---------- Darstellung ----------
 
-  if (!projectId) return <div className="panel-empty">{t('Öffne zuerst ein Projekt.')}</div>
+  if (!projectId) return <NoProject />
 
   const head = (
     <header className="ms-head">

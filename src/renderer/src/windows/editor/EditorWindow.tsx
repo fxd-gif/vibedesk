@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { NoProject } from '../NoProject'
 import { Prec, type EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { api } from '../../api'
@@ -252,17 +253,12 @@ export function EditorWindow(): React.JSX.Element {
               </button>
             </div>
           )}
-          {!activeTab && (
+          {!activeTab && !project && <NoProject />}
+          {!activeTab && project && (
             <div className="panel-empty ed-notice">
-              {project ? (
-                <>
-                  {t('Wähle links eine Datei –')}
-                  <br />
-                  {t('oder klicke im Live-Feed auf eine Änderung von Claude.')}
-                </>
-              ) : (
-                t('Lege zuerst ein Projekt an.')
-              )}
+              {t('Wähle links eine Datei –')}
+              <br />
+              {t('oder klicke im Live-Feed auf eine Änderung von Claude.')}
             </div>
           )}
           {activeTab?.status === 'ready' && (

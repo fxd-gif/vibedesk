@@ -1,4 +1,8 @@
 /* Einstellungen-Fenster */
+.settings-win .inspector-body { padding: 8px 18px 18px; }
+/* Auswahlfelder nicht über die ganze Zeile ziehen – sonst bricht die Beschriftung um */
+.settings-win .nset-row > .field, .settings-win .nset-row > select { width: 220px; flex: none; }
+.settings-win .nset-row > span:first-child { min-width: 0; }
 .settings-win .nset { padding: 0 2px 8px; }
 .settings-term { display: flex; flex-direction: column; gap: 10px; padding: 8px 2px; font-size: 12.5px; }
 .toolbox { display: flex; flex-direction: column; gap: 10px; padding: 6px 2px 10px; }

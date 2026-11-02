@@ -38,12 +38,17 @@ function PromptCard({ p, target, onEdit }: { p: Prompt; target: string | null; o
           <button className="btn small ghost" title={t('Als Code teilen')} onClick={() => sharePrompts([p])}>
             <Icon name="share" size={13} />
           </button>
-          <button className="btn small" disabled={!target} onClick={() => send(false)} title={t('Ins Terminal einfügen (nicht abschicken)')}>
-            {t('Einfügen')}
-          </button>
-          <button className="btn small primary" disabled={!target} onClick={() => send(true)} title={t('Einfügen und abschicken')} data-testid={`send-${p.id}`}>
-            {t('Senden')}
-          </button>
+          {/* ohne Session gibt es nichts zum Einfügen – dann keine toten Knöpfe */}
+          {target && (
+            <>
+              <button className="btn small" onClick={() => send(false)} title={t('Ins Terminal einfügen (nicht abschicken)')}>
+                {t('Einfügen')}
+              </button>
+              <button className="btn small primary" onClick={() => send(true)} title={t('Einfügen und abschicken')} data-testid={`send-${p.id}`}>
+                {t('Senden')}
+              </button>
+            </>
+          )}
         </div>
       </div>
       <div className="prompt-text">{p.text}</div>

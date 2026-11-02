@@ -9,6 +9,9 @@ import { useStats } from './statsStore'
 import { centeredRect, useUi } from './uiStore'
 import { useWorkflow } from './workflowStore'
 import { doingOf } from './workflowReducer'
+import { alert, prompt } from './dialogStore'
+import { promptProject } from './sessionPrompt'
+import { t } from '../../../shared/i18n'
 
 export const useApps = create<{ list: DeskApp[] }>(() => ({ list: [] }))
 
@@ -19,6 +22,20 @@ export function openApp(id: string): void {
   const ui = useUi.getState()
   ui.openWin(appWin(id), centeredRect(a?.w ?? 560, a?.h ?? 440))
   ui.focus(appWin(id))
+}
+
+/** Wunsch erfragen und an Claude schicken – Claude baut das Fenster, sieht es an und bessert nach */
+export async function designApp(): Promise<void> {
+  const wish = await prompt({
+    title: t('Werkzeug-Fenster mit Claude bauen'),
+    message: t('Was brauchst du? Claude baut dir ein kleines Fenster dafür, sieht es sich an und bessert nach. Es liest nur – Sessions, Gehirn und Verbrauch.'),
+    placeholder: t('z. B. alle offenen Todos meiner Sessions auf einen Blick'),
+    confirmLabel: t('An Claude schicken')
+  })
+  if (!wish) return
+  const pid = activeProjectId(await api.projects.list())
+  if (!pid) return void alert(t('Kein Projekt offen'), t('Öffne zuerst ein Projekt – Claude baut das Fenster in dessen Session.'))
+  await promptProject(pid, t('Baue mir mit dem VibeDesk-Werkzeug desk_app_create ein Werkzeug-Fenster: {wish}. Prüfe es mit desk_app_snapshot und bessere nach, bis es klar und gut lesbar ist.', { wish }))
 }
 
 let wired = false

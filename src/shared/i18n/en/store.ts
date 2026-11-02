@@ -143,6 +143,11 @@ const dict: Record<string, string> = {
   'Befehl kopieren': 'Copy command',
   '{agent} ist gerade still – vermutlich wartet es auf deine Antwort.': '{agent} has gone quiet – it’s probably waiting for your answer.',
   '{agent} hat sich mit einem Fehler verabschiedet.': '{agent} exited with an error.',
+  'Werkzeug-Fenster mit Claude bauen': 'Build a tool window with Claude',
+  'Was brauchst du? Claude baut dir ein kleines Fenster dafür, sieht es sich an und bessert nach. Es liest nur – Sessions, Gehirn und Verbrauch.': 'What do you need? Claude builds a small window for it, looks at it and polishes it. It only reads – sessions, brain and usage.',
+  'z. B. alle offenen Todos meiner Sessions auf einen Blick': 'e.g. all open todos of my sessions at a glance',
+  'Öffne zuerst ein Projekt – Claude baut das Fenster in dessen Session.': 'Open a project first – Claude builds the window in its session.',
+  'Baue mir mit dem VibeDesk-Werkzeug desk_app_create ein Werkzeug-Fenster: {wish}. Prüfe es mit desk_app_snapshot und bessere nach, bis es klar und gut lesbar ist.': 'Use the VibeDesk tool desk_app_create to build me a tool window: {wish}. Check it with desk_app_snapshot and refine it until it is clear and easy to read.',
 }
 
 export default dict

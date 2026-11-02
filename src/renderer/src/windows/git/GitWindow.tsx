@@ -1,5 +1,6 @@
 // Git & GitHub: Änderungen ansehen, vormerken, committen (mit KI-Nachricht), Verlauf, Push/Pull, Anmeldung.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { NoProject } from '../NoProject'
 import { api, errorText } from '../../api'
 import { isStaged, isUnstaged, letter, validBranchName, type GitCommit, type GitFile, type GitState, type GitStatus } from '../../../../shared/git'
 import type { Project } from '../../../../shared/types'
@@ -607,7 +608,7 @@ export function GitWindow(): React.JSX.Element {
 
   let body: React.JSX.Element
   if (tools && !tools.git) body = <NoGit />
-  else if (!projectId) body = <div className="panel-empty">{t('Lege zuerst ein Projekt an.')}</div>
+  else if (!projectId) body = <NoProject />
   else if (error) body = <div className="panel-empty">{error}</div>
   else if (!st) body = <div className="panel-empty"><span className="spin" /></div>
   else if (!st.repo)

@@ -151,7 +151,6 @@ const dict: Record<string, string> = {
   'Im Hauptordner läuft ein Git-Merge mit Konflikten in: {files}. Löse die Konfliktmarker so, dass die Absichten beider Seiten erhalten bleiben, prüfe, ob alles baut, und markiere die Dateien mit git add als gelöst. Nicht committen.':
     'A Git merge with conflicts is running in the main folder: {files}. Resolve the conflict markers so that the intent of both sides is kept, check that everything builds, and mark the files as resolved with git add. Do not commit.',
   'KI-Review fehlgeschlagen': 'AI review failed',
-  'Öffne zuerst ein Projekt.': 'Open a project first.',
   'Verwalte parallele Sessions, erkenne Konflikte und merge deine Änderungen sicher.': 'Manage parallel sessions, spot conflicts and merge your changes safely.',
   'Isolierte Session': 'Isolated session',
   'Lese Git-Daten …': 'Reading Git data …',

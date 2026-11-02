@@ -55,6 +55,79 @@ export function arrange(items: Item[], screen: Screen, dockH: number): Record<st
   return { ...row(terms, x, y, w, th), ...row(panels, x, y + th + GAP, w, h - th - GAP) }
 }
 
+// ---------- Neue Fenster platzieren ----------
+
+export interface Placed {
+  rect: WindowRect
+  kind: 'terminal' | 'panel'
+}
+
+const overlap = (a: WindowRect, b: WindowRect): number => Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) * Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y))
+
+/** Claude zuzudecken ist viel schlimmer, als ein anderes Werkzeug zu verdecken */
+const TERMINAL_WEIGHT = 4
+/** so schmal darf ein Fenster werden, um neben Claude zu passen */
+const FIT_MIN_W = 420
+/** größter Anteil der Breite beim ersten Öffnen */
+const FIRST_MAX = 0.86
+const FIRST_MAX_H = 0.92
+
+/**
+ * Wohin ein neues Fenster kommt: dorthin, wo es am wenigsten verdeckt – Terminals (Claude) möglichst gar nicht.
+ * Füllt ein Terminal fast den ganzen Schirm (so stehen sie nach dem Start), teilen sich beide den Schirm:
+ * Terminal links, neues Fenster rechts. Danach ist links Claude frei, und weitere Fenster stapeln sich rechts.
+ */
+export function placeRect(size: { w: number; h: number }, others: Placed[], screen: Screen, dockH: number, fitted = false): { rect: WindowRect; resize: Record<number, WindowRect> } {
+  const availW = screen.w - 2 * MARGIN
+  const availH = screen.h - dockH - 2 * MARGIN
+  // nie randlos: rundherum bleibt etwas Szene sichtbar, sonst wirkt jedes neue Fenster wie eine neue App
+  const w = Math.max(200, Math.min(size.w, Math.round(availW * FIRST_MAX)))
+  const h = Math.max(140, Math.min(size.h, Math.round(availH * FIRST_MAX_H)))
+  const maxX = MARGIN + availW - w
+  const maxY = MARGIN + availH - h
+  const cx = Math.round(MARGIN + (availW - w) / 2)
+  const cy = Math.round(MARGIN + (availH - h) / 2)
+  const clampX = (x: number): number => Math.min(maxX, Math.max(MARGIN, Math.round(x)))
+  const clampY = (y: number): number => Math.min(maxY, Math.max(MARGIN, Math.round(y)))
+  const xs = new Set([MARGIN, maxX, cx].map(clampX))
+  const ys = new Set([MARGIN, maxY, cy].map(clampY))
+  for (const o of others) {
+    for (const x of [o.rect.x, o.rect.x + o.rect.w + GAP, o.rect.x + o.rect.w - w, o.rect.x - GAP - w]) xs.add(clampX(x))
+    for (const y of [o.rect.y, o.rect.y + o.rect.h + GAP, o.rect.y + o.rect.h - h, o.rect.y - GAP - h]) ys.add(clampY(y))
+  }
+  let best = { rect: { x: cx, y: cy, w, h }, score: Infinity, term: 0, dist: Infinity }
+  for (const x of xs)
+    for (const y of ys) {
+      const r = { x, y, w, h }
+      let score = 0
+      let term = 0
+      for (const o of others) {
+        const a = overlap(r, o.rect)
+        if (o.kind === 'terminal') term += a
+        score += a * (o.kind === 'terminal' ? TERMINAL_WEIGHT : 1)
+      }
+      const dist = Math.abs(x - cx) + Math.abs(y - cy)
+      if (score < best.score || (score === best.score && dist < best.dist)) best = { rect: r, score, term, dist }
+    }
+  // Teilen, wenn sonst ein großes Terminal spürbar verdeckt würde
+  const big = others.map((o, i) => ({ o, i })).filter(({ o }) => o.kind === 'terminal' && o.rect.w > screen.w * 0.6)
+  if (best.term > w * h * 0.25 && big.length && availW >= 900) {
+    const half = Math.floor((availW - GAP) / 2)
+    const resize: Record<number, WindowRect> = {}
+    for (const { o, i } of big) resize[i] = { x: MARGIN, y: o.rect.y, w: half, h: o.rect.h }
+    return { rect: { x: MARGIN + half + GAP, y: MARGIN, w: half, h: availH }, resize }
+  }
+  // Zu breit für den Platz neben Claude? Schmaler machen, statt Claude anzuschneiden
+  const terms = others.filter((o) => o.kind === 'terminal').map((o) => o.rect)
+  if (best.term > 0 && terms.length && !fitted) {
+    const right = MARGIN + availW - (Math.max(...terms.map((r) => r.x + r.w)) + GAP)
+    const left = Math.min(...terms.map((r) => r.x)) - GAP - MARGIN
+    const room = Math.max(right, left)
+    if (room >= Math.min(w, FIT_MIN_W) && room < w) return placeRect({ w: room, h }, others, screen, dockH, true)
+  }
+  return { rect: best.rect, resize: {} }
+}
+
 /** Holt gespeicherte Fenster nach Auflösungswechsel zurück in den sichtbaren Bereich. */
 export function clampRect(r: WindowRect, screen: Screen, dockH: number): WindowRect {
   const maxH = screen.h - dockH

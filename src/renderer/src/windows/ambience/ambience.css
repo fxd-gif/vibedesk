@@ -4,7 +4,7 @@
   --sp: #1ed760;
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 290px;
+  grid-template-columns: minmax(0, 1fr) 330px;
 }
 .amb-main { min-width: 0; min-height: 0; display: flex; flex-direction: column; padding: 4px 14px 14px; gap: 12px; overflow: hidden; }
 .amb-side {
@@ -16,6 +16,9 @@
 .amb-side section + section { border-top: 1px solid var(--glass-border); }
 .amb-win h4 { margin: 0; font-size: 12px; font-weight: 600; color: var(--text); opacity: .9; }
 .amb-h { margin: 6px 0 2px !important; }
+/* Überschrift + Knopf in einer Zeile – nie zweizeilig umbrechen */
+.amb-side .row.between { flex-wrap: nowrap; gap: 10px; }
+.amb-side .row.between > h4, .amb-side .row.between > .btn { white-space: nowrap; }
 
 /* Quelle: Spotify | Lofi-Radio */
 .amb-src { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid var(--glass-border); }

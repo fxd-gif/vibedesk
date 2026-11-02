@@ -50,6 +50,8 @@
 .more-item small { font-size: 11.5px; color: var(--text-dim); }
 .more-head { margin: 8px 10px 4px; font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); opacity: .75; }
 .more-group + .more-group { margin-top: 4px; padding-top: 2px; border-top: 1px solid var(--glass-border); }
+.more-head-row { display: flex; align-items: center; justify-content: space-between; padding-right: 8px; }
+.more-head-row .link-btn { font-size: 11.5px; }
 .more-app { padding: 0; }
 .more-app-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 9px 10px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .more-app-open > svg { flex: none; }

@@ -1,5 +1,5 @@
 import { addonCommands, runCommand } from '../../addons/runtime'
-import { openApp, useApps } from '../../store/appsStore'
+import { designApp, openApp, useApps } from '../../store/appsStore'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { create } from 'zustand'
 import { api } from '../../api'
@@ -88,6 +88,7 @@ function buildCommands(projects: Project[]): Cmd[] {
     win('lounge', t('Mit Freunden vibecoden – ohne Server')),
     win('streamer', t('Schutz, OBS-Overlay, Twitch-Chat')),
     win('companion', t('Freigaben, Vorschläge und Prompts vom Handy')),
+    { id: 'act:appDesign', label: t('Werkzeug-Fenster mit Claude bauen …'), group: t('Aktionen'), icon: 'spark', hint: t('Ein kleines Fenster für genau deine Aufgabe'), run: () => void designApp() },
     ...useApps.getState().list.map((a): Cmd => ({ id: 'app:' + a.id, label: a.name, group: t('Eigene Werkzeuge'), icon: 'spark', hint: a.hint || undefined, run: () => openApp(a.id) })),
     ...addonCommands().map((c): Cmd => ({ id: 'macro:' + c.name, label: t('Makro: {name}', { name: c.name }), group: t('Makros'), icon: 'puzzle', hint: c.addon, run: () => runCommand(c.name) })),
     ...projects

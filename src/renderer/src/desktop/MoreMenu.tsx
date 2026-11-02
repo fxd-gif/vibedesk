@@ -9,7 +9,7 @@ import { openAbout } from './About'
 import { t } from '../../../shared/i18n'
 import { openSettings } from '../windows/SettingsWindow'
 import { moreGroups } from './dockPlan'
-import { openApp, useApps } from '../store/appsStore'
+import { designApp, openApp, useApps } from '../store/appsStore'
 import { confirm } from '../store/dialogStore'
 import { api } from '../api'
 
@@ -61,7 +61,19 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
         </section>
       ))}
       <section className="more-group" aria-label={t('Eigene Werkzeuge')} data-testid="more-apps">
-        <h4 className="more-head">{t('Eigene Werkzeuge')}</h4>
+        <div className="more-head-row">
+          <h4 className="more-head">{t('Eigene Werkzeuge')}</h4>
+          <button
+            className="link-btn small"
+            onClick={() => {
+              onClose()
+              void designApp()
+            }}
+            data-testid="more-app-design"
+          >
+            ✨ {t('Mit Claude bauen …')}
+          </button>
+        </div>
         {apps.map((a) => (
           <div key={a.id} className="more-item more-app">
             <button
@@ -90,7 +102,7 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
             </button>
           </div>
         ))}
-        <p className="more-apps-hint">{apps.length ? t('Neues? Sag Claude, was du brauchst.') : t('Sag Claude, was du brauchst – z. B. „Bau mir ein Fenster, das zeigt, welche Session auf mich wartet“. Es erscheint dann hier.')}</p>
+        {!apps.length && <p className="more-apps-hint">{t('Claude baut dir kleine Fenster für das, was du gerade brauchst – z. B. alle offenen Todos auf einen Blick.')}</p>}
       </section>
       <div className="more-foot">
         <button
