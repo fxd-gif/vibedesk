@@ -1,16 +1,19 @@
-/* Designsystem für Werkzeug-Fenster: dieselben Farben und Bausteine wie VibeDesk.
+/* Designsystem für Werkzeug-Fenster: dieselben Farben und Bausteine wie VibeDesk (Nacht-Design der Website).
    Normale HTML-Elemente sehen schon richtig aus (button, input, select, table, progress, h1–h3).
-   Dazu: .card .row .col .grid .stat .muted .small .badge .dot .list .empty .bar .tabs .chip */
+   Dazu: .card .row .col .grid .stat .muted .small .badge .dot .list .empty .bar .tabs .chip
+   Farbe heißt Status: Bernstein wartet, Grün arbeitet, Blau ist fertig, Rot ist ein Fehler. */
 :root {
-  --text: #dfe5ef;
-  --text-dim: rgba(223, 229, 239, 0.55);
-  --accent: #9fb8ff;
-  --green: #4ade80;
-  --yellow: #facc15;
-  --blue: #60a5fa;
-  --red: #f87171;
-  --line: rgba(255, 255, 255, 0.1);
-  --fill: rgba(255, 255, 255, 0.05);
+  --text: #e3e7ef;
+  --text-dim: #a3abbb;
+  --text-faint: #6f788a;
+  --accent: #8fa6c8;
+  --green: #5fd497;
+  --yellow: #f3b94d;
+  --blue: #7aa7ff;
+  --red: #ff8a8a;
+  --line: rgba(170, 185, 215, 0.14);
+  --fill: rgba(255, 255, 255, 0.02);
+  --code: #0a0d15;
   --radius: 12px;
   color-scheme: dark;
 }
@@ -18,53 +21,60 @@
 html, body { margin: 0; min-height: 100%; background: transparent; }
 body {
   padding: 14px 16px 18px;
-  font: 13px/1.5 Inter, 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  font: 13.5px/1.5 'Instrument Sans', 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: -0.003em;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 8px; }
-h1, h2, h3 { margin: 0 0 8px; font-weight: 600; letter-spacing: -0.01em; }
-h1 { font-size: 18px; }
-h2 { font-size: 15px; }
-h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); }
+::-webkit-scrollbar-thumb { background: rgba(170, 185, 215, 0.18); border-radius: 8px; }
+h1, h2, h3 { margin: 0 0 8px; font-weight: 600; letter-spacing: -0.025em; }
+h1 { font-size: 19px; }
+h2 { font-size: 15.5px; }
+h3 { font-size: 12.5px; font-weight: 500; letter-spacing: 0; color: var(--text-faint); }
+* + h2, * + h3 { margin-top: 18px; }
 p { margin: 0 0 8px; }
-a { color: var(--accent); }
+a { color: var(--text); text-decoration: underline; text-decoration-color: rgba(170, 185, 215, 0.24); text-underline-offset: 4px; }
+a:hover { text-decoration-color: currentColor; }
 code, pre, .mono { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12px; }
+pre { padding: 9px 11px; border-radius: 8px; background: var(--code); border: 1px solid rgba(170, 185, 215, 0.09); overflow: auto; }
 hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
 
+/* Knöpfe als Pillen: primär hell, sonst mit Linie, ghost nur Text */
 button, .btn {
-  font: inherit; color: var(--text); cursor: pointer;
-  border: 1px solid var(--line); background: rgba(255, 255, 255, 0.06);
-  border-radius: 10px; padding: 6px 12px;
+  font: inherit; font-weight: 500; color: var(--text); cursor: pointer;
+  border: 1px solid rgba(170, 185, 215, 0.24); background: transparent;
+  border-radius: 999px; padding: 6px 14px;
   display: inline-flex; align-items: center; gap: 6px;
   transition: background 150ms, border-color 150ms;
 }
-button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.11); }
+button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.04); border-color: rgba(227, 231, 239, 0.42); }
 button:disabled { opacity: 0.4; cursor: default; }
-button.primary { background: rgba(159, 184, 255, 0.18); border-color: rgba(159, 184, 255, 0.35); }
-button.primary:hover:not(:disabled) { background: rgba(159, 184, 255, 0.28); }
-button.danger { background: rgba(248, 113, 113, 0.16); border-color: rgba(248, 113, 113, 0.4); }
-button.ghost { background: transparent; border-color: transparent; }
-button.small { padding: 3px 9px; font-size: 12px; border-radius: 8px; }
+button.primary { background: #eef1f6; border-color: #eef1f6; color: #0c0f18; }
+button.primary:hover:not(:disabled) { background: #fff; border-color: #fff; }
+button.danger { color: var(--red); border-color: rgba(255, 138, 138, 0.42); }
+button.ghost { background: transparent; border-color: transparent; color: var(--text-faint); }
+button.ghost:hover:not(:disabled) { color: var(--text); border-color: transparent; }
+button.small { padding: 3px 11px; font-size: 12.5px; }
 
 input, select, textarea {
   font: inherit; color: var(--text); width: 100%;
-  padding: 7px 10px; border-radius: 10px;
-  border: 1px solid var(--line); background: rgba(0, 0, 0, 0.25); outline: none;
+  padding: 7px 10px; border-radius: 9px;
+  border: 1px solid var(--line); background: rgba(10, 13, 21, 0.6); outline: none;
 }
-input:focus, select:focus, textarea:focus { border-color: rgba(159, 184, 255, 0.5); }
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+input:focus, select:focus, textarea:focus { border-color: rgba(143, 166, 200, 0.6); }
 input[type='checkbox'], input[type='radio'], input[type='range'] { width: auto; accent-color: var(--accent); }
-label { display: flex; flex-direction: column; gap: 4px; color: var(--text-dim); font-size: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; color: var(--text-dim); font-size: 12.5px; }
 
 table { width: 100%; border-collapse: collapse; }
-th { text-align: left; font-weight: 500; font-size: 11.5px; color: var(--text-dim); padding: 6px 8px; border-bottom: 1px solid var(--line); }
-td { padding: 7px 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: top; }
-tr:hover td { background: rgba(255, 255, 255, 0.03); }
+th { text-align: left; font-weight: 500; font-size: 12px; color: var(--text-faint); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+td { padding: 7px 8px; border-bottom: 1px solid rgba(170, 185, 215, 0.09); vertical-align: top; }
+tr:hover td { background: rgba(255, 255, 255, 0.025); }
 
-progress { appearance: none; width: 100%; height: 6px; border: 0; border-radius: 6px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
-progress::-webkit-progress-bar { background: rgba(255, 255, 255, 0.08); }
-progress::-webkit-progress-value { background: var(--accent); border-radius: 6px; }
+progress { appearance: none; width: 100%; height: 3px; border: 0; border-radius: 3px; background: var(--line); overflow: hidden; }
+progress::-webkit-progress-bar { background: var(--line); }
+progress::-webkit-progress-value { background: var(--text-dim); border-radius: 3px; }
 
 .card { padding: 12px 14px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--fill); }
 .row { display: flex; align-items: center; gap: 8px; }
@@ -72,26 +82,27 @@ progress::-webkit-progress-value { background: var(--accent); border-radius: 6px
 .grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
 .spacer { flex: 1; }
 .muted { color: var(--text-dim); }
-.small { font-size: 11.5px; }
+.small { font-size: 12px; }
 .stat { display: flex; flex-direction: column; gap: 2px; }
-.stat b { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
-.stat span { font-size: 11.5px; color: var(--text-dim); }
-.badge { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: 999px; font-size: 11px; border: 1px solid var(--line); color: var(--text-dim); }
-.badge.green { color: var(--green); border-color: rgba(74, 222, 128, 0.35); }
-.badge.yellow { color: var(--yellow); border-color: rgba(250, 204, 21, 0.35); }
-.badge.red { color: var(--red); border-color: rgba(248, 113, 113, 0.4); }
-.badge.blue { color: var(--blue); border-color: rgba(96, 165, 250, 0.35); }
-.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); flex: none; }
-.dot.working { background: var(--green); box-shadow: 0 0 8px var(--green); }
-.dot.waiting { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
-.dot.done { background: var(--blue); }
-.dot.error { background: var(--red); }
+/* Zahlen kommen aus der Maschine: Mono */
+.stat b { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 22px; font-weight: 500; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--text-faint); }
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: 999px; font: 500 11.5px/1.5 'JetBrains Mono', Consolas, monospace; border: 1px solid var(--line); color: var(--text-dim); }
+.badge.green { color: var(--green); border-color: rgba(95, 212, 151, 0.3); }
+.badge.yellow { color: var(--yellow); border-color: rgba(243, 185, 77, 0.42); }
+.badge.red { color: var(--red); border-color: rgba(255, 138, 138, 0.35); }
+.badge.blue { color: var(--blue); border-color: rgba(122, 167, 255, 0.32); }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--text-faint); flex: none; }
+.dot.working { background: var(--green); box-shadow: 0 0 10px rgba(95, 212, 151, 0.5); }
+.dot.waiting { background: var(--yellow); box-shadow: 0 0 10px rgba(243, 185, 77, 0.5); }
+.dot.done { background: var(--blue); box-shadow: 0 0 8px rgba(122, 167, 255, 0.45); }
+.dot.error { background: var(--red); box-shadow: 0 0 8px rgba(255, 138, 138, 0.45); }
 .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.list > li { padding: 7px 10px; border-radius: 10px; }
-.list > li:hover { background: rgba(255, 255, 255, 0.05); }
+.list > li { padding: 7px 10px; border-radius: 9px; }
+.list > li:hover { background: rgba(255, 255, 255, 0.035); }
 .empty { padding: 28px 12px; text-align: center; color: var(--text-dim); }
-.bar { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
-.bar > i { display: block; height: 100%; background: var(--accent); border-radius: 6px; }
+.bar { height: 3px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; background: var(--text-dim); border-radius: 3px; }
 .tabs { display: flex; gap: 4px; margin-bottom: 10px; }
-.chip { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent; font-size: 11.5px; color: var(--text-dim); }
-.chip.on { color: var(--text); background: rgba(255, 255, 255, 0.09); }
+.chip { padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent; font-size: 12px; color: var(--text-dim); }
+.chip.on { color: var(--text); background: rgba(255, 255, 255, 0.05); border-color: rgba(170, 185, 215, 0.24); }

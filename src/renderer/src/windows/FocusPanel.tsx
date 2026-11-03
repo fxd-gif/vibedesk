@@ -12,7 +12,7 @@ export function Ring({ progress, size, stroke, children, tone }: { progress: num
   return (
     <div className="ring" style={{ width: size, height: size }}>
       <svg width={size} height={size}>
-        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(255,255,255,.1)" strokeWidth={stroke} fill="none" />
+        <circle cx={size / 2} cy={size / 2} r={r} stroke="rgba(170,185,215,.14)" strokeWidth={stroke} fill="none" />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -32,7 +32,7 @@ export function Ring({ progress, size, stroke, children, tone }: { progress: num
   )
 }
 
-export const toneOf = (phase: string): string => (phase === 'work' ? '#9fb8ff' : phase === 'idle' ? 'rgba(255,255,255,.3)' : '#4ade80')
+export const toneOf = (phase: string): string => (phase === 'work' ? '#b5c5dd' : phase === 'idle' ? 'rgba(170,185,215,.3)' : '#5fd497')
 
 function Stepper({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange(v: number): void }): React.JSX.Element {
   return (

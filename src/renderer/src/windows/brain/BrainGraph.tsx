@@ -11,14 +11,14 @@ import { t, tn } from '../../../../shared/i18n'
 import { canvasDpr } from '../../ambience/framePolicy'
 
 export const KIND_COLOR: Record<GraphNodeKind, string> = {
-  module: '#9fb8ff',
-  decision: '#c4a7ff',
-  pitfall: '#f87171',
-  convention: '#4ade80',
-  task: '#facc15',
-  fact: '#67e8f9',
-  file: 'rgba(223, 229, 239, 0.45)',
-  missing: 'rgba(223, 229, 239, 0.35)'
+  module: '#8fa6c8',
+  decision: '#b49cff',
+  pitfall: '#ff8a8a',
+  convention: '#5fd497',
+  task: '#f3b94d',
+  fact: '#6ad7e5',
+  file: 'rgba(227, 231, 239, 0.45)',
+  missing: 'rgba(227, 231, 239, 0.35)'
 }
 
 /** Anzeigename eines Notiztyps (gespeicherte Typ-Werte bleiben unverändert) */
@@ -39,12 +39,12 @@ export function noteTypeLabel(type: NoteType): string {
   }
 }
 
-const PULSE_COLOR = { read: '#67e8f9', edit: '#4ade80', write: '#c4a7ff' } as const
+const PULSE_COLOR = { read: '#6ad7e5', edit: '#5fd497', write: '#b49cff' } as const
 type PulseKind = keyof typeof PULSE_COLOR
 const PULSE_MS = 1800
 const BORN_MS = 700
 /** Datei ohne Commits, solange Hotspots an sind – tritt zurück */
-const COLD_FILE = 'rgba(223, 229, 239, 0.22)'
+const COLD_FILE = 'rgba(227, 231, 239, 0.22)'
 /** Ruhe-Treiben: Bildrate und Ausschlag (Weltkoordinaten) */
 const DRIFT_FPS = 24
 const DRIFT_AMP = 2.6
@@ -84,8 +84,8 @@ const phaseOf = (id: string): number => {
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
   return ((h >>> 0) % 6283) / 1000
 }
-const NOTE_FONT = '500 11.5px Inter, system-ui, sans-serif'
-const FILE_FONT = '400 10.5px JetBrains Mono, monospace'
+const NOTE_FONT = '500 11.5px "Instrument Sans", system-ui, sans-serif'
+const FILE_FONT = '400 10.5px "JetBrains Mono", monospace'
 
 /** Weiches Leuchten als vorgerendertes Bild – billiger als shadowBlur bei jedem Knoten */
 const sprites = new Map<string, HTMLCanvasElement>()
@@ -403,11 +403,11 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
         if (a.x === undefined || b.x === undefined) continue
         const hot = !!near && near.has(a.id) && near.has(b.id) && (a.id === focus || b.id === focus)
         const faded = (near && !hot) || (q && !(matches(a) && matches(b)))
-        if (l.kind === 'link') add(hot ? 'rgba(159,184,255,.85)' : faded ? 'rgba(159,184,255,.07)' : 'rgba(159,184,255,.26)', (hot ? 1.8 : 1.1) / sk, false, a, b)
-        else if (l.kind === 'file') add(hot ? 'rgba(223,229,239,.55)' : faded ? 'rgba(223,229,239,.04)' : 'rgba(223,229,239,.13)', 0.9 / sk, true, a, b)
+        if (l.kind === 'link') add(hot ? 'rgba(143, 166, 200, .85)' : faded ? 'rgba(143, 166, 200, .07)' : 'rgba(143, 166, 200, .26)', (hot ? 1.8 : 1.1) / sk, false, a, b)
+        else if (l.kind === 'file') add(hot ? 'rgba(227, 231, 239, .55)' : faded ? 'rgba(227, 231, 239, .04)' : 'rgba(227, 231, 239, .13)', 0.9 / sk, true, a, b)
         else {
           const alpha = Math.round(Math.min(0.25, 0.05 * l.weight) * 20) / 20
-          add(hot ? 'rgba(250,204,21,.55)' : faded ? 'rgba(250,204,21,.03)' : `rgba(250,204,21,${alpha})`, Math.round(Math.min(3, 0.6 + l.weight * 0.25) * 2) / 2 / sk, false, a, b)
+          add(hot ? 'rgba(243, 185, 77, .55)' : faded ? 'rgba(243, 185, 77, .03)' : `rgba(243, 185, 77, ${alpha})`, Math.round(Math.min(3, 0.6 + l.weight * 0.25) * 2) / 2 / sk, false, a, b)
         }
       }
       for (const g of groups.values()) {
@@ -501,7 +501,7 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
         if (n.stale) {
           ctx.beginPath()
           ctx.arc(n.px, n.py, r + 3, 0, Math.PI * 2)
-          ctx.strokeStyle = '#fb923c'
+          ctx.strokeStyle = '#f3b94d'
           ctx.lineWidth = 1.6 / k
           ctx.setLineDash([4, 3])
           ctx.stroke()
@@ -523,7 +523,7 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
       ctx.textBaseline = 'top'
       ctx.lineJoin = 'round'
       ctx.lineWidth = 3
-      ctx.strokeStyle = 'rgba(6, 8, 14, .85)'
+      ctx.strokeStyle = 'rgba(12, 15, 24, .85)'
       const placed: number[] = []
       const free = (x0: number, y0: number, x1: number, y1: number): boolean => {
         for (let i = 0; i < placed.length; i += 4) if (x0 < placed[i + 2] && x1 > placed[i] && y0 < placed[i + 3] && y1 > placed[i + 1]) return false
@@ -550,11 +550,11 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
         count++
         ctx.font = n.kind === 'file' ? FILE_FONT : NOTE_FONT
         ctx.globalAlpha = dimmed(n) ? 0.35 : n.kind === 'file' || n.kind === 'missing' ? 0.7 : 0.95
-        ctx.fillStyle = n.kind === 'missing' ? 'rgba(223,229,239,.6)' : '#dfe5ef'
+        ctx.fillStyle = n.kind === 'missing' ? 'rgba(227, 231, 239, .6)' : '#e3e7ef'
         ctx.strokeText(label, x, y)
         ctx.fillText(label, x, y)
         if (s.heatOn && n.commits && (n.id === focus || n.id === s.selected)) {
-          ctx.font = '400 10px Inter, system-ui, sans-serif'
+          ctx.font = '400 10px "Instrument Sans", system-ui, sans-serif'
           ctx.fillStyle = heatColor(n.heat ?? 0)
           ctx.globalAlpha = 1
           const txt = tn(n.commits, '{n} Commit in 90 Tagen', '{n} Commits in 90 Tagen')

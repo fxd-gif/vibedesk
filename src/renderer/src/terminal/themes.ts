@@ -5,23 +5,26 @@ import type { CustomTheme } from '../../../shared/desk'
 
 const glass = {
   background: 'rgba(0,0,0,0)',
-  scrollbarSliderBackground: 'rgba(255,255,255,0.08)',
-  scrollbarSliderHoverBackground: 'rgba(255,255,255,0.16)',
-  scrollbarSliderActiveBackground: 'rgba(255,255,255,0.22)'
+  // Linienfarbe der Nacht-Flächen statt Weiß – unter WebGL sonst ein auffälliger grauer Balken
+  scrollbarSliderBackground: 'rgba(170,185,215,0.1)',
+  scrollbarSliderHoverBackground: 'rgba(170,185,215,0.2)',
+  scrollbarSliderActiveBackground: 'rgba(170,185,215,0.28)'
 }
 
 export const TERMINAL_THEMES: { id: string; label: string; theme: ITheme }[] = [
   {
+    // Nacht-Design der Website: Text ink, Cursor Regen-Blau, Statusfarben als ANSI-Grundfarben – auf der Nacht-Fläche gut lesbar
     id: 'vibedesk',
     label: 'VibeDesk',
     theme: {
       ...glass,
-      foreground: '#dfe5ef',
-      cursor: '#9fb8ff',
-      cursorAccent: '#0b0e14',
-      selectionBackground: 'rgba(159,184,255,0.3)',
-      black: '#1b2030', red: '#f87171', green: '#4ade80', yellow: '#facc15', blue: '#60a5fa', magenta: '#c084fc', cyan: '#5eead4', white: '#dfe5ef',
-      brightBlack: '#5b6478', brightRed: '#fca5a5', brightGreen: '#86efac', brightYellow: '#fde047', brightBlue: '#93c5fd', brightMagenta: '#d8b4fe', brightCyan: '#99f6e4', brightWhite: '#ffffff'
+      foreground: '#e3e7ef',
+      cursor: '#b5c5dd',
+      cursorAccent: '#0c0f18',
+      selectionBackground: 'rgba(143,166,200,0.35)',
+      selectionForeground: '#ffffff',
+      black: '#1b2030', red: '#ff8a8a', green: '#5fd497', yellow: '#f3b94d', blue: '#7aa7ff', magenta: '#b49cff', cyan: '#6ad7e5', white: '#e3e7ef',
+      brightBlack: '#6f788a', brightRed: '#ffb0b0', brightGreen: '#8fe3b5', brightYellow: '#f7cf82', brightBlue: '#a4c3ff', brightMagenta: '#cbbaff', brightCyan: '#97e4ee', brightWhite: '#ffffff'
     }
   },
   {

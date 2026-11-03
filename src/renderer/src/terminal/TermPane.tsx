@@ -4,7 +4,8 @@ import { Icon } from '../desktop/icons'
 import { copySelection, dropFiles, getTerminal, mountTerminal, onTerminalUi, pasteInto } from '../store/terminals'
 import { t } from '../../../shared/i18n'
 
-const MATCH = { matchBackground: '#3b4a7a', matchOverviewRuler: '#7c9cff', activeMatchBackground: '#c8f04a', activeMatchColorOverviewRuler: '#c8f04a' }
+// Suchtreffer = Auswahl → Regen-Blau aus dem Nacht-Design (xterm will #RRGGBB)
+const MATCH = { matchBackground: '#2b3850', matchOverviewRuler: '#8fa6c8', activeMatchBackground: '#5d7396', activeMatchColorOverviewRuler: '#b5c5dd' }
 
 export function TermPane({ id, testId, focused, label }: { id: string; testId?: string; focused?: boolean; label?: string }): React.JSX.Element {
   const host = useRef<HTMLDivElement>(null)

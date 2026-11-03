@@ -40,7 +40,7 @@ type Snap = { nodes: RFNode[]; edges: Edge[] }
 const NODE_TYPES = { card: NodeCard }
 const NODE_W = 230
 const CAT_COLOR = { trigger: '#8b7cf6', claude: '#f59e6b', action: '#5b8cff', logic: '#8a97b3', tool: '#34d399', advanced: '#f472b6' }
-const HANDLE_COLOR: Record<string, string> = { yes: '#34d399', no: '#f87171', default: '#8a97b3' }
+const HANDLE_COLOR: Record<string, string> = { yes: '#34d399', no: '#ff8a8a', default: '#8a97b3' }
 
 const toRF = (n: FlowNode): RFNode => ({ id: n.id, type: 'card', position: n.position, data: n.data })
 const fromRF = (n: RFNode): FlowNode => ({ id: n.id, position: n.position, data: n.data })
@@ -539,9 +539,9 @@ function Editor({ editId, templateId, onBack }: { editId: string | null; templat
                 snapGrid={[10, 10]}
                 proOptions={{ hideAttribution: true }}
                 defaultEdgeOptions={{ type: 'default' }}
-                connectionLineStyle={{ stroke: '#9fb8ff', strokeWidth: 1.8 }}
+                connectionLineStyle={{ stroke: '#8fa6c8', strokeWidth: 1.8 }}
               >
-                <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="rgba(255,255,255,0.09)" />
+                <Background variant={BackgroundVariant.Dots} gap={22} size={1.2} color="rgba(170,185,215,0.12)" />
                 <ZoomBar onUndo={() => restore('undo')} onRedo={() => restore('redo')} canUndo={h.past.length > 0} canRedo={h.future.length > 0} />
               </ReactFlow>
             </FlowTest.Provider>
