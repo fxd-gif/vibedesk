@@ -978,7 +978,7 @@
         ctx.globalAlpha = 1
       }
       const fs = small() ? 10.5 : 12
-      ctx.font = `500 ${fs}px Geist, system-ui, sans-serif`
+      ctx.font = `500 ${fs}px "Instrument Sans", system-ui, sans-serif`
       ctx.textAlign = 'center'
       for (const n of nodes) {
         const dim = hover && !near(n) ? 0.3 : 1
@@ -1013,7 +1013,7 @@
           if (n.type === 'file') ctx.font = `400 ${fs - 1}px "JetBrains Mono", monospace`
           const half = ctx.measureText(n.label).width / 2 + 4
           ctx.fillText(n.label, Math.max(half, Math.min(W - half, n.x)), n.y + r + fs + 3)
-          if (n.type === 'file') ctx.font = `500 ${fs}px Geist, system-ui, sans-serif`
+          if (n.type === 'file') ctx.font = `500 ${fs}px "Instrument Sans", system-ui, sans-serif`
         }
         ctx.globalAlpha = 1
       }

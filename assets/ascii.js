@@ -73,7 +73,7 @@
   const FONT = '"JetBrains Mono", ui-monospace, Consolas, monospace'
 
   const fontReady = (document.fonts && document.fonts.load
-    ? Promise.all([document.fonts.load(`400 13px ${FONT}`), document.fonts.load('700 40px Geist')])
+    ? Promise.all([document.fonts.load(`400 13px ${FONT}`), document.fonts.load('700 40px "Instrument Sans"')])
     : Promise.resolve()
   ).catch(() => {})
 
@@ -213,10 +213,10 @@
         // Zellen sind höher als breit: im Zellraster horizontal strecken, damit das Wort auf dem Bildschirm normal aussieht
         const aspect = f.ch / f.cw
         let size = rows * 0.8
-        o.font = `700 ${size}px Geist, system-ui, sans-serif`
+        o.font = `700 ${size}px "Instrument Sans", system-ui, sans-serif`
         const tw = o.measureText(text).width * aspect
         if (tw > cols * 0.86) size *= (cols * 0.86) / tw
-        o.font = `700 ${size}px Geist, system-ui, sans-serif`
+        o.font = `700 ${size}px "Instrument Sans", system-ui, sans-serif`
         o.textBaseline = 'middle'
         o.textAlign = 'center'
         o.setTransform(aspect, 0, 0, 1, cols / 2, 0)

@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0a0b0e">
+  <meta name="theme-color" content="#0c0f18">
   <title>VibeDesk – The calm vibe-coding IDE for Claude Code on Windows</title>
-  <meta name="description" content="The calm vibe-coding IDE for Claude Code on Windows. Run several sessions side by side. See which one is waiting for you and answer in one click – on your PC or your phone. Rain, lofi and Spotify included. Free and open source.">
+  <meta name="description" content="The calm Windows app for Claude Code. See what every session is doing, answer the one that's waiting in one click – on your PC or your phone – and let Claude remember your project. Free and open source.">
   <link rel="canonical" href="https://fxd-gif.github.io/vibedesk/">
-  <meta property="og:title" content="VibeDesk – The calm vibe-coding IDE for Claude Code on Windows">
-  <meta property="og:description" content="Run several Claude Code sessions side by side on Windows. See which one is waiting for you and answer in one click – on your PC or your phone. Rain, lofi and Spotify included. Free and open source.">
+  <meta property="og:title" content="VibeDesk – Claude Code, finally calm">
+  <meta property="og:description" content="See what every Claude Code session is doing, answer the one that's waiting in one click, and let Claude remember your project. Free and open source for Windows.">
   <meta property="og:image" content="https://fxd-gif.github.io/vibedesk/img/og.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -20,28 +20,22 @@
   <link rel="icon" href="img/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="img/approval.webp" fetchpriority="high">
   <link rel="stylesheet" href="assets/site.css">
-  <script>document.documentElement.classList.add('js');setTimeout(function(){document.documentElement.classList.add('ready')},2600)</script>
-  <script src="assets/ascii.js" defer></script>
-  <script src="assets/site.js" defer></script>
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"VibeDesk","applicationCategory":"DeveloperApplication","operatingSystem":"Windows 10, Windows 11","description":"A calm Windows desktop for Claude Code: run several sessions side by side, see which one is waiting for you and answer permission requests in one click – on your PC or your phone.","url":"https://fxd-gif.github.io/vibedesk/","downloadUrl":"https://fxd-gif.github.io/vibedesk/download/","softwareVersion":"2.0.0","license":"https://opensource.org/licenses/MIT","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"image":"https://fxd-gif.github.io/vibedesk/img/og.jpg","author":{"@type":"Person","name":"fxd-gif","url":"https://github.com/fxd-gif"}}</script>
+  <link rel="stylesheet" href="assets/home.css">
+  <script>document.documentElement.classList.add('js')</script>
+  <script src="assets/home.js" defer></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"VibeDesk","applicationCategory":"DeveloperApplication","operatingSystem":"Windows 10, Windows 11","description":"A calm Windows app for Claude Code: see what every session is doing, answer permission requests in one click on your PC or your phone, and keep a project memory so Claude remembers your project.","url":"https://fxd-gif.github.io/vibedesk/","downloadUrl":"https://fxd-gif.github.io/vibedesk/download/","softwareVersion":"2.0.0","license":"https://opensource.org/licenses/MIT","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"image":"https://fxd-gif.github.io/vibedesk/img/og.jpg","author":{"@type":"Person","name":"fxd-gif","url":"https://github.com/fxd-gif"}}</script>
 </head>
-<body>
+<body class="home">
   <a class="skip" href="#main">Skip to content</a>
   <header class="nav">
     <div class="wrap nav-in">
       <a class="brand" href="./" aria-current="page"><img src="img/icon.png" alt="" width="28" height="28">VibeDesk</a>
-      <nav class="nav-links" aria-label="Features">
-        <a href="sessions/">Sessions</a>
-        <a href="phone/">Phone</a>
-        <a href="brain/">Brain</a>
-        <a href="ambience/">Ambience</a>
-        <a href="tools/">Tools</a>
-      </nav>
       <div class="nav-end">
         <details class="menu">
-          <summary><span class="m-desk">More</span><span class="m-mobile">Menu</span><span class="m-ico" aria-hidden="true"></span></summary>
+          <summary><span class="m-desk">Features</span><span class="m-mobile">Menu</span><span class="m-ico" aria-hidden="true"></span></summary>
           <nav class="menu-panel" aria-label="All pages">
             <a href="./" aria-current="page">Overview<small>Start page</small></a>
             <hr>
@@ -58,215 +52,162 @@
             <a class="btn btn-light m-dl" href="https://fxd-gif.github.io/vibedesk/download/?start=1">Download for Windows</a>
           </nav>
         </details>
-        <span class="nav-sep" aria-hidden="true"></span>
+        <a class="nav-gh" href="https://github.com/fxd-gif/vibedesk">GitHub</a>
         <a class="btn btn-light btn-sm dl" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download</a>
       </div>
     </div>
   </header>
 
   <main id="main">
-    <section class="hero" id="top">
-      <canvas class="ascii hero-canvas" data-scene="cloud" data-scroll aria-hidden="true"></canvas>
-      <div class="wrap hero-in">
-        <div class="hero-copy">
-          <a class="nx-pill enter" href="#next" data-next-pill hidden></a>
-          <p class="cmd enter" style="--d:200ms"><span class="pr">&gt;</span><span class="caret" aria-hidden="true"></span><span>v<span data-ver>2.0</span></span><span class="sep" aria-hidden="true">·</span><span>free</span><span class="sep" aria-hidden="true">·</span><span>open source</span></p>
-          <h1 class="display">
-            <span class="line"><span style="--d:320ms">A quieter way</span></span>
-            <span class="line"><span style="--d:420ms">to work with</span></span>
-            <span class="line"><span style="--d:520ms"><em>Claude Code.</em></span></span>
-          </h1>
-          <p class="hero-sub enter" style="--d:760ms">A free Windows app around Claude Code. See which session is working and which one needs you – and answer in one click, on your PC or your phone.</p>
-          <div class="hero-actions enter" style="--d:880ms">
-            <a class="btn btn-light" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows<svg class="arr" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a>
-            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.39-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5"/></svg>View on GitHub</a>
-          </div>
-          <ul class="trust enter" style="--d:1000ms">
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg>Free &amp; open source</li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg>Windows 10 &amp; 11</li>
-            <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg>Uses your own Claude plan</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="show" id="product">
+    <section class="h-hero" id="top">
       <div class="wrap">
-        <div class="sec-head">
+        <div class="h-head">
           <div>
-            <p class="eyebrow">Real screenshots, no mockups</p>
-            <h2 class="h-l split"><span class="line"><span>Everything happening.</span></span><span class="line"><span><em>One calm place.</em></span></span></h2>
+            <a class="h-pill" href="#next" data-next-pill hidden></a>
+            <h1>Claude Code, finally calm.</h1>
           </div>
-          <p>Claude Code keeps running in real terminals. VibeDesk adds the overview around them: what each session is doing and what it is waiting for.</p>
+          <div class="h-side">
+            <p class="h-lead">A free Windows app for Claude Code. See what every session is doing, answer the one that’s waiting in one click, and let Claude remember your project.</p>
+            <div class="h-cta">
+              <a class="btn btn-light" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+              <a class="h-text-link" href="https://github.com/fxd-gif/vibedesk">Source on GitHub</a>
+            </div>
+            <p class="h-note">For Windows 10 and 11. Works with your own Claude plan.</p>
+          </div>
         </div>
-        <div data-show>
-          <div class="sw-tabs" role="tablist" aria-label="Parts of VibeDesk">
-            <button type="button" role="tab" id="tab-sessions" aria-controls="pan-sessions" aria-selected="true" data-view="sessions"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2.5" y="3.5" width="15" height="13" rx="2"/><path d="m6 8 2.5 2L6 12M10.5 12.5H14"/></svg>Sessions</button>
-            <button type="button" role="tab" id="tab-phone" aria-controls="pan-phone" aria-selected="false" tabindex="-1" data-view="phone"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="5.5" y="2.5" width="9" height="15" rx="2"/><path d="M9 15h2"/></svg>Phone</button>
-            <button type="button" role="tab" id="tab-brain" aria-controls="pan-brain" aria-selected="false" tabindex="-1" data-view="brain"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="5" cy="6" r="2"/><circle cx="15" cy="5" r="2"/><circle cx="10" cy="14.5" r="2.2"/><path d="M6.8 6.6 13 5.3M6 7.8l3 4.8M14 6.8l-3 5.8"/></svg>Brain</button>
-            <button type="button" role="tab" id="tab-ambience" aria-controls="pan-ambience" aria-selected="false" tabindex="-1" data-view="ambience"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M5.5 12.5a3.5 3.5 0 0 1 .4-7A4.5 4.5 0 0 1 14.4 7a3 3 0 0 1 .1 5.5z"/><path d="m7 15-1 2.5M10.5 15l-1 2.5M14 15l-1 2.5"/></svg>Ambience</button>
-            <button type="button" role="tab" id="tab-tools" aria-controls="pan-tools" aria-selected="false" tabindex="-1" data-view="tools"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><rect x="2.5" y="4.5" width="15" height="11" rx="2"/><path d="M6 8h8M6 11h5"/></svg>Tools</button>
+        <figure class="story" data-story>
+          <div class="story-screen">
+            <img src="img/approval.webp" width="1600" height="960" alt="VibeDesk: the Claude Code terminal of shop-frontend waiting for permission, an approval card with In terminal, Deny, Always and Allow, and the dock at the bottom" fetchpriority="high">
+            <canvas aria-hidden="true"></canvas>
           </div>
-          <div class="sw-view">
-            <div class="sw-panel" role="tabpanel" id="pan-sessions" aria-labelledby="tab-sessions" data-cap="A session waits for you: Allow, Always or Deny – without hunting for the terminal." data-href="sessions/">
-              <img src="img/approval.webp" width="1600" height="960" alt="VibeDesk: a Claude Code terminal for shop-frontend waiting for permission, an approval card with In terminal, Deny, Always and Allow, and the dock at the bottom" fetchpriority="high">
-            </div>
-            <div class="sw-panel" role="tabpanel" id="pan-phone" aria-labelledby="tab-phone" data-cap="Pair your phone with a 6-digit code. Approvals, Claude's latest steps and the whole terminal – no app needed." data-href="phone/" hidden>
-              <div class="sw-phones"><img src="img/phone-session.webp" width="600" height="1006" alt="Phone: session shop-frontend working, your prompt, progress 1 of 3 and the latest agent steps" loading="lazy" decoding="async"><img src="img/phone-terminal.webp" width="600" height="662" alt="Phone: the full Claude Code terminal of shop-frontend with colors" loading="lazy" decoding="async"></div>
-            </div>
-            <div class="sw-panel" role="tabpanel" id="pan-brain" aria-labelledby="tab-brain" data-cap="Project memory as linked notes, so Claude doesn't start from scratch every time." data-href="brain/" hidden>
-              <img src="img/brain-graph.webp" width="1600" height="1014" alt="The brain graph: linked project notes as glowing nodes, grouped by type" loading="lazy" decoding="async">
-            </div>
-            <div class="sw-panel" role="tabpanel" id="pan-ambience" aria-labelledby="tab-ambience" data-cap="Rain scenes, a lofi radio without an account, or your own Spotify – if you like it cozy." data-href="ambience/" hidden>
-              <img src="img/ambience-spotify.webp" width="1600" height="1010" alt="The Ambience &amp; music window with the Spotify tab: steps to connect your own Spotify app, scenes, rain and volume sliders" loading="lazy" decoding="async">
-            </div>
-            <div class="sw-panel" role="tabpanel" id="pan-tools" aria-labelledby="tab-tools" data-cap="Editor, preview, Git and a command palette – one click away when you need them." data-href="tools/" hidden>
-              <img src="img/palette.webp" width="1600" height="960" alt="The command palette over the desk with commands for sessions, windows and tools" loading="lazy" decoding="async">
-            </div>
+          <figcaption><span>A real screenshot of VibeDesk. The session that needs you comes to you.</span><button type="button" data-replay>Play again</button></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="h-try" id="try">
+      <div class="wrap h-split">
+        <div class="h-copy">
+          <h2>One of them has been waiting for 14 minutes.</h2>
+          <p>Every session gets a dot: green while it works, amber when it waits for you, blue when it’s done. The question comes to you as a card, on your PC or on your phone.</p>
+          <p class="h-links"><a href="sessions/">More about sessions</a><a href="phone/">Answer from your phone</a></p>
+        </div>
+        <div class="sb" data-board>
+          <div class="sb-head"><b>Sessions</b><span>3 running</span></div>
+          <div class="sb-row" data-s="api"><span class="dot g" data-dot></span><span class="sb-name"><b>api-server</b><span data-act>Edit(src/routes/users.ts)</span></span><span class="sb-st g" data-chip>working</span></div>
+          <div class="sb-row hot" data-s="shop"><span class="dot y" data-dot></span><span class="sb-name"><b>shop-frontend</b><span data-act>Wants to run npm test</span></span><span class="sb-st y" data-chip>waiting 14:32</span></div>
+          <div class="sb-row" data-s="blog"><span class="dot b" data-dot></span><span class="sb-name"><b>blog</b><span data-act>Finished. 3 files changed.</span></span><span class="sb-st b" data-chip>done</span></div>
+          <div class="approve" data-approve>
+            <div class="approve-top"><span class="dot y" data-adot></span><span>shop-frontend needs your permission</span></div>
+            <div class="approve-sub">Run command</div>
+            <code data-req-cmd>npm test</code>
+            <div class="approve-btns"><button type="button" class="ghost" data-a="term">In terminal</button><button type="button" data-a="deny">Deny</button><button type="button" data-a="always">Always</button><button type="button" class="primary" data-a="allow">Allow</button></div>
+            <p class="sb-hint" data-hint aria-live="polite">Try it: click Allow.</p>
           </div>
-          <p class="sw-cap" aria-live="polite"><span data-sw-cap>A session waits for you: Allow, Always or Deny – without hunting for the terminal.</span><a class="link-u" href="sessions/" data-sw-link>Learn more<svg class="arr" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 8h10.5M9 4l4 4-4 4"/></svg></a></p>
+          <div class="toast sb-toast" data-toast aria-hidden="true"><span class="dot b"></span><div><b>shop-frontend is done</b><span>Claude finished the task.</span></div></div>
         </div>
       </div>
     </section>
 
-    <section id="how">
+    <section class="h-brain" id="memory">
       <div class="wrap">
-        <div class="sec-head solo">
-          <div>
-            <p class="eyebrow">How it works</p>
-            <h2 class="h-l split"><span class="line"><span>Set it up once.</span></span><span class="line"><span><em>Then just build.</em></span></span></h2>
-          </div>
+        <div class="h-copy">
+          <h2>Claude remembers your project.</h2>
+          <p>Decisions, pitfalls and conventions go into a project memory of plain Markdown notes. The next session starts with what the last one learned.</p>
         </div>
-        <ol class="steps">
-          <li><h3>Install VibeDesk</h3><p>Run the installer. If Node.js or Claude Code are missing, VibeDesk offers to set them up on first start.</p></li>
-          <li><h3>Open your project</h3><p>Pick a folder and start Claude – one session or several side by side, each in a real terminal.</p></li>
-          <li><h3>Step in when it counts</h3><p>VibeDesk tells you when a session needs you. Answer in one click, then let Claude keep going.</p></li>
-        </ol>
+        <figure class="mem" data-mem>
+          <div class="mem-tree">
+            <p class="mem-path">shop-frontend/.vibedesk/brain/</p>
+            <ul>
+              <li data-note="login"><span class="mem-b" aria-hidden="true">├── </span><span class="mem-n">Login flow.md</span><span class="mem-t">area</span></li>
+              <li data-note="auth"><span class="mem-b" aria-hidden="true">├── </span><span class="mem-n">Auth API.md</span><span class="mem-t">area</span></li>
+              <li data-note="cookie"><span class="mem-b" aria-hidden="true">├── </span><span class="mem-n">Cookie, not localStorage.md</span><span class="mem-t">decision</span></li>
+              <li><span class="mem-b" aria-hidden="true">├── </span><span class="mem-n">CRLF breaks snapshots.md</span><span class="mem-t">pitfall</span></li>
+              <li><span class="mem-b" aria-hidden="true">├── </span><span class="mem-n">Design tokens.md</span><span class="mem-t">convention</span></li>
+              <li><span class="mem-b" aria-hidden="true">├── </span><span class="mem-n">Error copy style.md</span><span class="mem-t">convention</span></li>
+              <li data-note="tests"><span class="mem-b" aria-hidden="true">└── </span><span class="mem-n">Test setup.md</span><span class="mem-t">fact</span></li>
+              <li class="mem-new" data-note="new"><span class="mem-b" aria-hidden="true">└── </span><span class="mem-n" data-type="Reset links expire after 1 h.md">Reset links expire after 1 h.md</span><span class="mem-t">decision</span></li>
+            </ul>
+          </div>
+          <ol class="mem-log" aria-label="What the new session does">
+            <li><span class="mem-p">›</span>new session in shop-frontend</li>
+            <li class="mem-dim">knows 7 notes from earlier sessions</li>
+            <li><span class="mem-p">›</span>Add a password reset</li>
+            <li><span class="mem-dot">●</span>brain: read Login flow, Auth API, Cookie, not localStorage</li>
+            <li><span class="mem-dot">●</span>Edit(src/pages/ResetPassword.tsx)</li>
+            <li class="mem-learn"><span class="mem-dot">●</span>brain: learned “Reset links expire after 1 h”</li>
+          </ol>
+          <figcaption class="sr-only">An illustration: the project memory is a folder of Markdown notes. A new session reads three of them and saves one new decision.</figcaption>
+        </figure>
+        <p class="h-links"><a href="brain/">How the brain works</a></p>
       </div>
     </section>
 
-    <div class="xline" aria-hidden="true"></div>
-
-    <section id="sessions">
-      <div class="wrap sess">
-        <div class="sess-text">
-          <p class="eyebrow">Try it</p>
-          <h2 class="h-l split"><span class="line"><span>See who needs you.</span></span><span class="line"><span><em>Answer in one click.</em></span></span></h2>
-          <p class="body-l">Every session gets a colored dot: <b>green</b> is working, <b>yellow</b> is waiting for you, <b>blue</b> is done. Click <b>Allow</b> on the card and watch what happens.</p>
-          <a class="link-u" href="sessions/">Everything about sessions<svg class="arr" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 8h10.5M9 4l4 4-4 4"/></svg></a>
-        </div>
-        <div>
-          <div class="board" data-board>
-            <div class="board-head"><b>Sessions</b><span>3 sessions</span></div>
-            <div class="brow" data-s="api"><span class="dot g" data-dot></span><span><b>api-server</b><span class="bact" data-act>Edit(src/routes/users.ts)</span></span><span class="chip-st g" data-chip>working</span><span class="t" data-t>4 min</span></div>
-            <div class="brow hot" data-s="shop"><span class="dot y" data-dot></span><span><b>shop-frontend</b><span class="bact" data-act>Wants to run npm test</span></span><span class="chip-st y" data-chip>waiting</span><span class="t" data-t>1 min</span></div>
-            <div class="brow" data-s="blog"><span class="dot b" data-dot></span><span><b>blog</b><span class="bact" data-act>Finished – 3 files changed</span></span><span class="chip-st b" data-chip>done</span><span class="t" data-t>8 min ago</span></div>
-            <div class="approve" data-approve>
-              <div class="approve-top"><span class="dot y" data-adot></span><span>shop-frontend needs your permission</span></div>
-              <div class="approve-sub">Run command</div>
-              <code>npm test</code>
-              <div class="approve-btns"><button type="button" class="ghost" data-a="term">In terminal</button><button type="button" data-a="deny">Deny</button><button type="button" data-a="always">Always</button><button type="button" class="primary" data-a="allow">Allow</button></div>
-              <div class="approve-hint" data-hint aria-live="polite">Try it – click Allow</div>
-            </div>
-            <div class="toast board-toast" data-toast aria-hidden="true"><span class="dot b" style="margin-top:6px"></span><div><b>shop-frontend is done</b><span>Claude finished the task.</span></div></div>
-          </div>
-          <p class="board-note">An illustration – the colors and the card work just like in the app.</p>
-        </div>
-      </div>
-    </section>
-
-    <div class="xline" aria-hidden="true"></div>
-
-    <section id="trust">
-      <div class="wrap safe">
-        <div>
-          <p class="eyebrow">Safe by default</p>
-          <h2 class="h-l split"><span class="line"><span>Your projects</span></span><span class="line"><span><em>stay yours.</em></span></span></h2>
-          <p class="body-l">VibeDesk is a calm layer around the real Claude Code. It doesn't replace it, and it doesn't hide what Claude does.</p>
-          <div class="hero-actions">
-            <a class="btn btn-glass" href="https://github.com/fxd-gif/vibedesk">Read the source<svg class="arr" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 8h10.5M9 4l4 4-4 4"/></svg></a>
-          </div>
-        </div>
-        <ul class="checks">
-          <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><div><b>Runs the real Claude Code</b><span>The official <code>claude</code> CLI that you install and log in to yourself.</span></div></li>
-          <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><div><b>Leaves your settings alone</b><span>Your <code>~/.claude/settings.json</code> and project settings are never changed.</span></div></li>
-          <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><div><b>Stays on your PC</b><span>Settings, stats and the project memory live locally. The phone link only runs while you switch it on.</span></div></li>
-          <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><div><b>No account, no tracking</b><span>Anonymous counting only if you say yes – a random ID and the version, nothing else.</span></div></li>
-          <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><div><b>Free and open source</b><span>MIT licensed. Every line is on GitHub, and you can build it yourself.</span></div></li>
-          <li><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m4 10.5 4 4 8-9"/></svg><div><b>Independent</b><span>Not made by Anthropic. Claude usage runs on your own Pro/Max plan or API key.</span></div></li>
-        </ul>
-      </div>
-    </section>
-
-    <div class="xline" aria-hidden="true"></div>
-
-    <section id="next" class="tight">
+    <section class="h-calm" id="calm" data-rain-field>
+      <canvas aria-hidden="true"></canvas>
       <div class="wrap">
-        <div class="rel-head">
-          <div>
-            <p class="label">Next release</p>
-            <h2 class="h-l">VibeDesk <span data-next-version>2.0</span> lands in</h2>
-          </div>
-          <div>
-            <div class="nx-count" aria-live="polite" data-next-count>
-              <div><b data-cd="d">–</b><span>days</span></div>
-              <div><b data-cd="h">–</b><span>hours</span></div>
-              <div><b data-cd="m">–</b><span>minutes</span></div>
-              <div><b data-cd="s">–</b><span>seconds</span></div>
-            </div>
-            <p class="nx-date" data-next-date></p>
-          </div>
-        </div>
-        <div class="nx-grid">
-          <div class="nx-col">
-            <h3>Planned</h3>
-            <ul class="nx-list" data-next-features></ul>
-          </div>
-          <div class="nx-col">
-            <h3>Most wanted by you</h3>
-            <ul class="nx-list" data-next-wishes><li class="nx-empty">No wishes yet – be the first.</li></ul>
-            <div class="nx-actions">
-              <a class="btn btn-light btn-sm" href="https://github.com/fxd-gif/vibedesk/issues/new?template=feature_request.yml&amp;labels=enhancement">Wish for a feature</a>
-              <a class="btn btn-glass btn-sm" href="https://github.com/fxd-gif/vibedesk/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement+sort%3Areactions-%2B1-desc">Vote with 👍</a>
-            </div>
-            <p class="nx-note">Wishes with the most 👍 move into the next release.</p>
-          </div>
+        <div class="h-copy" data-quiet>
+          <h2>And it’s a nice place to be.</h2>
+          <p>Rain on the window, a lofi radio without an account, or your own Spotify. Zen mode hides everything except Claude.</p>
+          <label class="rain-ctl"><span>Rain</span><input type="range" min="0" max="100" value="55" data-rain><output data-rain-v>55%</output></label>
+          <p class="h-links"><a href="ambience/">Ambience and music</a><a href="calm/">Zen mode</a></p>
         </div>
       </div>
     </section>
 
-    <div class="xline" aria-hidden="true"></div>
-
-    <section id="faq">
-      <div class="wrap qa">
-        <div>
-          <p class="eyebrow">Questions</p>
-          <h2 class="h-l">Good to know <em>before you start.</em></h2>
-          <p class="body-l">Anything else? <a class="link-u" href="https://github.com/fxd-gif/vibedesk/issues">Ask on GitHub</a></p>
-        </div>
-        <div class="faq">
-          <details><summary>Is VibeDesk made by Anthropic?</summary><p>No. VibeDesk is an independent, unofficial open-source project. It runs the real Claude Code CLI that you install and log in to yourself.</p></details>
-          <details><summary>What do I need?</summary><p>Windows 10 or 11 (64-bit), Claude Code, and a Claude Pro/Max plan or an Anthropic API key. If Node.js or Claude Code are missing, VibeDesk offers to install them on first start. Git and the GitHub CLI can be installed with one click when you need them.</p></details>
-          <details><summary>Is it really free?</summary><p>Yes. VibeDesk is free and open source under the MIT license. Claude usage is billed by Anthropic through your own plan, not by VibeDesk. Costs shown in the app are estimates based on API prices.</p></details>
-          <details><summary>Does it change my Claude Code settings?</summary><p>No. VibeDesk does not touch your <code>~/.claude/settings.json</code> or project settings. Sessions started in VibeDesk get a temporary settings file with its hooks, passed via <code>--settings</code>. Sessions you start elsewhere are not affected.</p></details>
-          <details><summary>Windows says “Windows protected your PC”.</summary><p>The installer is not code-signed, so SmartScreen may warn about it. Click <b>More info → Run anyway</b>. To check the file, compare its SHA256 checksum with the one in the <a href="https://github.com/fxd-gif/vibedesk/releases">release notes</a>.</p></details>
-        </div>
-      </div>
-    </section>
-
-    <div class="xline" aria-hidden="true"></div>
-
-    <section class="end" id="download">
+    <section class="h-safe" id="safe">
       <div class="wrap">
-        <div class="end-in">
-          <h2 class="h-xl split"><span class="line"><span>Make room for</span></span><span class="line"><span><em>your next idea.</em></span></span></h2>
-          <div class="hero-actions">
-            <a class="btn btn-light" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download VibeDesk<svg class="arr" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></a>
+        <div class="h-copy">
+          <h2>Safe to try.</h2>
+          <p>VibeDesk sits around the real Claude Code. It doesn’t replace it, and it doesn’t hide what Claude does.</p>
+        </div>
+        <div class="h-safe-grid">
+          <div class="facts">
+            <p class="facts-head"># five things you can check on GitHub</p>
+            <ul>
+              <li><b>runs the real Claude Code</b><span>the official <code>claude</code> CLI, with your own login</span></li>
+              <li><b>leaves your settings alone</b><span><code>~/.claude/settings.json</code> is never changed</span></li>
+              <li><b>stays on your PC</b><span>settings, stats and the project memory live locally</span></li>
+              <li><b>needs no account</b><span>anonymous counting only if you say yes</span></li>
+              <li><b>is open source</b><span>MIT license, every line on GitHub</span></li>
+            </ul>
+            <a class="facts-link" href="https://github.com/fxd-gif/vibedesk">Read the source</a>
+          </div>
+          <div class="faq">
+            <details><summary>Is VibeDesk made by Anthropic?</summary><p>No. VibeDesk is an independent, unofficial open-source project. It runs the real Claude Code CLI that you install and log in to yourself.</p></details>
+            <details><summary>What do I need?</summary><p>Windows 10 or 11 (64-bit) and a Claude Pro or Max plan or an Anthropic API key. If Node.js or Claude Code are missing, VibeDesk offers to install them on first start.</p></details>
+            <details><summary>Is it really free?</summary><p>Yes. VibeDesk is free and open source under the MIT license. Claude usage is billed by Anthropic through your own plan, not by VibeDesk.</p></details>
+            <details><summary>Windows says “Windows protected your PC”.</summary><p>The installer is not code-signed, so SmartScreen may warn about it. Click <b>More info</b>, then <b>Run anyway</b>. To check the file, compare its SHA256 checksum with the one in the <a href="https://github.com/fxd-gif/vibedesk/releases">release notes</a>.</p></details>
           </div>
         </div>
-        <p class="end-micro"><span>Free for Windows 10 and 11</span><span id="latest" hidden><a id="latest-link" href="https://github.com/fxd-gif/vibedesk/releases/latest">Latest: <span id="latest-v"></span></a></span></p>
       </div>
-      <canvas class="ascii word-canvas" data-scene="word" data-reveal="center" data-cw="8" data-ch="13" aria-hidden="true"></canvas>
+    </section>
+
+    <section class="h-end" id="download">
+      <div class="wrap">
+        <h2>Make room for your next idea.</h2>
+        <div class="h-cta">
+          <a class="btn btn-light" href="https://fxd-gif.github.io/vibedesk/download/?start=1"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5 10.5 4.4v7.1H3zm0 13 7.5 1.1v-7H3zm8.4 1.2L21 21v-8.4h-9.6zm0-15.4v7.2H21V3z"/></svg>Download for Windows</a>
+          <a class="h-text-link" href="https://github.com/fxd-gif/vibedesk">Source on GitHub</a>
+        </div>
+        <p class="h-rel" data-release>VibeDesk <span data-next-version>2.0</span> is out. <a href="https://github.com/fxd-gif/vibedesk/releases/latest">See what’s new</a> or <a href="https://github.com/fxd-gif/vibedesk/issues/new?template=feature_request.yml&amp;labels=enhancement">wish for a feature</a>.</p>
+        <div class="next" id="next" data-next hidden>
+          <p class="next-title">VibeDesk <span data-next-version>2.1</span> lands in</p>
+          <div class="next-count" aria-live="polite">
+            <div><b data-cd="d">00</b><span>days</span></div>
+            <div><b data-cd="h">00</b><span>hours</span></div>
+            <div><b data-cd="m">00</b><span>minutes</span></div>
+            <div><b data-cd="s">00</b><span>seconds</span></div>
+          </div>
+          <p class="next-date" data-next-date></p>
+          <div class="next-cols">
+            <div><h3>Planned</h3><ul class="next-list" data-next-features></ul></div>
+            <div data-wishes hidden><h3>Most wanted</h3><ul class="next-list next-wishes" data-next-wishes></ul></div>
+          </div>
+          <p class="next-wish"><a href="https://github.com/fxd-gif/vibedesk/issues/new?template=feature_request.yml&amp;labels=enhancement">Wish for a feature</a> or <a href="https://github.com/fxd-gif/vibedesk/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement+sort%3Areactions-%2B1-desc">vote with 👍</a>. The most wanted ideas move into the next release.</p>
+        </div>
+      </div>
+      <div class="word" data-word><canvas aria-hidden="true"></canvas></div>
     </section>
   </main>
 
@@ -283,7 +224,7 @@
           <div><h2>Project</h2><ul><li><a href="https://fxd-gif.github.io/vibedesk/download/">Download</a></li><li><a href="https://github.com/fxd-gif/vibedesk">GitHub</a></li><li><a href="https://www.youtube.com/watch?v=SLLYiK34I88">Video tour (5 min)</a></li><li><a href="https://github.com/fxd-gif/vibedesk/releases">Releases</a></li><li><a href="https://github.com/fxd-gif/vibedesk/issues">Issues</a></li></ul></div>
         </div>
       </div>
-      <div class="foot-base"><span>VibeDesk <span data-ver>2.0</span> · Windows 10/11 · MIT</span><a href="#top">Back to top ↑</a></div>
+      <div class="foot-base"><span>VibeDesk <span data-ver>2.0.0</span> for Windows 10 and 11, MIT license</span><a href="#top">Back to top</a></div>
     </div>
   </footer>
 </body>
