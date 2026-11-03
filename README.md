@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://fxd-gif.github.io/vibedesk/"><img src=".github/assets/readme/banner.svg" width="100%" alt="VibeDesk – the calm vibe-coding IDE for Claude Code on Windows. Three sessions in the dock: one working, one waiting for you for 3 minutes, one done." /></a>
+<a href="https://fxd-gif.github.io/vibedesk/"><img src=".github/assets/readme/banner.svg" width="100%" alt="VibeDesk – Claude Code, finally calm. A free Windows app for Claude Code." /></a>
 
 <br/>
 
@@ -8,9 +8,9 @@
 
 <br/>
 
-[![Release](https://img.shields.io/github/v/release/fxd-gif/vibedesk?style=flat-square&color=9fb8ff&label=release)](https://github.com/fxd-gif/vibedesk/releases/latest)
-[![License: MIT](https://img.shields.io/badge/license-MIT-4ade80?style=flat-square)](LICENSE)
-![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0b0f17?style=flat-square&logo=windows&logoColor=white)
+[![Release](https://img.shields.io/github/v/release/fxd-gif/vibedesk?style=flat-square&color=7aa7ff&labelColor=10141f&label=release)](https://github.com/fxd-gif/vibedesk/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-5fd497?style=flat-square&labelColor=10141f)](LICENSE)
+![Windows 10 | 11](https://img.shields.io/badge/Windows-10%20%7C%2011-0c0f18?style=flat-square&logo=windows&logoColor=white&labelColor=10141f)
 [![M8ven Score](https://m8ven.ai/badge/mcp/fxd-gif-vibedesk-nx57jc?v=33057809218db5425ec5d15bc9cbb2b6)](https://m8ven.ai/mcp/fxd-gif-vibedesk-nx57jc?s=readme)
 
 **English** · [Deutsch](README.de.md) · [Website](https://fxd-gif.github.io/vibedesk/)
@@ -19,11 +19,11 @@
 
 <br/>
 
-VibeDesk is a full-screen workspace for Windows built around [Claude Code](https://docs.claude.com/en/docs/claude-code). Instead of switching between terminals, a browser and a music app, you sit in front of a rainy window, and the things you need for building float in front of it as glass windows.
+VibeDesk is a free Windows app for [Claude Code](https://docs.claude.com/en/docs/claude-code). See what every session is doing, answer the one that's waiting in one click – on your PC or your phone – and let Claude remember your project.
 
-It runs the real Claude Code CLI in real terminals. VibeDesk adds the view around it: what each session is doing, what it is waiting for, and what it costs.
+Claude Code keeps running in real terminals. VibeDesk adds the calm place around them: a rainy window, glass windows for your tools, and a dock that tells you who needs you.
 
-<p align="center"><img src=".github/assets/hero.gif" width="760" alt="Every Claude Code session gets a dot in the dock: green means working, yellow means waiting for you, blue means done" /></p>
+<p align="center"><img src=".github/assets/readme/story.gif" width="880" alt="Three Claude Code terminals scroll by, one has been waiting for 14 minutes. The characters rain down and turn into VibeDesk: one calm screen with a permission card for the waiting session." /><br/><sub>Three busy terminals, one waiting for 14 minutes – and the same work in VibeDesk.</sub></p>
 
 <br/>
 
@@ -32,9 +32,9 @@ It runs the real Claude Code CLI in real terminals. VibeDesk adds the view aroun
 <td width="56%"><img src=".github/assets/readme/approval.webp" alt="A Claude Code session waiting for permission to run npm test, answered with a card: Deny, Always, Allow" /></td>
 <td>
 
-### Every session at a glance
+### See who needs you
 
-A dot per session: **green** while Claude works, **yellow** when it waits for you (and for how long), **blue** when it is done.
+A dot per session: **green** while Claude works, **amber** when it waits for you (and for how long), **blue** when it is done.
 
 Permission requests show up as a card with *Allow*, *Always* and *Deny*, so you never dig through four terminals to find the one that is stuck.
 
@@ -80,7 +80,7 @@ A personal brain remembers how *you* like to work, across all projects. Nothing 
 <td width="56%"><img src=".github/assets/readme/ambience-lofi.webp" alt="Ambience and music: lofi radio, three rainy scenes, sliders for rain, fog and volume" /></td>
 <td>
 
-### A calm place to sit
+### A nice place to be
 
 Rain runs down the window over a city at night, a forest, a Tokyo alley or your own photo. Lofi radio or your Spotify, a focus timer, and rain sound with its own volume.
 
@@ -93,7 +93,7 @@ The dock grows with your work. Tools appear only when they have something to do.
 
 ### Zen when you need it
 
-<kbd>Ctrl</kbd> + <kbd>.</kbd> hides everything except Claude and the rain. Other sessions shrink to small pills at the top and still turn yellow when they need you.
+<kbd>Ctrl</kbd> + <kbd>.</kbd> hides everything except Claude and the rain. Other sessions shrink to small pills at the top and still turn amber when they need you.
 
 One card at a time, "done" messages are bundled, and the dock dims while you type.
 
@@ -101,6 +101,27 @@ One card at a time, "done" messages are bundled, and the dock dims while you typ
 <td width="44%"><img src=".github/assets/readme/zen.webp" alt="Zen mode: one Claude Code session in full view, the other sessions as a small pill at the top" /></td>
 </tr>
 </table>
+
+<br/>
+
+## Safe to try
+
+VibeDesk sits around the real Claude Code. It doesn't replace it, and it doesn't hide what Claude does.
+
+```text
+# five things you can check in this repository
+
+✓ runs the real Claude Code
+  the official claude CLI, with your own login
+✓ leaves your settings alone
+  ~/.claude/settings.json is never changed
+✓ stays on your PC
+  settings, stats and the project memory live locally
+✓ needs no account
+  anonymous counting only if you say yes
+✓ is open source
+  MIT license, every line on GitHub
+```
 
 <br/>
 
@@ -112,13 +133,13 @@ Every feature you asked for in the issues made it in. We ship one bigger, tested
 <tr>
 <td width="50%" valign="top">
 
-**🌨️ Living scenes**<br/>
+**Living scenes**<br/>
 Ask Claude for an interactive background: snow that settles on the roof in your own photo, fireflies that follow your mouse, a thunderstorm on click. Claude writes the scene, looks at it and refines it.
 
 </td>
 <td width="50%" valign="top">
 
-**✅ Session wrap-up** · [#1](https://github.com/fxd-gif/vibedesk/issues/1)<br/>
+**Session wrap-up** · [#1](https://github.com/fxd-gif/vibedesk/issues/1)<br/>
 When Claude finishes, get a short summary, the changed files, what went into the brain and a suggested commit. One click commits it.
 
 </td>
@@ -126,13 +147,13 @@ When Claude finishes, get a short summary, the changed files, what went into the
 <tr>
 <td valign="top">
 
-**🔀 Pull requests from the Git window** · [#2](https://github.com/fxd-gif/vibedesk/issues/2)<br/>
+**Pull requests from the Git window** · [#2](https://github.com/fxd-gif/vibedesk/issues/2)<br/>
 Branch, push and open a PR without leaving VibeDesk. Claude writes the title and description, you check and send.
 
 </td>
 <td valign="top">
 
-**🟡 Tray status** · [#3](https://github.com/fxd-gif/vibedesk/issues/3)<br/>
+**Tray status** · [#3](https://github.com/fxd-gif/vibedesk/issues/3)<br/>
 See which session waits for you while VibeDesk is minimized, and answer permission requests right from the tray.
 
 </td>
@@ -140,13 +161,13 @@ See which session waits for you while VibeDesk is minimized, and answer permissi
 <tr>
 <td valign="top">
 
-**📊 Budget per project** · [#4](https://github.com/fxd-gif/vibedesk/issues/4)<br/>
+**Budget per project** · [#4](https://github.com/fxd-gif/vibedesk/issues/4)<br/>
 Set a cost or token budget per day or week. A quiet heads-up at 75 %, a notification at 100 %. Claude is never stopped.
 
 </td>
 <td valign="top">
 
-**🧭 Claude runs your desk**<br/>
+**Claude runs your desk**<br/>
 Claude can see your other sessions and hand them tasks, check usage and limits, set a budget and leave you a reminder.
 
 </td>
@@ -476,7 +497,10 @@ Questions, bug reports and ideas all go to [GitHub Issues](https://github.com/fx
 <br/>
 
 <div align="center">
-<img src="resources/icon.png" width="44" alt="" />
+<a href="https://fxd-gif.github.io/vibedesk/"><picture>
+<source media="(prefers-color-scheme: dark)" srcset=".github/assets/readme/wordmark-dark.svg" />
+<img src=".github/assets/readme/wordmark-light.svg" width="300" alt="VibeDesk" />
+</picture></a>
 <br/>
 <sub>Built with Electron, React and WebGL.<br/>Not affiliated with Anthropic. Claude is a trademark of Anthropic.</sub>
 </div>
