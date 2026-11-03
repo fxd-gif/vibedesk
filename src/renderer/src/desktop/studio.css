@@ -3,8 +3,8 @@
 .sidebar {
   position: absolute; left: 10px; top: 10px; bottom: 10px; width: 222px; z-index: 1000;
   display: flex; flex-direction: column; gap: 6px; padding: 12px 10px;
-  border-radius: 18px; background: rgba(14, 18, 26, .55); backdrop-filter: blur(26px) saturate(150%);
-  border: 1px solid var(--glass-border); box-shadow: 0 24px 60px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06);
+  border-radius: 18px; background: rgba(var(--bg2-rgb), .55); backdrop-filter: blur(26px) saturate(150%);
+  border: 1px solid var(--glass-border); box-shadow: 0 24px 60px rgba(0,0,0,.4);
 }
 .sb-brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 12px; font-size: 15px; }
 .sb-brand b { font-weight: 600; letter-spacing: .01em; }
@@ -44,7 +44,7 @@
 .statusbar {
   position: absolute; left: 246px; right: 10px; bottom: 8px; height: 30px; z-index: 1000;
   display: flex; align-items: center; gap: 4px; padding: 0 6px;
-  border-radius: 11px; background: rgba(14, 18, 26, .5); backdrop-filter: blur(20px) saturate(140%);
+  border-radius: 11px; background: rgba(var(--bg2-rgb), .5); backdrop-filter: blur(20px) saturate(140%);
   border: 1px solid var(--glass-border); font-size: 12px; color: var(--text-dim);
 }
 .stb-chip { padding: 2px 8px; border-radius: 7px; background: rgba(255,255,255,.06); font-size: 11px; }

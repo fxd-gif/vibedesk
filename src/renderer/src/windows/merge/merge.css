@@ -2,7 +2,7 @@
 .ms { display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 0; padding: 14px 16px 16px; container-type: inline-size; }
 
 .ms-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.ms-logo { width: 46px; height: 46px; flex: 0 0 46px; border-radius: 13px; display: grid; place-items: center; color: var(--accent); background: linear-gradient(145deg, rgba(var(--accent-rgb), .22), rgba(var(--accent-rgb), .06)); border: 1px solid rgba(var(--accent-rgb), .3); box-shadow: 0 0 24px rgba(var(--accent-rgb), .18), inset 0 1px 0 rgba(255,255,255,.1); }
+.ms-logo { width: 46px; height: 46px; flex: 0 0 46px; border-radius: 13px; display: grid; place-items: center; color: var(--accent); background: linear-gradient(145deg, rgba(var(--accent-rgb), .22), rgba(var(--accent-rgb), .06)); border: 1px solid rgba(var(--accent-rgb), .3); box-shadow: 0 0 24px rgba(var(--accent-rgb), .18); }
 .ms-title h2 { margin: 0; font-size: 19px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 .ms-title p { margin: 3px 0 0; font-size: 12.5px; }
 .ms-beta { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px; color: var(--accent); background: rgba(var(--accent-rgb), .12); border: 1px solid rgba(var(--accent-rgb), .3); letter-spacing: .02em; }
@@ -10,7 +10,7 @@
 .ms-pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; font-size: 12px; background: rgba(255,255,255,.05); border: 1px solid var(--glass-border); white-space: nowrap; }
 .ms-pill .dot { width: 7px; height: 7px; }
 
-.ms-merging { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; background: rgba(251, 191, 36, .09); border: 1px solid rgba(251, 191, 36, .32); color: #fde7a7; font-size: 12.5px; }
+.ms-merging { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 12px; background: rgba(var(--yellow-rgb), .09); border: 1px solid rgba(var(--yellow-rgb), .32); color: #fde7a7; font-size: 12.5px; }
 
 /* Karten */
 .ms-cards { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(230px, 1fr); gap: 12px; overflow-x: auto; padding-bottom: 2px; flex: 0 0 auto; }
@@ -38,15 +38,15 @@
 .ms-stat .del { color: var(--red); }
 
 .ms-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 500; white-space: nowrap; border: 1px solid transparent; }
-.ms-badge.ready { color: #9ff0bf; background: rgba(74, 222, 128, .1); border-color: rgba(74, 222, 128, .28); }
+.ms-badge.ready { color: #9ff0bf; background: rgba(var(--green-rgb), .1); border-color: rgba(var(--green-rgb), .28); }
 .ms-badge.conflict { color: #fdba74; background: rgba(251, 146, 60, .12); border-color: rgba(251, 146, 60, .35); }
-.ms-badge.review { color: #fca5a5; background: rgba(248, 113, 113, .1); border-color: rgba(248, 113, 113, .3); }
+.ms-badge.review { color: var(--red); background: rgba(var(--red-rgb), .1); border-color: rgba(var(--red-rgb), .3); }
 .ms-badge.empty { color: var(--text-dim); background: rgba(255,255,255,.04); border-color: var(--glass-border); }
 .ms-badge.target { color: var(--accent); background: rgba(var(--accent-rgb), .1); border-color: rgba(var(--accent-rgb), .3); }
-.ms-badge.dirty { color: #fde68a; background: rgba(251, 191, 36, .08); border-color: rgba(251, 191, 36, .25); }
+.ms-badge.dirty { color: var(--yellow); background: rgba(var(--yellow-rgb), .08); border-color: rgba(var(--yellow-rgb), .25); }
 
 /* Reiter-Panel */
-.ms-panel { flex: 1; min-height: 220px; display: flex; flex-direction: column; border-radius: 14px; background: rgba(5, 7, 12, .28); border: 1px solid var(--glass-border); overflow: hidden; }
+.ms-panel { flex: 1; min-height: 220px; display: flex; flex-direction: column; border-radius: 14px; background: rgba(var(--bg-rgb), .28); border: 1px solid var(--glass-border); overflow: hidden; }
 .ms-tabs { display: flex; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--glass-border); overflow-x: auto; flex: 0 0 auto; }
 .ms-tabs button { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px 10px; border: 0; background: transparent; color: var(--text-dim); cursor: pointer; font-size: 12.5px; white-space: nowrap; }
 .ms-tabs button:hover { color: var(--text); }
@@ -58,7 +58,7 @@
 .ms-overview { padding: 10px 12px; }
 .ms-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .ms-table th { text-align: left; font-weight: 500; font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); padding: 6px 8px; border-bottom: 1px solid var(--glass-border); }
-.ms-table td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,.04); }
+.ms-table td { padding: 8px; border-bottom: 1px solid var(--line); }
 .ms-table tbody tr { cursor: pointer; }
 .ms-table tbody tr:hover { background: rgba(255,255,255,.03); }
 .ms-table tbody tr.on { background: rgba(var(--accent-rgb), .08); }
@@ -75,7 +75,7 @@
 .ms-compare-head { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-bottom: 1px solid var(--glass-border); font-size: 12.5px; }
 .ms-compare-hint { margin-left: auto; font-size: 11.5px; }
 .ms-cols { flex: 1; min-height: 0; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(300px, 1fr); gap: 8px; padding: 8px; overflow-x: auto; }
-.ms-col { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(5, 7, 12, .35); overflow: hidden; }
+.ms-col { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(var(--bg-rgb), .35); overflow: hidden; }
 .ms-col-head { display: flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: 12px; border-bottom: 1px solid var(--glass-border); background: rgba(255,255,255,.03); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ms-col-mark { width: 9px; height: 9px; border-radius: 50%; border: 2px solid currentColor; flex: 0 0 auto; }
 .tone-session .ms-col-mark { color: var(--accent); }

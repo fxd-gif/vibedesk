@@ -3,9 +3,9 @@
 .toast-stack > * { pointer-events: auto; }
 .toast-stack .update-toast { position: static; }
 
-.ntoast { position: relative; width: 340px; padding: 12px 12px 12px 14px; border-radius: 14px; background: rgba(14, 18, 26, .86); backdrop-filter: blur(24px) saturate(150%); border: 1px solid var(--glass-border); box-shadow: 0 18px 50px rgba(0,0,0,.45); animation: ntoast-in 240ms cubic-bezier(.2,.8,.2,1); }
-.ntoast.k-waiting { border-color: rgba(250, 204, 21, .35); }
-.ntoast.k-error { border-color: rgba(248, 113, 113, .4); }
+.ntoast { position: relative; width: 340px; padding: 12px 12px 12px 14px; border-radius: 14px; background: rgba(var(--bg2-rgb), .86); backdrop-filter: blur(24px) saturate(150%); border: 1px solid var(--glass-border); box-shadow: 0 18px 50px rgba(0,0,0,.45); animation: ntoast-in 240ms cubic-bezier(.2,.8,.2,1); }
+.ntoast.k-waiting { border-color: rgba(var(--yellow-rgb), .35); }
+.ntoast.k-error { border-color: rgba(var(--red-rgb), .4); }
 .ntoast.k-watch { border-color: rgba(251, 146, 60, .45); }
 @keyframes ntoast-in { from { opacity: 0; transform: translateX(24px); } }
 .ntoast-main { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 0 22px 0 0; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; font: inherit; }
@@ -19,7 +19,7 @@
 .ntoast-x .gbtn-x { transform: scale(.8); }
 .ntoast-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 10px; }
 
-.npanel { position: absolute; right: 18px; bottom: 96px; z-index: 1001; width: 380px; max-height: min(560px, calc(100vh - 140px)); display: flex; flex-direction: column; padding: 10px 8px 8px; border-radius: 18px; background: rgba(14, 18, 26, .82); backdrop-filter: blur(30px) saturate(150%); border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,.55); animation: gwin-in 170ms cubic-bezier(.2,.8,.2,1); }
+.npanel { position: absolute; right: 18px; bottom: 96px; z-index: 1001; width: 380px; max-height: min(560px, calc(100vh - 140px)); display: flex; flex-direction: column; padding: 10px 8px 8px; border-radius: 18px; background: rgba(var(--bg2-rgb), .82); backdrop-filter: blur(30px) saturate(150%); border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,.55); animation: gwin-in 170ms cubic-bezier(.2,.8,.2,1); }
 .npanel-head { display: flex; align-items: center; gap: 4px; padding: 0 6px 8px 10px; }
 .npanel-head h4 { flex: 1; margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--text-dim); }
 .nlist { list-style: none; margin: 0; padding: 0; overflow: auto; }
@@ -41,7 +41,7 @@
 .dock-btn[data-hint]:hover::before { content: attr(data-tip) '\A' attr(data-hint); white-space: pre; text-align: center; line-height: 1.5; }
 
 /* ---------- Mehr ---------- */
-.more-menu { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 1001; width: 360px; max-height: calc(100vh - 140px); overflow: auto; padding: 8px; border-radius: 18px; background: rgba(14, 18, 26, .82); backdrop-filter: blur(30px) saturate(150%); border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,.55); animation: gwin-in 170ms cubic-bezier(.2,.8,.2,1); }
+.more-menu { position: absolute; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 1001; width: 360px; max-height: calc(100vh - 140px); overflow: auto; padding: 8px; border-radius: 18px; background: rgba(var(--bg2-rgb), .82); backdrop-filter: blur(30px) saturate(150%); border: 1px solid var(--glass-border); box-shadow: 0 30px 80px rgba(0,0,0,.55); animation: gwin-in 170ms cubic-bezier(.2,.8,.2,1); }
 .more-item { display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 10px; border: 0; border-radius: 11px; background: transparent; color: var(--text-dim); font: inherit; text-align: left; cursor: pointer; }
 .more-item > svg { flex: none; }
 .more-item:hover { background: rgba(255,255,255,.07); color: var(--text); }
@@ -72,8 +72,8 @@
 .lx-tile { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 9px 4px 8px; border: 0; border-radius: 12px; background: transparent; color: var(--text); font: inherit; cursor: pointer; }
 .lx-tile:hover, .lx-tile:focus-visible { background: rgba(255,255,255,.07); outline: none; }
 .lx-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid var(--glass-border); color: var(--text-dim); transition: color 150ms, background 150ms; }
-.lx-tile:hover .lx-icon, .lx-tile:focus-visible .lx-icon { color: var(--text); background: rgba(159, 184, 255, .14); }
-.lx-icon.own { color: #c4a7ff; }
+.lx-tile:hover .lx-icon, .lx-tile:focus-visible .lx-icon { color: var(--text); background: rgba(var(--accent-rgb), .14); }
+.lx-icon.own { color: var(--purple); }
 .lx-new .lx-icon { border-style: dashed; background: transparent; }
 .lx-name { max-width: 100%; font-size: 11.5px; line-height: 1.25; text-align: center; color: var(--text-dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .lx-tile:hover .lx-name { color: var(--text); }
@@ -84,12 +84,12 @@
 .launcher .more-foot { margin-top: 4px; padding: 8px 4px 4px; }
 
 /* ---------- Startkarte ---------- */
-.start-card { position: absolute; left: 50%; top: calc(50% - 42px); translate: -50% -50%; z-index: 1; width: min(440px, calc(100vw - 48px)); padding: 28px 26px 22px; border-radius: 22px; background: rgba(14, 18, 26, .55); backdrop-filter: blur(28px) saturate(150%); border: 1px solid var(--glass-border); box-shadow: 0 40px 120px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06); display: flex; flex-direction: column; gap: 16px; animation: onb-in 450ms cubic-bezier(.2,.8,.2,1); }
+.start-card { position: absolute; left: 50%; top: calc(50% - 42px); translate: -50% -50%; z-index: 1; width: min(440px, calc(100vw - 48px)); padding: 28px 26px 22px; border-radius: 22px; background: rgba(var(--bg2-rgb), .55); backdrop-filter: blur(28px) saturate(150%); border: 1px solid var(--glass-border); box-shadow: 0 40px 120px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 16px; animation: onb-in 450ms cubic-bezier(.2,.8,.2,1); }
 .start-card h2 { margin: 0; text-align: center; font-size: 21px; font-weight: 600; letter-spacing: -.01em; }
 .start-card p { margin: 0; text-align: center; color: var(--text-dim); line-height: 1.6; }
 .start-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .start-list button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 14px; border: 1px solid transparent; border-radius: 12px; background: rgba(255,255,255,.04); color: var(--text-dim); font: inherit; cursor: pointer; transition: background 150ms, border-color 150ms; }
-.start-list button:hover, .start-list button.first { background: rgba(159, 184, 255, .1); border-color: rgba(159, 184, 255, .25); color: var(--text); }
+.start-list button:hover, .start-list button.first { background: rgba(var(--accent-rgb), .1); border-color: rgba(var(--accent-rgb), .25); color: var(--text); }
 .start-list b { flex: 1; text-align: left; color: var(--text); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .start-list span { font-size: 11.5px; }
 .start-actions { display: flex; justify-content: center; gap: 8px; }
@@ -97,14 +97,14 @@
 .dock-btn[data-testid='dock-more'].active:hover::before, .dock-btn[data-testid='dock-notify'].active:hover::before { display: none; }
 
 /* Freigabe-Karten: bleiben, bis entschieden ist */
-.perm-card { width: 380px; border-color: rgba(250, 204, 21, .38); }
+.perm-card { width: 380px; border-color: rgba(var(--yellow-rgb), .38); }
 .perm-detail { margin: 10px 0 0; padding: 8px 10px; max-height: 140px; overflow: auto; border-radius: 9px; background: rgba(0,0,0,.32); font: 11.5px/1.45 var(--mono, 'JetBrains Mono', Consolas, monospace); white-space: pre-wrap; word-break: break-word; color: var(--text); }
 
 /* Über VibeDesk */
 .link-btn { background: none; border: 0; padding: 0; color: var(--text-dim); font: inherit; cursor: pointer; }
 .link-btn:hover { color: var(--text); text-decoration: underline; }
-.about-backdrop { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; background: rgba(5, 7, 12, .45); backdrop-filter: blur(6px); }
-.about-card { width: min(460px, calc(100vw - 32px)); padding: 22px 24px; border-radius: 16px; background: rgba(16, 20, 32, .95); border: 1px solid var(--glass-border); box-shadow: 0 30px 90px rgba(0, 0, 0, .5); font-size: 13.5px; }
+.about-backdrop { position: fixed; inset: 0; z-index: 900; display: grid; place-items: center; background: rgba(var(--bg-rgb), .45); backdrop-filter: blur(6px); }
+.about-card { width: min(460px, calc(100vw - 32px)); padding: 22px 24px; border-radius: 16px; background: rgba(var(--bg2-rgb), .95); border: 1px solid var(--glass-border); box-shadow: 0 30px 90px rgba(0, 0, 0, .5); font-size: 13.5px; }
 .about-card h3 { margin: 0 0 8px; font-size: 18px; }
 .about-card dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 14px 0; }
 .about-card dt { color: var(--text-dim); }
@@ -118,12 +118,12 @@
 .about-log { max-height: 180px; overflow: auto; margin: 0; padding: 10px 12px; border-radius: 10px; background: rgba(0, 0, 0, .3); font-family: var(--mono); font-size: 11px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-dim); }
 
 /* Ruhe-Budget: weitere Karten hinter einem kleinen Knopf */
-.ntoast-more { align-self: flex-end; padding: 5px 12px; border-radius: 999px; background: rgba(14, 18, 26, .8); border: 1px solid var(--glass-border); color: var(--text-dim); font: inherit; font-size: 12px; cursor: pointer; backdrop-filter: blur(18px); }
+.ntoast-more { align-self: flex-end; padding: 5px 12px; border-radius: 999px; background: rgba(var(--bg2-rgb), .8); border: 1px solid var(--glass-border); color: var(--text-dim); font: inherit; font-size: 12px; cursor: pointer; backdrop-filter: blur(18px); }
 .ntoast-more:hover { color: var(--text); }
 
 /* Plan-Karte: breiter, Plan scrollt in sich */
 .ntoast.plan-card { width: min(480px, calc(100vw - 32px)); }
-.plan-body { margin: 10px 0 2px; padding: 10px 12px; max-height: min(46vh, 460px); overflow: auto; border-radius: 10px; background: rgba(0, 0, 0, .28); border: 1px solid rgba(255, 255, 255, .06); }
+.plan-body { margin: 10px 0 2px; padding: 10px 12px; max-height: min(46vh, 460px); overflow: auto; border-radius: 10px; background: rgba(0, 0, 0, .28); border: 1px solid var(--line); }
 .plan-body .md { font-size: 12.5px; }
 .plan-edit { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .plan-edit textarea { width: 100%; resize: vertical; min-height: 64px; font: inherit; font-size: 13px; }

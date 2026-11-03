@@ -36,7 +36,7 @@
 .amb-scene > button:first-child { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; padding: 0; text-align: left; }
 .amb-scene img { width: 64px; height: 36px; object-fit: cover; border-radius: 7px; flex: 0 0 auto; }
 .amb-scene:hover { background: rgba(255,255,255,.05); }
-.amb-scene.on { color: var(--text); border-color: rgba(159,184,255,.45); background: rgba(159,184,255,.1); }
+.amb-scene.on { color: var(--text); border-color: rgba(var(--accent-rgb),.45); background: rgba(var(--accent-rgb),.1); }
 .amb-scene-x { border: 0; background: none; color: var(--text-dim); cursor: pointer; font-size: 15px; padding: 0 6px; opacity: .6; }
 .amb-scene-x:hover { opacity: 1; color: var(--red); }
 .amb-scene-share { display: grid; place-items: center; }
@@ -76,7 +76,7 @@
 .lofi-stations { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; }
 .lofi-station { display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--glass-border); background: rgba(255,255,255,.03); color: var(--text-dim); cursor: pointer; font-size: 12.5px; text-align: left; }
 .lofi-station:hover { background: rgba(255,255,255,.07); }
-.lofi-station.on { color: var(--text); border-color: rgba(159,184,255,.45); background: rgba(159,184,255,.1); }
+.lofi-station.on { color: var(--text); border-color: rgba(var(--accent-rgb),.45); background: rgba(var(--accent-rgb),.1); }
 
 /* Spotify: Verbinden */
 .sp-connect { margin: auto; max-width: 460px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; padding: 20px 0; overflow: auto; }
@@ -89,7 +89,7 @@
 .sp-steps .field { flex: 1; }
 .sp-uri { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
 .sp-uri code { flex: 1; padding: 6px 9px; border-radius: 8px; background: rgba(0,0,0,.3); color: var(--text); font-size: 11.5px; user-select: all; }
-.sp-error { padding: 8px 12px; border-radius: 10px; background: rgba(248,113,113,.14); border: 1px solid rgba(248,113,113,.35); color: #fecaca; font-size: 12px; line-height: 1.45; }
+.sp-error { padding: 8px 12px; border-radius: 10px; background: rgba(var(--red-rgb),.14); border: 1px solid rgba(var(--red-rgb),.35); color: var(--red); font-size: 12px; line-height: 1.45; }
 
 /* Spotify: Bibliothek */
 .sp { flex: 1; min-height: 0; display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 14px; }
@@ -103,7 +103,7 @@
 .sp-nav-h { margin: 12px 0 4px; padding: 0 9px; font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: .05em; }
 .sp-search { display: flex; align-items: center; gap: 7px; padding: 6px 9px; margin-bottom: 8px; border-radius: 9px; border: 1px solid var(--glass-border); background: rgba(0,0,0,.2); color: var(--text-dim); }
 .sp-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: 12.5px; }
-.sp-ph { display: block; background: linear-gradient(135deg, rgba(159,184,255,.25), rgba(30,215,96,.18)); }
+.sp-ph { display: block; background: linear-gradient(135deg, rgba(var(--accent-rgb),.25), rgba(30,215,96,.18)); }
 .sp-content { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 14px; padding-right: 4px; }
 .sp-content section { display: flex; flex-direction: column; gap: 8px; }
 
@@ -163,11 +163,11 @@
 /* Eigene Musik – nutzt die Spotify-Bausteine, nur mit Akzentfarbe */
 .lm { --sp: var(--accent); flex: 1; }
 .lm-now .amb-cover { width: 120px; height: 80px; }
-.lm-calm .lm-logo { color: var(--accent); background: rgba(159,184,255,.12); box-shadow: 0 0 40px rgba(159,184,255,.15); }
+.lm-calm .lm-logo { color: var(--accent); background: rgba(var(--accent-rgb),.12); box-shadow: 0 0 40px rgba(var(--accent-rgb),.15); }
 .lm-calm .row { gap: 8px; justify-content: center; }
 .lm-head { gap: 8px; }
 .lm-head .row { gap: 4px; }
 .lm-tracks { min-height: 0; }
 .lm-track { grid-template-columns: 30px minmax(0, 1fr); }
-.lm-track.on { background: rgba(159,184,255,.1); }
+.lm-track.on { background: rgba(var(--accent-rgb),.1); }
 .lm-group { margin: 10px 0 4px; }

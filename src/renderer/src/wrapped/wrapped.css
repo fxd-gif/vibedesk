@@ -1,13 +1,13 @@
 /* Vibe Wrapped – Wochenrückblick als teilbare Karte.
    Bewusst ruhig: Off-Black, ein einziger Akzent (bester Tag), Zahlen in Mono, keine Verläufe. */
-.vw-backdrop { position: fixed; inset: 0; z-index: 5850; display: grid; place-items: center; background: rgba(6, 7, 9, .62); backdrop-filter: blur(6px); animation: fade 200ms; }
+.vw-backdrop { position: fixed; inset: 0; z-index: 5850; display: grid; place-items: center; background: rgba(var(--bg-rgb), .62); backdrop-filter: blur(6px); animation: fade 200ms; }
 .vw-stack { display: flex; flex-direction: column; align-items: center; gap: 14px; animation: vw-in 320ms cubic-bezier(.16, 1, .3, 1); }
 @keyframes vw-in { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 .vw-card {
   --vw-bg: #121316; --vw-ink: #ededeb; --vw-mute: #8a8c92; --vw-line: rgba(255, 255, 255, .09); --vw-bar: #2b2d32; --vw-accent: #c8f04a;
   position: relative; width: 440px; padding: 22px 26px 24px; border-radius: 18px; color: var(--vw-ink); background: var(--vw-bg);
-  box-shadow: 0 24px 70px rgba(4, 5, 7, .6), inset 0 1px 0 rgba(255, 255, 255, .05); font-family: var(--ui-font);
+  box-shadow: 0 24px 70px rgba(var(--bg-rgb), .6); font-family: var(--ui-font);
 }
 /* :where hält den Reset bei Spezifität 0, sonst schluckt er die Abstände der Abschnitte */
 .vw-card :where(dl, dd, ol) { margin: 0; padding: 0; }

@@ -1,20 +1,79 @@
+/* Nacht-Design wie auf der Website: Nacht-Blau statt Schwarz, Sans für Menschensprache, Mono für alles aus der Maschine.
+   Farbe heißt Status: Bernstein wartet auf dich, Grün arbeitet, Blau ist fertig, Rot ist ein Fehler.
+   Regen-Blau (--accent) nur für Fokus und Auswahl. */
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('../assets/fonts/instrument-sans-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Instrument Sans';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('../assets/fonts/instrument-sans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
 :root {
-  --bg: #07090d;
-  --glass: rgba(16, 20, 30, 0.55);
-  --glass-strong: rgba(12, 15, 22, 0.82);
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --text: #dfe5ef;
-  --text-dim: rgba(223, 229, 239, 0.55);
-  --accent: #9fb8ff;
+  /* Flächen */
+  --bg: #0c0f18;
+  --bg-2: #10141f;
+  --surface: #161b29;
+  --bg-rgb: 12, 15, 24;
+  --bg2-rgb: 16, 20, 31;
+  /* Code-Felder, Befehle */
+  --code-bg: #0a0d15;
+  /* Text */
+  --ink: #e3e7ef;
+  --ink-2: #a3abbb;
+  --ink-3: #6f788a;
+  --ink-4: #4a5263;
+  --ink-rgb: 227, 231, 239;
+  /* Linien */
+  --line-rgb: 170, 185, 215;
+  --line: rgba(170, 185, 215, 0.09);
+  --line-2: rgba(170, 185, 215, 0.14);
+  --line-3: rgba(170, 185, 215, 0.24);
+  /* Glasfenster: dicht wie die Nacht-Flächen der Website, die Regen-Szene schimmert nur durch */
+  --glass: rgba(16, 20, 31, 0.86);
+  --glass-strong: rgba(16, 20, 31, 0.94);
+  --glass-border: var(--line-2);
+  --glass-blur: blur(16px) saturate(120%);
+  --shadow: 0 40px 100px -40px rgba(0, 0, 0, 0.8);
+  --shadow-s: 0 20px 50px rgba(0, 0, 0, 0.5);
+  /* alte Namen bleiben – sie zeigen auf die neuen Werte */
+  --text: var(--ink);
+  --text-dim: var(--ink-2);
+  /* Regen-Blau: nur Fokus und Auswahl */
+  --accent: #8fa6c8;
+  --accent-2: #b5c5dd;
   /* dieselbe Farbe als Kanäle – für rgba(var(--accent-rgb), .x) */
-  --accent-rgb: 159, 184, 255;
-  --green: #4ade80;
-  --yellow: #facc15;
-  --blue: #60a5fa;
-  --red: #f87171;
+  --accent-rgb: 143, 166, 200;
+  /* Status */
+  --green: #5fd497;
+  --yellow: #f3b94d;
+  --amber: var(--yellow);
+  --blue: #7aa7ff;
+  --red: #ff8a8a;
+  --green-rgb: 95, 212, 151;
+  --yellow-rgb: 243, 185, 77;
+  --blue-rgb: 122, 167, 255;
+  --red-rgb: 255, 138, 138;
+  /* Gehirn-Typen behalten ihre Farben */
+  --purple: #b49cff;
+  --cyan: #6ad7e5;
+  /* Primäre Aktion: heller Pillen-Knopf wie „Allow“ auf der Website */
+  --primary-bg: #eef1f6;
+  --primary-ink: #0c0f18;
   --radius: 14px;
-  --ui-font: 'Inter', system-ui, sans-serif;
-  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --radius-s: 9px;
+  --ui-font: 'Instrument Sans', 'Segoe UI', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html, body, #root { margin: 0; height: 100%; overflow: hidden; }
@@ -22,24 +81,26 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--ui-font);
-  font-size: 13px;
+  font-size: 13.5px;
+  letter-spacing: -0.003em;
   user-select: none;
   cursor: default;
   -webkit-font-smoothing: antialiased;
 }
+h1, h2, h3 { letter-spacing: -0.025em; }
 input, textarea, .xterm { user-select: text; }
-button, input, select, textarea { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; letter-spacing: inherit; }
 :focus { outline: none; }
-:focus-visible { outline: 1.5px solid rgba(159, 184, 255, 0.6); outline-offset: 2px; border-radius: 6px; }
+:focus-visible { outline: 1.5px solid var(--accent-2); outline-offset: 2px; border-radius: 6px; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.28); }
-::selection { background: rgba(159, 184, 255, 0.3); }
+::-webkit-scrollbar-thumb { background: rgba(var(--line-rgb), 0.18); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(var(--line-rgb), 0.32); }
+::selection { background: rgba(var(--accent-rgb), 0.35); color: #fff; }
 .app { position: fixed; inset: 0; }
-.ambience-fallback { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 20%, #1a2233 0%, #07090d 70%); }
+.ambience-fallback { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 20%, #161d2c 0%, var(--bg) 70%); }
 .rain-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 /* Tageszeit: Farbschleier direkt über dem Regen, unter allen Fenstern; Übergänge sehr langsam */
 .daylight-tint { position: absolute; inset: 0; pointer-events: none; mix-blend-mode: soft-light; transition: background-color 50s linear, opacity 50s linear; }
 /* lebende Szene: bekommt die Maus per postMessage, Klicks gehen an den Desktop */
-.living-scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border: 0; pointer-events: none; background: #0b0d12; }
+.living-scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; border: 0; pointer-events: none; background: var(--bg); }
