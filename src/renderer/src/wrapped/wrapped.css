@@ -1,11 +1,11 @@
 /* Vibe Wrapped – Wochenrückblick als teilbare Karte.
-   Bewusst ruhig: Off-Black, ein einziger Akzent (bester Tag), Zahlen in Mono, keine Verläufe. */
+   Bewusst ruhig: Nacht-Fläche wie die Website, der beste Tag hell statt farbig (Farbe heißt nur Status), Zahlen in Mono, keine Verläufe. */
 .vw-backdrop { position: fixed; inset: 0; z-index: 5850; display: grid; place-items: center; background: rgba(var(--bg-rgb), .62); backdrop-filter: blur(6px); animation: fade 200ms; }
 .vw-stack { display: flex; flex-direction: column; align-items: center; gap: 14px; animation: vw-in 320ms cubic-bezier(.16, 1, .3, 1); }
 @keyframes vw-in { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 .vw-card {
-  --vw-bg: #121316; --vw-ink: #ededeb; --vw-mute: #8a8c92; --vw-line: rgba(255, 255, 255, .09); --vw-bar: #2b2d32; --vw-accent: #c8f04a;
+  --vw-bg: var(--bg-2); --vw-ink: var(--ink); --vw-mute: var(--ink-3); --vw-line: var(--line); --vw-bar: #232a3a; --vw-accent: var(--ink);
   position: relative; width: 440px; padding: 22px 26px 24px; border-radius: 18px; color: var(--vw-ink); background: var(--vw-bg);
   box-shadow: 0 24px 70px rgba(var(--bg-rgb), .6); font-family: var(--ui-font);
 }
@@ -13,14 +13,14 @@
 .vw-card :where(dl, dd, ol) { margin: 0; padding: 0; }
 
 .vw-top { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; }
-.vw-top b { font-weight: 700; letter-spacing: -.01em; }
+.vw-top b { font-weight: 600; letter-spacing: -.02em; }
 .vw-top span { font-family: var(--mono); color: var(--vw-mute); font-size: 11.5px; }
 
 .vw-lede { margin: 26px 0 4px; font-size: 13px; color: var(--vw-mute); }
-.vw-card h2 { margin: 0; font-size: 30px; line-height: 1.1; font-weight: 750; letter-spacing: -.025em; }
+.vw-card h2 { margin: 0; font-size: 30px; line-height: 1.1; font-weight: 600; letter-spacing: -.035em; }
 
 .vw-hero { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 20px; }
-.vw-big { font-family: var(--mono); font-size: 84px; line-height: .9; font-weight: 700; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+.vw-big { font-family: var(--mono); font-size: 84px; line-height: .9; font-weight: 500; letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
 .vw-unit { font-size: 15px; color: var(--vw-mute); }
 
 .vw-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; height: 88px; }
@@ -34,7 +34,7 @@
 
 .vw-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--vw-line); }
 .vw-stats > div { display: flex; flex-direction: column; gap: 3px; }
-.vw-stats dd { font-family: var(--mono); font-size: 22px; font-weight: 700; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.vw-stats dd { font-family: var(--mono); font-size: 22px; font-weight: 500; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .vw-stats dt { font-size: 11.5px; color: var(--vw-mute); }
 
 .vw-projects { margin-top: 20px; }
@@ -42,17 +42,17 @@
 .vw-projects ol { list-style: none; display: flex; flex-direction: column; gap: 7px; }
 .vw-projects li { display: grid; grid-template-columns: 18px 1fr auto; align-items: baseline; gap: 8px; font-size: 13.5px; }
 .vw-rank { font-family: var(--mono); font-size: 11px; color: var(--vw-mute); }
-.vw-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.vw-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .vw-time { font-family: var(--mono); font-size: 12px; color: var(--vw-mute); font-variant-numeric: tabular-nums; }
 
 .vw-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--vw-line); }
 .vw-facts > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .vw-facts dt { font-size: 11px; color: var(--vw-mute); }
-.vw-facts dd { font-size: 13px; font-weight: 600; }
+.vw-facts dd { font-size: 13px; font-weight: 500; }
 
 .vw-actions { gap: 8px; }
 
 @media (prefers-reduced-motion: reduce) {
   .vw-stack, .vw-days i { animation: none; }
 }
-.vw-foot { margin-top: 16px; font-family: var(--mono); font-size: 10.5px; color: var(--vw-mute); text-align: center; letter-spacing: .02em; }
+.vw-foot { margin-top: 16px; font-family: var(--mono); font-size: 10.5px; color: var(--vw-mute); text-align: center; }

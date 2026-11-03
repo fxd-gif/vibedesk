@@ -137,6 +137,8 @@
 /* primär: heller Knopf wie „Allow“ */
 .btn.primary { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-ink); }
 .btn.primary:hover:not(:disabled) { background: #fff; border-color: #fff; }
+/* gesperrt: kein heller Block, sondern ein blasser Umriss – sonst zieht er den Blick auf sich */
+.btn.primary:disabled { background: transparent; border-color: var(--line-3); color: var(--ink); }
 .btn.danger { background: transparent; border-color: rgba(var(--red-rgb), 0.42); color: var(--red); }
 .btn.danger:hover:not(:disabled) { background: rgba(var(--red-rgb), 0.08); border-color: rgba(var(--red-rgb), 0.6); }
 /* Ghost: nur Text */
@@ -236,7 +238,7 @@ input[type='range']:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px 
 .ppath { color: var(--text-dim); font-size: 11px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pactions { display: flex; gap: 4px; opacity: 0.6; transition: opacity 150ms; }
 .pitem:hover .pactions { opacity: 1; }
-.badge { font-size: 10px; padding: 1px 7px; border-radius: 999px; background: rgba(var(--red-rgb), 0.18); color: var(--red); font-weight: 500; }
+.badge { font-family: var(--mono); font-size: 10.5px; padding: 1px 7px; border-radius: 999px; border: 1px solid rgba(var(--red-rgb), .35); background: transparent; color: var(--red); font-weight: 500; }
 .path-input { position: relative; border-radius: 10px; }
 .path-input.over .field { border-color: var(--accent); background: rgba(var(--accent-rgb), 0.08); }
 .path-suggest { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; background: rgba(var(--bg2-rgb), 0.95); border: 1px solid var(--glass-border); border-radius: 10px; font-family: var(--mono); font-size: 11.5px; }
@@ -539,7 +541,7 @@ kbd { font-family: var(--mono); font-size: 11.5px; padding: 1px 6px; border-radi
 .inspector { display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .inspector-tabs { padding: 0 12px 8px; flex: 0 0 auto; }
 .inspector-body { flex: 1; min-height: 0; overflow: auto; padding-top: 8px; }
-.tab-count { margin-left: 6px; padding: 0 6px; border-radius: 999px; background: rgba(var(--accent-rgb), .18); color: var(--accent); font-size: 10.5px; font-weight: 600; }
+.tab-count { margin-left: 6px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line-2); background: transparent; color: var(--ink-2); font-family: var(--mono); font-size: 10.5px; font-weight: 500; }
 
 /* ── Command Palette ────────────────────────────────── */
 .pal-backdrop { position: fixed; inset: 0; z-index: 6000; background: rgba(var(--bg-rgb), .35); display: flex; justify-content: center; align-items: flex-start; padding-top: 16vh; animation: fade 120ms; }
