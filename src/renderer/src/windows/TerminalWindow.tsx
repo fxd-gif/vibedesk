@@ -163,9 +163,8 @@ export function TerminalWindow({ session }: { session: SessionInfo }): React.JSX
               {agentName(agent)} · Beta
             </span>
           )}
-          <span className="dim" style={{ fontWeight: 400 }}>
-            · {tending ? t('pflegt Gehirn …') : <StatusLabel status={status} since={waitingSince} sessionId={session.id} claude={claude} />}
-          </span>
+          {/* Status als Pille in Mono – Farbe heißt Status, wie auf der Website */}
+          <span className={`st-chip ${status}`}>{tending ? t('pflegt Gehirn …') : <StatusLabel status={status} since={waitingSince} sessionId={session.id} claude={claude} />}</span>
           {urls?.slice(0, 2).map((u) => (
             <button key={u} className="url-chip" title={t('Vorschau: {url}', { url: u })} onClick={() => usePreview.getState().openPreview(u)} data-testid="url-chip">
               ▸ {shortUrl(u)}
