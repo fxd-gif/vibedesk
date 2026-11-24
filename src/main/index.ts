@@ -59,6 +59,7 @@ import { registerMergeIpc } from './mergeIpc'
 import { MergeService } from './mergeService'
 import { PermissionBroker } from './permissionBroker'
 import { setupCompanion } from './companionIpc'
+import { fontFaceRules, setCompanionFonts } from './companionPage'
 import { parseRateLimits, type PlanLimits } from '../shared/limits'
 import { deskDone, parseDeskCommand, type DeskCommand } from '../shared/desk'
 import { QuickPrompt, type QuickTarget } from './quickPrompt'
@@ -213,6 +214,12 @@ app.whenReady().then(async () => {
   const living = new LivingStore(join(userData, 'living'), app.isPackaged ? join(process.resourcesPath, 'living-runtime.js') : join(app.getAppPath(), 'resources', 'living-runtime.js'))
   const res = (f: string): string => (app.isPackaged ? join(process.resourcesPath, f) : join(app.getAppPath(), 'resources', f))
   const apps = new AppStore(join(userData, 'apps'), res('app-runtime.js'), res('app-runtime.css'))
+  // Handy-Begleiter: dieselben eingebetteten Schriften wie die Werkzeug-Fenster
+  try {
+    setCompanionFonts(fontFaceRules(fs.readFileSync(res('app-runtime.css'), 'utf8')))
+  } catch {
+    // ohne Schriften fällt die Seite auf die Systemschrift zurück
+  }
   protocol.handle(SCENE_SCHEME, async (req) => {
     // lebende Szene: Seite, Laufzeit, Skript und Bild – mit eigener, strenger CSP
     const host = new URL(req.url).host

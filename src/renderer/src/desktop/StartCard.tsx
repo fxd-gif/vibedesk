@@ -10,6 +10,7 @@ import { openPanel } from '../windows/palette/CommandPalette'
 import { newProject } from '../windows/ProjectsWindow'
 import { Icon } from './icons'
 import { recentProjects } from './recentProjects'
+import { Wordmark } from '../ascii/Wordmark'
 import { t } from '../../../shared/i18n'
 
 export function StartCard(): React.JSX.Element | null {
@@ -28,7 +29,10 @@ export function StartCard(): React.JSX.Element | null {
   const start = (p: Project): void => void useSessions.getState().start(p.id)
 
   return (
-    <div className="start-card" data-testid="start-card">
+    <div className="start" data-testid="start-card">
+      {/* leiser Schriftzug statt leerer Fläche – der Regen fällt auf seine Kanten und hält beim Tippen an */}
+      <Wordmark size={8} sky={5} density={0.1} quiet quietOnTyping className="start-word" />
+      <div className="start-card">
       <h2>{t('Woran baust du heute?')}</h2>
       {recent.length ? (
         <ul className="start-list">
@@ -53,6 +57,7 @@ export function StartCard(): React.JSX.Element | null {
         <button className="btn ghost" onClick={() => openPanel('projects')}>
           {recent.length ? t('Alle Projekte') : t('Bestehenden Ordner öffnen')}
         </button>
+      </div>
       </div>
     </div>
   )

@@ -24,8 +24,11 @@ export interface SceneParams {
   fogColor: string
 }
 
+/** Szene „Zeichenregen“: der Regen der Website aus Zeichen statt Regen-auf-Glas (ascii/CharRainScene.tsx) */
+export const ASCII_SCENE = 'ascii'
+
 /** label übersetzt sich beim Lesen (Getter) – die Liste selbst entsteht beim Import */
-export const SCENES: { id: 'city' | 'forest' | 'tokyo'; readonly label: string }[] = [
+export const SCENES: { id: 'city' | 'forest' | 'tokyo' | typeof ASCII_SCENE; readonly label: string }[] = [
   {
     id: 'city',
     get label() {
@@ -42,6 +45,12 @@ export const SCENES: { id: 'city' | 'forest' | 'tokyo'; readonly label: string }
     id: 'tokyo',
     get label() {
       return t('Tokio-Gasse')
+    }
+  },
+  {
+    id: ASCII_SCENE,
+    get label() {
+      return t('Zeichenregen')
     }
   }
 ]

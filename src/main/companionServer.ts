@@ -143,7 +143,7 @@ export class CompanionServer {
       res.writeHead(200, {
         ...common,
         'content-type': 'text/html; charset=utf-8',
-        'content-security-policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`
+        'content-security-policy': `default-src 'none'; script-src 'nonce-${nonce}'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; font-src data:; manifest-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`
       })
       res.end(companionPage(nonce))
       return

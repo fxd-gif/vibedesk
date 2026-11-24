@@ -16,6 +16,7 @@ import { Toggle } from '../../desktop/Toggle'
 import { BrainGraph, KIND_COLOR, noteTypeLabel, type GraphHandle } from './BrainGraph'
 import { BrainSide, emptyDraft, type Draft } from './BrainSide'
 import { BrainOverview } from './BrainOverview'
+import { BrainFiles } from './BrainFiles'
 import { saverActive } from '../../ambience/framePolicy'
 import { useOnBattery } from '../../ambience/RainCanvas'
 import './brain.css'
@@ -31,14 +32,35 @@ export const meetPrompt = (): string =>
 export const hotspotNotePrompt = (file: string, commits: number): string =>
   t('Die Datei {file} wurde in den letzten 90 Tagen in {n} Commits geändert, im Gehirn steht aber noch nichts dazu. Lies sie und halte mit brain_write fest, was man darüber wissen sollte: wofür sie da ist, wie sie mit dem Rest zusammenhängt und worauf man beim Ändern achten muss. Gib die Datei unter files an, verlinke passende Notizen mit [[Titel]] und halte die Notiz kurz (5–15 Zeilen).', { file, n: commits })
 
-// Hotspots-Chip merken (pro Rechner, wie die Inspector-Reiter)
+// Hotspots-Chip und Ansicht (Graph oder Dateien) merken (pro Rechner, wie die Inspector-Reiter)
 const HOT_KEY = 'vibedesk.brainHotspots'
+const MODE_KEY = 'vibedesk.brainMode'
+type Mode = 'graph' | 'files'
+const modeInitial = (): Mode => {
+  try {
+    return localStorage.getItem(MODE_KEY) === 'files' ? 'files' : 'graph'
+  } catch {
+    return 'graph'
+  }
+}
 const hotInitial = (): boolean => {
   try {
     return localStorage.getItem(HOT_KEY) === '1'
   } catch {
     return false
   }
+}
+
+/** Projektnamen wie „shop-frontend“ nicht am Bindestrich umbrechen – Platzhalter \u0001 im übersetzten Satz */
+function NoBreakName({ text, name }: { text: string; name: string }): React.JSX.Element {
+  const [pre, post = ''] = text.split('\u0001')
+  return (
+    <>
+      {pre}
+      <span className="nowrap">{name}</span>
+      {post}
+    </>
+  )
 }
 
 const filters = (): { kind: GraphNodeKind; label: string }[] => [...NOTE_TYPES.map((k) => ({ kind: k as GraphNodeKind, label: noteTypeLabel(k) })), { kind: 'file', label: t('Dateien') }]
@@ -53,6 +75,15 @@ export function BrainWindow(): React.JSX.Element {
   // Dateien sind Rauschen, solange man nicht gezielt nach ihnen schaut – Pulse auf Dateien lassen dann das Wissen dazu leuchten
   const [hidden, setHidden] = useState<ReadonlySet<GraphNodeKind>>(new Set(['file']))
   const [heatOn, setHeatOn] = useState(hotInitial)
+  const [mode, setModeState] = useState<Mode>(modeInitial)
+  const setMode = (m: Mode): void => {
+    setModeState(m)
+    try {
+      localStorage.setItem(MODE_KEY, m)
+    } catch {
+      // egal
+    }
+  }
   const [hot, setHot] = useState<Hotspot[]>([])
   const graph = useRef<GraphHandle>(null)
   const brainOn = useSettings((s) => s.s?.brainOn ?? true)
@@ -85,8 +116,10 @@ export function BrainWindow(): React.JSX.Element {
     const offChanged = api.on.brainChanged((pid) => pid === projectId && load())
     const offPulse = api.on.brainPulse((p) => {
       if (p.projectId !== projectId) return
+      // Dateien-Ansicht: kein Graph zum Aufleuchten (neue Notizen kommen über brainChanged)
+      if (!graph.current) return
       // neue Datei im Spiel → Graph nachladen, damit sie auftaucht
-      if (!graph.current?.pulse(p.id, p.kind)) {
+      if (!graph.current.pulse(p.id, p.kind)) {
         clearTimeout(refetch)
         refetch = setTimeout(load, 1500)
       }
@@ -216,6 +249,16 @@ export function BrainWindow(): React.JSX.Element {
             ))}
           <option value={ME_ID}>{t('Über dich (alle Projekte)')}</option>
         </select>
+        {view && !empty && (
+          <div className="brain-views" role="tablist" aria-label={t('Ansicht')}>
+            <button role="tab" aria-selected={mode === 'graph'} className={`tab${mode === 'graph' ? ' on' : ''}`} onClick={() => setMode('graph')} data-testid="brain-mode-graph">
+              {t('Graph')}
+            </button>
+            <button role="tab" aria-selected={mode === 'files'} className={`tab${mode === 'files' ? ' on' : ''}`} onClick={() => setMode('files')} data-testid="brain-mode-files">
+              {t('Dateien')}
+            </button>
+          </div>
+        )}
         <div className="brain-search">
           <Icon name="search" size={14} />
           <input
@@ -252,7 +295,8 @@ export function BrainWindow(): React.JSX.Element {
       </div>
       <div className="brain-main">
         <div className="brain-stage">
-          {shown && <BrainGraph ref={graph} graph={shown} hidden={hidden} query={query} selected={selected} heatOn={heatShown} calm={calm} onSelect={select} />}
+          {shown && (mode === 'graph' || empty) && <BrainGraph ref={graph} graph={shown} hidden={hidden} query={query} selected={selected} heatOn={heatShown} calm={calm} onSelect={select} />}
+          {view && !empty && mode === 'files' && <BrainFiles view={view} projectName={project?.name ?? ''} onSelect={select} />}
           {!projectId && <div className="brain-empty">{t('Lege zuerst ein Projekt an – dann wächst hier sein Gehirn.')}</div>}
           {empty && isMe && (
             <div className="brain-empty card" data-testid="brain-empty-me">
@@ -274,7 +318,7 @@ export function BrainWindow(): React.JSX.Element {
           {empty && !isMe && (
             <div className="brain-empty card" data-testid="brain-empty">
               <Icon name="brain" size={34} />
-              <h3>{project ? t('Das Gehirn von {name} ist noch leer', { name: project.name }) : t('Das Gehirn dieses Projekts ist noch leer')}</h3>
+              <h3>{project ? <NoBreakName text={t('Das Gehirn von {name} ist noch leer', { name: '\u0001' })} name={project.name} /> : t('Das Gehirn dieses Projekts ist noch leer')}</h3>
               <p>
                 {t('Hier sammelt sich, was Claude über dein Projekt lernt: Bereiche, Entscheidungen, Stolperfallen und Konventionen – als verlinkte Notizen. Jede neue Session startet mit diesem Wissen, statt alles neu zu erkunden.')}
               </p>
@@ -294,7 +338,7 @@ export function BrainWindow(): React.JSX.Element {
               {view.graph.nodes.length > 0 && <small className="dim">{t('Die Punkte im Hintergrund sind Dateien, an denen Claude schon gearbeitet hat.')}</small>}
             </div>
           )}
-          {view && !empty && (
+          {view && !empty && mode === 'graph' && (
             <div className="brain-tools">
               {!isMe && (
                 <button
@@ -312,7 +356,7 @@ export function BrainWindow(): React.JSX.Element {
               </button>
             </div>
           )}
-          {view && !empty && (
+          {view && !empty && mode === 'graph' && (
             <div className="brain-dock">
               <div className="brain-kinds" title={t('Klicken blendet ein oder aus')}>
                 {filters()
@@ -376,7 +420,8 @@ export function BrainWindow(): React.JSX.Element {
             />
           </aside>
         )}
-        {projectId && view && !empty && !selected && !draft && (
+        {/* in der Dateien-Ansicht braucht der Baum die Breite – der Überblick steht dort schon als Protokoll */}
+        {projectId && view && !empty && !selected && !draft && mode === 'graph' && (
           <aside className="brain-side">
             <BrainOverview view={view} isMe={isMe} onSelect={select} />
           </aside>

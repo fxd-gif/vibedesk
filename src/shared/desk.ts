@@ -3,7 +3,7 @@
 import type { LayoutTheme, PanelId } from './types'
 import { isLocalUrl } from './terminalInput'
 
-export const DESK_SCENES = ['city', 'forest', 'tokyo'] as const
+export const DESK_SCENES = ['city', 'forest', 'tokyo', 'ascii'] as const
 export const DESK_THEMES = ['scene', 'vibedesk', 'wald', 'neon', 'kontrast', 'mono', 'custom'] as const
 
 /** Farben, die ein eigenes Terminal-Farbschema setzen darf (Hintergrund bleibt durchsichtig – Glas) */

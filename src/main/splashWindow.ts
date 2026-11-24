@@ -1,4 +1,4 @@
-// Kleines Update-Fensterchen (Discord-Stil): beim Start und kurz vor dem Installieren.
+// Kleines Update-Fensterchen im Nacht-Design: beim Start und kurz vor dem Installieren. Fortschritt aus Zeichen [####------].
 import { BrowserWindow } from 'electron'
 import { spawn } from 'child_process'
 import fs from 'fs'
@@ -8,20 +8,17 @@ import type { SplashView } from './splashGate'
 import { getLang, t } from '../shared/i18n'
 
 const html = (): string => `<!doctype html><html lang="${getLang()}"><head><meta charset="utf-8"><style>
-html,body{margin:0;height:100%;background:#07090d;color:#e8ecf3;font:13px/1.4 'Segoe UI',system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-app-region:drag}
-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;border:1px solid rgba(255,255,255,.08);box-sizing:border-box;border-radius:12px;
-background:radial-gradient(120% 80% at 50% 0%,rgba(110,140,255,.18),transparent 60%),#07090d}
-.orb{width:72px;height:72px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#a9b8ff,#5865f2 55%,#1d2150);box-shadow:0 0 40px rgba(88,101,242,.55);animation:p 2.4s ease-in-out infinite}
-@keyframes p{50%{transform:scale(1.06);box-shadow:0 0 60px rgba(88,101,242,.8)}}
-h1{margin:0;font-size:20px;font-weight:600;letter-spacing:.5px}
-#t{opacity:.75;min-height:18px;text-align:center;padding:0 20px}
-.bar{width:200px;height:4px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;position:relative}
-#f{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#5865f2,#a9b8ff);border-radius:2px;transition:width .25s}
-.indet #f{width:35%;animation:s 1.2s ease-in-out infinite}
-@keyframes s{from{left:-35%}to{left:100%}}
-</style></head><body class="indet"><div class="orb"></div><h1>VibeDesk</h1><div id="t">${t('Suche nach Updates …')}</div><div class="bar"><div id="f"></div></div>
-<script>window.setView=function(v){document.getElementById('t').textContent=v.text;document.body.classList.toggle('indet',v.percent===null);
-if(v.percent!==null)document.getElementById('f').style.width=v.percent+'%'}</script></body></html>`
+html,body{margin:0;height:100%;background:#0c0f18;color:#e3e7ef;font:13px/1.45 'Instrument Sans','Segoe UI',system-ui,sans-serif;overflow:hidden;user-select:none;-webkit-app-region:drag;-webkit-font-smoothing:antialiased}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;box-sizing:border-box;border:1px solid rgba(170,185,215,.14);border-radius:14px;background:#10141f}
+h1{margin:0 0 4px;font-size:22px;font-weight:600;letter-spacing:-.035em}
+#t{color:#a3abbb;min-height:19px;text-align:center;padding:0 20px}
+.bar{display:flex;gap:10px;align-items:baseline;font:12px/1 'JetBrains Mono',Consolas,'Cascadia Mono',monospace;color:#6f788a;white-space:pre}
+#b{color:#a3abbb}
+</style></head><body><h1>VibeDesk</h1><div id="t">${t('Suche nach Updates …')}</div><div class="bar"><span id="s">·</span><span id="b">[----------]</span></div>
+<script>var F='·:¦|',k=0,ind=true,pos=0;
+function bar(p){var n=p>=100?10:Math.min(9,Math.max(p>0?1:0,Math.round(p/10)));return '['+'#'.repeat(n)+'-'.repeat(10-n)+']'}
+setInterval(function(){k=(k+1)%4;document.getElementById('s').textContent=F[k];if(ind){pos=(pos+1)%13;var a='';for(var i=0;i<10;i++)a+=(i>=pos-3&&i<pos)?'#':'-';document.getElementById('b').textContent='['+a+']'}},200);
+window.setView=function(v){document.getElementById('t').textContent=v.text;ind=v.percent===null;if(!ind)document.getElementById('b').textContent=bar(v.percent)}</script></body></html>`
 
 export class SplashWindow {
   private win: BrowserWindow | null
@@ -39,7 +36,7 @@ export class SplashWindow {
       alwaysOnTop: true,
       center: true,
       show: false,
-      backgroundColor: '#07090d',
+      backgroundColor: '#10141f',
       title: 'VibeDesk',
       webPreferences: { sandbox: true, contextIsolation: true }
     })

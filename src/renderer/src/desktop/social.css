@@ -79,7 +79,7 @@
 .curtain { position: fixed; inset: 0; z-index: 9000; display: grid; place-items: center; background: radial-gradient(ellipse at center, rgba(var(--bg2-rgb),.94), rgba(var(--bg-rgb),.99)); backdrop-filter: blur(40px); }
 @keyframes curtain-in { from { opacity: 0; transform: translateY(8px); } }
 .curtain-box { animation: curtain-in 300ms; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.curtain-emoji { font-size: 64px; animation: steam 3s ease-in-out infinite; }
+.curtain-emoji { font-size: 64px; animation: steam 3s steps(6) infinite; }
 .curtain-title { font-size: 34px; font-weight: 600; letter-spacing: -.035em; }
 @keyframes steam { 50% { transform: translateY(-6px); } }
 .streamer-pill { position: fixed; top: 12px; right: 14px; z-index: 1100; display: flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px; border: 1px solid rgba(var(--red-rgb),.45); background: rgba(var(--bg2-rgb),.94); color: var(--red); font: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; }

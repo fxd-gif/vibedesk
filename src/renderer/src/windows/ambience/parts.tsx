@@ -1,11 +1,13 @@
 import { renderScene } from '../../ambience/scenes'
+import { ASCII_SCENE } from '../../ambience/sceneParams'
+import { charRainThumb } from '../../ascii/CharRainScene'
 
 /** kleine Vorschaubilder der eingebauten Szenen – einmal gezeichnet, dann gemerkt */
 const thumbs = new Map<string, string>()
 export function sceneThumb(id: string): string {
   let url = thumbs.get(id)
   if (!url) {
-    url = renderScene(id, 192, 108).sharp.toDataURL('image/jpeg', 0.8)
+    url = id === ASCII_SCENE ? charRainThumb(192, 108) : renderScene(id, 192, 108).sharp.toDataURL('image/jpeg', 0.8)
     thumbs.set(id, url)
   }
   return url

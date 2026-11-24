@@ -38,7 +38,7 @@
   --line-2: rgba(170, 185, 215, 0.14);
   --line-3: rgba(170, 185, 215, 0.24);
   /* Glasfenster: dicht wie die Nacht-Flächen der Website, die Regen-Szene schimmert nur durch */
-  --glass: rgba(16, 20, 31, 0.86);
+  --glass: rgba(16, 20, 31, 0.9);
   --glass-strong: rgba(16, 20, 31, 0.94);
   --glass-border: var(--line-2);
   --glass-blur: blur(16px) saturate(120%);

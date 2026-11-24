@@ -58,5 +58,5 @@
 [data-layout='studio'] .more-menu { left: 244px; bottom: 50px; transform: none; }
 [data-layout='studio'] .npanel { left: 244px; right: auto; bottom: 50px; }
 [data-layout='studio'] .toast-stack { bottom: 52px; }
-[data-layout='studio'] .start-card { left: calc(50% + 118px); }
+[data-layout='studio'] .start { left: calc(50% + 118px); }
 [data-layout='studio'] .focus-banner { left: calc(50% + 118px); }

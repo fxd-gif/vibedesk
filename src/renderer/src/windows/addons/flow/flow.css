@@ -37,7 +37,7 @@
 .fbar-status { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2); white-space: nowrap; }
 .fbar-status i { width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; }
 .fbar-status.dirty i { background: var(--yellow); box-shadow: 0 0 8px var(--yellow); }
-.fbar-status.saving i { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: fpulse 1s ease-in-out infinite; }
+.fbar-status.saving i { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: fpulse 1s steps(4) infinite; }
 .fbar-status.error i { background: var(--red); box-shadow: 0 0 8px var(--red); }
 @keyframes fpulse { 50% { opacity: 0.35; } }
 
@@ -257,7 +257,7 @@ textarea.finput { resize: vertical; line-height: 1.45; }
 .ftmpl-tags i { font-style: normal; font-size: 10.5px; font-weight: 600; padding: 3px 7px; border-radius: 999px; color: color-mix(in srgb, var(--c) 70%, #fff); background: color-mix(in srgb, var(--c) 14%, transparent); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); }
 
 /* Testmodus: laufender Knoten, Nachglimmen, genommene Kanten */
-.fcanvas .react-flow__node.is-run .fnode { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(181, 197, 221, 0.28), 0 10px 26px -12px rgba(0, 0, 0, 0.7), 0 0 30px -4px rgba(181, 197, 221, 0.75); animation: frun 1.6s ease-in-out infinite; }
+.fcanvas .react-flow__node.is-run .fnode { border-color: var(--accent-2); box-shadow: 0 0 0 3px rgba(181, 197, 221, 0.28), 0 10px 26px -12px rgba(0, 0, 0, 0.7), 0 0 30px -4px rgba(181, 197, 221, 0.75); animation: frun 1.6s steps(4) infinite; }
 .fcanvas .react-flow__node.is-recent .fnode { animation: fglow 1.6s ease-out forwards; }
 @keyframes frun { 50% { box-shadow: 0 0 0 5px rgba(181, 197, 221, 0.16), 0 10px 26px -12px rgba(0, 0, 0, 0.7), 0 0 36px -4px rgba(181, 197, 221, 0.55); } }
 @keyframes fglow {
@@ -282,7 +282,7 @@ textarea.finput { resize: vertical; line-height: 1.45; }
 .fdebug-head { display: flex; align-items: center; gap: 4px; padding: 0 4px 0 0; }
 .fdebug-head .ficon-btn { width: 26px; height: 26px; }
 .fdebug-toggle { flex: 1; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; text-align: left; }
-.fdebug-live { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 8px var(--accent-2); animation: fpulse 1.4s ease-in-out infinite; }
+.fdebug-live { width: 7px; height: 7px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 8px var(--accent-2); animation: fpulse 1.4s steps(4) infinite; }
 .fdebug-count { padding: 1px 7px; border-radius: 999px; background: rgba(255, 255, 255, 0.07); color: var(--ink-2); font-size: 11px; font-variant-numeric: tabular-nums; }
 .fdebug-chev { margin-left: auto; display: grid; color: var(--ink-3); transform: rotate(180deg); transition: transform 0.15s; }
 .fdebug-chev.open { transform: none; }

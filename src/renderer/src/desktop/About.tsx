@@ -7,6 +7,7 @@ import { diagnosticsReport, saverOn, type DiagnosticsInfo, type GhState } from '
 import type { AppInfo } from '../../../shared/types'
 import { t } from '../../../shared/i18n'
 import { useLounge } from '../store/loungeStore'
+import { TermFacts } from '../ascii/Facts'
 
 export const useAbout = create<{ open: boolean; diag: boolean }>(() => ({ open: false, diag: false }))
 /** diag: gleich mit aufgeklappter Diagnose (Befehlspalette) */
@@ -44,7 +45,12 @@ function Diagnostics(): React.JSX.Element {
     return () => clearTimeout(id)
   }, [copied])
 
-  if (!d) return <p className="dim small about-diag">{t('Diagnose wird gesammelt …')}</p>
+  if (!d)
+    return (
+      <p className="dim small about-diag">
+        <span className="spin" aria-hidden /> {t('Diagnose wird gesammelt …')}
+      </p>
+    )
   const v = d.versions
   return (
     <section className="about-diag" data-testid="about-diag">
@@ -113,6 +119,18 @@ export function About(): React.JSX.Element | null {
       <div className={`about-card${diag ? ' wide' : ''}`} role="dialog" aria-label={t('Über VibeDesk')}>
         <h3>VibeDesk {info?.version ?? ''}</h3>
         <p className="dim">{t('Kostenlos und Open Source unter der MIT-Lizenz. Ein unabhängiges Projekt – nicht von Anthropic. Claude ist eine Marke von Anthropic.')}</p>
+        {!diag && (
+          <TermFacts
+            head={t('# fünf Dinge, die du prüfen kannst')}
+            facts={[
+              { title: t('startet das echte Claude Code'), text: t('das offizielle claude-CLI, mit deinem eigenen Login') },
+              { title: t('lässt deine Einstellungen in Ruhe'), text: t('~/.claude/settings.json wird nie verändert') },
+              { title: t('bleibt auf deinem PC'), text: t('Einstellungen, Statistik und das Gehirn liegen lokal') },
+              { title: t('braucht kein Konto'), text: t('anonymes Mitzählen nur, wenn du Ja sagst') },
+              { title: t('ist Open Source'), text: t('MIT-Lizenz, jede Zeile auf GitHub') }
+            ]}
+          />
+        )}
         <dl>
           <dt>Claude Code</dt>
           <dd>{info ? (info.claude ?? t('nicht gefunden')) : '…'}</dd>

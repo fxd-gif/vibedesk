@@ -22,8 +22,11 @@ $start = Get-Date
 $scale = [Windows.Forms.Screen]::PrimaryScreen.Bounds.Height / 1080
 if ($scale -lt 1) { $scale = 1 }
 $W = [int](300 * $scale); $H = [int](340 * $scale)
-$bg = [Drawing.Color]::FromArgb(7, 9, 13)
-$accent = [Drawing.Color]::FromArgb(88, 101, 242)
+# Nacht-Design wie die App: Flaeche --bg-2, Text --ink/--ink-2, Fortschritt aus Zeichen statt Leuchtball
+$bg = [Drawing.Color]::FromArgb(16, 20, 31)
+$ink = [Drawing.Color]::FromArgb(227, 231, 239)
+$ink2 = [Drawing.Color]::FromArgb(163, 171, 187)
+$ink3 = [Drawing.Color]::FromArgb(111, 120, 138)
 
 $form = New-Object Windows.Forms.Form
 $form.FormBorderStyle = 'None'
@@ -37,7 +40,7 @@ $form.Opacity = 0
 # ohne Doppelpuffer flackert der Balken
 $form.GetType().GetProperty('DoubleBuffered', [Reflection.BindingFlags]'NonPublic,Instance').SetValue($form, $true)
 
-$script:pos = -0.35
+$script:pos = 0
 $script:ticks = 0
 $script:state = 'in'
 $form.Add_Paint({
@@ -45,32 +48,35 @@ $form.Add_Paint({
   $g = $e.Graphics
   $g.SmoothingMode = 'AntiAlias'
   $g.TextRenderingHint = 'ClearTypeGridFit'
-  $o = [int](72 * $scale); $ox = [int](($W - $o) / 2); $oy = [int](70 * $scale)
-  $orb = New-Object Drawing.Drawing2D.LinearGradientBrush((New-Object Drawing.Rectangle($ox, $oy, $o, $o)), [Drawing.Color]::FromArgb(169, 184, 255), $accent, 45)
-  $g.FillEllipse($orb, $ox, $oy, $o, $o)
+  # feiner Rand wie die Fenster der App
+  $g.DrawRectangle((New-Object Drawing.Pen([Drawing.Color]::FromArgb(36, 170, 185, 215), 1)), 0, 0, $W - 1, $H - 1)
   $fmt = New-Object Drawing.StringFormat
   $fmt.Alignment = 'Center'
-  $title = New-Object Drawing.Font('Segoe UI Semibold', [single](20 * $scale), [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Pixel)
-  $g.DrawString('VibeDesk', $title, [Drawing.Brushes]::White, (New-Object Drawing.RectangleF(0, [single](160 * $scale), $W, [single](30 * $scale))), $fmt)
+  $title = New-Object Drawing.Font('Segoe UI Semibold', [single](22 * $scale), [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Pixel)
+  $g.DrawString('VibeDesk', $title, (New-Object Drawing.SolidBrush($ink)), (New-Object Drawing.RectangleF(0, [single](118 * $scale), $W, [single](32 * $scale))), $fmt)
   $small = New-Object Drawing.Font('Segoe UI', [single](13 * $scale), [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Pixel)
-  $grey = New-Object Drawing.SolidBrush([Drawing.Color]::FromArgb(180, 232, 236, 243))
-  # Auslassungspunkte als Zeichencode: PowerShell 5.1 liest Skripte ohne BOM als ANSI
+  # Auslassungspunkte und Spinner-Zeichen als Zeichencode: PowerShell 5.1 liest Skripte ohne BOM als ANSI
   $dots = [string][char]0x2026
   $text = if ($Version) { "Installiere Update $Version $dots" } else { "Installiere Update $dots" }
-  $g.DrawString($text, $small, $grey, (New-Object Drawing.RectangleF(0, [single](205 * $scale), $W, [single](22 * $scale))), $fmt)
-  $bw = [int](200 * $scale); $bh = [int](4 * $scale); $bx = [int](($W - $bw) / 2); $by = [int](245 * $scale)
-  $g.FillRectangle((New-Object Drawing.SolidBrush([Drawing.Color]::FromArgb(20, 255, 255, 255))), $bx, $by, $bw, $bh)
-  $g.SetClip((New-Object Drawing.Rectangle($bx, $by, $bw, $bh)))
-  $g.FillRectangle((New-Object Drawing.SolidBrush($accent)), [int]($bx + $bw * $script:pos), $by, [int]($bw * 0.35), $bh)
+  $g.DrawString($text, $small, (New-Object Drawing.SolidBrush($ink2)), (New-Object Drawing.RectangleF(0, [single](164 * $scale), $W, [single](22 * $scale))), $fmt)
+  # Fortschritt aus Zeichen [---###----] und ein Spinner, der in vier Stufen dichter wird
+  $mono = New-Object Drawing.Font('Consolas', [single](12 * $scale), [Drawing.FontStyle]::Regular, [Drawing.GraphicsUnit]::Pixel)
+  $spin = @([string][char]0x00B7, ':', [string][char]0x00A6, '|')[[int][Math]::Floor($script:ticks / 5) % 4]
+  $p = [int]$script:pos
+  $cells = -join (0..9 | ForEach-Object { if ($_ -ge $p - 3 -and $_ -lt $p) { '#' } else { '-' } })
+  $g.DrawString("$spin  [$cells]", $mono, (New-Object Drawing.SolidBrush($ink3)), (New-Object Drawing.RectangleF(0, [single](204 * $scale), $W, [single](20 * $scale))), $fmt)
 })
 
 $timer = New-Object Windows.Forms.Timer
 $timer.Interval = 30
 $timer.Add_Tick({
   $script:ticks++
-  $script:pos += 0.025
-  if ($script:pos -gt 1) { $script:pos = -0.35 }
-  $form.Invalidate()
+  # der Block aus drei # wandert in Stufen (alle 150 ms eine Zelle) - kein fluessiges Gleiten
+  if ($script:ticks % 5 -eq 0) {
+    $script:pos += 1
+    if ($script:pos -gt 12) { $script:pos = 0 }
+    $form.Invalidate()
+  }
   if ($script:state -eq 'in') {
     # 1.0 statt 1: sonst nimmt PowerShell Math.Min(int, int), aus 0.1 wird 0 und das Fenster bleibt unsichtbar
     $form.Opacity = [Math]::Min(1.0, $form.Opacity + 0.1)

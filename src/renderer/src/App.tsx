@@ -14,6 +14,9 @@ import { CommandPalette, usePalette, wirePalette } from './windows/palette/Comma
 import type { PanelId } from '../../shared/types'
 import './desktop/desktop.css'
 import './desktop/social.css'
+import './ascii/ascii.css'
+import { CharRainScene } from './ascii/CharRainScene'
+import { ASCII_SCENE } from './ambience/sceneParams'
 import { kindOf, restoreSessions, termWin, useSessions, wireSessions } from './store/sessionStore'
 import { useWorkflow, wireWorkflow } from './store/workflowStore'
 import { wireStats } from './store/statsStore'
@@ -63,6 +66,7 @@ import { MoreMenu } from './desktop/MoreMenu'
 import { dockPlan, earned, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
 import { useBrainUsed, wireBrainActivity } from './store/brainActivity'
+import { wireBrainLog } from './store/brainLog'
 import { wireWrapUp } from './store/wrapUpStore'
 import { wireTray } from './store/trayStore'
 import { wireBudget } from './store/budgetStore'
@@ -206,6 +210,7 @@ export default function App(): React.JSX.Element {
     wireQueue()
     wireQuick()
     wireBrainActivity()
+    wireBrainLog()
     wireWrapUp()
     wireLiving()
     wireTray()
@@ -309,6 +314,8 @@ export default function App(): React.JSX.Element {
     <div className={`app${zen ? ' zen' : ''}${saver ? ' saver' : ''}`} data-layout={studio ? 'studio' : 'desktop'}>
       {settings && livingScene ? (
         <LivingSceneView scene={livingScene} />
+      ) : settings?.scene === ASCII_SCENE ? (
+        <CharRainScene intensity={settings.rainIntensity} />
       ) : settings ? (
         <RainCanvas
           scene={isLivingScene(settings.scene) ? 'city' : settings.scene}

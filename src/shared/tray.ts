@@ -18,17 +18,17 @@ export function trayState(list: TraySession[]): SessionStatus {
   return RANK[best]
 }
 
-/** Punktfarbe als [r, g, b]; null = kein Punkt */
+/** Punktfarbe als [r, g, b] in den Statusfarben der Website (Bernstein, Rot, Grün, Blau); null = kein Punkt */
 export function dotColor(s: SessionStatus): [number, number, number] | null {
   switch (s) {
     case 'waiting':
-      return [245, 196, 66]
+      return [243, 185, 77]
     case 'error':
-      return [235, 87, 87]
+      return [255, 138, 138]
     case 'working':
-      return [76, 201, 120]
+      return [95, 212, 151]
     case 'done':
-      return [96, 156, 255]
+      return [122, 167, 255]
     default:
       return null
   }
@@ -64,7 +64,8 @@ export function paintDot(bgra: Uint8Array, size: number, rgb: [number, number, n
       const i = (y * size + x) * 4
       // Kante weich: 1 innen, 0 außen
       const a = Math.min(1, Math.max(0, r + ring - d))
-      const [cr, cg, cb] = d > r ? [16, 18, 24] : rgb
+      // Rand in Nacht-Blau (--bg), damit der Punkt auf hellen und dunklen Taskleisten steht
+      const [cr, cg, cb] = d > r ? [12, 15, 24] : rgb
       out[i] = Math.round(out[i] * (1 - a) + cb * a)
       out[i + 1] = Math.round(out[i + 1] * (1 - a) + cg * a)
       out[i + 2] = Math.round(out[i + 2] * (1 - a) + cr * a)

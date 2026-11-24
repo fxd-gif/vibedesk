@@ -2,6 +2,7 @@ import { api } from '../api'
 import { updateLabel } from '../store/updateLabel'
 import { useUpdate } from '../store/updateStore'
 import { Icon } from './icons'
+import { AsciiProgress } from '../ascii/Spinner'
 import { t } from '../../../shared/i18n'
 
 export function UpdateToast(): React.JSX.Element | null {
@@ -13,11 +14,8 @@ export function UpdateToast(): React.JSX.Element | null {
     <div className="update-toast" data-testid="update-toast">
       <Icon name={ready ? 'check' : 'restart'} size={16} />
       <span>{label}</span>
-      {status.state === 'downloading' && (
-        <div className="update-bar">
-          <i style={{ width: `${status.percent}%` }} />
-        </div>
-      )}
+      {/* Fortschritt aus Zeichen: [####----] */}
+      {status.state === 'downloading' && <AsciiProgress value={status.percent / 100} width={10} />}
       {status.state === 'available' && status.manual && (
         <>
           <button className="btn small primary" onClick={() => api.update.download()} data-testid="update-download">

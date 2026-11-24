@@ -1,6 +1,6 @@
 // Session-Abschluss: was Claude in der Runde gemacht hat, welche Dateien sich geändert haben,
 // was ins Gehirn kam – und ein Commit mit Nachricht von Claude, alles in einem Schritt.
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { turnShare, type WrapChanges } from '../../../shared/wrapUp'
 import { t, tn } from '../../../shared/i18n'
 import { api, errorText } from '../api'
@@ -13,6 +13,9 @@ import { useUi } from '../store/uiStore'
 import { closeWrapUp, finishWrapUp, useWrapUp } from '../store/wrapUpStore'
 import { Markdown } from './brain/Markdown'
 import { addonEvent } from '../addons/appEvents'
+import { useWorkflow } from '../store/workflowStore'
+import { RainAway } from '../ascii/RainAway'
+import { feedLines } from '../ascii/lines'
 
 export function WrapUpDialog(): React.JSX.Element | null {
   const open = useWrapUp((s) => s.open)
@@ -34,6 +37,9 @@ function WrapUpBox({ sessionId }: { sessionId: string }): React.JSX.Element {
   const [msgError, setMsgError] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  // Verwandlung beim Öffnen: die Ausgabe-Zeilen der Runde regnen ab, die Zusammenfassung bleibt
+  const lines = useMemo(() => feedLines(useWorkflow.getState().sessions[sessionId]?.feed ?? []), [sessionId])
+  const [raining, setRaining] = useState(lines.length > 0)
 
   const suggest = (): void => {
     setWriting(true)
@@ -98,18 +104,21 @@ function WrapUpBox({ sessionId }: { sessionId: string }): React.JSX.Element {
 
         <div className="wrapup-section">
           <div className="wrapup-label">{t('Was Claude gemacht hat')}</div>
-          {turn?.summary ? (
-            <div className="wrapup-summary">
-              <Markdown text={redactText(turn.summary)} onLink={() => {}} />
-            </div>
-          ) : (
-            <p className="dim small">
-              {t('Keine Zusammenfassung gefunden – die letzte Antwort steht im Terminal.')}{' '}
-              <button className="linkish" onClick={() => (useUi.getState().focus(termWin(sessionId)), closeWrapUp())}>
-                {t('Zum Terminal')}
-              </button>
-            </p>
-          )}
+          <div className={`wrapup-stage${raining ? ' raining' : ''}`} data-testid="wrapup-stage">
+            {raining && <RainAway lines={lines} onDone={() => setRaining(false)} />}
+            {turn?.summary ? (
+              <div className="wrapup-summary">
+                <Markdown text={redactText(turn.summary)} onLink={() => {}} />
+              </div>
+            ) : (
+              <p className="dim small">
+                {t('Keine Zusammenfassung gefunden – die letzte Antwort steht im Terminal.')}{' '}
+                <button className="linkish" onClick={() => (useUi.getState().focus(termWin(sessionId)), closeWrapUp())}>
+                  {t('Zum Terminal')}
+                </button>
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="wrapup-section">
@@ -120,7 +129,9 @@ function WrapUpBox({ sessionId }: { sessionId: string }): React.JSX.Element {
           {loadError ? (
             <p className="warn small">{loadError}</p>
           ) : !changes ? (
-            <p className="dim small">{t('Lädt …')}</p>
+            <p className="dim small">
+              <span className="spin" aria-hidden /> {t('Lädt …')}
+            </p>
           ) : !changes.repo ? (
             <p className="dim small">{t('Dieser Ordner ist kein Git-Repository – im Git-Fenster kannst du eins anlegen.')}</p>
           ) : !files.length ? (

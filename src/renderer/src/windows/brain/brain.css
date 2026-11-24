@@ -19,7 +19,7 @@
 .brain-sep { width: 1px; height: 14px; margin: 0 4px; background: var(--glass-border); }
 
 .brain-main { flex: 1; min-height: 0; display: flex; border-top: 1px solid var(--glass-border); }
-.brain-stage { position: relative; flex: 1; min-width: 0; overflow: hidden; background: rgba(10, 13, 21, .45); }
+.brain-stage { position: relative; flex: 1; min-width: 0; overflow: hidden; background: rgba(10, 13, 21, .45); container-type: inline-size; }
 .brain-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
 .brain-dock { position: absolute; left: 10px; right: 10px; bottom: 9px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; pointer-events: none; }
 .brain-dock > * { pointer-events: auto; }
@@ -39,10 +39,48 @@
 .brain-legend .heat { width: 22px; height: 7px; border-radius: 4px; background: linear-gradient(90deg, rgba(111, 143, 179, .6), rgba(232, 163, 90, .95)); }
 .brain-legend .unlinked { border: 1.5px dotted rgba(255, 255, 255, .7); }
 
+/* Ansicht: Graph oder Dateien */
+.brain-views { display: flex; gap: 2px; }
+.brain-views .tab { padding: 3px 11px; font-size: 12px; }
+
+/* Dateien + Protokoll wie auf der Website (.mem): Maschine spricht Mono, Äste leise, gelesen grün, gelernt violett */
+.brain-files { position: absolute; inset: 0; margin: 0; display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); font: 400 12.5px/1.75 var(--mono); }
+.bf-tree, .bf-log { min-height: 0; overflow: auto; padding: 18px 22px 24px; }
+.bf-path { margin: 0 0 6px; color: var(--ink-3); overflow-wrap: anywhere; }
+.bf-tree ul { margin: 0; padding: 0; list-style: none; }
+.bf-tree li { display: flex; align-items: baseline; white-space: pre; color: var(--ink-2); transition: color .5s var(--ease); }
+.bf-b { flex: none; color: var(--ink-4); }
+.bf-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.bf-n:hover { color: var(--ink); text-decoration: underline; text-decoration-color: var(--line-3); text-underline-offset: 3px; }
+.bf-t { flex: none; margin-left: auto; padding-left: 2ch; font-size: 11.5px; color: var(--ink-3); }
+.bf-t em { margin-right: 1.5ch; font-style: normal; }
+.bf-tree li.read { color: var(--ink); }
+.bf-tree li.read em { color: var(--green); }
+.bf-tree li.new, .bf-tree li.updated, .bf-tree li.new .bf-t, .bf-tree li.updated .bf-t { color: var(--purple); }
+.bf-log { margin: 0; list-style: none; border-left: 1px solid var(--line-2); }
+.bf-log li { padding-left: 2ch; text-indent: -2ch; color: var(--ink-2); }
+.bf-dot { display: inline-block; width: 2ch; text-indent: 0; color: var(--ink-3); }
+.bf-log .bf-dim { padding-left: 0; text-indent: 0; color: var(--ink-3); }
+.bf-log .bf-wait { margin-top: 10px; font-family: var(--ui-font); font-size: 12.5px; line-height: 1.55; }
+.bf-log .bf-learn, .bf-log .bf-learn .bf-dot { color: var(--purple); }
+.bf-log time { margin-left: 1.5ch; font-size: 11px; color: var(--ink-4); }
+/* schmaleres Fenster: Typen weglassen – nur „gelesen“/„neu“ bleiben stehen (wie auf der Website am Handy) */
+@container (max-width: 780px) {
+  .bf-t { font-size: 0; padding-left: 1ch; }
+  .bf-t em { margin-right: 0; font-size: 11.5px; }
+}
+/* ganz schmal: Protokoll unter den Baum */
+@container (max-width: 520px) {
+  .brain-files { grid-template-columns: minmax(0, 1fr); align-content: start; overflow: auto; }
+  .bf-tree, .bf-log { overflow: visible; }
+  .bf-log { border-left: 0; border-top: 1px solid var(--line-2); padding-top: 16px; }
+}
+.brain-empty .nowrap { white-space: nowrap; }
+
 .brain-empty { position: absolute; left: 50%; top: 50%; translate: -50% -50%; color: var(--text-dim); text-align: center; }
 .brain-empty.card { width: min(460px, calc(100% - 40px)); padding: 26px 26px 20px; border-radius: var(--radius); background: rgba(var(--bg2-rgb), .94); border: 1px solid var(--glass-border); display: flex; flex-direction: column; align-items: center; gap: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.4); }
 .brain-empty.card svg { color: var(--purple); }
-.brain-empty h3 { margin: 0; color: var(--text); font-size: 18px; font-weight: 600; letter-spacing: -.025em; }
+.brain-empty h3 { margin: 0; color: var(--text); font-size: 22px; line-height: 1.15; font-weight: 600; letter-spacing: -.035em; text-wrap: balance; }
 .brain-empty p { margin: 0; line-height: 1.6; font-size: 12.5px; }
 
 .brain-side { flex: 0 0 300px; min-width: 0; overflow: auto; border-left: 1px solid var(--glass-border); background: rgba(var(--bg2-rgb), .6); }

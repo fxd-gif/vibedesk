@@ -5,7 +5,7 @@ import { useSettings } from '../store/settingsStore'
 import { centeredRect, useUi } from '../store/uiStore'
 import { PathInput } from './PathInput'
 import { MissingHint, missingTools, ToolSetupPanel, useSetup } from './ToolSetup'
-import iconUrl from '../assets/icon.png'
+import { Wordmark } from '../ascii/Wordmark'
 import { t } from '../../../shared/i18n'
 
 // kurz halten: Szene, Musik und Discord kommen später als leise Tipps
@@ -48,12 +48,13 @@ export function Onboarding(): React.JSX.Element | null {
 
   return (
     <div className={`onb${leaving ? ' leaving' : ''}`} data-testid="onboarding">
-      <div className="onb-card" key={step}>
+      <div className={`onb-card${step === 'welcome' ? ' hero' : ''}`} key={step}>
         {step === 'welcome' && (
           <>
-            <img className="onb-logo" src={iconUrl} alt="" />
-            <h1>{t('Willkommen bei VibeDesk')}</h1>
-            <p>{t('Dein ruhiger Ort zum Vibecoden – Regen an der Scheibe, Lofi im Ohr und alle Claude-Sessions im Blick.')}</p>
+            {/* der große Moment der App: die Buchstaben regnen zusammen, danach fällt leiser Regen auf ihre Kanten */}
+            <Wordmark size={15} sky={7} density={0.4} intro />
+            <h1>{t('Claude Code, endlich ruhig.')}</h1>
+            <p>{t('Sieh, was jede Session gerade tut, beantworte die wartende mit einem Klick, und Claude merkt sich dein Projekt.')}</p>
             <button className="btn primary big" onClick={next} data-testid="onb-next">
               {t('Einrichten')}
             </button>

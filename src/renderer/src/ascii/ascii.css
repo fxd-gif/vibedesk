@@ -1,0 +1,33 @@
+/* ---------- Zeichen (ASCII) – DESIGN.md Abschnitt 9 und 11.3 ----------
+   Zeichen zeigen Maschine oder Verwandlung. Nie in Knöpfen, Formularen, Menüs, Fehlermeldungen oder Einstellungen.
+   Endlos-Animationen nur mit steps(), damit der Compositor nicht dauernd neue Bilder rechnet. */
+
+/* Schriftzug VIBEDESK mit Regen */
+.ascii-word { width: 100%; }
+.ascii-word canvas { display: block; width: 100%; height: 180px; }
+
+/* Szene „Zeichenregen“: Nacht-Blau statt Bokeh */
+.ascii-scene { background: var(--bg); }
+
+/* Session-Abschluss: die Ausgabe-Zeilen liegen über der Zusammenfassung und regnen ab */
+.rain-away { position: absolute; inset: 0; z-index: 1; display: block; width: 100%; height: 100%; pointer-events: none; }
+
+/* Spinner aus Zeichen · : ¦ | – vier Stufen, kein flüssiges Drehen */
+.spin { display: inline-block; flex: 0 0 auto; width: 1ch; height: 1.25em; overflow: hidden; vertical-align: -0.25em; font: 500 12px/1.25 var(--mono); color: var(--ink-2); }
+.spin::before { content: '·:¦|'; display: block; width: 4ch; white-space: nowrap; animation: a-spin 0.8s steps(4) infinite; }
+@keyframes a-spin { to { transform: translateX(-4ch); } }
+@media (prefers-reduced-motion: reduce) { .spin::before { animation: none; transform: translateX(-1ch); } }
+
+/* Fortschritt als [####----] */
+.a-bar { display: inline-flex; align-items: baseline; gap: 8px; font: 400 12px/1 var(--mono); color: var(--ink-3); white-space: pre; font-variant-numeric: tabular-nums; }
+.a-bar b { font-weight: 400; color: var(--ink-2); }
+
+/* Fakten als Terminal-Ausgabe */
+.term-facts { padding: 18px 20px 20px; border-radius: 12px; background: #090c13; box-shadow: 0 0 0 1px var(--line-2); font: 400 12.5px/1.6 var(--mono); text-align: left; user-select: text; }
+.tf-head { margin: 0; color: var(--ink-3); }
+.term-facts ul { display: grid; gap: 12px; margin: 14px 0 0; padding: 0; list-style: none; }
+.term-facts li { display: grid; grid-template-columns: 2ch minmax(0, 1fr); column-gap: 1.2ch; }
+.term-facts li::before { content: '✓'; grid-row: span 2; color: var(--green); }
+.term-facts li b { font-weight: 500; color: var(--ink); }
+.term-facts li span { color: var(--ink-3); }
+.term-facts code { font: inherit; color: var(--ink-2); }

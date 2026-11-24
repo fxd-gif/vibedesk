@@ -87,7 +87,7 @@ export interface BlocklyProgram {
   variables?: { name: string; id: string }[]
 }
 
-export const BUILTIN_SCENES = ['city', 'forest', 'tokyo']
+export const BUILTIN_SCENES = ['city', 'forest', 'tokyo', 'ascii']
 // Ohne Q, E, M, 2, 3, 7, 8, 9, 0: Strg+Alt ist auf deutschen Tastaturen AltGr (@, €, µ, ², ³, {, [, ], })
 const KEYS = [...'ABCDFGHIJKLNOPRSTUVWXYZ1456']
 const OPS_COMPARE = ['EQ', 'NEQ', 'LT', 'LTE', 'GT', 'GTE']

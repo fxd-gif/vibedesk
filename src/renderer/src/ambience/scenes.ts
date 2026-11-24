@@ -60,6 +60,16 @@ function blurOf(src: HTMLCanvasElement, w: number, h: number): HTMLCanvasElement
   return c
 }
 
+/** Nacht statt Bokeh (DESIGN.md 11.2): weniger Farbe und etwas dunkler, damit Farbe in der App Status bleibt */
+export const NIGHT_GRADE = 'saturate(0.5) brightness(0.8)'
+
+function night(src: HTMLCanvasElement): HTMLCanvasElement {
+  const [c, ctx] = canvas(src.width, src.height)
+  ctx.filter = NIGHT_GRADE
+  ctx.drawImage(src, 0, 0)
+  return c
+}
+
 export function renderScene(id: string, w: number, h: number, seed = 7): SceneTextures {
   const p = sceneParams(id, seed)
   const [bokeh, bctx] = canvas(w, h)
@@ -70,7 +80,7 @@ export function renderScene(id: string, w: number, h: number, seed = 7): SceneTe
   sctx.globalAlpha = 0.45
   sctx.drawImage(blurOf(bokeh, w, h), 0, 0)
   sctx.globalAlpha = 1
-  return { sharp, blurred: blurOf(bokeh, w, h) }
+  return { sharp: night(sharp), blurred: night(blurOf(bokeh, w, h)) }
 }
 
 export async function renderImageScene(url: string, w: number, h: number): Promise<SceneTextures> {

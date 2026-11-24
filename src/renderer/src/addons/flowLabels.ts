@@ -6,7 +6,7 @@ export const FIELD_LABELS = (): Record<string, Record<string, string>> => ({
   PHASE: { work: t('Fokus beginnt'), break: t('Pause beginnt'), end: t('Timer endet') },
   CHANNEL: { music: t('Musik'), rain: t('Regen'), rain_volume: t('Regen-Lautstärke') },
   CMD: { start: t('starten'), stop: t('stoppen') },
-  SCENE: { city: t('Stadt bei Nacht'), forest: t('Wald in der Dämmerung'), tokyo: t('Tokio-Gasse') },
+  SCENE: { city: t('Stadt bei Nacht'), forest: t('Wald in der Dämmerung'), tokyo: t('Tokio-Gasse'), ascii: t('Zeichenregen') },
   SOUND: { chime: t('Gong') },
   ON: { TRUE: t('an'), FALSE: t('aus') },
   WAIT: { TRUE: t('ja, warten bis fertig'), FALSE: t('nein, sofort weiter') },

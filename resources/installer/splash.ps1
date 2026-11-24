@@ -6,7 +6,7 @@ Add-Type -TypeDefinition 'using System.Runtime.InteropServices; public class VdD
 [VdDpi]::SetProcessDPIAware() | Out-Null
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 
-$bg = [Drawing.Color]::FromArgb(7, 9, 13)
+$bg = [Drawing.Color]::FromArgb(12, 15, 24)
 $screen = [Windows.Forms.Screen]::PrimaryScreen.Bounds
 
 $form = New-Object Windows.Forms.Form

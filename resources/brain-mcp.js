@@ -81,8 +81,8 @@ const DESK_TOOLS = [
   { name: 'desk_zen', description: 'Zen-Modus: nur das aktuelle Claude-Terminal und der Regen sind zu sehen. Ohne on wird umgeschaltet.', inputSchema: { type: 'object', properties: { on: { type: 'boolean' } } } },
   {
     name: 'desk_scene',
-    description: 'Atmosphäre hinter dem Desktop ändern: Szene (city = Stadt bei Nacht, forest = Wald, tokyo = Tokyo-Gasse), Regenstärke und Unschärfe (je 0 bis 1).',
-    inputSchema: { type: 'object', properties: { scene: { type: 'string', enum: ['city', 'forest', 'tokyo'] }, rain: { type: 'number', minimum: 0, maximum: 1 }, blur: { type: 'number', minimum: 0, maximum: 1 } } }
+    description: 'Atmosphäre hinter dem Desktop ändern: Szene (city = Stadt bei Nacht, forest = Wald, tokyo = Tokyo-Gasse, ascii = Zeichenregen wie auf der Website), Regenstärke und Unschärfe (je 0 bis 1).',
+    inputSchema: { type: 'object', properties: { scene: { type: 'string', enum: ['city', 'forest', 'tokyo', 'ascii'] }, rain: { type: 'number', minimum: 0, maximum: 1 }, blur: { type: 'number', minimum: 0, maximum: 1 } } }
   },
   {
     name: 'desk_music',
