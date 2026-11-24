@@ -25,6 +25,13 @@ export const useLights = create<LightsState>((set) => ({
   select: (id) => set({ selected: id })
 }))
 
+/** Ausblick öffnen/schließen (ohne Argument umschalten) */
+export function toggleOutlook(on?: boolean): void {
+  const s = useLights.getState()
+  const next = on ?? !s.outlook
+  if (next !== s.outlook) s.setOutlook(next)
+}
+
 const sameSlots = (a: Record<string, number>, b: Record<string, number>): boolean => {
   const ka = Object.keys(a)
   return ka.length === Object.keys(b).length && ka.every((k) => a[k] === b[k])

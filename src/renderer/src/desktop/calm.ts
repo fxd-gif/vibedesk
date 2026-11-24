@@ -2,6 +2,7 @@
 import { t } from '../../../shared/i18n'
 import { inform } from '../store/notifyStore'
 import { kindOf } from '../store/sessionStore'
+import { toggleOutlook } from '../store/lightsStore'
 import { useSettings } from '../store/settingsStore'
 import { useUi } from '../store/uiStore'
 
@@ -32,7 +33,7 @@ let wired = false
 export function wireCalm(): void {
   if (wired) return
   wired = true
-  // Strg+. schaltet Zen um – auch im Terminal, dort hat die Kombination keine Bedeutung
+  // Strg+. schaltet Zen um, Strg+Tab den Ausblick – auch im Terminal, dort haben die Kombinationen keine Bedeutung
   window.addEventListener(
     'keydown',
     (e) => {
@@ -40,6 +41,12 @@ export function wireCalm(): void {
         e.preventDefault()
         e.stopPropagation()
         toggleZen()
+      }
+      // Strg+Tab: Ausblick – alle Sessions als Lichter gegenüber (im Terminal bekommt xterm das Tab nicht)
+      if (e.ctrlKey && !e.altKey && e.key === 'Tab') {
+        e.preventDefault()
+        e.stopPropagation()
+        toggleOutlook()
       }
     },
     true

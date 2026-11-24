@@ -89,6 +89,21 @@ export function lampLook(status: SessionStatus, t: number, animate: boolean, pha
   }
 }
 
+/** Reihenfolge im Ausblick: erst das untere Stockwerk, dann das obere, jeweils von links nach rechts */
+function inViewOrder(lamps: Lamp[]): Lamp[] {
+  const floor = (l: Lamp): number => (l.slot < FLOOR_1.length ? 0 : 1)
+  return [...lamps].sort((a, b) => floor(a) - floor(b) || slotPos(a.slot).x - slotPos(b.slot).x)
+}
+
+/** Nächstes Licht für Tab/Pfeile; ohne (gültige) Auswahl das erste bzw. letzte */
+export function nextLamp(lamps: Lamp[], current: string | null, dir: 1 | -1): string | null {
+  if (!lamps.length) return null
+  const list = inViewOrder(lamps)
+  const i = list.findIndex((l) => l.id === current)
+  if (i < 0) return (dir === 1 ? list[0] : list[list.length - 1]).id
+  return list[(i + dir + list.length) % list.length].id
+}
+
 /** Bewegt sich gerade ein Licht? Nur dann braucht das Standbild eine Bildschleife. */
 export function lampsAnimate(lamps: Pick<Lamp, 'status'>[]): boolean {
   return lamps.some((l) => l.status === 'working' || l.status === 'waiting')

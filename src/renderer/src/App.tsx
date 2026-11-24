@@ -67,7 +67,8 @@ import { dockPlan, earned, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
 import { useBrainUsed, wireBrainActivity } from './store/brainActivity'
 import { wireBrainLog } from './store/brainLog'
-import { wireLights } from './store/lightsStore'
+import { useLights, wireLights } from './store/lightsStore'
+import { Outlook } from './desktop/Outlook'
 import { wireWrapUp } from './store/wrapUpStore'
 import { wireTray } from './store/trayStore'
 import { wireBudget } from './store/budgetStore'
@@ -179,6 +180,7 @@ export default function App(): React.JSX.Element {
   const edits = useWorkflow(hasEdits)
   const brainUsed = useBrainUsed()
   const zen = useUi((s) => s.zen)
+  const outlook = useLights((s) => s.outlook)
   // Sparmodus: Glas ohne Live-Unschärfe – die wird sonst bei jeder Terminal-Ausgabe neu berechnet
   const saver = saverActive(settings?.energySaver, useOnBattery())
   const detected = usePreview((s) => Object.values(s.urls).flat().length)
@@ -313,7 +315,7 @@ export default function App(): React.JSX.Element {
   const Nav = studio ? Sidebar : Dock
 
   return (
-    <div className={`app${zen ? ' zen' : ''}${saver ? ' saver' : ''}`} data-layout={studio ? 'studio' : 'desktop'}>
+    <div className={`app${zen ? ' zen' : ''}${saver ? ' saver' : ''}${outlook ? ' outlook' : ''}`} data-layout={studio ? 'studio' : 'desktop'}>
       {settings && livingScene ? (
         <LivingSceneView scene={livingScene} />
       ) : settings?.scene === ASCII_SCENE ? (
@@ -354,6 +356,7 @@ export default function App(): React.JSX.Element {
         ))}
       {/* im Zen-Modus holt die Maus am unteren Rand das Dock zurück – steht vor dem Dock, damit CSS (~) es findet */}
       {zen && <div className="zen-reveal" aria-hidden />}
+      <Outlook />
       <Nav
         groups={[
           [

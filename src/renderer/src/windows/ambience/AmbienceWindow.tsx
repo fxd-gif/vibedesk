@@ -169,6 +169,10 @@ function AtmosphereSide({ source }: { source: MusicSource }): React.JSX.Element 
           <span>{t('Folgt der Tageszeit')}</span>
           <Toggle label={t('Folgt der Tageszeit')} on={!!s.daylight} onChange={(v) => set({ daylight: v })} />
         </div>
+        <div className="row between" title={t('Jede Session leuchtet gegenüber: grün arbeitet, bernstein wartet, blau ist fertig')}>
+          <span>{t('Sessions als Lichter in der Szene')}</span>
+          <Toggle label={t('Sessions als Lichter in der Szene')} on={s.sessionLights !== false} onChange={(v) => set({ sessionLights: v })} testId="toggle-session-lights" />
+        </div>
         <div className="row between">
           <span>{t('Regengeräusch')}</span>
           <Toggle label={t('Regengeräusch')} on={s.rainSoundOn} onChange={() => set(toggleRainSound(s))} />

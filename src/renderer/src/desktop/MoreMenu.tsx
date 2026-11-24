@@ -13,6 +13,7 @@ import { launcherGroups } from './dockPlan'
 import { designApp, openApp, useApps } from '../store/appsStore'
 import { confirm } from '../store/dialogStore'
 import { api } from '../api'
+import { toggleOutlook } from '../store/lightsStore'
 
 interface Info {
   title: string
@@ -144,6 +145,9 @@ export function MoreMenu({ items, onClose }: { items: PanelId[]; onClose(): void
         </button>
         <button className="link-btn" onClick={go(() => openSettings('toolbox'))} data-testid="more-toolbox">
           {t('Werkzeugkasten')}
+        </button>
+        <button className="link-btn" onClick={go(() => toggleOutlook(true))} title={t('Strg+Tab · alle Sessions als Lichter gegenüber')} data-testid="more-outlook">
+          {t('Blick aus dem Fenster')}
         </button>
         <button className="link-btn" onClick={go(() => openAbout())} data-testid="more-about">
           {t('Über VibeDesk · Fehler melden')}

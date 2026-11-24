@@ -24,6 +24,7 @@ import { redactText, toggleCurtain } from '../../store/streamerStore'
 import { t } from '../../../../shared/i18n'
 import { moduleOn } from '../../desktop/modules'
 import { tidyNow, toggleZen } from '../../desktop/calm'
+import { toggleOutlook } from '../../store/lightsStore'
 import { openSettings } from '../SettingsWindow'
 import { startTour } from '../../desktop/Tour'
 import { forgetCurrentWorkspace } from '../../store/workspaceStore'
@@ -126,6 +127,7 @@ function buildCommands(projects: Project[]): Cmd[] {
     { id: 'act:update', label: t('Nach Updates suchen'), group: t('Aktionen'), icon: 'restart', run: () => void api.update.check() },
     { id: 'act:tour', label: t('Rundgang starten'), group: t('Aktionen'), icon: 'spark', hint: t('Kurze Klick-Tour: wo was ist'), run: startTour },
     { id: 'act:zen', label: t('Zen-Modus'), group: t('Aktionen'), icon: 'eyeoff', hint: t('Strg+. · nur Claude und der Regen'), run: () => toggleZen() },
+    { id: 'act:outlook', label: t('Blick aus dem Fenster'), group: t('Aktionen'), icon: 'eye', hint: t('Strg+Tab · alle Sessions als Lichter gegenüber'), run: () => toggleOutlook(true) },
     { id: 'act:tidy', label: t('Aufräumen'), group: t('Aktionen'), icon: 'grid', hint: t('Übrige Fenster ins Dock, Rest anordnen'), run: tidyNow },
     ...(s && s.workspacesOn !== false && s.layout !== 'studio'
       ? [{ id: 'act:forgetWorkspace', label: t('Anordnung für dieses Projekt vergessen'), group: t('Aktionen'), icon: 'grid', hint: t('Fenster pro Projekt merken'), searchOnly: true, run: forgetCurrentWorkspace }]

@@ -1,0 +1,64 @@
+/* Ausblick (Strg+Tab): Fenster treten zurück, die Lichter gegenüber sind beschriftet und anklickbar */
+.app.outlook .gwin { opacity: 0; transform: scale(0.985); pointer-events: none; }
+.app.outlook .zen-bar, .app.outlook .zen-reveal { opacity: 0; pointer-events: none; }
+
+.outlook { position: fixed; inset: 0; z-index: 950; animation: fade 300ms ease; }
+
+/* Farbe heißt Status */
+.ol-lamp { --c: #ffecd2; --c-rgb: 255, 236, 210; }
+.ol-lamp.st-working { --c: var(--green); --c-rgb: var(--green-rgb); }
+.ol-lamp.st-waiting { --c: var(--yellow); --c-rgb: 243, 185, 77; }
+.ol-lamp.st-done { --c: var(--blue); --c-rgb: var(--blue-rgb); }
+.ol-lamp.st-error { --c: var(--red); --c-rgb: var(--red-rgb); }
+
+/* Klickfläche über dem Fenster, das der Regen-Shader zeichnet (gleiche Größe: 0,026 × 0,038 der Bildhöhe) */
+.ol-lamp {
+  position: absolute;
+  width: 72px;
+  height: 84px;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.ol-pane {
+  width: 2.6vh;
+  height: 3.8vh;
+  border-radius: 3px;
+  outline: 1.5px solid transparent;
+  outline-offset: 7px;
+  transition: outline-color 150ms ease;
+}
+.ol-lamp:hover .ol-pane, .ol-lamp.on .ol-pane { outline-color: rgba(var(--c-rgb), 0.7); }
+/* Zeichenregen und lebende Szenen: kein Regen-Shader → das Fenster selbst zeichnen */
+.ol-lamp.own .ol-pane { background: var(--c); box-shadow: 0 0 22px 4px rgba(var(--c-rgb), 0.45); opacity: 0.9; }
+.ol-lamp.own.st-idle .ol-pane { opacity: 0.35; }
+.ol-lamp.own.st-waiting .ol-pane { animation: ol-breathe 2.4s steps(12) infinite; }
+@keyframes ol-breathe { 50% { opacity: 0.45; } }
+
+.ol-label {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: rgba(var(--bg-rgb), 0.6);
+  backdrop-filter: blur(6px);
+  white-space: nowrap;
+  pointer-events: none;
+}
+.ol-name { font-size: 13.5px; color: var(--text); }
+.ol-status { font-family: var(--mono); font-size: 11.5px; color: var(--c); }
+
+.ol-empty { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); margin: 0; font-size: 15px; color: var(--text-dim); }
+.ol-hint { position: absolute; left: 50%; bottom: 112px; transform: translateX(-50%); margin: 0; font-size: 12.5px; color: var(--text-dim); }

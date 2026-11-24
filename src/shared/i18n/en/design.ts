@@ -21,7 +21,14 @@ const dict: Record<string, string> = {
   'Sobald Claude im Gehirn liest oder etwas festhält, steht es hier.': 'As soon as Claude reads the brain or keeps something, it shows up here.',
   'gelesen: {notes}': 'read: {notes}',
   'gelernt: „{title}“': 'learned: “{title}”',
-  'ergänzt: „{title}“': 'updated: “{title}”'
+  'ergänzt: „{title}“': 'updated: “{title}”',
+  // Lichter gegenüber und Ausblick
+  'Sessions als Lichter in der Szene': 'Sessions as lights in the scene',
+  'Jede Session leuchtet gegenüber: grün arbeitet, bernstein wartet, blau ist fertig': 'Every session glows across the street: green is working, amber is waiting, blue is done',
+  'Blick aus dem Fenster': 'Look outside',
+  'Strg+Tab · alle Sessions als Lichter gegenüber': 'Ctrl+Tab · every session as a light across the street',
+  'Noch keine Sessions – gegenüber ist alles dunkel.': 'No sessions yet – it’s dark across the street.',
+  'Esc bringt deine Fenster zurück.': 'Esc brings your windows back.'
 }
 
 export default dict

@@ -85,6 +85,11 @@ export async function pasteInto(id: string): Promise<void> {
   e.term.focus()
 }
 
+/** Tastatur ins Terminal einer Session (z. B. nach dem Blick aus dem Fenster) */
+export function focusTerminal(id: string): void {
+  entries.get(id)?.term.focus()
+}
+
 export function copySelection(id: string): boolean {
   const e = entries.get(id)
   const sel = e?.term.getSelection()
