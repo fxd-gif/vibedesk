@@ -4,6 +4,8 @@ import type { EnergySaver } from '../../../shared/types'
 export const FPS_FOCUS = 30
 export const FPS_SAVER = 15
 export const FPS_IDLE = 5
+/** ohne Regen bewegen sich nur noch die Session-Lichter – dafür reichen wenige Bilder */
+export const FPS_LAMPS = 12
 
 export interface FrameState {
   paused: boolean
@@ -12,11 +14,17 @@ export interface FrameState {
   saver: boolean
   /** Regenstärke 0..1 – bei 0 hängt das Bild nicht von der Zeit ab */
   rain?: number
+  /** ein Session-Licht bewegt sich (arbeitet/wartet) – hält das Standbild lebendig, außer im Sparmodus */
+  lamps?: boolean
 }
 
 /** Mindestabstand zwischen zwei Bildern in ms – null heißt: gar nicht laufend zeichnen (Standbild). */
 export function frameInterval(s: FrameState): number | null {
-  if (s.paused || (s.rain !== undefined && s.rain <= 0)) return null
+  if (s.paused) return null
+  if (s.rain !== undefined && s.rain <= 0) {
+    if (!s.lamps || s.saver) return null
+    return 1000 / (s.idle ? FPS_IDLE : FPS_LAMPS)
+  }
   if (s.idle) return 1000 / FPS_IDLE
   return 1000 / (s.saver ? FPS_SAVER : FPS_FOCUS)
 }

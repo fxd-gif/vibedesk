@@ -67,6 +67,7 @@ import { dockPlan, earned, showPreviewInDock } from './desktop/dockPlan'
 import { useAddons } from './store/addonStore'
 import { useBrainUsed, wireBrainActivity } from './store/brainActivity'
 import { wireBrainLog } from './store/brainLog'
+import { wireLights } from './store/lightsStore'
 import { wireWrapUp } from './store/wrapUpStore'
 import { wireTray } from './store/trayStore'
 import { wireBudget } from './store/budgetStore'
@@ -211,6 +212,7 @@ export default function App(): React.JSX.Element {
     wireQuick()
     wireBrainActivity()
     wireBrainLog()
+    wireLights()
     wireWrapUp()
     wireLiving()
     wireTray()

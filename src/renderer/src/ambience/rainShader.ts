@@ -19,8 +19,35 @@ uniform vec2 uRes;
 uniform float uTime;
 uniform float uRain;    // 0..1
 uniform float uBlurAmt; // 0..1
+// Lichter gegenüber (ambience/lights.ts): x, y (0..1, y nach unten), Helligkeit, Schein – Farbe = Status
+uniform vec4 uLamp[12];
+uniform vec3 uLampCol[12];
+uniform int uLampN;
 in vec2 vUv;
 out vec4 outColor;
+
+// Erleuchtete Fenster gegenüber. soft 0 = scharf (Fenster mit Sprossenkreuz, durch den Tropfen gesehen),
+// 1 = unscharf (weicher Fleck im Beschlag). Wartende werfen zusätzlich warmes Licht auf die Scheibe.
+vec3 lampLight(vec2 uv, float aspect, float soft) {
+  vec3 acc = vec3(0.0);
+  for (int i = 0; i < 12; i++) {
+    if (i >= uLampN) break;
+    vec4 L = uLamp[i];
+    vec2 d = vec2((uv.x - L.x) * aspect, uv.y - L.y); // Einheiten der Bildhöhe
+    float r2 = dot(d, d);
+    if (r2 > (L.w > 0.0 ? 0.5 : 0.04)) continue;
+    vec2 q = abs(d) - vec2(0.013, 0.019);
+    float box = 1.0 - smoothstep(-0.0012, 0.0012, max(q.x, q.y));
+    float bars = max(1.0 - smoothstep(0.001, 0.002, abs(d.x)), 1.0 - smoothstep(0.001, 0.002, abs(d.y)));
+    float sharpL = box * (1.0 - 0.45 * bars) * 0.8 + exp(-r2 / 0.0012) * 0.22;
+    // im Beschlag ein hochkantiger, weicher Schein – man ahnt das Fenster noch
+    vec2 e = d / vec2(0.7, 1.0);
+    float softL = exp(-dot(e, e) / 0.0016) * 0.55;
+    float spill = exp(-r2 / 0.1024) * 0.08 * L.w;
+    acc += uLampCol[i] * ((mix(sharpL, softL, soft) + spill) * L.z);
+  }
+  return acc;
+}
 
 float h11(float p) { p = fract(p * 0.1031); p *= p + 33.33; p *= p + p; return fract(p); }
 vec3 h31(float p) {
@@ -109,10 +136,12 @@ void main() {
   vec3 blurred = texture(uBlur, vUv).rgb;
   vec3 bg = mix(sharp, blurred, blurMix);
   bg = mix(bg, bg * 0.92 + vec3(0.025, 0.03, 0.04), uBlurAmt * (1.0 - clearFog)); // Kondensat
+  bg += lampLight(vUv, aspect, blurMix);
 
   // Tropfen: Linse zeigt die Szene scharf, verschoben und gespiegelt
   vec2 lensUv = vUv - vec2(off.x / aspect, off.y) * 0.045 + vec2(0.0, 0.0);
   vec3 drop = mix(texture(uSharp, lensUv).rgb, texture(uBlur, lensUv).rgb, 0.45) * 1.25 + 0.015;
+  drop += lampLight(lensUv, aspect, 0.35) * 0.85;
   float rim = smoothstep(0.55, 1.0, length(off)) * mask;
   drop *= 1.0 - rim * 0.3;
   float spec = smoothstep(0.32, 0.0, length(off - vec2(-0.32, -0.42))) * mask;

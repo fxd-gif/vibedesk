@@ -2,8 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { FRAG, VERT } from './rainShader'
 import { renderImageScene, renderScene, type SceneTextures } from './scenes'
 import { canvasDpr, frameInterval, saverActive, shouldDraw } from './framePolicy'
+import { lampLook, lampsAnimate, MAX_LAMPS, slotPos, type Lamp } from './lights'
 import { api } from '../api'
 import { useSettings } from '../store/settingsStore'
+import { subscribeLamps } from '../store/lightsStore'
 
 /** Akkubetrieb aus dem Main-Prozess (Electron powerMonitor) – zuverlässiger als navigator.getBattery */
 export function useOnBattery(): boolean {
@@ -64,10 +66,20 @@ export function RainCanvas({ scene, customImage, intensity, blur, paused }: Prop
   const glState = useRef<{ gl: WebGL2RenderingContext; sharp: WebGLTexture | null; blurred: WebGLTexture | null } | null>(null)
   /** Bild neu zeichnen (auch im Standbild) und ggf. die Schleife wieder anwerfen */
   const wake = useRef<(resize?: boolean) => void>(() => {})
+  /** Lichter gegenüber – Sessions als Fenster in der Szene */
+  const lamps = useRef<Lamp[]>([])
 
   // Änderungen an Stärke/Beschlag/Pause → einmal neu zeichnen; Sparmodus ändert die Auflösung
   useEffect(() => wake.current(), [intensity, blur, paused])
   useEffect(() => wake.current(true), [saver])
+  useEffect(
+    () =>
+      subscribeLamps((list) => {
+        lamps.current = list
+        wake.current()
+      }),
+    []
+  )
 
   // Szene (neu) rendern und als Texturen hochladen
   useEffect(() => {
@@ -126,6 +138,9 @@ export function RainCanvas({ scene, customImage, intensity, blur, paused }: Prop
     gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0)
     const u = (n: string) => gl.getUniformLocation(prog, n)
     const uRes = u('uRes'), uTime = u('uTime'), uRain = u('uRain'), uBlur = u('uBlurAmt')
+    const uLamp = u('uLamp'), uLampCol = u('uLampCol'), uLampN = u('uLampN')
+    const lampBuf = new Float32Array(MAX_LAMPS * 4)
+    const colBuf = new Float32Array(MAX_LAMPS * 3)
     gl.uniform1i(u('uSharp'), 0)
     gl.uniform1i(u('uBlur'), 1)
     glState.current = { gl, sharp: null, blurred: null }
@@ -158,6 +173,18 @@ export function RainCanvas({ scene, customImage, intensity, blur, paused }: Prop
       gl.uniform1f(uTime, t)
       gl.uniform1f(uRain, p.intensity)
       gl.uniform1f(uBlur, p.blur)
+      // Lichter laufen nach der Wanduhr, auch wenn der Regen steht; im Sparmodus leuchten sie ruhig
+      const list = lamps.current
+      const n = Math.min(list.length, MAX_LAMPS)
+      for (let i = 0; i < n; i++) {
+        const pos = slotPos(list[i].slot)
+        const look = lampLook(list[i].status, now / 1000, !p.saver, list[i].slot * 1.3)
+        lampBuf.set([pos.x, pos.y, look.intensity, look.spill], i * 4)
+        colBuf.set(look.rgb, i * 3)
+      }
+      gl.uniform4fv(uLamp, lampBuf)
+      gl.uniform3fv(uLampCol, colBuf)
+      gl.uniform1i(uLampN, n)
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
       last = now
       dirty = false
@@ -165,7 +192,7 @@ export function RainCanvas({ scene, customImage, intensity, blur, paused }: Prop
     const frame = (now: number): void => {
       raf = 0
       const p = params.current
-      const interval = frameInterval({ paused: !!p.paused, idle: document.hidden || !document.hasFocus(), saver: p.saver, rain: p.intensity })
+      const interval = frameInterval({ paused: !!p.paused, idle: document.hidden || !document.hasFocus(), saver: p.saver, rain: p.intensity, lamps: lampsAnimate(lamps.current) })
       if (interval === null) {
         // Pausiert: nur ein Standbild, keine laufende Schleife
         if (dirty) draw(now)

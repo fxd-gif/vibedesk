@@ -215,6 +215,8 @@ export interface Settings {
   blur: number
   /** Szene folgt der Tageszeit (leiser Farbschleier über dem Regen) */
   daylight?: boolean
+  /** Lichter gegenüber: jede Session leuchtet als Fenster in der Szene (fehlt = an) */
+  sessionLights?: boolean
   scene: string
   customScenes: string[]
   visiblePanels: PanelId[]
