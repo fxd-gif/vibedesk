@@ -1,56 +1,31 @@
 {
-  "version": "2.0",
-  "date": "2026-11-01T17:00:00Z",
-  "milestone": "https://github.com/fxd-gif/vibedesk/milestone/1",
+  "version": "2.1",
+  "date": "2026-12-13T17:00:00Z",
+  "milestone": "https://github.com/fxd-gif/vibedesk/milestones",
   "features": [
     {
-      "title": "Living scenes",
-      "text": "Ask Claude for an interactive background – snow that really settles on the roof in your own photo, fireflies that follow your mouse, a thunderstorm on click. Claude writes the scene, looks at it and refines it."
+      "title": "Lights across the street",
+      "text": "Every Claude Code session is a lit window in the city behind the rain: green is working, amber is waiting for you, blue is done."
     },
     {
-      "title": "Session wrap-up",
-      "text": "When Claude finishes, get a short summary, a suggested commit and the key decisions saved to the brain.",
-      "issue": 1
+      "title": "Look outside (Ctrl+Tab)",
+      "text": "Your windows step back, every light shows its session and status – click one to jump straight in."
     },
     {
-      "title": "Pull requests from the Git window",
-      "text": "Branch, push and open a PR without leaving VibeDesk – Claude writes the description.",
-      "issue": 2
+      "title": "The night design of this website",
+      "text": "Night blue instead of black, color only for status, Instrument Sans for people and JetBrains Mono for the machine."
     },
     {
-      "title": "Tray status",
-      "text": "See which session is waiting for you even while VibeDesk is minimized.",
-      "issue": 3
+      "title": "Tool windows Claude builds for you",
+      "text": "Ask Claude for a small window – a todo board, a status view – and it builds it in VibeDesk's look."
     },
     {
-      "title": "Budget per project",
-      "text": "A quiet heads-up at 75 % and 100 % of the token or cost budget you set.",
-      "issue": 4
+      "title": "A memory you can see",
+      "text": "The brain shows what Claude knows about your project, as a graph or as files, with a log of what it read and learned."
     },
     {
-      "title": "Claude runs your desk",
-      "text": "New desktop tools for Claude: see your other sessions and hand them tasks, check usage and limits, set a budget and leave you a reminder."
-    },
-    {
-      "title": "Shows how long Claude has been waiting",
-      "text": "“waiting · 3 min” on the session, in the tray and on your phone – the longest wait comes first.",
-      "issue": 5
-    },
-    {
-      "title": "Much lighter on your laptop",
-      "text": "About a tenth of the graphics load of 1.9 while Claude works – VibeDesk stays cool and quick, even after hours."
-    },
-    {
-      "title": "Gemini CLI and Codex (beta)",
-      "text": "Start a session with another agent in the same terminal, with a simple working/waiting dot."
-    },
-    {
-      "title": "Second screen (beta)",
-      "text": "Move the Inspector, Git, the brain or a preview to your other monitor."
-    },
-    {
-      "title": "Your own music, project templates, diagnostics",
-      "text": "Play a folder of your own tracks, start new projects from eight templates, copy a diagnostic report for an issue."
+      "title": "Character rain",
+      "text": "The rain of this website as a background: drops made of characters, and your mouse is an umbrella."
     }
   ]
 }
