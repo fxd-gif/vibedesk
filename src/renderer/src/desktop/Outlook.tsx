@@ -31,7 +31,8 @@ function statusText(l: Lamp): string {
 function openSession(id: string): void {
   toggleOutlook(false)
   useUi.getState().focus(termWin(id))
-  // gleich weitertippen können
+  // gleich weitertippen können: sofort (xterm bleibt auch minimiert eingehängt), nach dem nächsten Bild zur Sicherheit noch einmal
+  focusTerminal(id)
   requestAnimationFrame(() => focusTerminal(id))
 }
 
