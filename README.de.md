@@ -478,7 +478,7 @@ Ja. VibeDesk richtet sich nach der Sprache von Windows (Deutsch oder Englisch). 
 
 ## Aus dem Quellcode bauen
 
-Benötigt Node.js und npm.
+Benötigt Node.js und npm. VibeDesk zieht Stück für Stück nach Rust um ([native/](native/README.md)). Ist [Rust](https://rustup.rs) installiert, bauen `npm run dev` und `npm run dist` diese Teile mit. Ohne Rust nimmt VibeDesk die JavaScript-Fassungen.
 
 ```bash
 npm install

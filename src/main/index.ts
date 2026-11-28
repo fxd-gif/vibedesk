@@ -26,6 +26,8 @@ import { registerCoreIpc, registerFileIpc, registerNotesIpc, registerSessionIpc,
 import { FileService, FileWatcher } from './fileService'
 import { CLAUDE_DOCS_URL, checkTools, installTool, NODE_DOWNLOAD_URL } from './toolSetup'
 import { NotesStore } from './notesStore'
+import { BRIDGE_FILE, prepareBridge } from './nativeBridge'
+import type { NativeBridge } from './hookSettings'
 import { DiscordRpc, fetchAppInfo, type DiscordStatus } from './discord/rpc'
 import { postWebhook, shouldSend, type WebhookKind } from './discord/webhook'
 import { setupUpdater } from './updater'
@@ -184,12 +186,17 @@ app.whenReady().then(async () => {
   Menu.setApplicationMenu(null)
   // Sprache vor dem ersten sichtbaren Fenster festlegen – auch das Update-Fensterchen spricht sie
   const userData = app.getPath('userData')
+  // Rust-Brücke statt node + JS-Skripten (native/README.md). Bis sie bereitsteht, starten Sessions über den JS-Weg.
+  let bridge: NativeBridge | null = null
+  const bridgeSource = join(app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources'), 'bin', BRIDGE_FILE)
+  const bridgeReady = prepareBridge(bridgeSource, join(userData, 'bin')).then((b) => (bridge = b))
   const settings = new SettingsStore(join(userData, 'settings.json'), DEFAULT_SETTINGS(app.getPath('documents')))
   setLang(resolveLang(settings.get().language, app.getLocale()))
   if (app.isPackaged || process.env.VIBEDESK_SPLASH) splash = new SplashWindow()
   if (app.isPackaged) registerRunAlias(process.execPath)
   ipcMain.handle('app:claudeInstalled', () => !!process.env.VIBEDESK_CLAUDE_CMD || claudeOnPath())
-  ipcMain.handle('setup:check', () => checkTools())
+  // Mit der Rust-Brücke braucht VibeDesk kein Node.js auf dem System
+  ipcMain.handle('setup:check', async () => ({ ...(await checkTools()), bridge: !!(await bridgeReady) }))
   ipcMain.handle('setup:install', (_e, tool: string) => {
     if (tool !== 'node' && tool !== 'claude') return false
     return installTool(tool, (line) => send('setup:log', tool, line))
@@ -479,12 +486,14 @@ app.whenReady().then(async () => {
     maxSessions: () => settings.get().maxSessions,
     brain: { mcpPath: resource('brain-mcp.js'), enabled: () => settings.get().brainOn },
     statusLine: { path: resource('statusline.js'), configDir: process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude') },
-    endpointFile
+    endpointFile,
+    native: () => bridge
   })
   registerDiagnosticsIpc({
     claudeVersion,
     gitTools: () => gitService.tools(),
     hooks: () => hookServer.stats(),
+    bridge: () => bridge?.version ?? null,
     sessions: () => sessions.list().length,
     settings: () => settings.get()
   })

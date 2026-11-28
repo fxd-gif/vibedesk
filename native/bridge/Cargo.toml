@@ -1,0 +1,13 @@
+[package]
+name = "vibedesk-bridge"
+version = "0.1.0"
+description = "Native bridge between Claude Code and VibeDesk: hook forwarder, statusline and MCP server in one small binary"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+serde_json = { version = "1", features = ["preserve_order"] }
+# 0.5 statt 0.6: windows-sys ≥ 0.61 braucht unter windows-gnu ohne MinGW-binutils ein dlltool (native/README.md)
+socket2 = "0.5"

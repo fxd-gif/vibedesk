@@ -420,6 +420,8 @@ export interface ToolStatus {
   winget: boolean
   /** Anmeldedaten von Claude Code gefunden (Abo-Anmeldung oder API-Schlüssel) – geprüft ohne Netz */
   login: boolean
+  /** Rust-Brücke bereit – dann braucht VibeDesk kein Node.js auf dem System */
+  bridge?: boolean
 }
 
 export interface SkillInfo {

@@ -11,6 +11,13 @@ extraResources:
     to: hook-forwarder.js
   - from: resources/brain-mcp.js
     to: brain-mcp.js
+  - from: resources/mcp-tools.json
+    to: mcp-tools.json
+  # Rust-Brücke (native/bridge), gebaut von native/build.mjs
+  - from: resources/bin
+    to: bin
+    filter:
+      - "*.exe"
   - from: resources/statusline.js
     to: statusline.js
   - from: resources/update-splash.ps1

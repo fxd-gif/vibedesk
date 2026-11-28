@@ -14,8 +14,10 @@ export interface DiagnosticsInfo {
     node: string
     os: string
     claude: string | null
-    /** Node auf dem System (für den Hook-Forwarder) */
+    /** Node auf dem System (für die JS-Brücke, falls die Rust-Brücke fehlt) */
     systemNode: string | null
+    /** Rust-Brücke zu Claude Code (native/bridge); null = Node mit den JS-Skripten */
+    bridge?: string | null
     git: string | null
     gh: GhState
   }
@@ -82,6 +84,7 @@ export function diagnosticsReport(d: DiagnosticsInfo, lounge: boolean, now = Dat
     `- ${v.os}`,
     `- Claude Code ${v.claude ?? 'nicht gefunden'}`,
     `- Node (System) ${v.systemNode ?? 'nicht gefunden'}`,
+    `- Claude-Brücke ${v.bridge ? `Rust ${v.bridge}` : 'Node (JS-Skripte)'}`,
     `- Git ${v.git ?? 'nicht gefunden'}`,
     `- GitHub-CLI ${GH[v.gh]}`,
     '',

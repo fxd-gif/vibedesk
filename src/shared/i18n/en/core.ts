@@ -39,6 +39,8 @@ const dict: Record<string, string> = {
   'Diagnose wird gesammelt …': 'Collecting diagnostics …',
   'Laufzeit': 'Runtime',
   'Node (System)': 'Node (system)',
+  'Claude-Brücke': 'Claude bridge',
+  'Node (JS-Skripte)': 'Node (JS scripts)',
   'GitHub-CLI': 'GitHub CLI',
   'angemeldet': 'signed in',
   'nicht angemeldet': 'not signed in',

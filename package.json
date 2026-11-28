@@ -20,8 +20,10 @@
     "developer-tools"
   ],
   "scripts": {
-    "dev": "electron-vite dev",
-    "build": "electron-vite build",
+    "dev": "node native/build.mjs && electron-vite dev",
+    "build": "node native/build.mjs && electron-vite build",
+    "build:native": "node native/build.mjs",
+    "test:native": "node native/build.mjs --test",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "dist": "npm run build && electron-builder --win --publish never"

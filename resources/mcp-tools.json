@@ -1,0 +1,777 @@
+{
+  "$comment": "Werkzeuge des VibeDesk-MCP-Servers. Eine Quelle für beide Umsetzungen: resources/brain-mcp.js liest die Datei, native/bridge baut sie ein.",
+  "protocol": "2025-06-18",
+  "brainInstructions": "Projektgedächtnis von VibeDesk: vor dem Erkunden suchen (brain_search, brain_related), Gelerntes festhalten (brain_write). ",
+  "deskInstructions": "Den VibeDesk-Desktop steuern die desk_*-Werkzeuge (Fenster anordnen, Zen-Modus, Szene, Musik …), wenn der User darum bittet. Interaktive Hintergründe (z. B. Schnee, der auf dem Dach im eigenen Bild liegen bleibt) baust du mit desk_scene_create und prüfst sie mit desk_scene_snapshot. Braucht der User ein Werkzeug (Dashboard, Übersicht, Rechner, Checkliste …), baust du ihm mit desk_app_create ein eigenes Fenster in VibeDesk und prüfst es mit desk_app_snapshot. Andere Sessions siehst du mit desk_sessions und gibst ihnen mit desk_session_send Aufträge; Verbrauch und Budget liefert desk_usage.",
+  "brainTools": [
+    {
+      "name": "brain_overview",
+      "description": "Überblick über das Projektgedächtnis (VibeDesk-Gehirn): alle Notizen nach Typ, Notizen „zu prüfen“ und zuletzt geänderte Dateien. Nutze es zu Beginn einer größeren Aufgabe.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "brain_search",
+      "description": "Durchsucht das Projektgedächtnis und das persönliche Gehirn nach Stichworten (Titel, Inhalt, Tags, Dateien). Nutze es, bevor du einen Bereich des Projekts neu erkundest.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Stichworte, z. B. „auth token refresh“"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
+      "name": "brain_read",
+      "description": "Liest eine Notiz aus dem Projektgedächtnis inklusive verknüpfter Dateien und Rückverweise. Ohne scope wird erst im Projekt, dann im persönlichen Gehirn gesucht.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "project",
+              "me"
+            ],
+            "description": "project (Standard) = dieses Projekt; me = persönliches Gehirn über den User, gilt in allen Projekten"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      }
+    },
+    {
+      "name": "brain_related",
+      "description": "Was weiß das Gedächtnis über eine Datei? Zugehörige Notizen und Dateien, die oft zusammen mit ihr geändert werden. Nutze es, bevor du eine Datei änderst, die du nicht kennst.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Pfad relativ zum Projekt oder absolut"
+          }
+        },
+        "required": [
+          "file"
+        ]
+      }
+    },
+    {
+      "name": "brain_write",
+      "description": "Legt eine Notiz im Projektgedächtnis an oder ersetzt sie (gleicher Titel = gleiche Notiz). Halte fest, was künftigen Sessions Zeit spart: Überblick über einen Bereich, Entscheidungen samt Grund, Stolperfallen, Projekt-Konventionen. Kurz und sachlich, Markdown, verlinke verwandte Notizen mit [[Titel]]. Was du über den User selbst lernst (Vorlieben, Arbeitsweise, Stack, was er nicht mag), gehört mit scope \"me\" ins persönliche Gehirn – das gilt dann in allen Projekten.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "kurzer, eindeutiger Titel – wird zum Dateinamen"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "module",
+              "decision",
+              "pitfall",
+              "convention",
+              "task",
+              "fact"
+            ],
+            "description": "module = Bereich, decision = Entscheidung, pitfall = Stolperfalle, convention = Regel, task = Aufgabe, fact = Wissen"
+          },
+          "body": {
+            "type": "string",
+            "description": "Inhalt in Markdown, mit [[Links]] zu verwandten Notizen"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "betroffene Projektdateien"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "project",
+              "me"
+            ],
+            "description": "project (Standard) = dieses Projekt; me = persönliches Gehirn über den User, gilt in allen Projekten"
+          }
+        },
+        "required": [
+          "title",
+          "type",
+          "body"
+        ]
+      }
+    },
+    {
+      "name": "brain_forget",
+      "description": "Archiviert eine veraltete oder falsche Notiz.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "project",
+              "me"
+            ],
+            "description": "project (Standard) = dieses Projekt; me = persönliches Gehirn über den User, gilt in allen Projekten"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      }
+    }
+  ],
+  "deskTools": [
+    {
+      "name": "desk_state",
+      "description": "Zeigt, wie VibeDesk gerade eingestellt ist: Aufbau, Szene, Regen, Musik, Farbschema, laufende Sessions. Nutze es, bevor du etwas am Desktop änderst.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "desk_arrange",
+      "description": "Ordnet alle offenen Fenster in VibeDesk neu an (Terminals oben, Werkzeuge darunter). Für Bitten wie „sortier meine Fenster“.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "desk_tidy",
+      "description": "Räumt auf: alle Werkzeug-Fenster außer dem obersten wandern ins Dock, der Rest wird angeordnet.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "desk_zen",
+      "description": "Zen-Modus: nur das aktuelle Claude-Terminal und der Regen sind zu sehen. Ohne on wird umgeschaltet.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "on": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "name": "desk_scene",
+      "description": "Atmosphäre hinter dem Desktop ändern: Szene (city = Stadt bei Nacht, forest = Wald, tokyo = Tokyo-Gasse, ascii = Zeichenregen wie auf der Website), Regenstärke und Unschärfe (je 0 bis 1).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "scene": {
+            "type": "string",
+            "enum": [
+              "city",
+              "forest",
+              "tokyo",
+              "ascii"
+            ]
+          },
+          "rain": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "blur": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "desk_music",
+      "description": "Musik und Regengeräusch: music = lofi (Lofi-Radio an) oder off, volume 0–100, rainSound an/aus.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "music": {
+            "type": "string",
+            "enum": [
+              "lofi",
+              "off"
+            ]
+          },
+          "volume": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "rainSound": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "name": "desk_open",
+      "description": "Öffnet ein VibeDesk-Fenster.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "window": {
+            "type": "string",
+            "enum": [
+              "projects",
+              "inspector",
+              "git",
+              "brain",
+              "merge",
+              "ambience",
+              "focus",
+              "prompts",
+              "skills",
+              "addons",
+              "companion",
+              "discord",
+              "lounge",
+              "streamer",
+              "settings"
+            ]
+          }
+        },
+        "required": [
+          "window"
+        ]
+      }
+    },
+    {
+      "name": "desk_layout",
+      "description": "Aufbau wechseln: desktop = freie Fenster mit Dock, studio = Seitenleiste mit Seiten.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "layout": {
+            "type": "string",
+            "enum": [
+              "desktop",
+              "studio"
+            ]
+          }
+        },
+        "required": [
+          "layout"
+        ]
+      }
+    },
+    {
+      "name": "desk_terminal_theme",
+      "description": "Farbschema der Terminals: scene (passend zur Szene), vibedesk, wald, neon, kontrast, mono oder custom (das zuletzt mit desk_custom_theme erzeugte).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string",
+            "enum": [
+              "scene",
+              "vibedesk",
+              "wald",
+              "neon",
+              "kontrast",
+              "mono",
+              "custom"
+            ]
+          }
+        },
+        "required": [
+          "theme"
+        ]
+      }
+    },
+    {
+      "name": "desk_custom_theme",
+      "description": "Erzeugt ein eigenes Farbschema für die Terminals und schaltet es ein (z. B. „Herbstfarben“, „Dracula-artig“). Farben als Hex #rrggbb. Der Hintergrund bleibt durchsichtig (Glas über der Regenszene), also helle, gut lesbare Vordergrundfarben wählen. Pflicht: foreground. Ein neues Schema ersetzt das vorige eigene.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "kurzer Name, z. B. Herbst"
+          },
+          "colors": {
+            "type": "object",
+            "properties": {
+              "foreground": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "cursor": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "black": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "red": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "green": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "yellow": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "blue": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "magenta": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "cyan": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "white": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "brightBlack": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "brightRed": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "brightGreen": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "brightYellow": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "brightBlue": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "brightMagenta": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "brightCyan": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              },
+              "brightWhite": {
+                "type": "string",
+                "pattern": "^#[0-9a-fA-F]{6}$"
+              }
+            },
+            "required": [
+              "foreground"
+            ]
+          }
+        },
+        "required": [
+          "colors"
+        ]
+      }
+    },
+    {
+      "name": "desk_preview",
+      "description": "Öffnet die lokale App des Users im Vorschau-Fenster von VibeDesk, z. B. nachdem du den Dev-Server gestartet hast. Nur localhost/127.0.0.1.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "z. B. http://localhost:5173/"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    },
+    {
+      "name": "desk_focus",
+      "description": "Fokus-Timer (Pomodoro) steuern.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "start",
+              "pause",
+              "resume",
+              "stop"
+            ]
+          }
+        },
+        "required": [
+          "action"
+        ]
+      }
+    },
+    {
+      "name": "desk_scene_create",
+      "description": "Lebende Szene erschaffen oder ändern: ein interaktiver Hintergrund hinter allen Fenstern, z. B. Schnee, der wirklich auf dem Hausdach im Bild liegen bleibt, Glühwürmchen, die der Maus folgen, Regen mit Spritzern, Gewitter auf Klick. Du schreibst ein kurzes JavaScript gegen die globale vd-API; es läuft abgeschottet (kein Netz, kein DOM außer dem Canvas). Danach wird die Szene eingeschaltet; Skriptfehler bekommst du zurück.\nBild: image = \"current\" (das eigene Hintergrundbild des Users, Pfad steht in desk_state), ein Pfad zu einem Bild auf dem PC, oder weglassen (beim Ändern bleibt es). LIES DAS BILD VORHER (Read), um Dächer, Fenster, Laternen zu finden. Positionen im Bild gibst du als Anteile [nx, ny] von 0 bis 1 an (0,0 = oben links), das Bild füllt den Schirm wie CSS cover.\nAPI: vd.background({dim:0..1, blur:px, top, bottom}) · vd.surface([[nx,ny],…], {snow:true, maxDepth:18}) Fläche von links nach rechts (Dachkante, Fensterbank – Schnee/Blätter bleiben darauf liegen, Regen spritzt) · await vd.autoSurfaces({threshold:0.12}) findet Kanten vor ruhigem Himmel selbst · vd.debugSurfaces(true) zeigt Flächen farbig (zum Prüfen).\nEffekte (alle Optionen optional): vd.snow({amount:1, size:1, speed:1, wind:0, settle:true, ground:true, maxDepth:18, start:0.5, melt:0}) – start = wie viel schon liegt (0..1) – Maus pustet Flocken weg, Ziehen mit gedrückter Maus wischt Schnee vom Dach · vd.rain({amount, speed, wind:0.15, splash:true, mouse:\"umbrella\"}) · vd.fireflies({count:40, color, region:[x0,y0,x1,y1], followMouse:0.35}) · vd.leaves({count, colors:[…], shape:\"leaf\"|\"petal\", settle:true}) · vd.embers({at:[nx,ny], spread, count, color}) · vd.fog({density:0.35, color, region}) · vd.stars({count, region, twinkle, shooting:true}) · vd.lightning({every:14, flash:0.55, onClick:false}) · vd.glow({at:[nx,ny], radius:0.06, color, flicker:0.25}).\nEigenes: vd.onFrame((ctx, dt, t) => {…}) zeichnet nach den Effekten (Canvas 2D, CSS-Pixel), vd.onBefore(fn) davor · vd.on(\"click\"|\"move\"|\"down\"|\"up\", (x, y) => {}) · vd.mouse {x,y,vx,vy,down,active} · vd.px(nx,ny) → {x,y} Pixel, vd.norm(x,y) · vd.width/height/time · vd.wind (global, −1..1) · vd.noise(x,y,z), vd.rand(a,b), vd.lerp, vd.clamp.\nBeispiel Schnee auf dem Dach: vd.background({dim:0.15}); vd.surface([[0.18,0.42],[0.40,0.27],[0.62,0.42]]); vd.surface([[0.25,0.61],[0.33,0.61]], {maxDepth:8}); vd.snow({amount:1.2}); vd.glow({at:[0.29,0.55], color:\"rgba(255,190,110,0.7)\"})\nDanach mit desk_scene_snapshot ansehen und nachbessern (id angeben, um zu ändern statt neu anzulegen). Ruhig und stimmungsvoll bleiben – es ist ein Hintergrund zum Arbeiten.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "kurzer Name, z. B. „Winterhaus“ (Pflicht bei neuen Szenen)"
+          },
+          "code": {
+            "type": "string",
+            "description": "JavaScript gegen die vd-API"
+          },
+          "image": {
+            "type": "string",
+            "description": "\"current\", Pfad zu einem Bild, \"none\" (kein Bild) oder weglassen"
+          },
+          "id": {
+            "type": "string",
+            "description": "id einer bestehenden Szene, um sie zu ändern"
+          },
+          "activate": {
+            "type": "boolean",
+            "description": "Standard true: gleich einschalten"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      }
+    },
+    {
+      "name": "desk_scene_snapshot",
+      "description": "Schnappschuss der laufenden lebenden Szene als Bild (ohne die Fenster davor) – so prüfst du, ob Schnee wirklich auf dem Dach liegt, Lichter an der richtigen Stelle sitzen usw. wait = Sekunden warten (z. B. 8, damit sich Schnee sammelt).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "wait": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 30
+          }
+        }
+      }
+    },
+    {
+      "name": "desk_scene_list",
+      "description": "Listet die lebenden Szenen (id, Name, Bildgröße) und welche gerade läuft.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "desk_scene_code",
+      "description": "Liefert das Skript einer lebenden Szene, um es zu ändern.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "desk_scene_show",
+      "description": "Schaltet eine gespeicherte lebende Szene ein.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "desk_scene_delete",
+      "description": "Löscht eine lebende Szene.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "desk_app_create",
+      "description": "Werkzeug-Fenster bauen oder ändern: ein kleines, echtes Fenster in VibeDesk für eine Aufgabe des Users – z. B. Dashboard über alle Sessions, Übersicht der Entscheidungen im Gehirn, Rechner, Checkliste, Zähler, Konfigurator. Es erscheint in der Glas-Optik von VibeDesk, wird gespeichert und steht im Mehr-Menü unter „Eigene Werkzeuge“. Läuft abgeschottet: kein Netz, keine Dateien, keine Befehle.\nDu lieferst html (Markup für <body>, OHNE <script> und OHNE onclick=…), code (JavaScript, läuft nach dem Markup in einer async-Funktion – await geht direkt) und optional css. Das Designsystem ist schon geladen: button (.primary .danger .ghost .small), input, select, textarea, table, progress, h1–h3 sehen fertig aus; Klassen .card .row .col .grid .spacer .muted .small .stat (<b>Zahl</b><span>Label</span>) .badge(.green .yellow .red .blue) .dot(.working .waiting .done .error) .list .empty .bar .tabs .chip(.on). Kein eigener Hintergrund nötig – das Glas scheint durch. Eigene Farben nur sparsam (var(--accent), var(--green) …).\nAPI (global vd): await vd.data(art) liest, vd.watch(art, fn) ruft fn sofort und bei jeder Änderung. Arten: \"sessions\" → [{id, name, project, agent, status: working|waiting|done|error|idle, doing, waitingSince, todos:[{content,status}], agents, lastActivity}] · \"brain\" → {project, notes:[{title, type: module|decision|pitfall|convention|task|fact, body, tags, files, updated, stale, links}]} oder null (Gehirn aus / kein Projekt) · \"usage\" → {today:{tokens,costUsd}, days:[{date,tokens,costUsd}] (7 Tage), sessions:[{id,name,tokens,costUsd,context}]} · \"project\" → {id, name} oder null. Alles nur lesend.\nSpeichern: await vd.store.get(key, fallback), await vd.store.set(key, wert) – bleibt erhalten (JSON, insgesamt höchstens 200 kB). Bauen: vd.h(tag, {class, style:{…}, onClick: fn, …}, ...kinder) erzeugt Elemente (Text wird nie als HTML gelesen), vd.mount(\"#ziel\", ...knoten) ersetzt den Inhalt, vd.$ / vd.$$. Helfer: vd.fmt.tokens/usd/pct/time/date/ago, vd.sparkline(werte, {w,h}), vd.bar(0..1).\nBeispiel: html '<h2>Wartet auf mich</h2><ul id=\"l\" class=\"list\"></ul>', code 'vd.watch(\"sessions\", (s) => vd.mount(\"#l\", s.filter((x) => x.status === \"waiting\").map((x) => vd.h(\"li\", {class: \"row\"}, vd.h(\"span\", {class: \"dot waiting\"}), x.name, vd.h(\"span\", {class: \"spacer\"}), vd.h(\"span\", {class: \"muted small\"}, vd.fmt.ago(x.waitingSince)))) ))'\nDanach mit desk_app_snapshot ansehen und nachbessern (id angeben; nur die geänderten Teile html/code/css schicken). Klein, ruhig und klar halten – ein Werkzeug, keine Webseite.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "kurzer Name, z. B. „Todo-Übersicht“ (Pflicht bei neuen Fenstern)"
+          },
+          "hint": {
+            "type": "string",
+            "description": "ein Satz, wofür es da ist"
+          },
+          "html": {
+            "type": "string",
+            "description": "Markup für <body>, ohne Skripte"
+          },
+          "code": {
+            "type": "string",
+            "description": "JavaScript gegen die vd-API"
+          },
+          "css": {
+            "type": "string",
+            "description": "optional, zusätzliche Stile"
+          },
+          "w": {
+            "type": "number",
+            "description": "Breite beim ersten Öffnen (280–1400, Standard 560)"
+          },
+          "h": {
+            "type": "number",
+            "description": "Höhe beim ersten Öffnen (200–1000, Standard 440)"
+          },
+          "id": {
+            "type": "string",
+            "description": "id eines bestehenden Fensters, um es zu ändern"
+          },
+          "open": {
+            "type": "boolean",
+            "description": "Standard true: gleich öffnen"
+          }
+        }
+      }
+    },
+    {
+      "name": "desk_app_snapshot",
+      "description": "Schnappschuss eines Werkzeug-Fensters als Bild (holt es nach vorn) – so prüfst du Layout, Lesbarkeit und ob die Daten ankommen. Meldet auch den letzten Skriptfehler. wait = Sekunden warten.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "wait": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 20
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "desk_app_list",
+      "description": "Listet die Werkzeug-Fenster (id, Name, Zweck, Größe).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "desk_app_code",
+      "description": "Liefert html, css und code eines Werkzeug-Fensters, um es zu ändern.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "desk_app_open",
+      "description": "Öffnet ein gespeichertes Werkzeug-Fenster.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "desk_app_delete",
+      "description": "Löscht ein Werkzeug-Fenster samt seinem Speicher.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      }
+    },
+    {
+      "name": "desk_notify",
+      "description": "Zeigt dem User in VibeDesk eine kurze Karte (z. B. „Build fertig“). Sparsam nutzen.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      }
+    },
+    {
+      "name": "desk_sessions",
+      "description": "Listet alle Claude-Sessions in VibeDesk: Name, Status (arbeitet, wartet auf den User, fertig …), Projekt, Ordner und id. Markiert, welche du selbst bist.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "desk_session_send",
+      "description": "Schickt einer ANDEREN Claude-Session in VibeDesk einen Auftrag, als hätte der User ihn getippt – z. B. „Schreib Tests für die neue API“ an die Session im Backend-Projekt. Nur nutzen, wenn der User mehrere Sessions zusammenarbeiten lassen will. Formuliere vollständig, die andere Session kennt deinen Kontext nicht. VibeDesk hängt eine kurze Übergabe an: deine summary und die Dateien, die du in dieser Runde geändert hast (mit Zeilenzahlen). Arbeitet sie gerade, kommt der Auftrag danach dran.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "session": {
+            "type": "string",
+            "description": "id oder Name aus desk_sessions"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "description": "2–4 Sätze: was du gerade gemacht hast und warum (Entscheidungen, offene Punkte) – kommt als Übergabe mit"
+          },
+          "handoff": {
+            "type": "boolean",
+            "description": "false = nur den Auftrag schicken, ohne Übergabe (Standard: true)"
+          }
+        },
+        "required": [
+          "session",
+          "prompt"
+        ]
+      }
+    },
+    {
+      "name": "desk_usage",
+      "description": "Verbrauch: Tokens und geschätzte Kosten heute und in den letzten 7 Tagen, Abo-Limits (5-Stunden-Fenster, Woche) und Budgets der Projekte.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "desk_budget",
+      "description": "Setzt das Budget für das Projekt dieser Session (VibeDesk warnt bei 75 % und 100 %, hält aber nichts an) oder entfernt es mit remove: true.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "number",
+            "description": "Dollar bei unit \"usd\", Tokens bei unit \"tokens\""
+          },
+          "unit": {
+            "type": "string",
+            "enum": [
+              "usd",
+              "tokens"
+            ]
+          },
+          "period": {
+            "type": "string",
+            "enum": [
+              "day",
+              "week"
+            ]
+          },
+          "remove": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "name": "desk_remind",
+      "description": "Erinnert den User nach einigen Minuten mit einer Karte in VibeDesk, z. B. „Deploy prüfen“ in 30 Minuten.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "minutes": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1440
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "minutes",
+          "text"
+        ]
+      }
+    }
+  ]
+}

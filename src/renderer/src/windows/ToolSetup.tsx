@@ -52,7 +52,7 @@ export function wireSetup(): void {
 /** Bestehende Installation: beim Start prüfen und nur bei Lücken nachfragen. */
 export async function checkSetupOnStart(): Promise<void> {
   const st = await useSetup.getState().check()
-  if (!st.node || !st.claude) useSetup.setState({ prompt: true })
+  if (needsNode(st) || !st.claude) useSetup.setState({ prompt: true })
 }
 
 /** Einrichtung als Dialog öffnen (z. B. wenn eine Session nicht starten kann) */
@@ -61,8 +61,11 @@ export function openSetup(): void {
   void useSetup.getState().check()
 }
 
+/** Node.js braucht VibeDesk nur noch, wenn die Rust-Brücke fehlt (dann laufen Hooks und Gehirn über die JS-Skripte) */
+const needsNode = (st: ToolStatus): boolean => !st.node && !st.bridge
+
 /** Fehlt etwas, ohne das keine Session läuft? */
-export const missingTools = (st: ToolStatus | null): boolean => !!st && (!st.node || !st.claude)
+export const missingTools = (st: ToolStatus | null): boolean => !!st && (needsNode(st) || !st.claude)
 
 const LABEL = (): Record<ToolId, { name: string; why: string }> => ({
   node: { name: 'Node.js', why: t('für Live-Status, Feed und Stats') },
@@ -161,7 +164,7 @@ export function ToolSetupPanel(): React.JSX.Element {
     )
   return (
     <div className="setup">
-      <Row tool="node" />
+      {!status.bridge && <Row tool="node" />}
       <Row tool="claude" />
       <LoginRow />
       {installing === 'node' && <p className="setup-hint">{t('Windows fragt eventuell nach Administrator-Rechten – bitte bestätigen.')}</p>}
@@ -171,7 +174,7 @@ export function ToolSetupPanel(): React.JSX.Element {
         </pre>
       )}
       <FailInfo />
-      {!installing && (!status.node || !status.claude || !status.login) && (
+      {!installing && (needsNode(status) || !status.claude || !status.login) && (
         <button className="btn small ghost setup-recheck" onClick={() => check()} disabled={checking}>
           {checking ? t('Prüfe …') : t('Erneut prüfen')}
         </button>
@@ -197,7 +200,7 @@ export function SetupPrompt(): React.JSX.Element | null {
   const status = useSetup((s) => s.status)
   const installing = useSetup((s) => s.installing)
   if (!prompt) return null
-  const done = !!status?.node && !!status?.claude
+  const done = !!status && !needsNode(status) && !!status.claude
   const close = (): void => useSetup.setState({ prompt: false })
   return (
     <div className="dlg-backdrop" onPointerDown={(e) => e.target === e.currentTarget && !installing && close()}>

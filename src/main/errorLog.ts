@@ -78,6 +78,8 @@ export interface DiagnosticsDeps {
   claudeVersion(): Promise<string | null>
   gitTools(): Promise<GitTools>
   hooks(): DiagnosticsInfo['hooks']
+  /** Version der Rust-Brücke, null = JS-Weg */
+  bridge(): string | null
   sessions(): number
   settings(): Settings
 }
@@ -110,6 +112,7 @@ export function registerDiagnosticsIpc(d: DiagnosticsDeps): void {
         os: osLabel(),
         claude,
         systemNode,
+        bridge: d.bridge(),
         git: tools?.git ?? null,
         gh
       },

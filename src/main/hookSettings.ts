@@ -28,14 +28,36 @@ export function hookCommand(nodeExe: string, scriptPath: string): string {
   return `${exe} "${scriptPath}"`
 }
 
+/** Die Rust-Brücke (native/bridge): ersetzt node mit hook-forwarder.js, statusline.js und brain-mcp.js */
+export interface NativeBridge {
+  exe: string
+  version: string
+}
+
+/**
+ * Aufruf der Rust-Brücke für Hooks und Statuszeile. Der Pfad steht unquotiert vorn (siehe hookCommand) und mit
+ * Schrägstrichen – Backslashes ohne Anführungszeichen schluckt bash. Enthält er Zeichen, die eine Shell
+ * auseinandernehmen würde (z. B. Leerzeichen im Benutzernamen), gibt es null und der JS-Weg bleibt.
+ */
+export function nativeCommand(exe: string, mode: 'hook' | 'statusline'): string | null {
+  const p = exe.replace(/\\/g, '/')
+  return /^[\w.:/-]+$/.test(p) ? `${p} ${mode}` : null
+}
+
 export const BRAIN_SERVER = 'vibedesk-brain'
 
 /**
  * Claude-Code-Settings, deren Hooks jedes Event an den VibeDesk-Forwarder geben.
  * statusLine: VibeDesk-Statuszeile (liest die Abo-Limits); padding der eigenen Statuszeile bleibt erhalten.
+ * native: Rust-Brücke statt node, wo ihr Pfad sich sicher in eine Befehlszeile schreiben lässt.
  */
-export function buildHookSettings(nodeExe: string, forwarderPath: string, opts: { brain?: boolean; statusLine?: { path: string; padding?: number } } = {}): object {
-  const hook = { type: 'command', command: hookCommand(nodeExe, forwarderPath), timeout: 5 }
+export function buildHookSettings(
+  nodeExe: string,
+  forwarderPath: string,
+  opts: { brain?: boolean; statusLine?: { path: string; padding?: number }; native?: NativeBridge | null } = {}
+): object {
+  const native = (mode: 'hook' | 'statusline'): string | null => (opts.native ? nativeCommand(opts.native.exe, mode) : null)
+  const hook = { type: 'command', command: native('hook') ?? hookCommand(nodeExe, forwarderPath), timeout: 5 }
   const hooks = Object.fromEntries(
     HOOK_EVENTS.map((e) => {
       const h = e === 'PermissionRequest' ? { ...hook, timeout: PERMISSION_TIMEOUT_S } : hook
@@ -43,7 +65,13 @@ export function buildHookSettings(nodeExe: string, forwarderPath: string, opts: 
     })
   )
   const statusLine = opts.statusLine
-    ? { statusLine: { type: 'command', command: hookCommand(nodeExe, opts.statusLine.path), ...(opts.statusLine.padding !== undefined ? { padding: opts.statusLine.padding } : {}) } }
+    ? {
+        statusLine: {
+          type: 'command',
+          command: native('statusline') ?? hookCommand(nodeExe, opts.statusLine.path),
+          ...(opts.statusLine.padding !== undefined ? { padding: opts.statusLine.padding } : {})
+        }
+      }
     : {}
   // Gehirn-Werkzeuge ohne Rückfrage – sie lesen und schreiben nur Notizen in .vibedesk/brain
   return opts.brain ? { hooks, ...statusLine, permissions: { allow: [`mcp__${BRAIN_SERVER}`] } } : { hooks, ...statusLine }
@@ -68,14 +96,22 @@ export function userStatusLine(files: { read(): string | null }[]): { command: s
   return null
 }
 
-/** MCP-Konfiguration für --mcp-config: startet den Gehirn-Server dieser Session */
-export function buildBrainMcpConfig(nodeExe: string, mcpPath: string, env: { sessionId: string; port: number; token: string; endpoint?: string; brain?: boolean }): object {
+/**
+ * MCP-Konfiguration für --mcp-config: startet den Gehirn-Server dieser Session. Mit der Rust-Brücke direkt als
+ * Programm mit Argument – ohne Shell, darum sind hier auch Leerzeichen im Pfad kein Problem.
+ */
+export function buildBrainMcpConfig(
+  nodeExe: string,
+  mcpPath: string,
+  env: { sessionId: string; port: number; token: string; endpoint?: string; brain?: boolean },
+  native?: NativeBridge | null
+): object {
   return {
     mcpServers: {
       [BRAIN_SERVER]: {
         type: 'stdio',
-        command: nodeExe,
-        args: [mcpPath],
+        command: native ? native.exe : nodeExe,
+        args: native ? ['mcp'] : [mcpPath],
         env: {
           VIBEDESK_SESSION_ID: env.sessionId,
           VIBEDESK_PORT: String(env.port),

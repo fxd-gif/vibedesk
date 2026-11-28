@@ -59,6 +59,8 @@ function Diagnostics(): React.JSX.Element {
         <dd>{`Electron ${v.electron} · Chrome ${v.chrome} · Node ${v.node}`}</dd>
         <dt>{t('Node (System)')}</dt>
         <dd>{v.systemNode ?? t('nicht gefunden')}</dd>
+        <dt>{t('Claude-Brücke')}</dt>
+        <dd>{v.bridge ? `Rust ${v.bridge}` : t('Node (JS-Skripte)')}</dd>
         <dt>Git</dt>
         <dd>{v.git ?? t('nicht gefunden')}</dd>
         <dt>{t('GitHub-CLI')}</dt>

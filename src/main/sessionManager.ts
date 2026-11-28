@@ -7,7 +7,7 @@ import { claudeMissingMessage } from '../shared/setupHints'
 import { AGENT_DEFAULT_CMD, agentCommand, agentMissingMessage, parseAgent } from '../shared/agents'
 import { AgentActivity, type ActivityStatus } from '../shared/agentActivity'
 import type { AgentKind, Project, SessionInfo } from '../shared/types'
-import { buildBrainMcpConfig, buildHookSettings, userStatusLine } from './hookSettings'
+import { buildBrainMcpConfig, buildHookSettings, userStatusLine, type NativeBridge } from './hookSettings'
 
 export interface PtyLike {
   onData(cb: (d: string) => void): void
@@ -40,6 +40,8 @@ export interface SessionManagerOptions {
   endpointFile?: string
   /** VibeDesk-Statuszeile (Abo-Limits); die eigene Statuszeile des Nutzers läuft darin weiter */
   statusLine?: { path: string; configDir: string }
+  /** Rust-Brücke statt node + JS-Skripten, sobald sie bereitsteht (null = JS-Weg) */
+  native?: () => NativeBridge | null
 }
 
 interface Running {
@@ -120,11 +122,13 @@ export class SessionManager {
     const statusLine = this.o.statusLine ? { path: this.o.statusLine.path, padding: own?.padding } : undefined
     // Der MCP-Server läuft immer (Desktop-Werkzeuge); die Gehirn-Werkzeuge nur, solange das Gehirn an ist
     const mcp = !!this.o.brain
-    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath, { brain: mcp, statusLine })))
+    const native = this.o.native?.() ?? null
+    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath, { brain: mcp, statusLine, native })))
     let mcpFile: string | undefined
     if (mcp) {
       mcpFile = path.join(this.o.tmpDir, `session-${id}-mcp.json`)
-      fs.writeFileSync(mcpFile, JSON.stringify(buildBrainMcpConfig(this.o.nodeExe, this.o.brain!.mcpPath, { sessionId: id, port: this.o.port(), token: this.o.token, endpoint: this.o.endpointFile, brain })))
+      const mcpEnv = { sessionId: id, port: this.o.port(), token: this.o.token, endpoint: this.o.endpointFile, brain }
+      fs.writeFileSync(mcpFile, JSON.stringify(buildBrainMcpConfig(this.o.nodeExe, this.o.brain!.mcpPath, mcpEnv, native)))
     }
 
     const env: Record<string, string> = {

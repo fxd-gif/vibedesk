@@ -1,6 +1,10 @@
 node_modules/
 out/
 dist/
+
+# Rust-Build (native/) und die daraus kopierten Programme
+native/target/
+resources/bin/
 .superpowers/
 test-results/
 playwright-report/
