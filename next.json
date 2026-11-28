@@ -12,6 +12,10 @@
       "text": "Your windows step back, every light shows its session and status – click one to jump straight in."
     },
     {
+      "title": "Faster, and no Node.js needed",
+      "text": "The bridge to Claude Code is now a small Rust program: hooks start about 6× faster, each session needs a tenth of the memory, and you no longer have to install Node.js."
+    },
+    {
       "title": "The night design of this website",
       "text": "Night blue instead of black, color only for status, Instrument Sans for people and JetBrains Mono for the machine."
     },
