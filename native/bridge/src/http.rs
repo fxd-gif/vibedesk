@@ -70,6 +70,9 @@ fn fast_loopback_fail(s: &socket2::Socket) -> bool {
         max_syn_retransmissions: u8,
     }
     const SIO_TCP_INITIAL_RTO: u32 = 0x9800_0011;
+    /// TCP_INITIAL_RTO_DEFAULT_RTT: Anfangs-RTO des Systems behalten (libuv src/win/tcp.c)
+    const DEFAULT_RTT: u16 = 0;
+    /// TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS
     const NO_SYN_RETRANSMISSIONS: u8 = 0xFE;
     #[link(name = "ws2_32")]
     unsafe extern "system" {
@@ -85,7 +88,7 @@ fn fast_loopback_fail(s: &socket2::Socket) -> bool {
             completion: *mut c_void,
         ) -> i32;
     }
-    let p = InitialRto { rtt: NO_SYN_RETRANSMISSIONS as u16, max_syn_retransmissions: NO_SYN_RETRANSMISSIONS };
+    let p = InitialRto { rtt: DEFAULT_RTT, max_syn_retransmissions: NO_SYN_RETRANSMISSIONS };
     let mut returned = 0u32;
     // Kennt ein älteres Windows das nicht (vor 10.0.16299), bleibt es beim Connect mit Zeitgrenze
     unsafe {

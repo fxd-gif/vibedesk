@@ -1,7 +1,7 @@
 import { execFile } from 'child_process'
 import fs from 'fs'
 import path from 'path'
-import type { NativeBridge } from './hookSettings'
+import { nativeCommand, type NativeBridge } from './hookSettings'
 
 export const BRIDGE_FILE = 'vibedesk-bridge.exe'
 
@@ -19,12 +19,25 @@ export const BRIDGE_FILE = 'vibedesk-bridge.exe'
 export async function prepareBridge(source: string, dir: string, env: NodeJS.ProcessEnv = process.env): Promise<NativeBridge | null> {
   if (env.VIBEDESK_BRIDGE === 'node' || !fs.existsSync(source)) return null
   try {
-    const exe = installBridge(source, dir)
+    let exe = installBridge(source, dir)
+    // Leerzeichen oder Umlaute im Benutzerpfad: Hooks laufen durch eine Shell – dann der 8.3-Kurzpfad, falls es ihn gibt
+    if (!nativeCommand(exe, 'hook')) exe = (await shortPath(exe)) ?? exe
     const version = await probeBridge(exe)
     return version ? { exe, version } : null
   } catch {
     return null
   }
+}
+
+/** 8.3-Kurzpfad (nur ASCII, ohne Leerzeichen) oder null, wenn das Laufwerk keine Kurznamen hat */
+export function shortPath(p: string): Promise<string | null> {
+  if (process.platform !== 'win32' || /["%]/.test(p)) return Promise.resolve(null)
+  return new Promise((resolve) => {
+    execFile('cmd.exe', ['/d', '/c', `for %I in ("${p}") do @echo %~sI`], { windowsHide: true, timeout: 5000, windowsVerbatimArguments: true }, (err, stdout) => {
+      const s = err ? '' : String(stdout).trim()
+      resolve(s && nativeCommand(s, 'hook') && fs.existsSync(s) ? s : null)
+    })
+  })
 }
 
 /**
@@ -46,8 +59,16 @@ export function installBridge(source: string, dir: string): string {
   if (fs.existsSync(target) && fs.readFileSync(target).equals(bytes)) return target
   const tmp = `${target}.new-${process.pid}`
   fs.writeFileSync(tmp, bytes)
-  if (fs.existsSync(target)) fs.renameSync(target, `${target}.old-${Date.now()}`)
-  fs.renameSync(tmp, target)
+  const old = `${target}.old-${Date.now()}`
+  const hadOld = fs.existsSync(target)
+  if (hadOld) fs.renameSync(target, old)
+  try {
+    fs.renameSync(tmp, target)
+  } catch (e) {
+    // Laufende Sessions haben diesen Pfad in ihren Settings – lieber die alte Fassung behalten als gar keine
+    if (hadOld) fs.renameSync(old, target)
+    throw e
+  }
   return target
 }
 

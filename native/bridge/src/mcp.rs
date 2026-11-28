@@ -54,9 +54,11 @@ pub fn run() {
         }
         match serde_json::from_str::<Value>(text) {
             Ok(msg) => {
+                // id vorher merken: Auch bei einem Programmfehler bekommt die Anfrage eine Antwort und hängt nicht
+                let id = msg.get("id").cloned().unwrap_or(Value::Null);
                 let s = server.clone();
                 if catch_unwind(AssertUnwindSafe(|| s.handle(msg))).is_err() {
-                    server.send(json!({ "id": null, "error": { "code": -32603, "message": "Interner Fehler" } }));
+                    server.send(json!({ "id": id, "error": { "code": -32603, "message": "Interner Fehler" } }));
                 }
             }
             Err(_) => server.send(json!({ "id": null, "error": { "code": -32700, "message": "Parse error" } })),

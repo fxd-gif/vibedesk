@@ -93,6 +93,8 @@ export interface SessionIpcDeps {
   sessions: import('./sessionManager').SessionManager
   projects: ProjectStore
   claudeProjectsDir: string
+  /** Sessions starten erst, wenn das erfüllt ist (Probelauf der Rust-Brücke) */
+  ready?: Promise<unknown>
 }
 
 export function registerNotesIpc(notes: import('./notesStore').NotesStore): void {
@@ -105,7 +107,8 @@ export function registerSessionIpc(d: SessionIpcDeps): void {
     const p = d.projects.get(projectId)
     return p ? listClaudeSessions(p.path, d.claudeProjectsDir) : []
   })
-  ipcMain.handle('sessions:start', (_e, projectId: string, resumeId?: string, cwd?: string, agent?: unknown) => {
+  ipcMain.handle('sessions:start', async (_e, projectId: string, resumeId?: string, cwd?: string, agent?: unknown) => {
+    await d.ready
     const p = d.projects.get(projectId)
     if (!p) throw new Error(t('Projekt nicht gefunden'))
     if (!fs.existsSync(p.path)) throw new Error(t('Projektordner fehlt: {path}', { path: p.path }))

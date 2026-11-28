@@ -44,6 +44,9 @@ export function nativeCommand(exe: string, mode: 'hook' | 'statusline'): string 
   return /^[\w.:/-]+$/.test(p) ? `${p} ${mode}` : null
 }
 
+/** Laufen Hooks und Statuszeile wirklich über die Rust-Brücke? Nur dann braucht VibeDesk kein Node.js auf dem System. */
+export const bridgeRunsHooks = (b: NativeBridge | null | undefined): boolean => !!b && nativeCommand(b.exe, 'hook') !== null
+
 export const BRAIN_SERVER = 'vibedesk-brain'
 
 /**

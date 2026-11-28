@@ -27,7 +27,7 @@ import { FileService, FileWatcher } from './fileService'
 import { CLAUDE_DOCS_URL, checkTools, installTool, NODE_DOWNLOAD_URL } from './toolSetup'
 import { NotesStore } from './notesStore'
 import { BRIDGE_FILE, prepareBridge } from './nativeBridge'
-import type { NativeBridge } from './hookSettings'
+import { bridgeRunsHooks, type NativeBridge } from './hookSettings'
 import { DiscordRpc, fetchAppInfo, type DiscordStatus } from './discord/rpc'
 import { postWebhook, shouldSend, type WebhookKind } from './discord/webhook'
 import { setupUpdater } from './updater'
@@ -196,7 +196,7 @@ app.whenReady().then(async () => {
   if (app.isPackaged) registerRunAlias(process.execPath)
   ipcMain.handle('app:claudeInstalled', () => !!process.env.VIBEDESK_CLAUDE_CMD || claudeOnPath())
   // Mit der Rust-Brücke braucht VibeDesk kein Node.js auf dem System
-  ipcMain.handle('setup:check', async () => ({ ...(await checkTools()), bridge: !!(await bridgeReady) }))
+  ipcMain.handle('setup:check', async () => ({ ...(await checkTools()), bridge: bridgeRunsHooks(await bridgeReady) }))
   ipcMain.handle('setup:install', (_e, tool: string) => {
     if (tool !== 'node' && tool !== 'claude') return false
     return installTool(tool, (line) => send('setup:log', tool, line))
@@ -509,7 +509,8 @@ app.whenReady().then(async () => {
     send('session:exit', id, code)
   })
   const claudeProjectsDir = join(process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude'), 'projects')
-  registerSessionIpc({ sessions, projects, claudeProjectsDir })
+  // Sessions starten erst nach dem Probelauf der Brücke (wenige ms) – sonst bekäme die erste Session den JS-Weg
+  registerSessionIpc({ sessions, projects, claudeProjectsDir, ready: bridgeReady })
   registerWrapUpIpc({ sessions, git: gitService, claudeProjectsDir })
   // Eigene Shells neben Claude – gleiche Bündelung der Ausgabe, eigene Kanäle
   const shells = new ShellManager({ spawn: (file, args, o) => pty.spawn(file, args, { name: 'xterm-256color', ...o }), kind: () => settings.get().terminal.shell })
