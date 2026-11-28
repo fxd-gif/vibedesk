@@ -1,14 +1,16 @@
-// Lebendiger Graph des Gehirns: Canvas + d3-force. Zoomen (Rad), Verschieben (Hintergrund ziehen),
+// Lebendiger Graph des Gehirns: WebGL + Canvas, Layout im Worker (Rust/WebAssembly, sonst d3-force). Zoomen (Rad), Verschieben (Hintergrund ziehen),
 // Knoten ziehen, Nachbarn beim Überfahren hervorheben. Wenn Claude etwas anfasst, leuchtet der Knoten auf,
 // ein Ring breitet sich aus und Funken laufen die Verbindungen entlang – wie auf der Website.
-// Leistung: kein shadowBlur, Leucht-Sprites statt Schatten, Kanten gebündelt, Beschriftungen ohne Überlappung,
-// Zeichenfläche höchstens 1,5-fach, Ruhe-Treiben nur mit Fokus und gedrosselt.
+// Leistung: kein shadowBlur, Leucht-Sprites statt Schatten, Kanten als gebündelte Haarlinien, Knoten als Bilder,
+// nur Sichtbares zeichnen, Beschriftungen ohne Überlappung, Zeichenfläche höchstens 1,5-fach, Ruhe-Treiben nur mit Fokus und gedrosselt.
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react'
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type Simulation, type SimulationLinkDatum, type SimulationNodeDatum } from 'd3-force'
 import type { BrainGraph as Graph, GraphEdge, GraphNode, GraphNodeKind, NoteType } from '../../../../shared/brain'
 import { heatColor, type HotNode } from '../../../../shared/hotspots'
 import { t, tn } from '../../../../shared/i18n'
 import { canvasDpr } from '../../ambience/framePolicy'
+import { DASHED, DISC as DISC_GL, GLOW, GlFrame, GraphGl, RING, rgba } from './graphGl'
+import { layoutClient, type LayoutClient } from './layout/client'
+import type { LayoutInput } from './layout/engine'
 
 export const KIND_COLOR: Record<GraphNodeKind, string> = {
   module: '#8fa6c8',
@@ -53,9 +55,16 @@ const AWAKE_MS = 15000
 /** Beschriftungen: weit weg nur die wichtigsten, beim Hineinzoomen mehr */
 const labelBudget = (k: number): number => Math.round(Math.max(14, Math.min(80, 14 + (k - 0.5) * 60)))
 const MAX_SPARKS = 8
+/** Grundschein höchstens so groß (CSS-Pixel): beim Hineinzoomen überdecken sich sonst Hunderte riesiger Flächen (Füllrate) */
+const GLOW_MAX = 56
 
-type SimNode = HotNode & SimulationNodeDatum & { r: number; ph: number; px: number; py: number }
-type SimLink = SimulationLinkDatum<SimNode> & { kind: GraphEdge['kind']; weight: number }
+/** Knoten im Bild: i = Platz in den Layout-Arrays, x/y aus dem Layout (fehlt bis zur ersten Antwort), px/py mit Treiben */
+type SimNode = HotNode & { i: number; x?: number; y?: number; r: number; ph: number; px: number; py: number }
+type SimLink = { source: SimNode; target: SimNode; kind: GraphEdge['kind']; weight: number }
+
+/** Federn und Ladungen – wie zuvor in der d3-Konfiguration */
+const linkDist = (k: GraphEdge['kind']): number => (k === 'link' ? 90 : k === 'file' ? 55 : 70)
+const linkStrength = (k: GraphEdge['kind'], w: number): number => (k === 'co' ? Math.min(0.3, 0.05 * w) : k === 'file' ? 0.5 : 0.35)
 
 export interface GraphHandle {
   focusNode(id: string): void
@@ -105,8 +114,28 @@ function glowSprite(color: string): HTMLCanvasElement {
   return c
 }
 
+/** Knoten als vorgerenderte Scheibe – drawImage ist auf der GPU viel billiger als ein Pfad je Knoten */
+const DISC = 64
+const discs = new Map<string, HTMLCanvasElement>()
+function discSprite(color: string): HTMLCanvasElement {
+  let c = discs.get(color)
+  if (c) return c
+  c = document.createElement('canvas')
+  c.width = c.height = DISC
+  const g = c.getContext('2d')!
+  g.fillStyle = color
+  g.beginPath()
+  g.arc(DISC / 2, DISC / 2, DISC / 2 - 1, 0, Math.PI * 2)
+  g.fill()
+  discs.set(color, c)
+  return c
+}
+
 export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ graph, hidden, query, selected, heatOn = false, calm = false, onSelect }, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  /** WebGL-Ebene darunter: Kanten, Knoten, Ringe; null = alles auf dem 2D-Canvas */
+  const glCanvasRef = useRef<HTMLCanvasElement>(null)
+  const glRef = useRef<GraphGl | null>(null)
   const st = useRef({
     nodes: [] as SimNode[],
     links: [] as SimLink[],
@@ -119,7 +148,11 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     /** Beschriftungs-Reihenfolge: wichtigste zuerst */
     order: [] as SimNode[],
     pos: new Map<string, { x: number; y: number }>(),
-    sim: null as Simulation<SimNode, SimLink> | null,
+    layout: null as LayoutClient | null,
+    /** Generation des Graphen – Positionen eines älteren Graphen werden verworfen */
+    gen: 0,
+    /** welche Engine rechnet (für Messungen und Diagnose) */
+    engine: '' as '' | 'rust' | 'js',
     t: { k: 1, x: 0, y: 0 },
     size: { w: 0, h: 0 },
     dpr: 1,
@@ -138,31 +171,49 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     heatOn: false,
     calm: false,
     lastDraw: 0,
-    awake: performance.now()
+    awake: performance.now(),
+    frame: new GlFrame()
   })
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
 
-  // ---------- Daten → Simulation ----------
+  // ---------- Layout im Worker: Positionen kommen als Arrays zurück ----------
   useEffect(() => {
     const s = st.current
-    s.sim?.stop()
+    s.layout = layoutClient((m) => {
+      if (m.gen !== s.gen) return
+      for (let i = 0; i < s.nodes.length && i < m.x.length; i++) {
+        s.nodes[i].x = m.x[i]
+        s.nodes[i].y = m.y[i]
+      }
+      if (s.engine !== m.engine && canvasRef.current) canvasRef.current.dataset.layout = m.engine
+      s.engine = m.engine
+      s.dirty = true
+    })
+    if (s.nodes.length) s.dirty = true
+    return () => {
+      s.layout?.dispose()
+      s.layout = null
+    }
+  }, [])
+
+  // ---------- Daten → Layout ----------
+  useEffect(() => {
+    const s = st.current
     for (const n of s.nodes) if (n.x !== undefined && n.y !== undefined) s.pos.set(n.id, { x: n.x, y: n.y })
     const known = new Set(s.nodes.map((n) => n.id))
     const visible = (n: GraphNode): boolean => !hidden.has(n.kind) && !(n.kind === 'missing' && hidden.has('fact'))
     const ids = new Set(graph.nodes.filter(visible).map((n) => n.id))
-    const links: SimLink[] = graph.edges.filter((e) => ids.has(e.source) && ids.has(e.target)).map((e) => ({ source: e.source, target: e.target, kind: e.kind, weight: e.weight }))
+    const edges = graph.edges.filter((e) => ids.has(e.source) && ids.has(e.target))
     const neighbors = new Map<string, Set<string>>()
-    for (const l of links) {
-      const a = l.source as string
-      const b = l.target as string
-      if (!neighbors.has(a)) neighbors.set(a, new Set())
-      if (!neighbors.has(b)) neighbors.set(b, new Set())
-      neighbors.get(a)!.add(b)
-      neighbors.get(b)!.add(a)
+    for (const e of edges) {
+      if (!neighbors.has(e.source)) neighbors.set(e.source, new Set())
+      if (!neighbors.has(e.target)) neighbors.set(e.target, new Set())
+      neighbors.get(e.source)!.add(e.target)
+      neighbors.get(e.target)!.add(e.source)
     }
     const now = performance.now()
-    const nodes: SimNode[] = graph.nodes.filter(visible).map((n) => {
+    const nodes: SimNode[] = graph.nodes.filter(visible).map((n, i) => {
       let p = s.pos.get(n.id)
       if (!p && s.loaded) {
         // neu dazugekommen: neben einem Nachbarn auftauchen und hineinwachsen
@@ -173,9 +224,10 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
           s.pulses.set(n.id, { kind: 'write', at: now, weak: false })
         }
       }
-      return { ...n, r: radius(n), ph: phaseOf(n.id), px: p?.x ?? 0, py: p?.y ?? 0, ...(p ? { x: p.x, y: p.y } : {}) }
+      return { ...n, i, r: radius(n), ph: phaseOf(n.id), px: p?.x ?? 0, py: p?.y ?? 0, ...(p ? { x: p.x, y: p.y } : {}) }
     })
     const byId = new Map(nodes.map((n) => [n.id, n]))
+    const links: SimLink[] = edges.map((e) => ({ source: byId.get(e.source)!, target: byId.get(e.target)!, kind: e.kind, weight: e.weight }))
     const fileNotes = new Map<string, string[]>()
     for (const e of graph.edges) {
       if (e.kind !== 'file') continue
@@ -192,33 +244,23 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     // Notizen vor Dateien, Bereiche und gut vernetzte vor dem Rest
     s.order = [...nodes].sort((a, b) => score(b) - score(a))
     const fresh = nodes.some((n) => n.x === undefined)
-    s.sim = forceSimulation<SimNode, SimLink>(nodes)
-      .force(
-        'link',
-        forceLink<SimNode, SimLink>(links)
-          .id((d) => d.id)
-          .distance((l) => (l.kind === 'link' ? 90 : l.kind === 'file' ? 55 : 70))
-          .strength((l) => (l.kind === 'co' ? Math.min(0.3, 0.05 * l.weight) : l.kind === 'file' ? 0.5 : 0.35))
-      )
-      .force('charge', forceManyBody<SimNode>().strength((d) => (d.kind === 'file' ? -70 : -260)).distanceMax(420))
-      .force('collide', forceCollide<SimNode>((d) => d.r + 6))
-      .force('center', forceCenter(0, 0).strength(0.05))
-      .force('x', forceX(0).strength(0.035))
-      .force('y', forceY(0).strength(0.035))
-      .alphaDecay(0.03)
-      .on('tick', () => {
-        s.dirty = true
-      })
-    if (fresh && !s.loaded) {
-      // erst einpendeln, dann zeigen – kein wildes Auseinanderfliegen beim Öffnen
-      s.sim.stop()
-      s.sim.alpha(1).tick(160)
-      s.sim.alpha(0.06).restart()
-      s.needFit = true
-    } else s.sim.alpha(fresh ? 0.5 : 0.3).restart()
+    const input: LayoutInput = {
+      x: Float64Array.from(nodes, (n) => n.x ?? NaN),
+      y: Float64Array.from(nodes, (n) => n.y ?? NaN),
+      r: Float64Array.from(nodes, (n) => n.r + 6),
+      charge: Float64Array.from(nodes, (n) => (n.kind === 'file' ? -70 : -260)),
+      src: Uint32Array.from(links, (l) => l.source.i),
+      dst: Uint32Array.from(links, (l) => l.target.i),
+      dist: Float64Array.from(links, (l) => linkDist(l.kind)),
+      strength: Float64Array.from(links, (l) => linkStrength(l.kind, l.weight))
+    }
+    s.gen++
+    // beim ersten Öffnen erst einpendeln, dann zeigen – kein wildes Auseinanderfliegen
+    const first = fresh && !s.loaded
+    s.layout?.send({ type: 'set', gen: s.gen, input, warm: first ? 160 : 0, alpha: first ? 0.06 : fresh ? 0.5 : 0.3 })
+    if (first) s.needFit = true
     s.loaded = nodes.length > 0
     s.dirty = true
-    return () => void s.sim?.stop()
   }, [graph, hidden])
 
   useEffect(() => {
@@ -244,10 +286,11 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     s.anim = { from: { ...s.t }, to, at: performance.now() }
   }
 
-  function fitView(instant: boolean): void {
+  /** false: noch keine Positionen (Layout rechnet noch) */
+  function fitView(instant: boolean): boolean {
     const s = st.current
     const ns = s.nodes.filter((n) => n.x !== undefined)
-    if (!ns.length || !s.size.w) return
+    if (!ns.length || !s.size.w) return false
     s.fitted = true
     const xs = ns.map((n) => n.x!)
     const ys = ns.map((n) => n.y!)
@@ -261,8 +304,9 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
       s.anim = null
       s.dirty = true
     } else animateTo(to)
+    return true
   }
-  const fit = (): void => fitView(false)
+  const fit = (): void => void fitView(false)
 
   const startPulse = (id: string, kind: PulseKind): void => {
     const s = st.current
@@ -304,12 +348,31 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     const ctx = canvas.getContext('2d')!
     const s = st.current
     let raf = 0
+    const glCanvas = glCanvasRef.current!
+    // WebGL, außer abgeschaltet (localStorage vibedesk.brainGl = 0, zum Vergleichen) oder nicht verfügbar
+    const glWanted = ((): boolean => {
+      try {
+        return localStorage.getItem('vibedesk.brainGl') !== '0'
+      } catch {
+        return true
+      }
+    })()
+    glRef.current = glWanted ? GraphGl.create(glCanvas) : null
+    // Kontext verloren (Treiber-Neustart, zu viele Kontexte): ab dann Canvas 2D
+    const onLost = (e: Event): void => {
+      e.preventDefault()
+      glRef.current = null
+      s.dirty = true
+    }
+    glCanvas.addEventListener('webglcontextlost', onLost)
 
     const resize = (): void => {
       const r = canvas.getBoundingClientRect()
       s.dpr = canvasDpr(s.calm, window.devicePixelRatio)
       canvas.width = Math.round(r.width * s.dpr)
       canvas.height = Math.round(r.height * s.dpr)
+      glCanvas.width = canvas.width
+      glCanvas.height = canvas.height
       if (!s.size.w) s.t = { k: 1, x: r.width / 2, y: r.height / 2 }
       s.size = { w: r.width, h: r.height }
       s.dirty = true
@@ -333,10 +396,7 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
       if (canvasDpr(s.calm, window.devicePixelRatio) !== s.dpr) resize()
       // minimiert oder versteckt: nichts zu zeichnen
       if (!s.size.w || !s.size.h) return
-      if (s.needFit) {
-        s.needFit = false
-        fitView(true)
-      }
+      if (s.needFit && fitView(true)) s.needFit = false
       if (s.anim) {
         const p = Math.min(1, (now - s.anim.at) / 450)
         const e = 1 - Math.pow(1 - p, 3)
@@ -388,48 +448,153 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
         return 0.4 + 0.6 * (1 - Math.pow(1 - p, 3))
       }
 
-      // Kanten – nach Aussehen gebündelt, ein Strich-Aufruf pro Gruppe
-      const groups = new Map<string, { color: string; width: number; dash: boolean; seg: number[] }>()
-      const add = (color: string, width: number, dash: boolean, a: SimNode, b: SimNode): void => {
-        const key = color + '|' + width + '|' + dash
-        let g = groups.get(key)
-        if (!g) groups.set(key, (g = { color, width, dash, seg: [] }))
-        g.seg.push(a.px, a.py, b.px, b.py)
-      }
+      // Sichtbarer Ausschnitt in Weltkoordinaten (mit Rand für Leuchten und Ringe)
+      const vx0 = -s.t.x / k - 60
+      const vy0 = -s.t.y / k - 60
+      const vx1 = (s.size.w - s.t.x) / k + 60
+      const vy1 = (s.size.h - s.t.y) / k + 60
+      const inView = (n: SimNode): boolean => n.px > vx0 && n.px < vx1 && n.py > vy0 && n.py < vy1
+      // Welt → Gerätepixel
+      const K = dpr * k
+      const OX = dpr * s.t.x
+      const OY = dpr * s.t.y
       const sk = Math.sqrt(k)
-      for (const l of s.links) {
-        const a = l.source as SimNode
-        const b = l.target as SimNode
-        if (a.x === undefined || b.x === undefined) continue
+
+      // Kanten: Farbe je Art und Zustand; breit sind nur die wenigen am Fokus
+      const edgeLook = (l: SimLink, a: SimNode, b: SimNode): { color: string; width: number } => {
         const hot = !!near && near.has(a.id) && near.has(b.id) && (a.id === focus || b.id === focus)
         const faded = (near && !hot) || (q && !(matches(a) && matches(b)))
-        if (l.kind === 'link') add(hot ? 'rgba(143, 166, 200, .85)' : faded ? 'rgba(143, 166, 200, .07)' : 'rgba(143, 166, 200, .26)', (hot ? 1.8 : 1.1) / sk, false, a, b)
-        else if (l.kind === 'file') add(hot ? 'rgba(227, 231, 239, .55)' : faded ? 'rgba(227, 231, 239, .04)' : 'rgba(227, 231, 239, .13)', 0.9 / sk, true, a, b)
+        let color: string
+        if (l.kind === 'link') color = hot ? 'rgba(143, 166, 200, .85)' : faded ? 'rgba(143, 166, 200, .09)' : 'rgba(143, 166, 200, .36)'
+        else if (l.kind === 'file') color = hot ? 'rgba(227, 231, 239, .55)' : faded ? 'rgba(227, 231, 239, .04)' : 'rgba(227, 231, 239, .14)'
         else {
-          const alpha = Math.round(Math.min(0.25, 0.05 * l.weight) * 20) / 20
-          add(hot ? 'rgba(243, 185, 77, .55)' : faded ? 'rgba(243, 185, 77, .03)' : `rgba(243, 185, 77, ${alpha})`, Math.round(Math.min(3, 0.6 + l.weight * 0.25) * 2) / 2 / sk, false, a, b)
+          const alpha = Math.round(Math.min(0.35, 0.07 * l.weight) * 20) / 20
+          color = hot ? 'rgba(243, 185, 77, .55)' : faded ? 'rgba(243, 185, 77, .03)' : `rgba(243, 185, 77, ${alpha})`
+        }
+        const width = hot ? Math.round((l.kind === 'co' ? Math.min(3, 0.6 + l.weight * 0.25) : l.kind === 'link' ? 1.8 : 1.1) * sk * dpr * 2) / 2 : 0
+        return { color, width }
+      }
+      const nodeFill = (n: SimNode): string =>
+        n.kind === 'file' && s.heatOn ? (n.heat !== undefined ? heatColor(Math.round(n.heat * 12) / 12) : COLD_FILE) : KIND_COLOR[n.kind]
+      const visibleLinks = (each: (l: SimLink, a: SimNode, b: SimNode) => void): void => {
+        for (const l of s.links) {
+          const a = l.source as SimNode
+          const b = l.target as SimNode
+          if (a.x === undefined || b.x === undefined) continue
+          if ((a.px < vx0 && b.px < vx0) || (a.px > vx1 && b.px > vx1) || (a.py < vy0 && b.py < vy0) || (a.py > vy1 && b.py > vy1)) continue
+          each(l, a, b)
         }
       }
-      for (const g of groups.values()) {
-        ctx.beginPath()
-        for (let i = 0; i < g.seg.length; i += 4) {
-          ctx.moveTo(g.seg[i], g.seg[i + 1])
-          ctx.lineTo(g.seg[i + 2], g.seg[i + 3])
-        }
-        ctx.setLineDash(g.dash ? [3, 3] : [])
-        ctx.strokeStyle = g.color
-        ctx.lineWidth = g.width
-        ctx.stroke()
-      }
-      ctx.setLineDash([])
 
-      // Leuchten: Grundschein der Notizen + Aufleuchten bei Aktivität (Sprites statt shadowBlur)
-      for (const n of s.nodes) {
-        if (n.x === undefined || n.kind === 'file' || n.kind === 'missing' || dimmed(n)) continue
-        const r = n.r * grow(n) * 3.4
-        ctx.globalAlpha = 0.32
-        ctx.drawImage(glowSprite(KIND_COLOR[n.kind]), n.px - r, n.py - r, r * 2, r * 2)
+      const gl = glRef.current
+      if (gl) {
+        // ---- WebGL: Kanten, Leuchten, Knoten und Ringe in drei Zeichenaufrufen ----
+        const f = s.frame
+        f.reset()
+        visibleLinks((l, a, b) => {
+          const { color, width } = edgeLook(l, a, b)
+          const x0 = a.px * K + OX
+          const y0 = a.py * K + OY
+          const x1 = b.px * K + OX
+          const y1 = b.py * K + OY
+          if (width) f.wide(x0, y0, x1, y1, width, rgba(color))
+          else f.line(x0, y0, x1, y1, rgba(color))
+        })
+        for (const n of s.nodes) {
+          if (n.x === undefined || n.kind === 'file' || n.kind === 'missing' || dimmed(n) || !inView(n)) continue
+          f.circle(n.px * K + OX, n.py * K + OY, Math.min(n.r * grow(n) * 3.4 * K, GLOW_MAX * dpr), GLOW, rgba(KIND_COLOR[n.kind]), 0.32)
+        }
+        for (const n of s.nodes) {
+          if (n.x === undefined || !inView(n)) continue
+          const al = dimmed(n) ? 0.18 : 1
+          const r = n.r * grow(n) * K
+          const x = n.px * K + OX
+          const y = n.py * K + OY
+          if (n.kind === 'missing') f.circle(x, y, r, DASHED, rgba(KIND_COLOR.missing), al, 1.2 * dpr)
+          else f.circle(x, y, r, DISC_GL, rgba(nodeFill(n)), al)
+          if (s.heatOn && n.unlinked) f.circle(x, y, r + 3.5 * K, DASHED, rgba('rgba(255, 255, 255, 0.7)'), al, 1.3 * dpr)
+          if (n.stale) f.circle(x, y, r + 3 * K, DASHED, rgba('#f3b94d'), al, 1.6 * dpr)
+          if (n.id === s.selected) f.circle(x, y, r + 5 * K, RING, rgba('rgba(255,255,255,.9)'), 1, 1.6 * dpr)
+        }
+        gl.draw(f, Math.round(s.size.w * dpr), Math.round(s.size.h * dpr))
+      } else {
+        // ---- Canvas 2D (ohne WebGL): Kanten als gebündelte Haarlinien – breitere Striche schickt Skia auf der GPU
+        // in einen langsamen Weg (gemessen mit 2.200 Kanten: 11 → 45 fps) –, Knoten als Bilder ----
+        const thin = new Map<string, number[]>()
+        const wide = new Map<string, { color: string; width: number; seg: number[] }>()
+        visibleLinks((l, a, b) => {
+          const { color, width } = edgeLook(l, a, b)
+          let seg: number[]
+          if (width) {
+            const key = color + '|' + width
+            let g = wide.get(key)
+            if (!g) wide.set(key, (g = { color, width, seg: [] }))
+            seg = g.seg
+          } else {
+            let g = thin.get(color)
+            if (!g) thin.set(color, (g = []))
+            seg = g
+          }
+          seg.push(a.px * K + OX, a.py * K + OY, b.px * K + OX, b.py * K + OY)
+        })
+        const strokeAll = (seg: number[], color: string, width: number): void => {
+          ctx.beginPath()
+          for (let i = 0; i < seg.length; i += 4) {
+            ctx.moveTo(seg[i], seg[i + 1])
+            ctx.lineTo(seg[i + 2], seg[i + 3])
+          }
+          ctx.strokeStyle = color
+          ctx.lineWidth = width
+          ctx.stroke()
+        }
+        ctx.setTransform(1, 0, 0, 1, 0, 0)
+        for (const [color, seg] of thin) strokeAll(seg, color, 1)
+        for (const g of wide.values()) strokeAll(g.seg, g.color, g.width)
+        ctx.setTransform(K, 0, 0, K, OX, OY)
+
+        // Grundschein der Notizen (Sprites statt shadowBlur)
+        for (const n of s.nodes) {
+          if (n.x === undefined || n.kind === 'file' || n.kind === 'missing' || dimmed(n) || !inView(n)) continue
+          const r = Math.min(n.r * grow(n) * 3.4, GLOW_MAX / k)
+          ctx.globalAlpha = 0.32
+          ctx.drawImage(glowSprite(KIND_COLOR[n.kind]), n.px - r, n.py - r, r * 2, r * 2)
+        }
+        const ring = (n: SimNode, r: number, color: string, width: number, dash: number[]): void => {
+          ctx.beginPath()
+          ctx.arc(n.px, n.py, r, 0, Math.PI * 2)
+          ctx.strokeStyle = color
+          ctx.lineWidth = width / k
+          ctx.setLineDash(dash)
+          ctx.stroke()
+          ctx.setLineDash([])
+        }
+        // Knoten – als Bild; nur bei starkem Zoom (das Bild würde unscharf) als Pfad
+        for (const n of s.nodes) {
+          if (n.x === undefined || !inView(n)) continue
+          const r = n.r * grow(n)
+          ctx.globalAlpha = dimmed(n) ? 0.18 : 1
+          if (n.kind === 'missing') ring(n, r, KIND_COLOR.missing, 1.2, [2.5, 2.5])
+          else if (r * K > DISC / 2) {
+            ctx.beginPath()
+            ctx.arc(n.px, n.py, r, 0, Math.PI * 2)
+            ctx.fillStyle = nodeFill(n)
+            ctx.fill()
+          } else {
+            const R = (r * DISC) / (DISC - 2)
+            ctx.drawImage(discSprite(nodeFill(n)), n.px - R, n.py - R, R * 2, R * 2)
+          }
+          // Hotspot ohne Notiz: gepunkteter Ring
+          if (s.heatOn && n.unlinked) ring(n, r + 3.5, 'rgba(255, 255, 255, 0.7)', 1.3, [1.5, 2.5])
+          if (n.stale) ring(n, r + 3, '#f3b94d', 1.6, [4, 3])
+          if (n.id === s.selected) {
+            ctx.globalAlpha = 1
+            ring(n, r + 5, 'rgba(255,255,255,.9)', 1.6, [])
+          }
+        }
+        ctx.globalAlpha = 1
       }
+
+      // Aufleuchten bei Aktivität und Funken entlang der Verbindungen – wenige, daher auf dem 2D-Canvas darüber
       for (const [id, p] of s.pulses) {
         const n = s.byId.get(id)
         if (!n || n.x === undefined) continue
@@ -450,8 +615,6 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
         }
       }
       ctx.globalAlpha = 1
-
-      // Funken entlang der Verbindungen
       for (const sp of s.sparks) {
         const a = s.byId.get(sp.a)
         const b = s.byId.get(sp.b)
@@ -469,53 +632,6 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
         ctx.arc(x, y, 1.5 / Math.max(0.6, sk), 0, Math.PI * 2)
         ctx.fill()
       }
-
-      // Knoten
-      for (const n of s.nodes) {
-        if (n.x === undefined) continue
-        const dim = dimmed(n)
-        const r = n.r * grow(n)
-        ctx.globalAlpha = dim ? 0.18 : 1
-        ctx.beginPath()
-        ctx.arc(n.px, n.py, r, 0, Math.PI * 2)
-        if (n.kind === 'missing') {
-          ctx.setLineDash([2.5, 2.5])
-          ctx.strokeStyle = KIND_COLOR.missing
-          ctx.lineWidth = 1.2 / k
-          ctx.stroke()
-          ctx.setLineDash([])
-        } else {
-          ctx.fillStyle = n.kind === 'file' && s.heatOn ? (n.heat !== undefined ? heatColor(n.heat) : COLD_FILE) : KIND_COLOR[n.kind]
-          ctx.fill()
-        }
-        if (s.heatOn && n.unlinked) {
-          // Hotspot ohne Notiz: gepunkteter Ring
-          ctx.beginPath()
-          ctx.arc(n.px, n.py, r + 3.5, 0, Math.PI * 2)
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'
-          ctx.lineWidth = 1.3 / k
-          ctx.setLineDash([1.5, 2.5])
-          ctx.stroke()
-          ctx.setLineDash([])
-        }
-        if (n.stale) {
-          ctx.beginPath()
-          ctx.arc(n.px, n.py, r + 3, 0, Math.PI * 2)
-          ctx.strokeStyle = '#f3b94d'
-          ctx.lineWidth = 1.6 / k
-          ctx.setLineDash([4, 3])
-          ctx.stroke()
-          ctx.setLineDash([])
-        }
-        if (n.id === s.selected) {
-          ctx.beginPath()
-          ctx.arc(n.px, n.py, r + 5, 0, Math.PI * 2)
-          ctx.strokeStyle = 'rgba(255,255,255,.9)'
-          ctx.lineWidth = 1.6 / k
-          ctx.stroke()
-        }
-      }
-      ctx.globalAlpha = 1
 
       // Beschriftungen im Bildschirm-Maßstab: wichtigste zuerst, nichts überlappt
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -569,6 +685,9 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     return () => {
       cancelAnimationFrame(raf)
       ro.disconnect()
+      glCanvas.removeEventListener('webglcontextlost', onLost)
+      glRef.current?.dispose()
+      glRef.current = null
     }
   }, [])
 
@@ -620,9 +739,11 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
       drag.moved = true
       if (drag.node) {
         const p = world(e)
-        drag.node.fx = p.x
-        drag.node.fy = p.y
-        s.sim?.alphaTarget(0.25).restart()
+        // sofort hier zeigen, das Layout zieht die Nachbarn nach
+        drag.node.x = p.x
+        drag.node.y = p.y
+        s.layout?.send({ type: 'fix', i: drag.node.i, x: p.x, y: p.y })
+        s.layout?.send({ type: 'alpha', target: 0.25 })
       } else {
         s.t = { ...s.t, x: drag.tx + dx, y: drag.ty + dy }
         canvas.style.cursor = 'grabbing'
@@ -631,10 +752,9 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     }
     const up = (e: PointerEvent): void => {
       if (!drag) return
-      if (drag.node) {
-        drag.node.fx = null
-        drag.node.fy = null
-        s.sim?.alphaTarget(0)
+      if (drag.node && drag.moved) {
+        s.layout?.send({ type: 'free', i: drag.node.i })
+        s.layout?.send({ type: 'alpha', target: 0 })
       }
       if (!drag.moved) onSelectRef.current(drag.node?.id ?? null)
       drag = null
@@ -671,7 +791,12 @@ export const BrainGraph = forwardRef<GraphHandle, Props>(function BrainGraph({ g
     }
   }, [])
 
-  return <canvas ref={canvasRef} className="brain-canvas" data-testid="brain-canvas" />
+  return (
+    <>
+      <canvas ref={glCanvasRef} className="brain-canvas brain-gl" aria-hidden />
+      <canvas ref={canvasRef} className="brain-canvas" data-testid="brain-canvas" />
+    </>
+  )
 })
 
 /** Wie wichtig ist eine Beschriftung? Notizen vor Dateien, Bereiche und gut vernetzte zuerst. */

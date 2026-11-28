@@ -32,7 +32,7 @@ if (!cargo) {
 }
 
 const manifest = ['--release', '--locked', '--manifest-path', path.join(here, 'Cargo.toml')]
-if (process.argv.includes('--test') && spawnSync(cargo, ['test', ...manifest], { stdio: 'inherit' }).status !== 0) {
+if (process.argv.includes('--test') && spawnSync(cargo, ['test', '--workspace', ...manifest], { stdio: 'inherit' }).status !== 0) {
   console.error('✗ cargo test ist fehlgeschlagen')
   process.exit(1)
 }
@@ -65,5 +65,30 @@ for (const f of fs.readdirSync(out)) {
     fs.rmSync(path.join(out, f), { force: true })
   } catch {
     // läuft noch – beim nächsten Build
+  }
+}
+
+// Planke 2: Layout des Gehirn-Graphen als WebAssembly (native/layout). Der Worker bettet die Datei beim Bauen ein;
+// ohne sie rechnet er mit d3-force – dann nur eine Warnung, außer bei --required.
+const WASM_TARGET = 'wasm32-unknown-unknown'
+const wasmOut = path.join(root, 'src', 'renderer', 'src', 'windows', 'brain', 'layout', 'wasm.gen.ts')
+const wasm = spawnSync(cargo, ['build', ...manifest, '-p', 'vibedesk-layout', '--target', WASM_TARGET], { stdio: 'inherit' })
+if (wasm.status !== 0) {
+  const msg = `Gehirn-Layout (WebAssembly) nicht gebaut – fehlt das Ziel? rustup target add ${WASM_TARGET}. VibeDesk nutzt d3-force.`
+  if (required) {
+    console.error(`✗ ${msg}`)
+    process.exit(1)
+  }
+  console.warn(`⚠ ${msg}`)
+} else {
+  const from = path.join(here, 'target', WASM_TARGET, 'release', 'vibedesk_layout.wasm')
+  const bytes = fs.readFileSync(from)
+  // als Modul eingebettet: der Renderer läuft unter file://, dort gibt es kein fetch für Nachbardateien
+  const mod = `// generiert von native/build.mjs aus native/layout – nicht von Hand ändern
+export default '${bytes.toString('base64')}'
+`
+  if (!fs.existsSync(wasmOut) || fs.readFileSync(wasmOut, 'utf8') !== mod) {
+    fs.writeFileSync(wasmOut, mod)
+    console.log(`✓ ${path.relative(root, wasmOut)} (WebAssembly ${Math.round(bytes.length / 1024)} KB)`)
   }
 }

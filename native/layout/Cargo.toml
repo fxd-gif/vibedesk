@@ -1,0 +1,14 @@
+[package]
+name = "vibedesk-layout"
+version = "0.1.0"
+description = "Force layout for the VibeDesk brain graph (Barnes-Hut, collision, springs), built to WebAssembly and run in a Web Worker"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+# cdylib: die .wasm für den Worker; rlib: damit cargo test nativ laufen kann
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]

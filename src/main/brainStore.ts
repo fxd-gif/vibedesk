@@ -15,6 +15,51 @@ export interface NoteInput {
 const ARCHIVE = '.archiv'
 const MAX_DEPTH = 3
 
+/**
+ * Notizen je Gehirn-Ordner im Speicher. Unter Windows kostet allein das Öffnen einer Datei rund 0,6 ms – bei 500 Notizen
+ * blockierte jedes list() den Main-Prozess (und damit die ganze App) für eine halbe Sekunde, und list() läuft bei jedem
+ * Gehirn-Werkzeug, beim Session-Start und bei jedem Neuzeichnen des Graphen. Jetzt: Ein Wächter meldet Änderungen;
+ * ohne Meldung gibt es die gemerkte Liste ohne Dateizugriff, sonst werden nur geänderte Dateien neu gelesen (mtime + Größe).
+ */
+interface NoteCache {
+  files: Map<string, { mtime: number; size: number; note: NoteMeta }>
+  list: NoteMeta[] | null
+  /** seit dem letzten Einlesen hat sich etwas geändert (oder es gibt keinen Wächter) */
+  dirty: boolean
+  watcher: fs.FSWatcher | null
+}
+const caches = new Map<string, NoteCache>()
+
+function cacheOf(dir: string): NoteCache {
+  let c = caches.get(dir)
+  if (!c) caches.set(dir, (c = { files: new Map(), list: null, dirty: true, watcher: null }))
+  return c
+}
+
+/** Wächter anlegen, sobald der Ordner existiert; fällt er aus, wird bei jedem Aufruf nachgesehen */
+function watchNotes(dir: string, c: NoteCache): void {
+  if (c.watcher) return
+  try {
+    const w = fs.watch(dir, { recursive: true }, () => {
+      c.dirty = true
+    })
+    w.on('error', () => {
+      w.close()
+      if (c.watcher === w) c.watcher = null
+      c.dirty = true
+    })
+    c.watcher = w
+  } catch {
+    // Ordner fehlt oder Wächter nicht möglich – dann prüft list() jedes Mal mtime und Größe
+  }
+}
+
+/** Beim Beenden: alle Wächter schließen */
+export function closeNoteCaches(): void {
+  for (const c of caches.values()) c.watcher?.close()
+  caches.clear()
+}
+
 export class BrainStore {
   readonly dir: string
 
@@ -22,8 +67,13 @@ export class BrainStore {
     this.dir = path.join(root, BRAIN_DIR)
   }
 
-  /** alle Notizen, auch aus Unterordnern (Obsidian-Nutzer sortieren gern) */
+  /** alle Notizen, auch aus Unterordnern (Obsidian-Nutzer sortieren gern) – aus dem Speicher, solange sich nichts geändert hat */
   list(): NoteMeta[] {
+    const c = cacheOf(this.dir)
+    if (c.list && !c.dirty && c.watcher) return c.list.slice()
+    // vor dem Einlesen „sauber“ setzen: eine Änderung währenddessen macht die Liste gleich wieder ungültig
+    c.dirty = false
+    const seenFiles = new Set<string>()
     const out: NoteMeta[] = []
     const seen = new Set<string>()
     const walk = (dir: string, depth: number): void => {
@@ -46,15 +96,32 @@ export class BrainStore {
         try {
           const st = fs.statSync(p)
           if (st.size > LIMITS.bodyLen * 2) continue
-          out.push(parseNote(title, fs.readFileSync(p, 'utf8'), st.mtimeMs))
+          const hit = c.files.get(p)
+          let note: NoteMeta
+          if (hit && hit.mtime === st.mtimeMs && hit.size === st.size) note = hit.note
+          else {
+            note = parseNote(title, fs.readFileSync(p, 'utf8'), st.mtimeMs)
+            c.files.set(p, { mtime: st.mtimeMs, size: st.size, note })
+          }
+          seenFiles.add(p)
+          out.push(note)
           seen.add(titleKey(title))
         } catch {
           // gerade gelöscht oder gesperrt – beim nächsten Mal
+          c.dirty = true
         }
       }
     }
     walk(this.dir, 0)
-    return out
+    for (const p of c.files.keys()) if (!seenFiles.has(p)) c.files.delete(p)
+    c.list = out
+    watchNotes(this.dir, c)
+    return out.slice()
+  }
+
+  /** eigene Änderung: sofort neu einlesen, nicht erst auf den Wächter warten */
+  private touched(): void {
+    cacheOf(this.dir).dirty = true
   }
 
   private find(title: string): string | null {
@@ -82,6 +149,13 @@ export class BrainStore {
   }
 
   get(title: string): NoteMeta | null {
+    // aus dem Speicher, wenn die Liste aktuell ist (der Wächter hat nichts gemeldet)
+    const c = cacheOf(this.dir)
+    if (c.list && !c.dirty && c.watcher) {
+      const want = titleKey(title)
+      const hit = c.list.find((n) => titleKey(n.title) === want)
+      if (hit) return hit
+    }
     const f = this.find(title)
     if (!f) return null
     try {
@@ -118,6 +192,7 @@ export class BrainStore {
     const tmp = target + '.tmp'
     fs.writeFileSync(tmp, serializeNote(note), 'utf8')
     fs.renameSync(tmp, target)
+    this.touched()
     return { note: parseNote(title, serializeNote(note), now), created: !old }
   }
 
@@ -129,6 +204,7 @@ export class BrainStore {
     fs.mkdirSync(archive, { recursive: true })
     const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')
     fs.renameSync(f, path.join(archive, `${path.basename(f, '.md')} ${stamp}.md`))
+    this.touched()
     return true
   }
 
@@ -140,6 +216,7 @@ export class BrainStore {
     if (titleKey(from) !== titleKey(to) && this.find(to)) throw new Error(t('Eine Notiz mit diesem Titel gibt es schon'))
     const target = path.join(path.dirname(f), file)
     fs.renameSync(f, target)
+    this.touched()
     // Links in anderen Notizen mitziehen, damit der Graph zusammenhält
     const re = new RegExp(`\\[\\[${cleanTitle(from).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=[\\]|#])`, 'gi')
     for (const n of this.list()) {
@@ -148,7 +225,10 @@ export class BrainStore {
       if (!p) continue
       const text = fs.readFileSync(p, 'utf8')
       const next = text.replace(re, `[[${cleanTitle(to)}`)
-      if (next !== text) fs.writeFileSync(p, next, 'utf8')
+      if (next !== text) {
+        fs.writeFileSync(p, next, 'utf8')
+        this.touched()
+      }
     }
     return this.get(to)!
   }

@@ -28,7 +28,7 @@ import {
   type NoteDetail
 } from '../shared/brain'
 import type { BrainNoteInput, HookEvent, Project } from '../shared/types'
-import { BrainStore, type NoteInput } from './brainStore'
+import { BrainStore, closeNoteCaches, type NoteInput } from './brainStore'
 import { readJson, writeJsonAtomic } from './jsonFile'
 import { shouldTend, stopHookReply, type TurnActivity } from './brainTend'
 
@@ -124,6 +124,7 @@ export class BrainService {
     for (const id of [...this.saveTimers.keys()]) this.save(id)
     for (const w of this.watchers.values()) w.close()
     this.watchers.clear()
+    closeNoteCaches()
   }
 
   onHook(e: HookEvent): void {

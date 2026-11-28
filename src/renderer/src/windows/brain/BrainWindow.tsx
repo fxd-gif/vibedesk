@@ -113,13 +113,17 @@ export function BrainWindow(): React.JSX.Element {
   useEffect(() => {
     if (!projectId) return
     let refetch: ReturnType<typeof setTimeout> | undefined
+    // Knoten, für die schon einmal nachgeladen wurde: Taucht eine Datei danach nicht auf (nicht unter den aktivsten),
+    // bleibt es dabei – sonst lädt jedes Lesen dieser Datei den ganzen Graph neu
+    const tried = new Set<string>()
     const offChanged = api.on.brainChanged((pid) => pid === projectId && load())
     const offPulse = api.on.brainPulse((p) => {
       if (p.projectId !== projectId) return
       // Dateien-Ansicht: kein Graph zum Aufleuchten (neue Notizen kommen über brainChanged)
       if (!graph.current) return
-      // neue Datei im Spiel → Graph nachladen, damit sie auftaucht
-      if (!graph.current.pulse(p.id, p.kind)) {
+      // neue Datei im Spiel → Graph einmal nachladen, damit sie auftaucht
+      if (!graph.current.pulse(p.id, p.kind) && !tried.has(p.id)) {
+        tried.add(p.id)
         clearTimeout(refetch)
         refetch = setTimeout(load, 1500)
       }

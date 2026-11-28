@@ -5,6 +5,7 @@ dist/
 # Rust-Build (native/) und die daraus kopierten Programme
 native/target/
 resources/bin/
+src/renderer/src/windows/brain/layout/wasm.gen.ts
 .superpowers/
 test-results/
 playwright-report/

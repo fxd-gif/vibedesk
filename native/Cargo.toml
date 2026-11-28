@@ -1,6 +1,8 @@
 # VibeDesk wird Stück für Stück nativ – jede Planke ist ein eigenes Crate (siehe README.md)
 [workspace]
-members = ["bridge"]
+members = ["bridge", "layout"]
+# die Programme für resources/bin; layout wird für wasm32 gebaut (build.mjs)
+default-members = ["bridge"]
 resolver = "3"
 
 [workspace.package]
