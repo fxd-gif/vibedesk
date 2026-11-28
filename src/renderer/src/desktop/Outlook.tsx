@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { t } from '../../../shared/i18n'
 import { isLivingScene } from '../../../shared/living'
-import { waitingLabel } from '../../../shared/waiting'
-import { nextLamp, slotPos, type Lamp } from '../ambience/lights'
+import { lampStatusText as statusText } from '../ambience/lampText'
+import { nextLamp, slotPos } from '../ambience/lights'
 import { ASCII_SCENE } from '../ambience/sceneParams'
 import { toggleOutlook, useLamps, useLights } from '../store/lightsStore'
 import { termWin } from '../store/sessionStore'
@@ -12,21 +12,6 @@ import { focusTerminal } from '../store/terminals'
 import { useSettings } from '../store/settingsStore'
 import { useUi } from '../store/uiStore'
 import './outlook.css'
-
-function statusText(l: Lamp): string {
-  switch (l.status) {
-    case 'waiting':
-      return waitingLabel(l.waitingSince)
-    case 'working':
-      return t('arbeitet')
-    case 'done':
-      return t('fertig')
-    case 'error':
-      return t('Fehler')
-    default:
-      return t('bereit')
-  }
-}
 
 function openSession(id: string): void {
   toggleOutlook(false)
