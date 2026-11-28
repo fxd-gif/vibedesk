@@ -42,6 +42,8 @@ export interface SessionManagerOptions {
   statusLine?: { path: string; configDir: string }
   /** Rust-Brücke statt node + JS-Skripten, sobald sie bereitsteht (null = JS-Weg) */
   native?: () => NativeBridge | null
+  /** zuletzt bekannte Claude-Code-Version ohne Warten (VersionCache.known) – ab EXEC_HOOKS_SINCE Hooks ohne Shell */
+  claudeVersion?: () => string | null
 }
 
 interface Running {
@@ -75,8 +77,8 @@ export function claudeOnPath(): boolean {
   }
 }
 
-/** Version von Claude Code, z. B. "2.1.296" – null, wenn nicht installiert */
-export function claudeVersion(): Promise<string | null> {
+/** Fragt `claude --version` (rund 110 ms), z. B. "2.1.296" – null, wenn nicht installiert */
+function probeClaudeVersion(): Promise<string | null> {
   return new Promise((resolve) => {
     execFile('cmd.exe', ['/d', '/c', 'claude', '--version'], { windowsHide: true, timeout: 15000 }, (err, stdout) => {
       if (err) return resolve(null)
@@ -84,6 +86,44 @@ export function claudeVersion(): Promise<string | null> {
     })
   })
 }
+
+/**
+ * Merkt sich die zuletzt ermittelte Version. Sessions starten synchron und brauchen sie für die Hook-Form
+ * (Exec-Form erst ab EXEC_HOOKS_SINCE) – darum `known()` ohne Warten. Claude Code aktualisiert sich selbst; ist
+ * der Wert älter als maxAgeMs, fragt `known()` im Hintergrund neu, die nächste Session nutzt dann die neue Version.
+ * Gleichzeitige Abfragen teilen sich einen Prozess.
+ */
+export class VersionCache {
+  private last: { value: string | null; at: number } | null = null
+  private running: Promise<string | null> | null = null
+
+  constructor(
+    private probe: () => Promise<string | null>,
+    private maxAgeMs = 60_000,
+    private now: () => number = Date.now
+  ) {}
+
+  refresh(): Promise<string | null> {
+    this.running ??= this.probe()
+      .catch(() => null)
+      .then((value) => {
+        this.last = { value, at: this.now() }
+        this.running = null
+        return value
+      })
+    return this.running
+  }
+
+  known(): string | null {
+    if (!this.running && (!this.last || this.now() - this.last.at > this.maxAgeMs)) void this.refresh()
+    return this.last?.value ?? null
+  }
+}
+
+export const claudeVersions = new VersionCache(probeClaudeVersion)
+
+/** Version von Claude Code, z. B. "2.1.296" – null, wenn nicht installiert. Füllt nebenbei claudeVersions. */
+export const claudeVersion = (): Promise<string | null> => claudeVersions.refresh()
 
 export class SessionManager {
   private sessions = new Map<string, Running>()
@@ -123,7 +163,9 @@ export class SessionManager {
     // Der MCP-Server läuft immer (Desktop-Werkzeuge); die Gehirn-Werkzeuge nur, solange das Gehirn an ist
     const mcp = !!this.o.brain
     const native = this.o.native?.() ?? null
-    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath, { brain: mcp, statusLine, native })))
+    // Die Version gilt nur für das claude aus dem PATH – ein anderer Befehl (VIBEDESK_CLAUDE_CMD) bekommt die Shell-Form
+    const claudeVersion = cmd === 'claude' ? (this.o.claudeVersion?.() ?? null) : null
+    fs.writeFileSync(settingsFile, JSON.stringify(buildHookSettings(this.o.nodeExe, this.o.forwarderPath, { brain: mcp, statusLine, native, claudeVersion })))
     let mcpFile: string | undefined
     if (mcp) {
       mcpFile = path.join(this.o.tmpDir, `session-${id}-mcp.json`)

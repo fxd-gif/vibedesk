@@ -47,8 +47,30 @@ VibeDesk no longer needs Node.js on the system for any of this.
 ### Windows details that cost time
 
 - **Refused connections take 2 seconds.** Windows retries the SYN after a RST, so connecting to a dead port on `127.0.0.1` fails only after about two seconds. Node is fast because libuv sets `SIO_TCP_INITIAL_RTO` with `TCP_INITIAL_RTO_NO_SYN_RETRANSMISSIONS` on loopback sockets. The bridge does the same (`src/http.rs`). Without it, a hook would never reach a restarted VibeDesk in time.
-- **Hook commands go through bash, cmd or PowerShell.** The binary path is written unquoted with forward slashes, which all three accept. A path with spaces stays on the JavaScript fallback.
+- **Hook commands go through bash, cmd or PowerShell.** The binary path is written unquoted with forward slashes, which all three accept. A path with spaces stays on the JavaScript fallback (unless exec form applies, see below).
 - **A running .exe is locked.** Every session keeps an MCP server running. If it ran from the install folder, the next update would fail. VibeDesk copies the bridge to `%APPDATA%\vibedesk\bin` at startup and renames an old copy aside if it is still running.
+- **The shell costs more than the bridge.** See the next section.
+
+### Hooks without a shell
+
+In shell form, Claude Code on Windows runs every hook command through Git Bash, or through PowerShell when Git for Windows is not installed (the hook `shell` field picks one explicitly). Since Claude Code 2.1.139, a command hook may carry an `args` array instead ("exec form", [CHANGELOG](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md#21139), [hooks docs](https://code.claude.com/docs/en/hooks)): `command` is then spawned directly, with no shell, and must be a real `.exe` on Windows.
+
+```json
+{ "type": "command", "command": "C:\\Users\\me\\AppData\\Roaming\\vibedesk\\bin\\vibedesk-bridge.exe", "args": ["hook"], "timeout": 5 }
+```
+
+VibeDesk writes this form when it knows the Claude Code version is 2.1.139 or newer (`claude --version`, about 110 ms, cached and refreshed in the background so an auto-update is picked up by the next session). Unknown or older versions keep the shell form, because an older Claude Code would ignore `args` and run the bridge without a mode, which does nothing. Without the bridge, the Node fallback uses the same form (`"command": "node", "args": ["…\\hook-forwarder.js"]`). Exec form also takes paths with spaces, so the bridge runs hooks even where the shell form could not. The statusline has no exec form and stays in shell form.
+
+Measured with the real bridge, 50 runs each, interleaved, spawn to exit, on a busy Windows 11 laptop (the bridge alone was 11 ms on a quiet machine, see above):
+
+| How the hook is started | Median | p90 |
+|---|---|---|
+| Exec form (no shell) | 31 ms | 56 ms |
+| `cmd /d /c` | 51 ms | 105 ms |
+| Git Bash `bash -c` (the default) | 81 ms | 141 ms |
+| PowerShell (no Git for Windows) | 324 ms | 444 ms |
+
+That is about 50 ms saved on every hook with Git Bash and about 300 ms without it. A single tool call fires at least `PreToolUse` and `PostToolUse`, and Claude Code waits for each.
 
 ## Plank 2: the brain graph layout
 

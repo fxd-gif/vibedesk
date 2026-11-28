@@ -47,20 +47,49 @@ export function nativeCommand(exe: string, mode: 'hook' | 'statusline'): string 
 /** Laufen Hooks und Statuszeile wirklich über die Rust-Brücke? Nur dann braucht VibeDesk kein Node.js auf dem System. */
 export const bridgeRunsHooks = (b: NativeBridge | null | undefined): boolean => !!b && nativeCommand(b.exe, 'hook') !== null
 
+/**
+ * Ab dieser Claude-Code-Version kennen Command-Hooks das Feld `args` (Exec-Form, CHANGELOG 2.1.139): Claude Code
+ * startet `command` dann direkt als Programm, ohne Shell. Unter Windows spart das pro Hook die Git-Bash (~50 ms)
+ * oder – ohne Git für Windows – PowerShell (~300 ms), die Claude Code sonst davorschaltet (native/README.md).
+ * Ältere Versionen kennen `args` nicht – dort
+ * liefe das Programm ohne Argument und der Hook wäre wirkungslos. Darum nur bei sicher bekannter Version.
+ */
+export const EXEC_HOOKS_SINCE = '2.1.139'
+
+/** Versteht diese Claude-Code-Version die Exec-Form? Unbekannt oder unlesbar → nein (Shell-Form wie bisher) */
+export function supportsExecHooks(version: string | null | undefined): boolean {
+  const v = /^(\d+)\.(\d+)\.(\d+)/.exec(version?.trim() ?? '')
+  if (!v) return false
+  const min = EXEC_HOOKS_SINCE.split('.').map(Number)
+  for (let i = 0; i < 3; i++) {
+    const d = Number(v[i + 1]) - min[i]
+    if (d !== 0) return d > 0
+  }
+  return true
+}
+
 export const BRAIN_SERVER = 'vibedesk-brain'
 
 /**
  * Claude-Code-Settings, deren Hooks jedes Event an den VibeDesk-Forwarder geben.
  * statusLine: VibeDesk-Statuszeile (liest die Abo-Limits); padding der eigenen Statuszeile bleibt erhalten.
  * native: Rust-Brücke statt node, wo ihr Pfad sich sicher in eine Befehlszeile schreiben lässt.
+ * claudeVersion: Version des Claude Code, das die Session startet. Ab EXEC_HOOKS_SINCE laufen die Hooks in
+ * Exec-Form ohne Shell – dann geht die Brücke auch mit Leerzeichen im Pfad. Die Statuszeile kennt keine
+ * Exec-Form und bleibt beim Shell-Befehl.
  */
 export function buildHookSettings(
   nodeExe: string,
   forwarderPath: string,
-  opts: { brain?: boolean; statusLine?: { path: string; padding?: number }; native?: NativeBridge | null } = {}
+  opts: { brain?: boolean; statusLine?: { path: string; padding?: number }; native?: NativeBridge | null; claudeVersion?: string | null } = {}
 ): object {
   const native = (mode: 'hook' | 'statusline'): string | null => (opts.native ? nativeCommand(opts.native.exe, mode) : null)
-  const hook = { type: 'command', command: native('hook') ?? hookCommand(nodeExe, forwarderPath), timeout: 5 }
+  const run = supportsExecHooks(opts.claudeVersion)
+    ? opts.native
+      ? { command: opts.native.exe, args: ['hook'] }
+      : { command: nodeExe, args: [forwarderPath] }
+    : { command: native('hook') ?? hookCommand(nodeExe, forwarderPath) }
+  const hook = { type: 'command', ...run, timeout: 5 }
   const hooks = Object.fromEntries(
     HOOK_EVENTS.map((e) => {
       const h = e === 'PermissionRequest' ? { ...hook, timeout: PERMISSION_TIMEOUT_S } : hook

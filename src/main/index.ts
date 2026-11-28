@@ -37,7 +37,7 @@ import { SkillStore } from './skillStore'
 import { localDate, StatsHistory, StatsService } from './statsService'
 import os from 'os'
 import { registerRunAlias } from './runAlias'
-import { claudeOnPath, claudeVersion } from './sessionManager'
+import { claudeOnPath, claudeVersion, claudeVersions } from './sessionManager'
 import { ipcMain, powerMonitor, powerSaveBlocker } from 'electron'
 import { randomBytes } from 'crypto'
 import * as pty from '@lydell/node-pty'
@@ -190,6 +190,8 @@ app.whenReady().then(async () => {
   let bridge: NativeBridge | null = null
   const bridgeSource = join(app.isPackaged ? process.resourcesPath : join(app.getAppPath(), 'resources'), 'bin', BRIDGE_FILE)
   const bridgeReady = prepareBridge(bridgeSource, join(userData, 'bin')).then((b) => (bridge = b))
+  // Claude-Code-Version gleich mit ermitteln (~110 ms): ab 2.1.139 laufen Hooks ohne Shell. Höchstens 3 s darauf warten.
+  const versionKnown = process.env.VIBEDESK_CLAUDE_CMD ? Promise.resolve() : Promise.race([claudeVersion(), new Promise((r) => setTimeout(r, 3000))])
   const settings = new SettingsStore(join(userData, 'settings.json'), DEFAULT_SETTINGS(app.getPath('documents')))
   setLang(resolveLang(settings.get().language, app.getLocale()))
   if (app.isPackaged || process.env.VIBEDESK_SPLASH) splash = new SplashWindow()
@@ -487,7 +489,8 @@ app.whenReady().then(async () => {
     brain: { mcpPath: resource('brain-mcp.js'), enabled: () => settings.get().brainOn },
     statusLine: { path: resource('statusline.js'), configDir: process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude') },
     endpointFile,
-    native: () => bridge
+    native: () => bridge,
+    claudeVersion: () => claudeVersions.known()
   })
   registerDiagnosticsIpc({
     claudeVersion,
@@ -509,8 +512,8 @@ app.whenReady().then(async () => {
     send('session:exit', id, code)
   })
   const claudeProjectsDir = join(process.env.CLAUDE_CONFIG_DIR || join(os.homedir(), '.claude'), 'projects')
-  // Sessions starten erst nach dem Probelauf der Brücke (wenige ms) – sonst bekäme die erste Session den JS-Weg
-  registerSessionIpc({ sessions, projects, claudeProjectsDir, ready: bridgeReady })
+  // Sessions starten erst nach dem Probelauf der Brücke (wenige ms) und der Versionsabfrage – sonst bekäme die erste Session den JS-Weg bzw. die Shell-Form
+  registerSessionIpc({ sessions, projects, claudeProjectsDir, ready: Promise.all([bridgeReady, versionKnown]) })
   registerWrapUpIpc({ sessions, git: gitService, claudeProjectsDir })
   // Eigene Shells neben Claude – gleiche Bündelung der Ausgabe, eigene Kanäle
   const shells = new ShellManager({ spawn: (file, args, o) => pty.spawn(file, args, { name: 'xterm-256color', ...o }), kind: () => settings.get().terminal.shell })
